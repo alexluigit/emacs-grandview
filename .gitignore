@@ -1,5 +1,10 @@
+.cache/
 elpa/
 transient/
+contrib/
+eaf/
+eshell/
+projects
 forge-database.sqlite
-projectile-bookmarks.eld
-
+.lsp*
+ace.el
