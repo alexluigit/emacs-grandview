@@ -134,8 +134,9 @@ expressions."
 (ace/emacs-load-config)
 
 (defun ace/emacs-build-config ()
-  "Automatically tangle ace.org when saving.
+  "Automatically tangle main init org file at saving when current buffer name matches.
 Add this to `after-save-hook' in `org-mode-hook'."
+  (unless (string= buffer-file-name ace/emacs-init-org-path) (error "Main init untangled"))
   (let* ((main-init ace/emacs-configuration-main-file)
          (main-init-el (ace/emacs--expand-file-name main-init ".el"))
          (main-init-org (ace/emacs--expand-file-name main-init ".org"))
