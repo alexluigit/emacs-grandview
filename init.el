@@ -107,15 +107,9 @@ expressions."
          (display-warning 'ace-init (format "Loading `%s' failed" ,package) :warning)
          (display-warning 'ace-init (format "This must be available at %s" ,path) :warning)))))
 
-; (require 'vc)
-; (setq vc-follow-symlinks t) ; Because my dotfiles are managed that way
-
 (add-to-list 'load-path (concat user-emacs-directory "ace")) ; custom libraries
-;; (add-to-list 'load-path (concat user-emacs-directory "contrib")) ; git repo libraries
-; (add-to-list 'load-path (concat user-emacs-directory "contrib/emacs-application-framework")) ; emacs application framework
 (let ((default-directory (concat user-emacs-directory "contrib/")))
   (normal-top-level-add-subdirs-to-load-path))
-; (add-to-list 'load-path "/usr/share/emacs/site-lisp/eaf") ; emacs-application-framework
 
 (defun ace/emacs-load-config ()
   "Load main Emacs configurations, either '.el' or '.org' file."

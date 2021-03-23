@@ -118,41 +118,4 @@ those so-called 'extras'."
             (dolist (map maps)
               (delete map embark-become-keymaps))))))
 
-;;;; Keycast integration
-
-;; Got this from Embark's wiki.  Renamed it to placate the compiler:
-;; <https://github.com/oantolin/embark/wiki/Additional-Configuration>.
-
-(defvar keycast--this-command-keys)
-(defvar keycast--this-command)
-
-(defun ace/embark-extras--store-action-key+cmd (cmd)
-  "Configure keycast variables for keys and CMD.
-To be used as filter-return advice to `embark-keymap-prompter'."
-  (setq keycast--this-command-keys (this-single-command-keys)
-        keycast--this-command cmd))
-
-(advice-add 'embark-keymap-prompter :filter-return #'ace/embark-extras--store-action-key+cmd)
-
-(defun ace/embark-extras--force-keycast-update (&rest _)
-  "Update keycast's mode line.
-To be passed as advice before `embark-act' and others."
-  (force-mode-line-update t))
-
-(autoload 'embark-act "embark")
-(autoload 'embark-become "embark")
-
-;; NOTE: This has a generic name because my plan is to add more packages
-;; to it.
-;;;###autoload
-(define-minor-mode ace/embark-extras-setup-packages
-  "Set up advice to integrate Embark with various commands."
-  :init-value nil
-  :global t
-  (if ace/embark-extras-setup-packages
-      (dolist (cmd '(embark-act embark-become))
-        (advice-add cmd :before #'ace/embark-extras--force-keycast-update))
-    (dolist (cmd '(embark-act embark-become))
-      (advice-remove cmd #'ace/embark-extras--force-keycast-update))))
-
 (provide 'ace-embark)
