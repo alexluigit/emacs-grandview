@@ -1650,62 +1650,95 @@ Basically, its interaction model is as follows:
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 #+end_src
 
-** Leader key (general.el)
+** Super key
 
 #+begin_src emacs-lisp
-(ace/elpa-package 'general
-  (general-create-definer ace/leader-key
-    :states '(normal insert visual emacs)
-    :keymaps 'override
-    :prefix "SPC"
-    :global-prefix "H-SPC")
-  (ace/leader-key
-      "e"     '(:ignore t :which-key "Eval")
-      "ee"    #'eval-last-sexp
-      "ex"    #'eval-expression
-      "f"     '(:ignore t :which-key "File")
-      "fr"    #'ace/simple-rename-file-and-buffer
-      "fw"    #'save-buffer
-      "g"     '(:ignore t :which-key "Git")
-      "gg"    #'magit-status
-      "p"     '(:ignore t :which-key "Project")
-      "SPC"   #'project-find-file
-      "pp"    #'project-switch-project
-      "s"     '(:ignore t :which-key "Search")
-      "sb"    #'ace/ibuffer-buffers-major-mode
-      "sv"    #'ace/ibuffer-buffers-vc-root
-      "si"    #'ace/consult-imenu
-      "sl"    #'ace/consult-line
-      "sL"    #'ace/consult-outline
-      "sy"    #'ace/consult-yank
-      "r"     '(:ignore t :which-key "Replace")
-      "ro"    #'ace/search
-      "rO"    #'ace/search
-      "t"     '(:ignore t :which-key "Toggle")
-      "tt"    #'vterm
-      "w"     '(:ignore t :which-key "Window")
-      "wv"    #'split-window-right
-      "ws"    #'split-window-below
-      "wo"    #'delete-other-windows
-      "ww"    #'other-window
-      "wx"    #'delete-other-windows-vertically
-      "w-"    #'balance-windows
-      "w="    #'balance-windows-area
-      "/"     #'evilnc-comment-or-uncomment-lines
-      "."     (lambda () (interactive) (find-file ace/emacs-init-org-path))))
-
-(ace/manual-package 'eaf-evil
-  (setq eaf-evil-leader-keymap general-override-mode-map)
-  (define-key key-translation-map (kbd "SPC")
-      (lambda (prompt)
-        (if (derived-mode-p 'eaf-mode)
-            (pcase eaf--buffer-app-name
-              ("browser" (if (string= (eaf-call-sync "call_function" eaf--buffer-id "is_focus") "True")
-                            (kbd "SPC")
-                          (kbd eaf-evil-leader-key)))
-              ("pdf-viewer" (kbd eaf-evil-leader-key))
-              ("image-viewer" (kbd eaf-evil-leader-key))
-              (_  (kbd "SPC")))
-          (kbd "SPC")))))
+(let ((map global-map))
+  (define-key map (kbd "s-/") #'evilnc-comment-or-uncomment-lines)
+  (define-key map (kbd "s-;") #'eval-expression)
+  (define-key map (kbd "s-[") #'winner-redo)
+  (define-key map (kbd "s-]") #'winner-undo)
+  (define-key map (kbd "s-=") #'balance-windows-area)
+  (define-key map (kbd "s-a") #'ibuffer)
+  (define-key map (kbd "s-b") #'ace/ibuffer-buffers-major-mode)
+  (define-key map (kbd "s-f") #'dired-jump)
+  (define-key map (kbd "s-l") #'ace/consult-line)
+  (define-key map (kbd "s-i") #'next-buffer)
+  (define-key map (kbd "s-j") #'dired-jump-other-window)
+  (define-key map (kbd "s-m") #'ace/simple-monocle)
+  (define-key map (kbd "s-o") #'previous-buffer)
+  (define-key map (kbd "s-v") #'split-window-right)
+  (define-key map (kbd "s-w") #'save-buffer)
+  (define-key map (kbd "s-z") #'window-toggle-side-windows))
 #+end_src
 
+** Transient keybind
+
+I believe transient provides a better interface for complex (usually with
+prefix) keybindings. This package is actually a part of =magit=, serve as the key
+chords interface. For example, you type =c= in magit, it will give you a menu
+window with a lot of hints about what command/action you might want to execute
+next. Comparing to =which-key=, which is a similar project, it has better
+classification of commands and better UI overall.  
+
+#+begin_src emacs-lisp
+(ace/elpa-package 'transient
+                  (transient-bind-q-to-quit)
+                  (define-transient-command ace/transient-evil-leader ()
+                    "Evil leader keybind"
+                    ["Utils"
+                     ["File"
+                      ("SPC" "Find file in project" project-find-file)
+                      ("fo" "Find file other window" ace/project-fd-other-window)
+                      ("fr" "Rename file" ace/simple-rename-file-and-buffer)
+                      ("fw" "Write file" save-buffer)
+                      ("f." "Edit emacs config" (lambda () (interactive) (find-file ace/emacs-init-org-path)))
+                      ]
+                     ["Elisp"
+                      ("ee" "Eval last s-expression" eval-last-sexp)
+                      ("ef" "Eval defun" eval-defun)
+                      ("eb" "Eval buffer" eval-buffer)
+                      ("er" "Elisp repl" ielm)
+                      ]
+                     ["Tab"
+                      ("tn" "New/Select tab" ace/tab-select-tab-dwim)
+                      ("tx" "Close tab" tab-close)
+                      ("tt" "Toggle tab line" ace/tab-tab-bar-toggle)
+                      ]
+                     ["Launcher"
+                      ("ot" "Open vterm" vterm)
+                      ]
+                     ["Git"
+                      ("gg" "Open magit client" magit-status)
+                      ]
+                     ]
+                    ["Finder"
+                     ["Lines"
+                      ("lk" "Keep lines" consult-keep-lines)
+                      ("lf" "Focus lines" consult-focus-lines)
+                      ("lm" "Marks" consult-mark)
+                      ]
+                     ["Registers"
+                      ("rr" "Register" consult-register)
+                      ("rs" "Register store" consult-register-store)
+                      ("rl" "Register load" consult-register-load)
+                      ("rk" "Cycle kill-ring" ace/consult-yank)
+                      ]
+                     ["Search"
+                      ("sg" "Grep" consult-grep)
+                      ("si" "Imenu" ace/consult-imenu)
+                      ("so" "Outline" ace/consult-outline)
+                      ]
+                     ["Misc"
+                      ("mm" "Minor mode menu" consult-minor-mode-menu)
+                      ("mM" "Mode menu" consult-mode-command)
+                      ("mc" "Complex commands" consult-complex-command)
+                      ("mv" "Buffer in current project" ace/ibuffer-buffers-vc-root)
+                      ]
+                     ]
+                    )
+                  (dolist (map (list evil-normal-state-map
+                                     magit-mode-map
+                                     dired-mode-map))
+                    (define-key map (kbd "SPC") #'ace/transient-evil-leader)))
+#+end_src
