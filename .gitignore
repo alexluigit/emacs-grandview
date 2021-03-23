@@ -4,6 +4,7 @@ transient/
 contrib/
 eaf/
 eshell/
+image-dired/
 projects
 forge-database.sqlite
 .lsp*
