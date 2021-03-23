@@ -157,7 +157,7 @@ buffer's window as well."
   (interactive "P")
   (if (minibufferp)
       (abort-recursive-edit)
-    (kill-buffer (current-buffer)))
+    (kill-buffer (window-buffer (selected-window))))
   (when (and (not arg) (not (one-window-p)))
     (delete-window)))
 
