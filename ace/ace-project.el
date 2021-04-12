@@ -1,7 +1,8 @@
 (require 'cl-lib)
 (require 'project)
-(require 'ace-atom)
 (require 'vc)
+(require 'ace-complete)
+(require 'atom)
 
 (defgroup ace/project ()
   "Extensions for project.el and related libraries."
@@ -168,7 +169,7 @@ The log is limited to the integer specified by
          (default-directory dir) ; otherwise fails at spontaneous M-x calls
          (backend (vc-responsible-backend dir))
          (num ace/project-commit-log-limit)
-         (int (ace/atom-number-integer-p num))
+         (int (atom/number-integer-p num))
          (limit (if (= int 0) t int))
          (diffs (if arg 'with-diff nil))
          (vc-log-short-style (unless diffs '(directory))))

@@ -1,7 +1,7 @@
 (require 'cl-lib)
 (when (featurep 'embark)
   (require 'embark))
-(require 'ace-atom)
+(require 'atom)
 (require 'ace-minibuffer)
 
 (defgroup ace/embark ()
@@ -31,7 +31,7 @@ assigned to a key in `embark-collect-mode-map'."
 This calls `ace/embark--completions-act' and is meant to be
 assigned to a key in `embark-collect-mode-map'."
   (interactive "p")
-  (let ((num (ace/atom-number-negative arg))) ; from `ace-common.el'
+  (let ((num (atom/number-negative arg))) ; from `atom.el'
     (ace/embark--completions-act (or num -1))))
 
 ;;;###autoload

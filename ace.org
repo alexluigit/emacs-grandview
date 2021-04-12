@@ -11,13 +11,12 @@ My Emacs configuration file written in org format.
 'init' and 'early-init'
 
 * Basic
+** Custom utils (atom.el))
 
-** Custom utils library
-
-There are a few utilities that I keep re-using in various parts of my Emacs code base. To keep things modular, I place them all in a dedicated =ace-atom.el= file, which can then be marked as a dependency by other libraries of mine. As such, all we here is load the file.
+There are a few utilities that I keep re-using in various parts of my Emacs code base. To keep things modular, I place them all in a dedicated =atom.el= file, which can then be marked as a dependency by other libraries of mine. As such, all we here is load the file.
 
 #+begin_src emacs-lisp
-(ace/builtin-package 'ace-atom)
+(use-package atom)
 #+end_src
 
 ** Disable emacs auto appending to init.el
