@@ -5,6 +5,7 @@ contrib/
 eaf/
 eshell/
 image-dired/
+url/
 projects
 forge-database.sqlite
 .lsp*
