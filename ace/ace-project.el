@@ -105,30 +105,9 @@ The completion default is the filename at point, determined by
 
 (defun ace/project--directory-subdirs (dir)
   "Return list of subdirectories in DIR."
-  (cl-remove-if-not
-   (lambda (x)
-     (file-directory-p x))
-   (directory-files-recursively dir ".*" t t)))
-
-;; TODO: generalise this for all VC backends?  Which ones?
-(defun ace/project--directory-subdirs-no-git (dir)
-  "Remove .git dirs from DIR."
-  (cl-remove-if
-   (lambda (x)
-     (string-match-p "\\.git" x))
-   (ace/project--directory-subdirs dir)))
-
-;; NOTE: in practice this is for `embark.el' (or equivalent
-;; functionality), as it allows it to export the candidates in a Dired
-;; buffer.
-(defun ace/project--subdirs-completion-table (dir)
-  "Return list of subdirectories in DIR with completion table."
-  (ace/atom-completion-table
-   'file
-   (ace/project--directory-subdirs-no-git dir)))
-
-(defvar ace/project--subdir-hist '()
-  "Minibuffer history for `ace/project-find-subdir'.")
+  (cl-remove-if (lambda (x) (string-match-p "\\.git" x))
+    (cl-remove-if-not (lambda (x) (file-directory-p x))
+      (directory-files-recursively dir ".*" t t))))
 
 ;;;###autoload
 (defun ace/project-find-subdir ()
@@ -136,14 +115,11 @@ The completion default is the filename at point, determined by
   (interactive)
   (let* ((pr (project-current t))
          (dir (cdr pr))
-         (subdirs (ace/project--subdirs-completion-table dir))
-         (directory (completing-read "Select Project subdir: " subdirs
-                                     nil t nil 'ace/project--subdir-hist)))
-    (dired directory)
-    (add-to-history 'ace/project--subdir-hist dir)))
+         (dirs-raw (ace/project--directory-subdirs dir))
+         (subdirs (ace/complete-append-metadata 'file dirs-raw))
+         (directory (completing-read "Select Project subdir: " subdirs)))
+    (dired directory)))
 
-;; FIXME: the buttons at the bottom of the log for displaying more
-;; commits do not seem to work with this.
 ;;;###autoload
 (defun ace/project-commit-log (&optional arg)
   "Print commit log for the current project.
