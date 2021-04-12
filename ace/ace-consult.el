@@ -60,30 +60,4 @@ To be used with `advice-add'.")
     (remove-hook 'ace/consult-jump-top-hook #'ace/pulse-recentre-top)
     (remove-hook 'ace/consult-jump-top-hook #'ace/pulse-show-entry)))
 
-;;;; Commands
-
-;;;###autoload
-(defun ace/consult-outline ()
-  "Run `consult-outline' through `ace/orderless-with-styles'."
-  (interactive)
-  (ace/orderless-with-styles 'consult-outline))
-
-;;;###autoload
-(defun ace/consult-imenu ()
-  "Run `consult-imenu' through `ace/orderless-with-styles'."
-  (interactive)
-  (ace/orderless-with-styles 'consult-imenu))
-
-;;;###autoload
-(defun ace/consult-line ()
-  "Run `consult-line' through `ace/orderless-with-styles'."
-  (interactive)
-  (ace/orderless-with-styles 'consult-line))
-
-;;;###autoload
-(defun ace/consult-yank ()
-  "Run `consult-yank' through `ace/orderless-with-styles'."
-  (interactive)
-  (ace/orderless-with-styles 'consult-yank))
-
 (provide 'ace-consult)

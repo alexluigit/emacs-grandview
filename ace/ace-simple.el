@@ -174,4 +174,4 @@ Do not try to make a new directory or anything fancy."
     (set-visited-file-name name t t)))
 
 (provide 'ace-simple)
-;;; ace/simple.el ends hereo
+;;; ace/simple.el ends here

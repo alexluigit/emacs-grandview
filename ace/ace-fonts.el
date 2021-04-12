@@ -2,8 +2,6 @@
 
 (defvar ace/default-font-size 140)
 (defvar ace/default-variable-font-size 140)
-;; (defvar zh-font-list '("PingFang SC" "Hiragino Sans GB" "Microsoft Yahei" "STHeiti"))
-;; (defvar en-font-list '("DejaVu Sans Mono" "Monaco" "Consolas" "Monospace" "Courier New"))
 (defvar en-font-list '("Iosevka SS04" "Victor Mono" "Microsoft Yahei" "STHeiti"))
 (defvar zh-font-list '("Sarasa Mono SC" "PingFang SC" "Microsoft Yahei"))
 

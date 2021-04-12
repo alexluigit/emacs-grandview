@@ -27,11 +27,6 @@ or not, such as `ace/project-flymake-mode-activate'."
   :type 'integer
   :group 'ace/project)
 
-;; Copied from Manuel Uberti:
-;; <https://www.manueluberti.eu/emacs/2020/11/14/extending-project/>.
-;;
-;; Note that I prefer adding some dummy doc string over seeing spurious
-;; compiler warnings.
 (cl-defmethod project-root ((project (head local)))
   "Project root for PROJECT with HEAD and LOCAL."
   (cdr project))
@@ -48,13 +43,8 @@ or not, such as `ace/project-flymake-mode-activate'."
     (project--remote-file-names
      (split-string (shell-command-to-string command) "\0" t))))
 
-;; Copied from Manuel Uberti:
-;; <https://www.manueluberti.eu/emacs/2020/11/14/extending-project/>.
-;;
-;; Same principle for the dummy doc string.
 (cl-defmethod project-files ((project (head local)) &optional dirs)
   "Override `project-files' to use `fd' in local projects.
-
 Project root for PROJECT with HEAD and LOCAL, plus optional
 DIRS."
   (mapcan #'ace/project--project-files-in-directory
@@ -199,43 +189,5 @@ Basically switches to a new branch or tag."
   (let* ((pr (project-current t))
          (dir (cdr pr)))
     (magit-status dir)))
-
-(defun ace/project--max-line ()
-  "Return the last line's number."
-  (save-excursion
-    (goto-char (point-max))
-    (line-number-at-pos)))
-
-(defun ace/project--large-file-p (&optional n)
-  "Check if lines exceed `ace/project-large-file-lines'.
-Optional N integer overrides that variable's value."
-  (let* ((num (or n ace/project-large-file-lines))
-         (int (ace/atom-number-integer-p num)))
-    (> (ace/project--max-line) int)))
-
-;; Copied from Manuel Uberti, whom I had inspired with an earlier
-;; version of this, and adapted accordingly:
-;; <https://www.manueluberti.eu/emacs/2020/11/21/flymake-projects/>.
-;;;###autoload
-(defun ace/project-flymake-mode-activate ()
-  "Activate Flymake only for `project-known-project-roots'."
-  (project--ensure-read-project-list)
-  (let ((known-projects (project-known-project-roots))
-        (pr (or (vc-root-dir)
-                (locate-dominating-file "." ".git")
-                default-directory))
-        (modes (ace/atom-minor-modes-active)))
-    (if (and (eq buffer-read-only nil)
-             (member pr known-projects)
-             (not (ace/project--large-file-p))
-             (not (member 'org-src-mode modes))
-             (not (eq buffer-file-truename nil)))
-        (flymake-mode 1)
-      (flymake-mode -1))))
-
-(defvar org-src-mode-hook)
-
-(add-hook 'org-src-mode-hook #'ace/project-flymake-mode-activate)
-(add-hook 'prog-mode-hook #'ace/project-flymake-mode-activate)
 
 (provide 'ace-project)
