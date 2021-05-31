@@ -1,5 +1,4 @@
-(when (featurep 'consult)
-  (require 'consult))
+(when (featurep 'consult) (require 'consult))
 (require 'ace-pulse)
 
 (defgroup ace/consult ()
@@ -20,19 +19,17 @@ changes to take effect."
   :group 'ace/consult
   :type 'list)
 
-;;;; Setup for some consult commands (TODO: needs review)
-
 (defvar ace/consult-jump-recentre-hook nil
+  "Hook that runs after select Consult commands.
+To be used with `advice-add'.")
+
+(defvar ace/consult-jump-top-hook nil
   "Hook that runs after select Consult commands.
 To be used with `advice-add'.")
 
 (defun ace/consult-after-jump-recentre (&rest _)
   "Run `ace/consult-jump-recentre-hook'."
   (run-hooks 'ace/consult-jump-recentre-hook))
-
-(defvar ace/consult-jump-top-hook nil
-  "Hook that runs after select Consult commands.
-To be used with `advice-add'.")
 
 (defun ace/consult-after-jump-top (&rest _)
   "Run `ace/consult-jump-top-hook'."
