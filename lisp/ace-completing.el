@@ -80,7 +80,7 @@ the _value_ of the choice, not the selected choice."
         (signal 'file-mime-type-error (list "Command failed" (buffer-string))))
       (let ((str (buffer-string)))
         (and (string-match "charset=binary" str)
-             (or (string-match "video/" str) (memq ext extra-exts)))))))
+             (or (string-match "video/" str) (member ext extra-exts)))))))
 
 (defun ace/completing-file-in-user-dirs ()
   "Select video or stream to play in mpv."
