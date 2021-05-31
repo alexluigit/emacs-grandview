@@ -2,7 +2,7 @@
 (require 'cl-lib)
 (require 'project)
 (require 'vc)
-(require 'ace-complete)
+(require 'ace-completing)
 
 (defgroup ace/project ()
   "Extensions for project.el and related libraries."
@@ -114,7 +114,7 @@ The completion default is the filename at point, determined by
   (let* ((pr (project-current t))
          (dir (cdr pr))
          (dirs-raw (ace/project--directory-subdirs dir))
-         (subdirs (ace/complete-append-metadata 'file dirs-raw))
+         (subdirs (ace/completing-append-metadata 'file dirs-raw))
          (directory (completing-read "Select Project subdir: " subdirs)))
     (dired directory)))
 
@@ -163,17 +163,5 @@ Basically switches to a new branch or tag."
   (let* ((pr (project-current t))
          (dir (cdr pr)))
     (magit-status dir)))
-
-(defun aaa-project-find-file ()
-  "Visit a file (with completion) in the current project.
-
-The completion default is the filename at point, determined by
-`thing-at-point' (whether such file exists or not)."
-  (interactive)
-  (let* ((pr (project-current t))
-         (dirs (list (project-root pr))))
-    (dolist (file (project-files pr dirs))
-            (message "file: %s" file))
-    ))
 
 (provide 'ace-project)
