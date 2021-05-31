@@ -149,17 +149,52 @@ To be hooked to `window-configuration-change-hook'."
 
 ;;;; Commands for buffers
 
-;;;###autoload
-(defun ace/simple-kill-buffer-current (&optional arg)
-  "Kill current buffer or abort recursion when in minibuffer.
-With optional prefix ARG (\\[universal-argument]) delete the
-buffer's window as well."
+(defun ace/simple-kill-window-current (&optional force)
+  "Kill current window. If current window is the only window,
+delete current frame. With optional prefix
+ARG (\\[universal-argument]) kill current buffer frame as well."
   (interactive "P")
-  (if (minibufferp)
-      (abort-recursive-edit)
-    (kill-buffer (window-buffer (selected-window))))
-  (when (and (not arg) (not (one-window-p)))
-    (delete-window)))
+  (when force (kill-buffer))
+  (if (lf-live-p)
+      (lf-quit)
+    (condition-case nil
+        (delete-window)
+      (error (delete-frame)))))
+
+(defun ace/windmove--wm-takeover (direction)
+  (let ((cmd "awesome-client")
+        (args (concat
+               "require(\"awful\").client.focus.byidx\("
+               direction "\)")))
+    (start-process "" nil cmd args)))
+
+(defun ace/simple-winmove-r/d (&optional down)
+  (interactive "P")
+  (cond
+   ((lf-live-p)
+    (ace/windmove--wm-takeover "1"))
+   (down
+    (condition-case nil (windmove-down)
+      (user-error (ace/windmove--wm-takeover "1"))))
+   (t
+    (condition-case nil (windmove-right)
+      (user-error
+       (condition-case nil (windmove-down)
+         (user-error (ace/windmove--wm-takeover "1"))))))))
+
+(defun ace/simple-winmove-l/u (&optional up)
+  (interactive "P")
+  (cond
+   ((lf-live-p)
+    (ace/windmove--wm-takeover "-1"))
+   (up
+    (condition-case nil (windmove-up)
+      (user-error (ace/windmove--wm-takeover "-1"))))
+   (t
+    (condition-case nil (windmove-left)
+      (user-error
+       (condition-case nil (windmove-up)
+         (user-error (ace/windmove--wm-takeover "-1"))))))))
 
 ;;;###autoload
 (defun ace/simple-rename-file-and-buffer (name)
@@ -174,4 +209,5 @@ Do not try to make a new directory or anything fancy."
     (set-visited-file-name name t t)))
 
 (provide 'ace-simple)
+
 ;;; ace/simple.el ends here
