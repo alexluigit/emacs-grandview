@@ -1,12 +1,1 @@
-.cache/
-elpa/
-transient/
-contrib/
-eaf/
-eshell/
-image-dired/
-url/
-projects
-forge-database.sqlite
-.lsp*
-ace.el
+eln-cache
