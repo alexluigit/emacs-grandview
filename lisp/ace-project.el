@@ -1,8 +1,8 @@
+;;; -*- lexical-binding: t -*-
 (require 'cl-lib)
 (require 'project)
 (require 'vc)
 (require 'ace-complete)
-(require 'atom)
 
 (defgroup ace/project ()
   "Extensions for project.el and related libraries."
@@ -43,9 +43,9 @@ or not, such as `ace/project-flymake-mode-activate'."
     (project--remote-file-names
      (split-string (shell-command-to-string command) "\0" t))))
 
-(cl-defmethod project-files ((project (head local)) &optional dirs)
+(cl-defmethod project-files ((project (head vc)) &optional dirs)
   "Override `project-files' to use `fd' in local projects.
-Project root for PROJECT with HEAD and LOCAL, plus optional
+Project root for PROJECT with HEAD and VC, plus optional
 DIRS."
   (mapcan #'ace/project--project-files-in-directory
           (or dirs (list (project-root project)))))
@@ -91,8 +91,6 @@ The completion default is the filename at point, determined by
     (setq project--list (append projects project--list))
     (project--write-project-list)))
 
-;; TODO: use `completing-read-multiple' and learn how to delete a list
-;; from an alist.
 ;;;###autoload
 (defun ace/project-remove-project ()
   "Remove project from `project--list' using completion."
@@ -135,7 +133,7 @@ The log is limited to the integer specified by
          (default-directory dir) ; otherwise fails at spontaneous M-x calls
          (backend (vc-responsible-backend dir))
          (num ace/project-commit-log-limit)
-         (int (atom/number-integer-p num))
+         (int (if (numberp num) num (error "%s is not a number" n)))
          (limit (if (= int 0) t int))
          (diffs (if arg 'with-diff nil))
          (vc-log-short-style (unless diffs '(directory))))
@@ -165,5 +163,17 @@ Basically switches to a new branch or tag."
   (let* ((pr (project-current t))
          (dir (cdr pr)))
     (magit-status dir)))
+
+(defun aaa-project-find-file ()
+  "Visit a file (with completion) in the current project.
+
+The completion default is the filename at point, determined by
+`thing-at-point' (whether such file exists or not)."
+  (interactive)
+  (let* ((pr (project-current t))
+         (dirs (list (project-root pr))))
+    (dolist (file (project-files pr dirs))
+            (message "file: %s" file))
+    ))
 
 (provide 'ace-project)

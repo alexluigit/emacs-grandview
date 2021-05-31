@@ -1,8 +1,6 @@
 (require 'cl-lib)
 (when (featurep 'embark)
   (require 'embark))
-(require 'atom)
-(require 'ace-minibuffer)
 
 (defgroup ace/embark ()
   "Extensions for `embark'."
@@ -31,7 +29,7 @@ assigned to a key in `embark-collect-mode-map'."
 This calls `ace/embark--completions-act' and is meant to be
 assigned to a key in `embark-collect-mode-map'."
   (interactive "p")
-  (let ((num (atom/number-negative arg))) ; from `atom.el'
+  (let ((num (if (numberp arg) (- 0 arg))))
     (ace/embark--completions-act (or num -1))))
 
 ;;;###autoload
@@ -61,7 +59,6 @@ assigned to a key in `embark-collect-mode-map'."
           (embark-consult-preview-minor-mode -1))
       (add-hook 'embark-collect-mode-hook #'embark-consult-preview-minor-mode)
       (embark-consult-preview-minor-mode 1))))
-
 
 (autoload 'ace/project-fd-other-window "ace-project")
 (autoload 'consult-grep "consult")

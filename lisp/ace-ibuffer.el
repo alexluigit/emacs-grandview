@@ -32,7 +32,7 @@ With optional prefix ARG (\\[universal-argument]) produce an
           (switch-to-buffer
            (read-buffer
             (format "%s %s:" prompt root) nil t
-            (lambda (pair) ; pair is (name-string . buffer-object)
+            (lambda (pair) ;; pair is (name-string . buffer-object)
               (with-current-buffer (cdr pair) (string= (vc-root-dir) root))))))
       (user-error "Not in a version-controlled directory"))))
 
