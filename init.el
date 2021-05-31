@@ -1,56 +1,43 @@
-(require 'package)
+(defvar bootstrap-version)
+(setq straight-use-package-by-default t)
+(setq straight-vc-git-default-clone-depth 1)
 
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")))
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-(package-initialize)
+(straight-use-package 'use-package)
 
-;; Initialize use-package on non-Linux platforms
-(unless (package-installed-p 'use-package)
-   (package-install 'use-package))
-(require 'use-package)
-
-(defvar ace/init-org-path "/home/alex/Dev/alex.files/config/emacs/ace.org"
-  "Main configuration org file path")
-
-(defvar ace/init-el-path "ace"
-  "Base name of the main configuration file.")
-
-(defun ace/init--expand-file-name (file extension)
-  "Return canonical path to FILE with EXTENSION."
-  (expand-file-name
-   (concat user-emacs-directory file extension)))
-
-(add-to-list 'load-path (concat user-emacs-directory "ace")) ; custom libraries
-(let ((default-directory (concat user-emacs-directory "contrib/")))
-  (normal-top-level-add-subdirs-to-load-path))
-
-(defun ace/init-load-config ()
-  "Load main Emacs configurations, either '.el' or '.org' file."
-  (let* ((main-init ace/init-el-path)
-         (main-init-el (ace/init--expand-file-name main-init ".el"))
-         (main-init-org (ace/init--expand-file-name main-init ".org")))
-    (require 'org)
-    (if (file-exists-p main-init-el)
-        (load-file main-init-el)
-      (when (file-exists-p main-init-org)
-        (org-babel-load-file main-init-org)))))
+(push (concat ace/init-dot-repo "lisp") load-path)
 
 ;; Load configurations.
+(defun ace/init-load-config ()
+  "Load main Emacs configurations, either '.el' or '.org' file."
+  (let ((init-el (concat user-emacs-directory "ace.el"))
+        (init-org (concat ace/init-dot-repo "ace.org")))
+    (if (file-exists-p init-el)
+        (load-file init-el)
+      (require 'org)
+      (org-babel-tangle-file init-org init-el)
+      (load-file init-el))))
+
 (ace/init-load-config)
 
 (defun ace/init-build-config ()
   "Automatically tangle main init org file at saving when current buffer name matches.
 Add this to `after-save-hook' in `org-mode-hook'."
-  (unless (string= buffer-file-name ace/init-org-path) (error "Main init untangled"))
-  (let* ((main-init ace/init-el-path)
-         (main-init-el (ace/init--expand-file-name main-init ".el"))
-         (main-init-org (ace/init--expand-file-name main-init ".org")))
-    (when (file-exists-p main-init-el)
-      (delete-file main-init-el))
-    (require 'org)
-    (when (file-exists-p main-init-org)
-      (org-babel-tangle-file main-init-org main-init-el))))
+  (let ((init-el (concat user-emacs-directory "ace.el"))
+        (init-org (concat ace/init-dot-repo "ace.org")))
+    (when (file-exists-p init-el) (delete-file init-el))
+    (org-babel-tangle-file init-org init-el)
+    (byte-compile-file init-el)))
 
-(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'ace/init-build-config)))
+(add-hook 'kill-emacs-hook #'ace/init-build-config)
