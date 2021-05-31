@@ -17,6 +17,9 @@
 (push (expand-file-name "eln-cache/" user-emacs-directory) native-comp-eln-load-path)
 (setq native-comp-async-report-warnings-errors 'silent)
 
+
+(setq frame-inhibit-implied-resize t) ; Don't resize frame at this stage
+
 (setq use-file-dialog nil)
 (setq inhibit-startup-message t)
 (setq inhibit-startup-screen t)
