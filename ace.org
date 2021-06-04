@@ -578,13 +578,14 @@ on the screen and more on how fast you can bring them into focus.  This
 is, of course, a matter of realigning priorities, as we still wish to
 control every aspect of the interface.
 
-** Minibuffer
+** Minibuffer (minibuffer.el)
 
 #+begin_src emacs-lisp
 (use-package minibuffer
   :straight (:type built-in)
   :config
-  (setq completion-styles '(orderless flex)) ; Handle it to `orderless.el' 
+  (require 'ace-minibuffer)
+  (setq completion-styles '(orderless flex)) ; Handle it to `orderless.el'
   (setq completion-category-defaults nil)
   (setq completion-cycle-threshold 3)
   (setq completion-flex-nospace nil)
@@ -626,32 +627,15 @@ A minimalistic completion UI.
   (advice-add 'vertico--resize-window :override #'ignore))
 #+end_src
 
-** Completion style (orderless.el & pinyinlib.el)
+** Completion style (orderless.el)
 
 #+begin_src emacs-lisp
-(use-package pinyinlib
-  :config
-  (require 'ace-pinyin)
-  (setq pinyinlib--simplified-char-table ace/pinyinlib-xiaohe))
-
 (use-package orderless
-  :after pinyinlib
   :config
-  (defun ace/orderless-literal-dispatcher (pattern _index _total)
-    "Literal style dispatcher using the equals sign as a prefix."
-    (when (string-suffix-p "=" pattern)
-      `(orderless-literal . ,(substring pattern 0 -1))))
-  (defun ace/orderless-initialism-dispatcher (pattern _index _total)
-    "Leading initialism dispatcher using the comma sign as a prefix."
-    (when (string-prefix-p "," pattern)
-      `(orderless-strict-leading-initialism . ,(substring pattern 1))))
-  (defun ace/orderless-pinyin-dispatcher (pattern _index _total)
-    "Pinyin initialism dispatcher using the backtick sign as a prefix."
-    (when (string-prefix-p "`" pattern)
-      `(pinyinlib-build-regexp-string . ,(substring pattern 1))))
+  (require 'ace-orderless)
   (setq orderless-component-separator " +")
   (setq orderless-matching-styles
-        '(pinyinlib-build-regexp-string
+        '(ace/pinyin-build-regexp-string
           orderless-strict-leading-initialism
           orderless-prefixes
           orderless-regexp
@@ -661,7 +645,6 @@ A minimalistic completion UI.
           ace/orderless-initialism-dispatcher
           ace/orderless-pinyin-dispatcher))
   (define-key minibuffer-local-completion-map "SPC" nil))
-
 #+end_src
 
 ** Completion hint (marginalia.el)
