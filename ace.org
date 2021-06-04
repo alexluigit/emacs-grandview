@@ -1,5 +1,5 @@
 #+TITLE: Emacs Configuration
-#+AUTHOR: Alen Lu
+#+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
 
 * Overview
@@ -906,28 +906,7 @@ via =C-x t r=, though I find I do not use it.
   (tab-bar-echo-area-mode 1))
 #+end_src
 
-** Unique names for buffers (uniquify.el)
-
-These settings make it easier to work with multiple buffers.  When two
-buffers have the same name, Emacs will try to disambiguate them by
-displaying their element of differentiation in accordance with the style
-of =uniquify-buffer-name-style=.  While =uniquify-strip-common-suffix= will
-remove the part of the file system path they have in common.
-
-All such operations are reversed once an offending buffer is removed
-from the list, allowing Emacs to revert to the standard of displaying
-only the buffer's name.
-
-#+begin_src emacs-lisp
-(use-package uniquify
-  :straight nil
-  :config
-  (setq uniquify-buffer-name-style 'forward)
-  (setq uniquify-strip-common-suffix t)
-  (setq uniquify-after-kill-buffer-p t))
-#+end_src
-
-** Ibuffer and extras (ace-ibuffer.el)
+** Buffer list (ibuffer.el)
 
 =ibuffer.el= ships with Emacs and it provides a drop-in replacement for
 =list-buffers=.  Compared to its counterpart, it allows for granular
@@ -1083,14 +1062,21 @@ well. See details at: https://github.com/alexluigit/lf.el
   :straight (lf :type git :host github :repo "alexluigit/lf.el")
   :config
   (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files") ("/media/Cloud/" . ".Trash/files")))
-  (setq lf-show-icons t)
   (setq lf-completing-preview-position
         (lambda (info)
           (cons (/ (- (plist-get info :parent-frame-width)
                       (plist-get info :posframe-width)) 2)
                 (or (frame-parameter nil 'internal-border-width) 30))))
+  (setq lf-header-position '(0 . 30))
   (lf-override-dired-mode)
   (lf-completing-preview-mode)
+  (add-hook 'lf-mode-hook (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+  (add-hook 'lf-preview-setup-hook (lambda () (setq cursor-type nil) (setq truncate-lines t)))
+  (defun ace/ts-ext-fix (entry)
+    (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
+        (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
+      (find-file-noselect entry t nil)))
+  (add-to-list 'lf-preview-cmd-alist '(("ts") (ace/ts-ext-fix . ())))
   (transient-define-prefix ace/lf-go ()
     "Lf `lf-go' keybind."
     ["Directory"

@@ -6,7 +6,7 @@
 
 (setq native-comp-eln-load-path
       (remove (expand-file-name "eln-cache/" "~/.config/emacs/") native-comp-eln-load-path))
-(defvar comp-deferred-compilation-deny-list nil)
+(defvar comp-deferred-compilation-deny-list)
 (push (expand-file-name "eln-cache/" user-emacs-directory) native-comp-eln-load-path)
 (setq native-comp-async-report-warnings-errors 'silent)
 
