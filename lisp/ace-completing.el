@@ -1,14 +1,5 @@
 ;;; -*- lexical-binding: t -*-
-
-(defcustom ace/user-dir-alist '(
-  ((title . "  System Files") (path . "/home/alex/Code/alex.files/"))
-  ((title . "  Coding")   (path . "/media/HDD/Dev/"))
-  ((title . "  Books")        (path . "/media/HDD/Book/"))
-  ((title . "  Notes")        (path . "/home/alex/Documents/notes/"))
-  ((title . "  Photos")       (path . "/home/alex/Pictures/"))
-  ((title . "  Videos")       (path . "/home/alex/Video/"))
-  ((title . "  Downloads")    (path . "/home/alex/Downloads/")))
-  "doc")
+(require 'ace-files)
 
 ;;;###autoload
 (defun ace/completing-append-metadata (meta completions)
@@ -70,28 +61,17 @@ the _value_ of the choice, not the selected choice."
            (title (completing-read "murls: " cands)))
       (call-process "murl" nil 0 nil (funcall get-url title) "true"))))
 
-(defun ace/completing-file-video-p (file)
-  "Determine if FILE is a video file."
-  (with-temp-buffer
-    (let ((exit (call-process "file" nil t nil "-bi" file))
-          (ext (file-name-extension file))
-          (extra-exts '("rmvb" "rm" "ts")))
-      (when (not (zerop exit))
-        (signal 'file-mime-type-error (list "Command failed" (buffer-string))))
-      (let ((str (buffer-string)))
-        (and (string-match "charset=binary" str)
-             (or (string-match "video/" str) (member ext extra-exts)))))))
-
-(defun ace/completing-file-in-user-dirs ()
+(defun ace/completing-file-in-user-dirs (&optional skip-menu)
   "Select video or stream to play in mpv."
-  (interactive)
-  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ace/user-dir-alist))
-         (get-item (lambda (s field) (cl-dolist (i ace/user-dir-alist)
+  (interactive (list (if current-prefix-arg "  System Files" nil)))
+  (when skip-menu (setq skip-menu "  System Files"))
+  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ace/files-dir-alist))
+         (get-item (lambda (s field) (cl-dolist (i ace/files-dir-alist)
                                  (when (string= s (cdr (assq 'title i)))
                                    (cl-return (cdr (assq field i)))))))
          (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
          (cands (ace/completing-append-metadata annotation cands-raw))
-         (title (completing-read "Open: " cands))
+         (title (or skip-menu (completing-read "Open: " cands)))
          (path (funcall get-item title 'path)))
     (ace/completing--files-in-directory path (concat title ": "))))
 
@@ -103,13 +83,30 @@ the _value_ of the choice, not the selected choice."
          (files-raw (split-string output "\0" t))
          (files (ace/completing-append-metadata 'file files-raw))
          (file (completing-read (or prompt "Open file: ") files)))
-    (if (ace/completing-file-video-p file)
-        (let* ((file (shell-quote-argument (concat dir file)))
-               (floatw-flags (list "floatwin" "-c" "mpv:emacs-mpv"))
-               (mpv-flags (list "mpv" "--x11-name=emacs-mpv" file))
-               (flags (append floatw-flags mpv-flags)))
-          (apply #'start-process "" nil "nohup" flags))
-      (find-file file))
-    (delete-file (concat dir "nohup.out") t)))
+    (find-file (concat dir file))))
+
+(defun ace/completing-recentf ()
+  "Open file from `recentf-list' with completion."
+  (interactive)
+  (when-let* ((cands-raw (mapcar #'abbreviate-file-name recentf-list))
+              (cands (ace/completing-append-metadata 'file cands-raw))
+              (fname (completing-read "File name: " cands nil nil)))
+    (find-file (expand-file-name fname))))
+
+;;;###autoload
+(defun ace/completing-buffers-major-mode (&optional arg)
+  "Select buffers to switch to. Same as `switch-to-buffer'.
+With optional prefix ARG (\\[universal-argument]) select buffers
+that match the current buffer's major mode."
+  (interactive "P")
+  (let* ((major major-mode)
+         (prompt "Buffers for"))
+    (if arg
+        (switch-to-buffer
+              (read-buffer
+                (format "%s %s:" prompt major) nil t
+                (lambda (pair) ; pair is (name-string . buffer-object)
+                  (with-current-buffer (cdr pair) (derived-mode-p major)))))
+      (switch-to-buffer (read-buffer "Switch to buffer: ")))))
 
 (provide 'ace-completing)

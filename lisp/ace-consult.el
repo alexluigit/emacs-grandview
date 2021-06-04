@@ -35,19 +35,6 @@ To be used with `advice-add'.")
   "Run `ace/consult-jump-top-hook'."
   (run-hooks 'ace/consult-jump-top-hook))
 
-(defun ace/consult-recent-file ()
-  "The same as `consult-recent-file' except no preview."
-  (interactive)
-  (find-file
-   (consult--read
-    (or (mapcar #'abbreviate-file-name recentf-list)
-        (user-error "No recent files"))
-    :prompt "Find recent file: "
-    :sort nil
-    :require-match t
-    :category 'file
-    :history 'file-name-history)))
-
 ;;;###autoload
 (define-minor-mode ace/consult-set-up-hooks-mode
   "Set up hooks for Consult."
