@@ -762,31 +762,22 @@ for visualising the standard completion framework's output
     (define-key map (kbd "C-.") #'embark-act)
     (define-key map (kbd "C-,") #'embark-become))
   (let ((map embark-collect-mode-map))
-    (define-key map (kbd "C-.") #'embark-act))
-  (let ((map embark-symbol-map))
-    (define-key map (kbd "K") #'describe-keymap)))
+    (define-key map (kbd "C-.") #'embark-act)))
 
 (use-package ace-embark
-  :straight (:type built-in)
+  :straight nil
   :after embark
   :config
-  (ace/embark-extras-keymaps 1)
-  (let ((map embark-collect-mode-map))
-    (define-key map (kbd "C-k") #'ace/embark-collection-kill-line)
-    (define-key map (kbd "M-n") #'ace/embark-completions-act-next)
-    (define-key map (kbd "M-p") #'ace/embark-completions-act-previous)))
+  (ace/embark-extras-keymaps 1))
 #+end_src
 
 ** Completion utils (ace-completing.el)
 
 #+begin_src emacs-lisp
 (use-package ace-completing
-  :commands (ace/completing-file-in-user-dirs)
   :straight nil
   :config
   (define-key global-map (kbd "C-x d") #'ace/completing-word-ispell))
-  ;; (require 'ace-completing)
-  ;; (define-key global-map (kbd "C-x d") #'ace/completing-word-ispell)
 #+end_src
 
 * Window / Buffer / Tab
@@ -1012,8 +1003,27 @@ control over the buffer list and is more powerful overall.
     (define-key map (kbd "* n") #'ibuffer-mark-by-name-regexp)
     (define-key map (kbd "s n") #'ibuffer-do-sort-by-alphabetic)  ; "sort name" mnemonic
     (define-key map (kbd "/ g") #'ibuffer-filter-by-content)))
+#+end_src
 
-(use-package ace-ibuffer :straight nil)
+** Buffer name (uniquify.el)
+
+These settings make it easier to work with multiple buffers.  When two
+buffers have the same name, Emacs will try to disambiguate them by
+displaying their element of differentiation in accordance with the style
+of =uniquify-buffer-name-style=.  While =uniquify-strip-common-suffix= will
+remove the part of the file system path they have in common.
+
+All such operations are reversed once an offending buffer is removed
+from the list, allowing Emacs to revert to the standard of displaying
+only the buffer's name.
+
+#+begin_src emacs-lisp
+(use-package uniquify
+  :straight nil
+  :config
+  (setq uniquify-buffer-name-style 'forward)
+  (setq uniquify-strip-common-suffix t)
+  (setq uniquify-after-kill-buffer-p t))
 #+end_src
 
 ** Scratch buffers (scratch.el)
