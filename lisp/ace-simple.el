@@ -140,7 +140,9 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
 (defun ace/simple--monocle-disable ()
   "Set variable `ace/simple-monocle' to nil, when appropriate.
 To be hooked to `window-configuration-change-hook'."
-  (when (and ace/simple-monocle (not (one-window-p)))
+  (when (and ace/simple-monocle
+             (not (and (featurep 'transient) (window-live-p transient--window)))
+             (not (one-window-p)))
     (delete-other-windows)
     (ace/simple-monocle -1)
     (set-window-configuration ace/simple--windows-current)))
