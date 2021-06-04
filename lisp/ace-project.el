@@ -61,27 +61,25 @@ DIRS."
               (list (abbreviate-file-name d)))
             cands)))
 
-;;;###autoload
-(defun ace/project-fd-other-window ()
-  "Same as `project-find-file', but open file in other window
+;; ;;;###autoload
+;; (defun ace/project-fd-other-window ()
+;;   "Same as `project-find-file', but open file in other window
 
-The completion default is the filename at point, determined by
-`thing-at-point' (whether such file exists or not)."
-  (interactive)
-  (let* ((pr (project-current t))
-         (dirs (list (project-root pr)))
-         (all-files (project-files pr dirs))
-         (completion-ignore-case read-file-name-completion-ignore-case)
-         (filename (thing-at-point 'filename))
-         (file (funcall project-read-file-name-function
-                                 "Find file" all-files nil nil
-                                 filename)))
-  (if (string= file "")
-          (user-error "You didn't specify the file")
-        (find-file-other-window file))))
+;; The completion default is the filename at point, determined by
+;; `thing-at-point' (whether such file exists or not)."
+;;   (interactive)
+;;   (let* ((pr (project-current t))
+;;          (dirs (list (project-root pr)))
+;;          (all-files (project-files pr dirs))
+;;          (completion-ignore-case read-file-name-completion-ignore-case)
+;;          (filename (thing-at-point 'filename))
+;;          (file (funcall project-read-file-name-function
+;;                                  "Find file" all-files nil nil
+;;                                  filename)))
+;;   (if (string= file "")
+;;           (user-error "You didn't specify the file")
+;;         (find-file-other-window file))))
 
-;; FIXME: this is fragile since we do not store the original value of
-;; `project--list' and may risk losing data.
 ;;;###autoload
 (defun ace/project-add-projects ()
   "Append `ace/project--list-projects' to `project--list'."
