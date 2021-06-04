@@ -560,13 +560,12 @@ reposition it).
 
 #+begin_src emacs-lisp
 (use-package transient
+  :commands (transient-define-prefix)
   :config
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
   (define-key transient-map (kbd "<escape>") #'transient-quit-all)
-  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all)
-  (define-key evil-normal-state-map (kbd "SPC") #'ace/transient-evil-leader)
-  (define-key evil-visual-state-map (kbd "SPC") #'ace/transient-evil-leader))
+  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
 #+end_src
 
 * Completion
@@ -823,10 +822,7 @@ strongly encourage you to read the "Commentary" section in the source
 code.  Do it with =M-x find-library transpose-frame=.
 
 #+begin_src emacs-lisp
-(use-package transpose-frame
-  :bind
-  ("C-s-f" . flop-frame)
-  ("C-s-r" . rotate-frame-clockwise))
+(use-package transpose-frame)
 #+end_src
 
 ** Directional window motions (windmove.el)
@@ -1079,8 +1075,7 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   (define-key dired-mode-map "G"  #'end-of-buffer)
   (define-key dired-mode-map "h"  #'dired-up-directory)
   (define-key dired-mode-map "v"  #'set-mark-command)
-  (define-key dired-mode-map "."  #'dired-omit-mode)
-  (define-key dired-mode-map (kbd "SPC") #'ace/transient-evil-leader))
+  (define-key dired-mode-map "."  #'dired-omit-mode))
 #+end_src
 
 ** Wdired (wdired.el)
@@ -1358,10 +1353,8 @@ Org mode setup.
   :defer t
   :config
   (setq magit-define-global-key-bindings nil)
-  (define-key magit-mode-map (kbd "SPC") #'ace/transient-evil-leader)
   (define-key magit-mode-map (kbd "`") #'magit-diff-show-or-scroll-up)
   (define-key magit-diff-mode-map (kbd "`") #'scroll-up)
-  (define-key global-map (kbd "C-c g") #'magit-status)
   (require 'git-commit)
   (setq git-commit-summary-max-length 50)
   (setq git-commit-known-pseudo-headers
@@ -1580,7 +1573,7 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
   :defer t)
 #+end_src
 
-* Finalize
+* Keybindings
 
 This section is for my finalized global keybinds which contains super key
 combination and leader key in various modes. To ensure other config has been
@@ -1591,8 +1584,8 @@ fully loaded, I put this section at the end of my config file.
 #+begin_src emacs-lisp
 (let ((map global-map))
   (define-key map (kbd "s-/") #'evilnc-comment-or-uncomment-lines)
-  (define-key map (kbd "s-e") #'evil-scroll-down)
-  (define-key map (kbd "s-u") #'evil-scroll-up)
+  (define-key map (kbd "s-u") #'scroll-down)
+  (define-key map (kbd "s-e") #'scroll-up)
   (define-key map (kbd "s-n") #'ace/simple-winmove-r/d)
   (define-key map (kbd "s-p") #'ace/simple-winmove-l/u)
   (define-key map (kbd "s-i") #'next-buffer)
@@ -1602,7 +1595,7 @@ fully loaded, I put this section at the end of my config file.
   (define-key map (kbd "s-a") #'ibuffer)
   (define-key map (kbd "s-w") #'save-buffer)
   (define-key map (kbd "s-k") #'kill-current-buffer)
-  (define-key map (kbd "s-f") #'ace/ibuffer-buffers-major-mode)
+  (define-key map (kbd "s-f") #'ace/completing-buffers-major-mode)
   (define-key map (kbd "s-m") #'ace/simple-monocle)
   (define-key map (kbd "s-q") #'ace/simple-kill-window-current)
   (define-key map (kbd "s-=") #'balance-windows-area)
@@ -1616,6 +1609,7 @@ fully loaded, I put this section at the end of my config file.
 #+end_src
 
 ** Leader key
+
 I believe transient provides a better interface for complex (usually with
 prefix) keybindings. This package is actually a part of =magit=, serve as the key
 chords interface. For example, you type =c= in magit, it will give you a menu
@@ -1624,43 +1618,91 @@ next. Comparing to =which-key=, which is a similar project, it has better
 classification of commands and better UI overall.
 
 #+begin_src emacs-lisp
-(transient-define-prefix ace/transient-evil-leader ()
-  "Evil leader keybind"
-  ["File | Project | Git"
-   [("fo" "Find file other window" ace/project-fd-other-window)
-    ("ff" "Format file" format-all-buffer)
-    ("fu" "Find user dir file" ace/completing-file-in-user-dirs)
-    ("fr" "Recent file" ace/consult-recent-file)
-    ("fR" "Rename file" ace/simple-rename-file-and-buffer)
-    ("f." "Edit emacs config" (lambda () (interactive) (find-file (concat ace/init-dot-repo "ace.org"))))]
-   [("SPC" "Find file in project" project-find-file)
-    ("pp" "Open/Switch project" project-switch-project)]
-   [("gg" "Open magit client" magit-status)
-    ("gh" "Show hunks" git-gutter-mode)]]
-  ["Rg | Consult"
-   [("rg" "Grep" consult-grep)
-    ("rr" "Rg menu" rg-menu)
-    ("rf" "Rg on file" rg-dwim-current-file)
-    ("rp" "Rg on project" ace/rg-project-dwim)]
-   [("lk" "Keep lines" consult-keep-lines)
-    ("lf" "Focus lines" consult-focus-lines)
-    ("lm" "Marks" consult-mark)]
-   [("si" "Imenu" consult-project-imenu)
-    ("sr" "Register" consult-register)
-    ("sy" "Cycle kill-ring" consult-yank)]
-   [("mm" "Minor mode menu" consult-minor-mode-menu)
-    ("mM" "Mode menu" consult-mode-command)
-    ("mc" "Complex commands" consult-complex-command)
-    ("mv" "Buffer in current project" ace/ibuffer-buffers-vc-root)]]
+(transient-define-prefix ace/leader-find ()
+  "file open"
+  ["Find File"
+   [("p" "Find file in project" project-find-file)
+    ("u" "Find user dir file" ace/completing-file-in-user-dirs)
+    ("r" "Recent file" ace/completing-recentf)]])
+
+(transient-define-prefix ace/leader-consult ()
+  "Consult commands"
+  ["Consult"
+   [("g" "Grep" consult-grep)
+    ("k" "Keep lines" consult-keep-lines)
+    ("f" "Focus lines" consult-focus-lines)
+    ("m" "Marks" consult-mark)
+    ("i" "isearch" consult-isearch)
+    ("I" "imenu" consult-project-imenu)
+    ("r" "Register" consult-register)
+    ("k" "Cycle kill-ring" consult-yank)
+    ("M" "Minor mode menu" consult-minor-mode-menu)
+    ("c" "Mode command" consult-mode-command)
+    ("C" "Complex commands" consult-complex-command)]])
+
+(transient-define-prefix ace/leader-project ()
+  "Project commands"
+  ["Project commands"
+   [("p" "Open/Switch project" project-switch-project)
+    ("r" "Rg on project" ace/rg-project-dwim)]])
+
+(transient-define-prefix ace/leader-eval ()
+  "Eval (elisp) commands"
   ["Eval"
-   [("ee" "Eval last s-expression" eval-last-sexp)
-    ("ex" "Eval expression" eval-expression)
-    ("ef" "Eval defun" eval-defun)
-    ("eb" "Eval buffer" eval-buffer)
-    ("er" "Elisp repl" ielm)]]
-  ["Tab | Utils"
+   [("e" "Eval last s-expression" eval-last-sexp)
+    ("x" "Eval expression" eval-expression)
+    ("f" "Eval defun" eval-defun)
+    ("b" "Eval buffer" eval-buffer)
+    ("r" "Elisp repl" ielm)]])
+
+(transient-define-prefix ace/leader-tab ()
+  "Util commands"
+  ["Tab"
    [("tt" "New/Select tab" ace/tab-select-tab-dwim)
     ("tx" "Close tab" tab-close)
-    ("tl" "Toggle tab line" ace/tab-tab-bar-toggle)]
-   [("ov" "Murl" ace/completing-murl)]])
+    ("tl" "Toggle tab line" ace/tab-tab-bar-toggle)]])
+
+(transient-define-prefix ace/leader-window ()
+  "Util commands"
+  ["Window"
+   [("f" "flop frame windows" flop-frame)
+    ("r" "rotate frame windows" rotate-frame-clockwise)
+    ("h" "Move window left" evil-window-move-far-left)
+    ("l" "Move window right" evil-window-move-far-right)]])
+
+(transient-define-prefix ace/leader-git ()
+  "Util commands"
+  ["Git"
+   [("h" "Show hunks" git-gutter-mode)
+    ("g" "Open magit client" magit-status)]])
+
+(transient-define-prefix ace/leader-utils ()
+  "Util commands"
+  ["Utils"
+   [("m"   "Murl" ace/completing-murl)
+    ("r"   "Rg on file" rg-dwim-current-file)
+    ("f"   "Format file" format-all-buffer)
+    ("R"   "Rename file" ace/simple-rename-file-and-buffer)]])
+
+(transient-define-prefix ace/leader ()
+  "Leader keybind"
+  ["Ace Leader Commands"
+   [("f" "Finder" ace/leader-find)]
+   [("c" "Consult" ace/leader-consult)]
+   [("p" "Project" ace/leader-project)]
+   [("e" "Eval" ace/leader-eval)]
+   [("w" "Window" ace/leader-window)]
+   [("t" "Tab" ace/leader-tab)]
+   [("g" "Git" ace/leader-git)]
+   [("u" "Utils" ace/leader-utils)]]
+  ["Shortcuts"
+   [("`"   "Edit emacs config" ace/init-edit-config)]
+   [("."   "Find file in dotfiles" (lambda () (interactive) (ace/completing-file-in-user-dirs t)))]
+   [("SPC" "Find file in project" project-find-file)]])
+
+(with-eval-after-load 'dired (define-key dired-mode-map (kbd "SPC") #'ace/leader))
+(with-eval-after-load 'magit (define-key magit-mode-map (kbd "SPC") #'ace/leader))
+(with-eval-after-load 'evil
+    (define-key evil-normal-state-map (kbd "SPC") #'ace/leader)
+    (define-key evil-visual-state-map (kbd "SPC") #'ace/leader))
 #+end_src
