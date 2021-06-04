@@ -41,6 +41,7 @@
     (setq visual-fill-column-width 120)
     (setq visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
+  (setq truncate-lines t)
   ;; Replace list hyphen with dot
   (font-lock-add-keywords
    'org-mode
