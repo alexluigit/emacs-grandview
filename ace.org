@@ -452,10 +452,9 @@ using it because of that, though it can also adjust the size of the
 (use-package doom-themes
   :config
   (load-theme 'doom-dracula t))
+;; (load-theme 'modus-vivendi)
 
 (use-package all-the-icons)
-  ;; :config
-  ;; (setf (alist-get "repo" all-the-icons-data/octicons-alist) "\xf017"))
 #+end_src
 
 ** Better modeline (doom-modeline.el)
