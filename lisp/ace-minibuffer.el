@@ -16,32 +16,6 @@ Refer to the source of `ace/minibuffer-mini-cursor' and
   :group 'ace/minibuffer
   :type 'boolean)
 
-;;;; Minibuffer behaviour
-
-;; Thanks to Omar Antolín Camarena for providing the messageless and
-;; stealthily.  Source: <https://github.com/oantolin/emacs-config>.
-(defun ace/minibuffer--messageless (fn &rest args)
-  "Set `minibuffer-message-timeout' to 0.
-Meant as advice for minibuffer completion FN with ARGS."
-  (let ((minibuffer-message-timeout 0))
-    (apply fn args)))
-
-(dolist (fn '(minibuffer-force-complete-and-exit
-              minibuffer-complete-and-exit
-              exit-minibuffer))
-  (advice-add fn :around #'ace/minibuffer--messageless))
-
-;; Note that this solves bug#45686 and is only considered a temporary
-;; measure: <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=45686>
-(defun ace/minibuffer--stealthily (fn &rest args)
-  "Prevent minibuffer default from counting as a modification.
-Meant as advice for FN `minibuf-eldef-setup-minibuffer' with rest
-ARGS."
-  (let ((inhibit-modification-hooks t))
-    (apply fn args)))
-
-(advice-add 'minibuf-eldef-setup-minibuffer :around #'ace/minibuffer--stealthily)
-
 ;;;; Cursor appearance
 
 (defun ace/minibuffer--cursor-type ()
