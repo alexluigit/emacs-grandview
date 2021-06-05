@@ -117,6 +117,18 @@ Change some annoying keybindings in Info-mode.
 #+begin_src emacs-lisp
 #+end_src
 
+** Keybinding Hint (transient.el)
+
+#+begin_src emacs-lisp
+(use-package transient
+  :commands (transient-define-prefix)
+  :config
+  (setq transient-show-popup -0.5)
+  (transient-bind-q-to-quit)
+  (define-key transient-map (kbd "<escape>") #'transient-quit-all)
+  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
+#+end_src
+
 * Text Editing
 ** Evil
 
@@ -556,18 +568,6 @@ reposition it).
 (setq-default scroll-margin 0)
 #+end_src
 
-** Keybinding Hint (transient.el)
-
-#+begin_src emacs-lisp
-(use-package transient
-  :commands (transient-define-prefix)
-  :config
-  (setq transient-show-popup -0.5)
-  (transient-bind-q-to-quit)
-  (define-key transient-map (kbd "<escape>") #'transient-quit-all)
-  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
-#+end_src
-
 * Completion
 
 The optimal way of using Emacs is through searching and narrowing
@@ -798,7 +798,7 @@ as effective for my case.
     (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
 #+end_src
 
-** Window Position (transpose-frame.el)
+** Window position (transpose-frame.el)
 
 The =transpose-frame= library defines a set of commands for shifting the
 layout of Emacs windows.  Rather than me describing how these work, I
