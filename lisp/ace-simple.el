@@ -130,12 +130,15 @@ This is the equivalent of maximising a window.  Tiling window
 managers such as DWM, BSPWM refer to this state as 'monocle'."
   :lighter " -M-"
   :global nil
-  (let ((win ace/simple--windows-current))
+  (let ((config ace/simple--windows-current)
+        (buf (current-buffer)))
     (if (one-window-p)
-        (when win
-          (set-window-configuration win))
+        (when config
+          (set-window-configuration config))
       (setq ace/simple--windows-current (current-window-configuration))
-      (delete-other-windows))))
+      (when (window-parameter nil 'window-side) (delete-window))
+      (delete-other-windows)
+      (switch-to-buffer buf))))
 
 (defun ace/simple--monocle-disable ()
   "Set variable `ace/simple-monocle' to nil, when appropriate.
