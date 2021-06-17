@@ -8,7 +8,7 @@
   "Extensions for project.el and related libraries."
   :group 'project)
 
-(defcustom ace/project-project-roots (list "~/Dev")
+(defcustom ace/project-project-roots (list "~/Code")
   "List of directories with version-controlled projects.
 To be used by `ace/project-switch-project'."
   :type 'list
