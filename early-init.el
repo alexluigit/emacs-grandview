@@ -4,10 +4,8 @@
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
 (setq url-history-file (expand-file-name "url/history" user-emacs-directory))
 
-(setq native-comp-eln-load-path
-      (remove (expand-file-name "eln-cache/" "~/.config/emacs/") native-comp-eln-load-path))
-(defvar comp-deferred-compilation-deny-list)
-(push (expand-file-name "eln-cache/" user-emacs-directory) native-comp-eln-load-path)
+(when (boundp 'native-comp-eln-load-path)
+  (add-to-list 'native-comp-eln-load-path (concat user-emacs-directory "eln/")))
 (setq native-comp-async-report-warnings-errors 'silent)
 
 (setq package-quickstart nil)
