@@ -1,4 +1,5 @@
 ;;; -*- lexical-binding: t -*-
+(require 'json)
 (require 'ace-files)
 
 ;;;###autoload
