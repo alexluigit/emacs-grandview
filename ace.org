@@ -61,14 +61,30 @@ minibuffer's history of inputs allows the completion framework to guess
 the most likely course of action. Typing =M-x g= gives me =gnus= as the
 first possible option, which is exactly what I want.
 
-** Async facilities
+** Custom primitive commands (ace-atom.el)
+
+#+begin_src emacs-lisp
+(use-package ace-atom
+  :straight nil
+  :after evil
+  :bind
+  (:map evil-insert-state-map
+    ("<C-i>" . ace/atom-backward-char)
+    ("C-o" . ace/atom-forward-char)
+   :map minibuffer-local-map
+    ("<C-i>" . ace/atom-backward-char)
+    ("C-o" . ace/atom-forward-char)))
+#+end_src
+
+** Async facilities (async.el)
 
 This package provides some asynchronous processing facilities for
 various Emacs interfaces, such as for Dired's copy and rename operations
 (also read [[#h:c519300f-8a9a-472b-b26d-c2f49adbdb5d][Dired (directory editor, file manager)]]).
 
 #+begin_src emacs-lisp
-(use-package async)
+(use-package async
+  :defer t)
 #+end_src
 
 ** Simple (ace-simple.el)
@@ -78,15 +94,16 @@ various Emacs interfaces, such as for Dired's copy and rename operations
 #+begin_src emacs-lisp
 (use-package ace-simple
   :straight nil
-  :commands
-  (list ace/simple-kill-window-current
-        ace/simple-winmove-r/d
-        ace/simple-winmove-l/u)
+  :defer t
   :config
   (setq ace/simple-date-specifier "%F")
   (setq ace/simple-time-specifier "%R %z")
   :bind
-  (("C-c i" . ace/simple-insert-date)
+  (("s-n" . ace/simple-winmove-r/d)
+   ("s-p" . ace/simple-winmove-l/u)
+   ("s-m" . ace/simple-monocle)
+   ("s-q" . ace/simple-kill-window-current)
+   ("C-c i" . ace/simple-insert-date)
    ("C-c e" . ace/simple-escape-url)
    ("C-c q" . ace/simple-unfill-region-or-paragraph)
    ("C-<f2>" . ace/simple-rename-file-and-buffer)
@@ -117,7 +134,7 @@ Change some annoying keybindings in Info-mode.
 #+begin_src emacs-lisp
 #+end_src
 
-** Keybinding Hint (transient.el)
+** Keybindings (transient.el)
 
 #+begin_src emacs-lisp
 (use-package transient
@@ -144,8 +161,6 @@ or something like that.
   (setq evil-want-keybinding nil)
   (setq evil-disable-insert-state-bindings t)
   (setq evil-want-Y-yank-to-eol t)
-  (setq evil-want-C-u-scroll t)
-  (setq evil-want-C-i-jump t)
   :config
   (evil-mode)
   (setq evil-echo-state nil)                      ;; We have state in modeline
@@ -160,10 +175,11 @@ or something like that.
   (evil-define-key 'motion global-map "N"            #'evil-join)
   (evil-define-key 'normal global-map "P"            #'helpful-at-point)
   (evil-define-key 'normal global-map "U"            #'evil-redo)
+  (evil-define-key 'normal global-map (kbd "<C-i>")  #'evil-jump-forward)
+  (evil-define-key 'insert global-map (kbd "TAB")    #'tab-to-tab-stop)
+  (evil-define-key 'insert global-map (kbd "C-g")    #'evil-normal-state)
   (evil-define-key 'insert global-map (kbd "C-u")    #'evil-delete-back-to-indentation)
   (evil-define-key 'insert global-map (kbd "C-w")    #'evil-delete-backward-word)
-  (evil-define-key 'insert global-map (kbd "C-i")    #'backward-char)
-  (evil-define-key 'insert global-map (kbd "C-o")    #'forward-char)
   (evil-define-key 'visual global-map ">"            #'ace/evil-shift-right)
   (evil-define-key 'visual global-map "<"            #'ace/evil-shift-left)
   (evil-define-key 'visual global-map (kbd "C-s")    #'ace/evil-visual-search-forward)
@@ -171,7 +187,7 @@ or something like that.
   (evil-define-key '(normal insert) global-map (kbd "s-<f6>")   #'evil-paste-after)
   (evil-define-key '(normal insert) global-map (kbd "s-S-<f6>") #'evil-paste-before)
   (evil-set-initial-state 'dired-mode 'emacs)
-  (evil-set-initial-state 'vterm-mode 'emacs)
+  (evil-set-initial-state 'vterm-mode 'insert)
   (evil-set-initial-state 'nov-mode 'emacs)
   (evil-set-initial-state 'eaf-mode 'emacs))
 #+end_src
@@ -182,7 +198,7 @@ or something like that.
 (use-package evil-collection
   :after evil
   :config
-  (evil-collection-init '(rg vterm helpful help)))
+  (evil-collection-init '(rg helpful help)))
 #+end_src
 
 *** Symbols pairs (evil-surround.el)
@@ -221,13 +237,13 @@ some Emacs settings and modes that are scrattered around several files,
 which control (i) how paragraphs or comments in programming modes should
 be wrapped to a given column count, and (ii) what constitutes a
 sentence.  I put them all together here to make things easier to track.
-+ With regard to paragraphs, I find that a double space is the best way
+- With regard to paragraphs, I find that a double space is the best way
   to delimit sentences in source form, where a monospaced typeface is
   customary.  There is no worry that this will be shown on a website or
   rendered version of a document, because processors know how to handle
   spacing.  We do this to make phrases easier to tell apart, but also to
   render unambiguous commands like =forward-sentence=.
-+ =ace/fill-fill-mode= sets my desired default column width for all
+- =ace/fill-fill-mode= sets my desired default column width for all
   buffers, while it applies another value for programming modes (in case
   there is a need to control the two cases separately).  Those values
   are stored in the variables =ace/fill-default-column= and
@@ -251,32 +267,31 @@ sentence.  I put them all together here to make things easier to track.
   (ace/fill-fill-mode 1))
 #+end_src
 
-** Symbols (electric.el and paren.el)
+** Symbols 
+*** Pairs (electric.el & paren.el)
 
 Emacs labels as =electric= any behaviour that involves contextual
 auto-insertion of characters.  This is a summary of my settings:
 
-+ Indent automatically.
-+ If =electric-pair-mode= is enabled (which I might do manually), insert
-  quotes and brackets in pairs.  Only do so if there is no alphabetic
-  character after the cursor.
-  + To get those numbers, evaluate =(string-to-char CHAR)= where CHAR is
-    the one you are interested in.  For example, get the literal tab's
-    character with =(string-to-char "\t")=.
-+ While inputting a pair, inserting the closing character will just skip
-  over the existing one, rather than add a new one.  So typing =(= will
-  insert =()= and then typing =)= will just be the same as moving forward
-  one character =C-f=.
-+ Do not skip over whitespace when operating on pairs.  Combined with
-  the above point, this means that a new character will be inserted,
-  rather than be skipped over.  I find this better, because it prevents
-  the point from jumping forward, plus it allows for more natural
-  editing.
-+ The rest concern the conditions for transforming quotes into their
-  curly equivalents.  I keep this disabled, because curly quotes are
-  distinct characters.  It is difficult to search for them.  Just note
-  that on GNU/Linux you can type them directly by hitting the "compose"
-  key and then an angled bracket (=<= or =>=) followed by a quote mark.
+- Indent automatically.
+- If =electric-pair-mode= is enabled (which I might do manually), insert quotes
+   and brackets in pairs.  Only do so if there is no alphabetic character after
+   the cursor.
+- To get those numbers, evaluate =(string-to-char CHAR)= where CHAR is the one
+   you are interested in.  For example, get the literal tab's character with
+   =(string-to-char "\t")=.
+- While inputting a pair, inserting the closing character will just skip over
+   the existing one, rather than add a new one.  So typing =(= will insert =()= and
+   then typing =)= will just be the same as moving forward one character =C-f=.
+- Do not skip over whitespace when operating on pairs.  Combined with the above
+   point, this means that a new character will be inserted, rather than be
+   skipped over.  I find this better, because it prevents the point from jumping
+   forward, plus it allows for more natural editing.
+- The rest concern the conditions for transforming quotes into their curly
+   equivalents.  I keep this disabled, because curly quotes are distinct
+   characters.  It is difficult to search for them.  Just note that on GNU/Linux
+   you can type them directly by hitting the "compose" key and then an angled
+   bracket (=<= or =>=) followed by a quote mark.
 
 
 #+begin_src emacs-lisp
@@ -298,6 +313,32 @@ auto-insertion of characters.  This is a summary of my settings:
   (electric-indent-mode 1)
   (electric-pair-mode 1)
   (electric-quote-mode -1))
+#+end_src
+
+*** Prettify symbols (prog-mode.el)
+
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :straight nil
+  :hook (prog-mode . prettify-symbols-mode)
+  :init
+  (setq-default prettify-symbols-alist
+                '(("lambda" . ?λ)
+                  ("<-" . ?←)
+                  ("->" . ?→)
+                  ("->>" . ?↠)
+                  ("=>" . ?⇒)
+                  ("map" . ?↦)
+                  ("/=" . ?≠)
+                  ("!=" . ?≠)
+                  ("==" . ?≡)
+                  ("<=" . ?≤)
+                  (">=" . ?≥)
+                  ("=<<" . (?= (Br . Bl) ?≪))
+                  (">>=" . (?≫ (Br . Bl) ?=))
+                  ("<=<" . ?↢)
+                  (">=>" . ?↣)))
+  (setq prettify-symbols-unprettify-at-point 'right-edge))
 #+end_src
 
 ** Tabs / indentation
@@ -433,6 +474,7 @@ example, =C-m= different meaning.
   "To distinguish C-m from RET."
   (with-selected-frame (or frame (selected-frame))
     (when window-system
+      (define-key input-decode-map [?\C-i] [C-i])
       (define-key input-decode-map [?\C-m] [C-m]))))
 (add-hook 'after-make-frame-functions #'ace/key-fix)
 (define-key global-map (kbd "<C-m>") #'call-last-kbd-macro)
@@ -461,10 +503,9 @@ using it because of that, though it can also adjust the size of the
 ** Theme & icons
 
 #+begin_src emacs-lisp
-(use-package doom-themes
+(use-package kaolin-themes
   :config
-  (load-theme 'doom-dracula t))
-;; (load-theme 'modus-vivendi)
+  (load-theme 'kaolin-dark t))
 
 (use-package all-the-icons)
 #+end_src
@@ -603,11 +644,7 @@ control every aspect of the interface.
   (file-name-shadow-mode 1)
   (minibuffer-depth-indicate-mode 1)
   (minibuffer-electric-default-mode 1)
-  (add-hook 'minibuffer-setup-hook (lambda () (keyboard-translate ?\C-i ?\H-z)))
-  (add-hook 'minibuffer-exit-hook (lambda () (keyboard-translate ?\C-i ?\C-i)))
   (let ((map minibuffer-local-map))
-    (define-key map (kbd "H-z") #'backward-char)
-    (define-key map (kbd "C-o") #'forward-char)
     (define-key map (kbd "C-u") #'kill-whole-line)
     (define-key map (kbd "C-w") #'backward-kill-word)))
 #+end_src
@@ -669,22 +706,37 @@ for visualising the standard completion framework's output
 (use-package consult
   :init
   (with-eval-after-load 'evil
-    (evil-define-key '(normal visual) global-map "C-s" #'consult-isearch))
+    (evil-define-key '(normal visual insert) global-map (kbd "C-/") #'consult-isearch)
+    (evil-define-key '(normal visual insert) global-map (kbd "C-l") #'consult-line)
+    (evil-define-key '(normal visual) global-map (kbd "C-f") #'consult-outline))
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
-  (advice-add #'register-preview :override #'consult-register-window))
+  (advice-add #'register-preview :override #'consult-register-window)
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
-  :defer t
   :config
-  (define-key global-map (kbd "C-s") 'consult-isearch)
-  (define-key global-map (kbd "C-r") 'consult-isearch)
+  (transient-define-prefix ace/leader-consult ()
+    "Consult commands"
+    ["Consult"
+     [("g" "Grep" consult-grep)
+      ("k" "Keep lines" consult-keep-lines)
+      ("f" "Focus lines" consult-focus-lines)
+      ("m" "Marks" consult-mark)
+      ("i" "isearch" consult-isearch)
+      ("l" "isearch" consult-line)
+      ("o" "isearch" consult-outline)
+      ("I" "imenu" consult-project-imenu)
+      ("r" "Register" consult-register)
+      ("k" "Cycle kill-ring" consult-yank)
+      ("M" "Minor mode menu" consult-minor-mode-menu)
+      ("c" "Mode command" consult-mode-command)
+      ("C" "Complex commands" consult-complex-command)]])
   (setq consult-line-numbers-widen t)
   (setq completion-in-region-function #'consult-completion-in-region)
   (setq consult-async-min-input 3)
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
-  (setq consult-narrow-key ">")
+  (setq consult-narrow-key ">"))
 
 (use-package ace-consult
   :straight nil
@@ -741,11 +793,12 @@ for visualising the standard completion framework's output
 #+begin_src emacs-lisp
 (use-package ace-completing
   :straight nil
-  :config
-  (define-key global-map (kbd "C-x d") #'ace/completing-word-ispell))
+  :bind
+  (("s-f" . ace/completing-buffers-major-mode)
+   ("C-x d" . ace/completing-word-ispell)))
 #+end_src
 
-* Window / Buffer / Tab
+* Viewports
 
 I believe that Emacs' true power lies in its buffer management rather
 than its multiplexing.  The latter becomes inefficient at scale, since
@@ -776,14 +829,14 @@ as effective for my case.
 
 #+begin_src emacs-lisp
 (use-package window
-  :straight (:type built-in)
+  :straight nil
   :config
   (setq display-buffer-alist
-        '(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+        `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
             (display-buffer-in-side-window)
             (window-height . 0.3)
             (side . bottom))
-          ("\\*.*\\([Ee]shell\\|shell\\|\\Help\\|helpful\\).*"
+          ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
             (display-buffer-in-side-window)
             (window-width . 0.4)
             (side . right))
@@ -822,7 +875,12 @@ for a while but felt that the times it would interfere with my layout
 where more than those it would actually speed up my workflow.
 
 #+begin_src emacs-lisp
-(setq windmove-create-window nil)    ; Emacs 27.1
+(use-package windmove
+  :config
+  (setq windmove-create-window nil)    ; Emacs 27.1
+  :bind
+  ("s-h" . (lambda () (interactive) (split-window-right) (windmove-right)))
+  ("s-v" . (lambda () (interactive) (split-window-below) (windmove-down))))
 #+end_src
 
 ** Tabs (ace-tab.el)
@@ -914,6 +972,9 @@ control over the buffer list and is more powerful overall.
 
 #+begin_src emacs-lisp
 (use-package ibuffer
+  :bind
+  ("s-i" . (lambda (a) (interactive "P") (if a (ibuffer) (next-buffer))))
+  ("s-o" . (lambda (a) (interactive "P") (if a (ibuffer) (previous-buffer))))
   :config
   (setq ibuffer-expert t)
   (setq ibuffer-display-summary nil)
@@ -931,9 +992,7 @@ control over the buffer list and is more powerful overall.
                 " "
                 (mode 16 16 :left :elide)
                 " " filename-and-process)
-          (mark " "
-                (name 16 -1)
-                " " filename)))
+          (mark " " (name 16 -1) " " filename)))
   (setq ibuffer-saved-filter-groups nil)
   (add-to-list 'ibuffer-never-show-predicates "^\\ ")
   (setq ibuffer-old-time 48)
@@ -959,12 +1018,12 @@ from the list, allowing Emacs to revert to the standard of displaying
 only the buffer's name.
 
 #+begin_src emacs-lisp
-(use-package uniquify
-  :straight nil
-  :config
-  (setq uniquify-buffer-name-style 'forward)
-  (setq uniquify-strip-common-suffix t)
-  (setq uniquify-after-kill-buffer-p t))
+;; (use-package uniquify
+;;   :straight nil
+;;   :config
+;;   (setq uniquify-buffer-name-style 'forward)
+;;   (setq uniquify-strip-common-suffix t)
+;;   (setq uniquify-after-kill-buffer-p t))
 #+end_src
 
 ** Scratch buffers (scratch.el)
@@ -1004,9 +1063,110 @@ If region is active, add its contents to the new buffer."
   (define-key global-map (kbd "C-c s") #'scratch))
 #+end_src
 
+* Eshell
+** Basic (eshell.el & ace-eshell.el)
+
+#+begin_src emacs-lisp
+(use-package ace-eshell
+  :straight nil
+  :config
+  (setq eshell-banner-message "")
+  (setq eshell-aliases-file (concat ace/init-dot-repo "eshell/aliases"))
+  (add-hook 'eshell-first-time-mode-hook 'ace/eshell-configure)
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "zsh" "nvim")))
+  (define-key global-map (kbd "s-e") 'ace/eshell-toggle)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-f") 'consult-outline)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'consult-history)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-u") 'eshell-kill-input)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-n") 'eshell-next-prompt)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-p") 'eshell-previous-prompt)
+  (define-key eshell-mode-map (kbd "s-<backspace>") 'ace/eshell-clear-buffer)
+  (define-key eshell-mode-map (kbd "s-c") 'ace/eshell-new)
+  (define-key eshell-mode-map (kbd "s-i") 'ace/eshell-next)
+  (define-key eshell-mode-map (kbd "s-o") 'ace/eshell-prev))
+#+end_src
+
+** Import environment vars (exec-path-from-shell.el)
+
+#+begin_src emacs-lisp
+(use-package exec-path-from-shell
+  :init
+  (setq exec-path-from-shell-check-startup-files nil)
+  :config
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
+#+end_src
+
+** Colors
+
+#+begin_src emacs-lisp
+(use-package xterm-color
+  :after esh-mode
+  :config
+  (push 'xterm-color-filter eshell-preoutput-filter-functions)
+  ;; We want to use xterm-256color when running interactive commands
+  ;; in eshell but not during other times when we might be launching
+  ;; a shell command to gather its output.
+  (add-hook 'eshell-pre-command-hook (lambda () (setenv "TERM" "xterm-256color")))
+  (add-hook 'eshell-post-command-hook (lambda () (setenv "TERM" "dumb")))
+  (add-hook 'eshell-before-prompt-hook (lambda () (setq xterm-color-preserve-properties t)))
+  (delq 'eshell-handle-ansi-color eshell-output-filter-functions))
+#+end_src
+
+** Fish like Completion (fish-completion.el)
+
+This enhances eshell's completions with those that Fish is capable of and also
+falls back to any additional completions that are configured for Bash on the
+system.  The primary benefit here (for me) is getting completion for commits and
+branches in =git= commands.
+
+#+begin_src emacs-lisp
+(use-package fish-completion
+  :hook (eshell-mode . fish-completion-mode))
+#+end_src
+
+** Z navigation
+
+#+begin_src emacs-lisp
+(use-package eshell-z
+  :hook ((eshell-mode . (lambda () (require 'eshell-z)))
+         (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
+#+end_src
+
+** Command Highlighting
+
+#+begin_src emacs-lisp
+(use-package eshell-syntax-highlighting
+  :after esh-mode
+  :config
+  (eshell-syntax-highlighting-global-mode +1))
+#+end_src
+
+** History Autocompletion (esh-autosuggest.el)
+
+#+begin_src emacs-lisp
+(use-package esh-autosuggest
+  :hook (eshell-mode . esh-autosuggest-mode)
+  :config
+  (let ((map esh-autosuggest-active-map))
+    (define-key map (kbd "C-f") 'esh-autosuggest-complete-word)
+    (define-key map (kbd "C-<return>") 'company-complete-selection))
+  (set-face-foreground 'company-preview-common "#4b5668")
+  (set-face-background 'company-preview nil))
+#+end_src
+
 * File management
 
 Configuration about dired, lf, files, recentf etc.
+
+** User directory (ace-files.el)
+
+#+begin_src emacs-lisp
+(use-package ace-files
+  :straight nil)
+#+end_src
 
 ** Dired (dired.el)
 
@@ -1082,7 +1242,7 @@ well. See details at: https://github.com/alexluigit/lf.el
     ["Directory"
      ("h" "Home" (lambda () (interactive) (lf-find-file "~/")))
      ("u" "Emacs User Dir" (lambda () (interactive) (lf-find-file user-emacs-directory)))
-     ("c" "Code" (lambda () (interactive) (lf-find-file "~/Dev")))
+     ("c" "Code" (lambda () (interactive) (lf-find-file "~/Code")))
      ("d" "Downloads" (lambda () (interactive) (lf-find-file "~/Downloads")))
      ("p" "Wallpaper" (lambda () (interactive) (lf-find-file "~/Pictures/wallpaper")))
      ("m" "Drives (media)" (lambda () (interactive) (lf-find-file "/media")))
@@ -1092,6 +1252,11 @@ well. See details at: https://github.com/alexluigit/lf.el
      ("N" "Next subdir" dired-next-subdir)
      ("P" "Prev subdir" dired-prev-subdir)])
   (define-key evil-normal-state-map "-" #'lf)
+  (define-key lf-mode-map (kbd "s-e")
+    (lambda ()
+      (interactive)
+      (let ((ace/eshell-position '((window-height . 0.35) (side . bottom))))
+        (ace/eshell-toggle t))))
   (define-key lf-mode-map "g" #'ace/lf-go))
 #+end_src
 
@@ -1186,6 +1351,7 @@ Org mode setup.
 (use-package org-superstar
   :defer t
   :config
+  (setq org-superstar-item-bullet-alist '((?* . ?•) (?+ . ?+) (?- . ?•)))
   (setq org-superstar-remove-leading-stars t)
   (setq org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●"))
   :hook
@@ -1209,7 +1375,6 @@ Org mode setup.
 #+begin_src emacs-lisp
 (use-package org-habit
   :defer t
-  :straight (:type built-in)
   :straight nil
   :config
   (add-to-list 'org-modules 'org-habit)
@@ -1217,37 +1382,6 @@ Org mode setup.
 #+end_src
 
 * Utils
-** Vterm
-
-#+begin_src emacs-lisp
-(use-package vterm
-  :config
-  (setq vterm-always-compile-module t)
-  (defun ace/vterm-send-key (key &optional shift meta ctrl)
-    "Send KEY to libvterm with optional modifiers SHIFT, META and CTRL."
-    (deactivate-mark)
-    (when vterm--term
-      (let ((inhibit-redisplay t)
-            (inhibit-read-only t))
-        (when (and (not (symbolp last-input-event)) shift (not meta) (not ctrl))
-          (setq key (upcase key)))
-        (vterm--update vterm--term key shift meta ctrl)
-        (setq vterm--redraw-immididately t)
-        (when (not (eq evil-state 'insert))
-          (accept-process-output vterm--process vterm-timer-delay nil t)))))
-  (defun ace/vterm-hook ()
-    (evil-define-key 'insert 'local [escape] #'vterm-send-escape)
-    (evil-define-key 'insert 'local (kbd "<C-return>") '(lambda () (interactive) (vterm-send-key "<f5>")))
-    (evil-define-key 'insert 'local (kbd "C-i") '(lambda () (interactive) (vterm-send-key "<f6>")))
-    (evil-define-key 'insert 'local (kbd "s-<f6>") '(lambda () (interactive) (vterm-yank)))
-    (set (make-local-variable 'buffer-face-mode-face) 'fixed-pitch)
-    (vterm-reset-cursor-point)
-    (buffer-face-mode t))
-  (advice-add 'vterm-send-key :override #'ace/vterm-send-key)
-  :hook
-  (vterm-mode . ace/vterm-hook))
-#+end_src
-
 ** Epub reader (nov.el)
 
 #+begin_src emacs-lisp
@@ -1312,6 +1446,74 @@ Org mode setup.
     (setq nov-shr-rendering-functions '((img . nov-render-img) (title . nov-render-title) (b . shr-tag-b)))
     (setq nov-shr-rendering-functions
           (append nov-shr-rendering-functions shr-external-rendering-functions))))
+#+end_src
+
+** Music Player (mpdel.el)
+
+#+begin_src emacs-lisp
+;; (use-package mpdel)
+#+end_src
+
+** Dictionary
+
+#+begin_src emacs-lisp
+(use-package youdao-dictionary
+  :commands (youdao-dictionary-play-voice-of-current-word
+             youdao-dictionary-search-at-point-posframe)
+  :bind
+  ("C-c y" . youdao-dictionary-search-at-point-posframe)
+  :init
+  (setq url-automatic-caching t)
+  (setq youdao-dictionary-use-chinese-word-segmentation t))
+#+end_src
+
+* Development
+
+Packages or custom functions for development.
+
+** Major mode
+
+*** elisp mode
+
+#+begin_src emacs-lisp
+(transient-define-prefix ace/leader-eval ()
+  "Eval (elisp) commands"
+  ["Eval"
+   [("l" "Eval last s-expression" eval-last-sexp)
+    ("e" "Eval expression" eval-expression)
+    ("f" "Eval defun" eval-defun)
+    ("b" "Eval buffer" eval-buffer)
+    ("i" "Elisp repl" ielm)]])
+#+end_src
+
+*** lua mode
+
+#+begin_src emacs-lisp
+(use-package lua-mode
+  :defer t)
+#+end_src
+
+*** yaml mode
+
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :defer t)
+#+end_src
+
+*** web mode
+
+#+begin_src emacs-lisp
+(use-package web-mode
+  :defer t
+  :config
+  (define-derived-mode ace/vue-mode web-mode "ace/vue"
+    "A major mode derived from web-mode, for editing .vue files with LSP support.")
+  :hook
+  (web-mode . (lambda ()
+                (setq web-mode-markup-indent-offset 2)
+                (setq web-mode-code-indent-offset 2)
+                (setq web-mode-script-padding 0)))
+  :mode ("\\.vue\\'" . ace/vue-mode))
 #+end_src
 
 ** Version control (magit.el)
@@ -1415,52 +1617,21 @@ sure this is a good approach."
     (define-key map (kbd "C-x p t") #'ace/project-retrieve-tag)))
 #+end_src
 
-* Development
-
-Packages or custom functions for development.
-
-** Major mode
-
-#+begin_src emacs-lisp
-(use-package lua-mode
-  :defer t)
-
-(use-package yaml-mode
-  :defer t)
-
-(use-package web-mode
-  :defer t
-  :config
-  (define-derived-mode ace/vue-mode web-mode "ace/vue"
-    "A major mode derived from web-mode, for editing .vue files with LSP support.")
-  :hook
-  (web-mode . (lambda ()
-                (setq web-mode-markup-indent-offset 2)
-                (setq web-mode-code-indent-offset 2)
-                (setq web-mode-script-padding 0)))
-  :mode ("\\.vue\\'" . ace/vue-mode))
-#+end_src
-
 ** Language server protocol (lsp-mode.el)
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
   :defer t
   :config
+  (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
-  (dolist (dir '("[/\\\\]\\.cache" "[/\\\\]elpa$"))
-    (push dir lsp-file-watch-ignored-directories))
-  (dolist (hook '(
-                  sh-mode-hook
-                  lua-mode-hook
-                  haskell-mode-hook
-                  web-mode-hook
-                  typescript-mode-hook
-                  ))
-    (add-hook hook #'lsp-deferred))
+  (dolist (mode '(sh lua haskell web typescript ace/vue))
+    (add-hook (intern (format "%s-mode-hook" mode)) #'lsp-deferred))
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 
-(use-package lsp-tailwindcss)
+(use-package lsp-tailwindcss
+  :init
+  (setq lsp-tailwindcss-add-on-mode t))
 
 (use-package lsp-ui
   :defer t
@@ -1524,7 +1695,8 @@ Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=)
 
 #+begin_src emacs-lisp
 (use-package evil-nerd-commenter
-  :defer t)
+  :defer t
+  :bind ("s-/" . evilnc-comment-or-uncomment-lines))
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
@@ -1552,30 +1724,14 @@ fully loaded, I put this section at the end of my config file.
 ** Super key
 
 #+begin_src emacs-lisp
-(let ((map global-map))
-  (define-key map (kbd "s-/") #'evilnc-comment-or-uncomment-lines)
-  (define-key map (kbd "s-u") #'scroll-down)
-  (define-key map (kbd "s-e") #'scroll-up)
-  (define-key map (kbd "s-n") #'ace/simple-winmove-r/d)
-  (define-key map (kbd "s-p") #'ace/simple-winmove-l/u)
-  (define-key map (kbd "s-i") #'next-buffer)
-  (define-key map (kbd "s-o") #'previous-buffer)
-  (define-key map (kbd "s-h") (lambda () (interactive) (split-window-right) (windmove-right)))
-  (define-key map (kbd "s-v") (lambda () (interactive) (split-window-below) (windmove-down)))
-  (define-key map (kbd "s-a") #'ibuffer)
-  (define-key map (kbd "s-w") #'save-buffer)
-  (define-key map (kbd "s-k") #'kill-current-buffer)
-  (define-key map (kbd "s-f") #'ace/completing-buffers-major-mode)
-  (define-key map (kbd "s-m") #'ace/simple-monocle)
-  (define-key map (kbd "s-q") #'ace/simple-kill-window-current)
-  (define-key map (kbd "s-=") #'balance-windows-area)
-  (define-key map (kbd "s-z") #'window-toggle-side-windows)
-  (define-key map (kbd "s-l") #'consult-line)
-  (define-key map (kbd "s-r") #'ace/ibuffer-buffers-vc-root)
-  (define-key map (kbd "s-s") #'consult-outline)
-  (define-key map (kbd "s-t") #'vterm)
-  (define-key map (kbd "s-x") #'execute-extended-command)
-  (define-key map (kbd "s-<backspace>") (lambda () (interactive) (let ((inhibit-read-only t)) (erase-buffer)))))
+(bind-keys
+  ("s-s" . scroll-up)
+  ("s-r" . scroll-down)
+  ("s-w" . save-buffer)
+  ("s-k" . kill-current-buffer)
+  ("s-x" . execute-extended-command)
+  ("s-z" . window-toggle-side-windows)
+  ("s-<backspace>" . (lambda () (interactive) (let ((inhibit-read-only t)) (erase-buffer)))))
 #+end_src
 
 ** Leader key
@@ -1595,48 +1751,28 @@ classification of commands and better UI overall.
     ("u" "Find user dir file" ace/completing-file-in-user-dirs)
     ("r" "Recent file" ace/completing-recentf)]])
 
-(transient-define-prefix ace/leader-consult ()
-  "Consult commands"
-  ["Consult"
-   [("g" "Grep" consult-grep)
-    ("k" "Keep lines" consult-keep-lines)
-    ("f" "Focus lines" consult-focus-lines)
-    ("m" "Marks" consult-mark)
-    ("i" "isearch" consult-isearch)
-    ("I" "imenu" consult-project-imenu)
-    ("r" "Register" consult-register)
-    ("k" "Cycle kill-ring" consult-yank)
-    ("M" "Minor mode menu" consult-minor-mode-menu)
-    ("c" "Mode command" consult-mode-command)
-    ("C" "Complex commands" consult-complex-command)]])
-
 (transient-define-prefix ace/leader-project ()
   "Project commands"
   ["Project commands"
    [("p" "Open/Switch project" project-switch-project)
     ("r" "Rg on project" ace/rg-project-dwim)]])
 
-(transient-define-prefix ace/leader-eval ()
-  "Eval (elisp) commands"
-  ["Eval"
-   [("e" "Eval last s-expression" eval-last-sexp)
-    ("x" "Eval expression" eval-expression)
-    ("f" "Eval defun" eval-defun)
-    ("b" "Eval buffer" eval-buffer)
-    ("r" "Elisp repl" ielm)]])
-
 (transient-define-prefix ace/leader-tab ()
   "Util commands"
   ["Tab"
-   [("tt" "New/Select tab" ace/tab-select-tab-dwim)
-    ("tx" "Close tab" tab-close)
-    ("tl" "Toggle tab line" ace/tab-tab-bar-toggle)]])
+   [("t" "New/Select tab" ace/tab-select-tab-dwim)
+    ("x" "Close tab" tab-close)
+    ("l" "Toggle tab line" ace/tab-tab-bar-toggle)]])
 
 (transient-define-prefix ace/leader-window ()
   "Util commands"
   ["Window"
-   [("f" "flop frame windows" flop-frame)
-    ("r" "rotate frame windows" rotate-frame-clockwise)
+   [("f" "Flop frame windows" flop-frame)
+    ("r" "Rotate frame windows" rotate-frame-clockwise)
+    ("=" "Balance windows size" balance-windows-area)
+    ("t" "toggle side windows" window-toggle-side-windows)
+    ("i" "zoom In window" evil-window-increase-width)
+    ("o" "zoom Out window" evil-window-decrease-width)
     ("h" "Move window left" evil-window-move-far-left)
     ("l" "Move window right" evil-window-move-far-right)]])
 
@@ -1650,15 +1786,15 @@ classification of commands and better UI overall.
   "Util commands"
   ["Utils"
    [("m"   "Murl" ace/completing-murl)
+;; ("u"   "Messages" ace/atom-display-message)
     ("r"   "Rg on file" rg-dwim-current-file)
-    ("f"   "Format file" format-all-buffer)
-    ("R"   "Rename file" ace/simple-rename-file-and-buffer)]])
+    ("f"   "Format file" format-all-buffer)]])
 
 (transient-define-prefix ace/leader ()
   "Leader keybind"
   ["Ace Leader Commands"
    [("f" "Finder" ace/leader-find)]
-   [("c" "Consult" ace/leader-consult)]
+   [("s" "Consult" ace/leader-consult)]
    [("p" "Project" ace/leader-project)]
    [("e" "Eval" ace/leader-eval)]
    [("w" "Window" ace/leader-window)]
