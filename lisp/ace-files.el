@@ -1,8 +1,12 @@
 (require 'mailcap)
 (eval-when-compile (require 'cl-lib))
 
+(defcustom ace/files-additional-mime '((".ape" . "audio/ape") (".rmvb" . "video/rm") (".f4v" . "video/f4v"))
+  "doc")
+
 (defcustom ace/files-dir-alist
   '(((title . "  System Files") (path . "/home/alex/Code/alex.files/"))
+    ((title . "  Shows")        (path . "/media/HDD/Share/"))
     ((title . "  Coding")       (path . "/media/HDD/Dev/"))
     ((title . "  Books")        (path . "/media/HDD/Book/"))
     ((title . "  Notes")        (path . "/home/alex/Documents/notes/"))
@@ -31,8 +35,8 @@ Return the decoded text as multibyte string."
   (decode-coding-string (ace/files--read-bytes path) (or coding 'utf-8)))
 
 (defcustom ace/files-cmd-alist
-  '(("video/"            ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
-    (("ts" "rm" "rmvb")  ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
+  '(("video/"    ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
+    (("ts" "rm") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
   "doc"
   :group 'lf :type '(alist :value-type ((choice list string) list)))
 
@@ -41,14 +45,14 @@ Return the decoded text as multibyte string."
   (let ((meta (with-temp-buffer (call-process "file" nil t nil "-bi" file) (buffer-string))))
     (when (or (not (string-match "charset=binary" meta))
               (string-match "inode/x-empty" meta))
-      (cl-return-from ace/files-match-mime)))
-  (pcase-dolist (`(,re-or-exts ,cmd) ace/files-cmd-alist)
-    (if (listp re-or-exts)
-        (let ((ext (file-name-extension file)))
-          (when (member ext re-or-exts)
-            (cl-return-from ace/files-match-mime cmd)))
-      (when (string-match re-or-exts (or (mailcap-file-name-to-mime-type file) ""))
-        (cl-return-from ace/files-match-mime cmd)))))
+      (cl-return-from ace/files-match-mime))
+    (pcase-dolist (`(,re-or-exts ,cmd) ace/files-cmd-alist)
+      (if (listp re-or-exts)
+          (let ((ext (file-name-extension file)))
+            (when (member ext re-or-exts)
+              (cl-return-from ace/files-match-mime cmd)))
+        (when (string-match re-or-exts meta)
+          (cl-return-from ace/files-match-mime cmd))))))
 
 (defun ace/files-find-file-external (entry &optional cmd args)
   "Open file using external shell command."
@@ -71,6 +75,8 @@ Return the decoded text as multibyte string."
 
 (advice-add #'find-file :around #'ace/files-find-file-advisor)
 
-;;;###autoload
 (mailcap-parse-mimetypes)
+(cl-dolist (mm ace/files-additional-mime)
+  (add-to-list 'mailcap-mime-extensions mm))
+
 (provide 'ace-files)
