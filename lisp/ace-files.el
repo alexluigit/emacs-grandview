@@ -12,6 +12,24 @@
     ((title . "  Downloads")    (path . "/home/alex/Downloads/")))
   "doc")
 
+;; Copied from `f.el'
+(defun ace/files--read-bytes (path)
+  "Read binary data from PATH.
+
+Return the binary data as unibyte string."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (setq buffer-file-coding-system 'binary)
+    (insert-file-contents-literally path)
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun ace/files-read (path &optional coding)
+  "Read text with PATH, using CODING.
+
+CODING defaults to `utf-8'.
+Return the decoded text as multibyte string."
+  (decode-coding-string (ace/files--read-bytes path) (or coding 'utf-8)))
+
 (defcustom ace/files-cmd-alist
   '(("video/"            ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
     (("ts" "rm" "rmvb")  ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
