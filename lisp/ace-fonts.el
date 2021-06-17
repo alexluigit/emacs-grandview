@@ -42,10 +42,6 @@
     (setq visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
   (setq truncate-lines t)
-  ;; Replace list hyphen with dot
-  (font-lock-add-keywords
-   'org-mode
-   '(("^ *\\([-]\\) " (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
   ;; Setup font
   (let* ((var-font `(:font ,(ace/font-chooser ace/org-fonts)))
          (base-font-color     (face-foreground 'font-lock-string-face nil 'default))
