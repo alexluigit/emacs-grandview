@@ -1,6 +1,6 @@
 (defvar bootstrap-version)
 (setq straight-use-package-by-default t)
-(setq straight-vc-git-default-clone-depth 1)
+(setq straight-vc-git-default-clone-depth 'full)
 
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -36,7 +36,6 @@
 Add this to `after-save-hook' in `org-mode-hook'."
   (let ((init-el (concat user-emacs-directory "ace.el"))
         (init-org (concat ace/init-dot-repo "ace.org")))
-    (when (file-exists-p init-el) (delete-file init-el))
     (org-babel-tangle-file init-org init-el)
     (byte-compile-file init-el)))
 
