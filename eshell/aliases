@@ -1,0 +1,12 @@
+alias dh ~/Code/alex.files/local/bin/system/dothelper
+alias e find-file-other-window $1
+alias ls exa -a --color=always --group-directories-first
+alias la exa -al --color=always --group-directories-first
+alias ll exa -lu --color=always --group-directories-first --no-user --no-permissions -@
+alias lt exa -aT --color=always --git-ignore -I=.git --group-directories-first
+alias ka killall $1
+alias px export HTTP_PROXY=http://127.0.0.1:1088; export HTTPS_PROXY=http://127.0.0.1:1088
+alias yd youtube-dl --write-sub --write-auto-sub -o "~/Downloads/%(title)s-%(id)s.%(ext)s" $1
+alias ydl youtube-dl --yes-playlist --write-sub --write-auto-sub -o "~/Downloads/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" $1
+alias pai ace/eshell-pacman-install
+alias pau ace/eshell-pacman-uninstall
