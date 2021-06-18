@@ -1,4 +1,5 @@
 ;;; -*- lexical-binding: t -*-
+(require 'ispell)
 (require 'json)
 (require 'ace-files)
 

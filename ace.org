@@ -84,15 +84,19 @@ various Emacs interfaces, such as for Dired's copy and rename operations
   (setq ace/simple-date-specifier "%F")
   (setq ace/simple-time-specifier "%R %z")
   :bind
-  (("s-n" . ace/simple-winmove-r/d)
+  (("s-s" . scroll-up)
+   ("s-r" . scroll-down)
+   ("s-w" . save-buffer)
+   ("s-x" . execute-extended-command)
+   ("s-n" . ace/simple-winmove-r/d)
    ("s-p" . ace/simple-winmove-l/u)
    ("s-m" . ace/simple-monocle)
    ("s-q" . ace/simple-kill-window-current)
-   ("C-c i" . ace/simple-insert-date)
-   ("C-c e" . ace/simple-escape-url)
-   ("C-c q" . ace/simple-unfill-region-or-paragraph)
-   ("C-<f2>" . ace/simple-rename-file-and-buffer)
-   ("C-=" . count-words)
+   ("C-c C-M-d" . ace/simple-insert-date)
+   ("C-c C-M-e" . ace/simple-escape-url)
+   ("C-c C-M-q" . ace/simple-unfill-region-or-paragraph)
+   ("C-c C-M-r" . ace/simple-rename-file-and-buffer)
+   ("C-c C-M-=" . count-words)
    ("<escape>" . keyboard-escape-quit)))
 #+end_src
 
@@ -101,15 +105,16 @@ various Emacs interfaces, such as for Dired's copy and rename operations
 A better help buffer.
 
 #+begin_src emacs-lisp
-(use-package helpful
-  :bind
-  ("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
-  ([remap describe-function] . #'helpful-callable)
-  ([remap describe-variable] . #'helpful-symbol)
-  ([remap describe-key] . #'helpful-key)
-  :config
-  (add-hook 'help-mode-hook #'visual-line-mode)
-  (setq help-window-select t))
+  (use-package helpful
+    :defer t
+    :bind
+    ("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
+    ([remap describe-function] . #'helpful-callable)
+    ([remap describe-variable] . #'helpful-symbol)
+    ([remap describe-key] . #'helpful-key)
+    :config
+    (add-hook 'help-mode-hook #'visual-line-mode)
+    (setq help-window-select t))
 #+end_src
 
 ** Info (info.el)
@@ -123,7 +128,7 @@ Change some annoying keybindings in Info-mode.
 
 #+begin_src emacs-lisp
 (use-package transient
-  :commands (transient-define-prefix)
+  :defer t
   :config
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
@@ -246,7 +251,6 @@ auto-insertion of characters.  This is a summary of my settings:
                   ("->" . ?→)
                   ("->>" . ?↠)
                   ("=>" . ?⇒)
-                  ("map" . ?↦)
                   ("/=" . ?≠)
                   ("!=" . ?≠)
                   ("==" . ?≡)
@@ -282,11 +286,19 @@ complete whatever you have typed in.
 (setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
 (setq-default tab-width 2)
 (setq-default indent-tabs-mode nil)
-(setq-default evil-shift-width tab-width)
 #+end_src
 
 ** Search / Replace
-*** Regular expressions (re-builder.el)
+** Comment (evil-nerd-commenter.el)
+
+Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=) doesn't always comment things in the way you might expect so we use [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]] to provide a more familiar behavior.  I've bound it to =s-/= since other editors sometimes use this binding but you could also replace Emacs' =M-;= binding with this command.
+
+#+begin_src emacs-lisp
+(use-package evil-nerd-commenter)
+#+end_src
+
+
+*** COMMENT Regular expressions (re-builder.el)
 
 To learn more about regular expressions, read the relevant pages in
 the official manual.  Assuming you have this installed properly on
@@ -386,7 +398,6 @@ example, =C-m= different meaning.
       (define-key input-decode-map [?\C-i] [C-i])
       (define-key input-decode-map [?\C-m] [C-m]))))
 (add-hook 'after-make-frame-functions #'ace/key-fix)
-(define-key global-map (kbd "<C-m>") #'call-last-kbd-macro)
 #+end_src
 
 *** Fringe-mode
@@ -410,13 +421,14 @@ using it because of that, though it can also adjust the size of the
 #+end_src
 
 ** Theme & icons
-
+   
 #+begin_src emacs-lisp
 (use-package kaolin-themes
   :config
   (load-theme 'kaolin-dark t))
 
-(use-package all-the-icons)
+(use-package all-the-icons
+  :defer t)
 #+end_src
 
 ** Better modeline (doom-modeline.el)
@@ -449,17 +461,12 @@ using it because of that, though it can also adjust the size of the
 ** Line Number
 
 #+begin_src emacs-lisp
-(global-display-line-numbers-mode t)
-(dolist (mode '(org-mode-hook
-                nov-mode-hook
-                term-mode-hook
-                shell-mode-hook
-                treemacs-mode-hook
-                eshell-mode-hook
-                rg-mode-hook
-                dired-mode-hook
-                vterm-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+(use-package display-line-numbers
+  :straight nil
+  :init
+  (global-display-line-numbers-mode t)
+  :hook
+  ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
 #+end_src
 
 ** Parentheses (paren.el / rainbow-delimiters.el)
@@ -487,6 +494,7 @@ Summary of what these do:
 
 #+begin_src emacs-lisp
 (use-package paren
+  :defer t
   :config
   (setq show-paren-style 'parenthesis)
   (setq show-paren-when-point-in-periphery nil)
@@ -518,7 +526,7 @@ reposition it).
 (setq-default scroll-margin 0)
 #+end_src
 
-* Completion
+* Minibuffer Completion
 
 The optimal way of using Emacs is through searching and narrowing
 selection candidates.  Spend less time worrying about where things are
@@ -604,8 +612,8 @@ for visualising the standard completion framework's output
   :after minibuffer
   :config
   (setq marginalia-annotators
-        '(marginalia-annotators-heavy
-          marginalia-annotators-light))
+	      '(marginalia-annotators-heavy
+	        marginalia-annotators-light))
   (marginalia-mode))
 #+end_src
 
@@ -619,6 +627,17 @@ for visualising the standard completion framework's output
   (advice-add #'register-preview :override #'consult-register-window)
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
+  :bind
+  ("M-s g" . consult-grep)
+  ("M-s k" . consult-keep-lines)
+  ("M-s f" . consult-focus-lines)
+  ("M-s i" . consult-imenu)
+  ("M-s I" . consult-project-imenu)
+  ("M-s r" . consult-consult-register)
+  ("M-s k" . consult-yank)
+  ("M-s m" . consult-minor-mode-menu)
+  ("M-s l" . consult-complex-command)
+  ("M-s c" . consult-mode-command)
   :config
   (setq consult-line-numbers-widen t)
   (setq completion-in-region-function #'consult-completion-in-region)
@@ -636,39 +655,32 @@ for visualising the standard completion framework's output
           consult-outline
           consult-project-imenu))
   (setq ace/consult-command-top-list '())
-  (ace/consult-set-up-hooks-mode 1)
-  ;; make sure `C-i/o' can jump between
-  (dolist (cmd '(consult-line
-                 consult-outline
-                 consult-imenu))
-    (evil-add-command-properties cmd :jump t)))
+  (ace/consult-set-up-hooks-mode 1))
 #+end_src
 
 ** Minibuffer actions (embark.el)
 
 #+begin_src emacs-lisp
 (use-package embark
+  :bind
+  (("C-." . embark-act)
+   :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
+   :map embark-collect-mode-map ("C-." . embark-act))
   :config
   (setq embark-collect-initial-view-alist
-        '((file . list)
-          (buffer . list)
-          (symbol . list)
-          (line . list)
-          (xref-location . list)
-          (kill-ring . zebra)
-          (t . list)))
+	      '((file . list)
+	        (buffer . list)
+	        (symbol . list)
+	        (line . list)
+	        (xref-location . list)
+	        (kill-ring . zebra)
+	        (t . list)))
   (setq embark-quit-after-action t)
   (setq embark-key-action-separator (propertize " · " 'face 'shadow))
   (setq embark-action-indicator
-        (let ((act (propertize "Act" 'face 'success)))
-          (cons act (concat act " on '%s'"))))
-  (setq embark-become-indicator (propertize "Become" 'face 'warning))
-  (define-key global-map (kbd "C-.") #'embark-act)
-  (let ((map minibuffer-local-map))
-    (define-key map (kbd "C-.") #'embark-act)
-    (define-key map (kbd "C-,") #'embark-become))
-  (let ((map embark-collect-mode-map))
-    (define-key map (kbd "C-.") #'embark-act)))
+	      (let ((act (propertize "Act" 'face 'success)))
+	        (cons act (concat act " on '%s'"))))
+  (setq embark-become-indicator (propertize "Become" 'face 'warning)))
 
 (use-package ace-embark
   :straight nil
@@ -683,11 +695,11 @@ for visualising the standard completion framework's output
 (use-package ace-completing
   :straight nil
   :bind
-  (("s-f" . ace/completing-buffers-major-mode)
-   ("C-x d" . ace/completing-word-ispell)))
+  (("C-x d" . ace/completing-word-ispell)))
 #+end_src
 
 * Viewports
+
 
 I believe that Emacs' true power lies in its buffer management rather
 than its multiplexing.  The latter becomes inefficient at scale, since
@@ -721,23 +733,30 @@ as effective for my case.
   :straight nil
   :config
   (setq display-buffer-alist
-        `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
-            (display-buffer-in-side-window)
-            (window-height . 0.3)
-            (side . bottom))
-          ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
-            (display-buffer-in-side-window)
-            (window-width . 0.4)
-            (side . right))
-          ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
-            (display-buffer-at-bottom))))
-  (setq window-combination-resize t)
-  (setq even-window-sizes 'height-only)
-  (setq window-sides-vertical nil)
-  (setq switch-to-buffer-in-dedicated-window 'pop)
-  ;; Disable window close when calling 'keyboard-escape-quit'
-  (defadvice keyboard-escape-quit (around keep-windows activate)
-    (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
+	`(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+	   (display-buffer-in-side-window)
+	   (window-height . 0.3)
+	   (side . bottom))
+	  ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
+	   (display-buffer-in-side-window)
+	   (window-width . 0.4)
+	   (side . right))
+	  ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
+	   (display-buffer-at-bottom))))
+(setq window-combination-resize t)
+(setq even-window-sizes 'height-only)
+(setq window-sides-vertical nil)
+(setq switch-to-buffer-in-dedicated-window 'pop)
+;; Disable window close when calling 'keyboard-escape-quit'
+(defadvice keyboard-escape-quit (around keep-windows activate)
+  (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
+#+end_src
+
+** Index based window motions (ace-window.el)
+
+#+begin_src emacs-lisp
+(use-package ace-window
+  :defer t)
 #+end_src
 
 ** Window position (transpose-frame.el)
@@ -748,7 +767,7 @@ strongly encourage you to read the "Commentary" section in the source
 code.  Do it with =M-x find-library transpose-frame=.
 
 #+begin_src emacs-lisp
-(use-package transpose-frame)
+(use-package transpose-frame :defer t)
 #+end_src
 
 ** Directional window motions (windmove.el)
@@ -894,34 +913,13 @@ control over the buffer list and is more powerful overall.
     (define-key map (kbd "/ g") #'ibuffer-filter-by-content)))
 #+end_src
 
-** Buffer name (uniquify.el)
-
-These settings make it easier to work with multiple buffers.  When two
-buffers have the same name, Emacs will try to disambiguate them by
-displaying their element of differentiation in accordance with the style
-of =uniquify-buffer-name-style=.  While =uniquify-strip-common-suffix= will
-remove the part of the file system path they have in common.
-
-All such operations are reversed once an offending buffer is removed
-from the list, allowing Emacs to revert to the standard of displaying
-only the buffer's name.
-
-#+begin_src emacs-lisp
-;; (use-package uniquify
-;;   :straight nil
-;;   :config
-;;   (setq uniquify-buffer-name-style 'forward)
-;;   (setq uniquify-strip-common-suffix t)
-;;   (setq uniquify-after-kill-buffer-p t))
-#+end_src
-
 ** Scratch buffers (scratch.el)
 This package will produce a buffer that matches the major mode of the
 one you are currently in.  Use it with =M-x scratch=.  Doing that with a
 prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
 super effective!
 
-The =prot/scratch-buffer-setup= simply adds some text in the buffer and
+The =ace/scratch-buffer-setup= simply adds some text in the buffer and
 renames it appropriately for the sake of easier discovery.  I got the
 idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
 
@@ -952,12 +950,92 @@ If region is active, add its contents to the new buffer."
   (define-key global-map (kbd "C-c s") #'scratch))
 #+end_src
 
+* Org mode
+
+Org mode setup.
+
+** Org (org.el)
+
+#+begin_src emacs-lisp
+(use-package org
+  :defer t
+  :straight (:type built-in)
+  :hook
+  (org-mode . ace/font-org-setup)
+  (org-tab-first . org-end-of-line)
+  :config
+  (setq org-adapt-indentation nil)
+  (setq org-hide-leading-stars t)
+  (setq org-startup-folded t)
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-ellipsis " ▾")
+  (setq org-hide-emphasis-markers t)
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python . t)
+     (haskell . t)))
+  :bind
+  (:map org-mode-map
+        ("C-c S-l" . org-toggle-link-display)
+        ("C-c C-S-l" . org-insert-last-stored-link)))
+#+end_src
+
+** Source block (org-src.el)
+
+#+begin_src emacs-lisp
+(use-package org-src
+  :after org
+  :straight (:type built-in)
+  :config
+  (push '("conf-unix" . conf-unix) org-src-lang-modes)
+  (setq org-edit-src-content-indentation 0)
+  (setq org-src-window-setup 'split-window-right))
+
+(use-package org-tempo ; this is needed as of Org 9.2
+  :straight (:type built-in)
+  :after org
+  :config
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("hk" . "src haskell"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python")))
+#+end_src
+
+** Bullet (org-superstar.el)
+
+#+begin_src emacs-lisp
+(use-package org-superstar
+  :defer t
+  :config
+  (setq org-superstar-item-bullet-alist '((?* . ?•) (?+ . ?+) (?- . ?•)))
+  (setq org-superstar-remove-leading-stars t)
+  (setq org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●"))
+  :hook
+  (org-mode . org-superstar-mode))
+#+end_src
+
+** Habit (org-habit.el)
+
+#+begin_src emacs-lisp
+(use-package org-habit
+  :defer t
+  :straight nil
+  :config
+  (add-to-list 'org-modules 'org-habit)
+  (setq org-habit-graph-column 60))
+#+end_src
+
 * Eshell
 ** Basic (eshell.el & ace-eshell.el)
 
 #+begin_src emacs-lisp
 (use-package ace-eshell
   :straight nil
+  :defer t
   :config
   (setq eshell-banner-message "")
   (setq eshell-aliases-file (concat ace/init-dot-repo "eshell/aliases"))
@@ -965,16 +1043,17 @@ If region is active, add its contents to the new buffer."
   (with-eval-after-load 'esh-opt
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "nvim")))
-  (define-key global-map (kbd "s-e") 'ace/eshell-toggle)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-f") 'consult-outline)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'consult-history)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-u") 'eshell-kill-input)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-n") 'eshell-next-prompt)
-  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-p") 'eshell-previous-prompt)
-  (define-key eshell-mode-map (kbd "s-<backspace>") 'ace/eshell-clear-buffer)
-  (define-key eshell-mode-map (kbd "s-c") 'ace/eshell-new)
-  (define-key eshell-mode-map (kbd "s-i") 'ace/eshell-next)
-  (define-key eshell-mode-map (kbd "s-o") 'ace/eshell-prev))
+  :bind
+  (("s-e" . ace/eshell-toggle)
+   :map eshell-mode-map
+   ("C-r" . consult-history)
+   ("C-u" . eshell-kill-input)
+   ("C-n" . eshell-next-prompt)
+   ("C-p" . eshell-previous-prompt)
+   ("s-<backspace>" . ace/eshell-clear-buffer)
+   ("s-c" . ace/eshell-new)
+   ("s-i" . ace/eshell-next)
+   ("s-o" . ace/eshell-prev)))
 #+end_src
 
 ** Import environment vars (exec-path-from-shell.el)
@@ -990,14 +1069,15 @@ If region is active, add its contents to the new buffer."
 
 ** Colors
 
+We want to use xterm-256color when running interactive commands in eshell but
+not during other times when we might be launching a shell command to gather its
+output.
+
 #+begin_src emacs-lisp
 (use-package xterm-color
   :after esh-mode
   :config
   (push 'xterm-color-filter eshell-preoutput-filter-functions)
-  ;; We want to use xterm-256color when running interactive commands
-  ;; in eshell but not during other times when we might be launching
-  ;; a shell command to gather its output.
   (add-hook 'eshell-pre-command-hook (lambda () (setenv "TERM" "xterm-256color")))
   (add-hook 'eshell-post-command-hook (lambda () (setenv "TERM" "dumb")))
   (add-hook 'eshell-before-prompt-hook (lambda () (setq xterm-color-preserve-properties t)))
@@ -1038,10 +1118,11 @@ branches in =git= commands.
 #+begin_src emacs-lisp
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode)
+  :bind
+  (:map esh-autosuggest-active-map
+        ("C-f" . esh-autosuggest-complete-word)
+        ("C-<return>" . company-complete-selection))
   :config
-  (let ((map esh-autosuggest-active-map))
-    (define-key map (kbd "C-f") 'esh-autosuggest-complete-word)
-    (define-key map (kbd "C-<return>") 'company-complete-selection))
   (set-face-foreground 'company-preview-common "#4b5668")
   (set-face-background 'company-preview nil))
 #+end_src
@@ -1082,11 +1163,9 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   (define-key dired-mode-map "E"  #'dired-create-empty-file)
   (define-key dired-mode-map "i"  #'wdired-change-to-wdired-mode)
   (define-key dired-mode-map "a"  #'ace/dired-file-rename-eol)
-  (define-key dired-mode-map "r"  #'revert-buffer)
-  (define-key dired-mode-map "g"  #'beginning-of-buffer)
-  (define-key dired-mode-map "G"  #'end-of-buffer)
+  (define-key dired-mode-map "["  #'beginning-of-buffer)
+  (define-key dired-mode-map "]"  #'end-of-buffer)
   (define-key dired-mode-map "h"  #'dired-up-directory)
-  (define-key dired-mode-map "v"  #'set-mark-command)
   (define-key dired-mode-map "."  #'dired-omit-mode))
 #+end_src
 
@@ -1109,6 +1188,14 @@ well. See details at: https://github.com/alexluigit/lf.el
 #+begin_src emacs-lisp
 (use-package lf
   :straight (lf :type git :host github :repo "alexluigit/lf.el")
+  :init
+  (setq lf-routes '(("h" "Home"        "~")
+                    ("u" "Emacs cache" "~/.cache/emacs")
+                    ("c" "Code"        "~/Code")
+                    ("d" "Downloads"   "~/Downloads")
+                    ("p" "Wallpaper"   "~/Pictures/wallpaper")
+                    ("m" "Drives"      "/media")
+                    ("t" "Trash"       "~/.local/share/Trash")))
   :config
   (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files") ("/media/Cloud/" . ".Trash/files")))
   (setq lf-completing-preview-position
@@ -1126,27 +1213,11 @@ well. See details at: https://github.com/alexluigit/lf.el
         (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
       (find-file-noselect entry t nil)))
   (add-to-list 'lf-preview-cmd-alist '(("ts") (ace/ts-ext-fix . ())))
-  (transient-define-prefix ace/lf-go ()
-    "Lf `lf-go' keybind."
-    ["Directory"
-     ("h" "Home" (lambda () (interactive) (lf-find-file "~/")))
-     ("u" "Emacs User Dir" (lambda () (interactive) (lf-find-file user-emacs-directory)))
-     ("c" "Code" (lambda () (interactive) (lf-find-file "~/Code")))
-     ("d" "Downloads" (lambda () (interactive) (lf-find-file "~/Downloads")))
-     ("p" "Wallpaper" (lambda () (interactive) (lf-find-file "~/Pictures/wallpaper")))
-     ("m" "Drives (media)" (lambda () (interactive) (lf-find-file "/media")))
-     ("t" "Trash" (lambda () (interactive) (lf-find-file "~/.local/share/Trash/files")))]
-    ["Navigation"
-     ("g" "Top" lf-go-top)
-     ("N" "Next subdir" dired-next-subdir)
-     ("P" "Prev subdir" dired-prev-subdir)])
-  (define-key evil-normal-state-map "-" #'lf)
   (define-key lf-mode-map (kbd "s-e")
     (lambda ()
       (interactive)
       (let ((ace/eshell-position '((window-height . 0.35) (side . bottom))))
-        (ace/eshell-toggle t))))
-  (define-key lf-mode-map "g" #'ace/lf-go))
+        (ace/eshell-toggle t)))))
 #+end_src
 
 ** Highlighting (diredfl.el)
@@ -1191,91 +1262,12 @@ Basically, its interaction model is as follows:
 ;;   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 #+end_src
 
-* Org mode
-
-Org mode setup.
-
-** Org (org.el)
-
-#+begin_src emacs-lisp
-(use-package org
-  :defer t
-  :straight (:type built-in)
-  :hook
-  (org-mode . ace/font-org-setup)
-  (org-tab-first . org-end-of-line)
-  :config
-  (setq org-src-window-setup 'split-window-right)
-  (setq org-adapt-indentation nil)
-  (setq org-hide-leading-stars t)
-  (setq org-startup-folded t)
-  (setq org-confirm-babel-evaluate nil)
-  (setq org-edit-src-content-indentation 0)
-  (setq org-ellipsis " ▾")
-  (setq org-hide-emphasis-markers t)
-  (setq org-agenda-start-with-log-mode t)
-  (setq org-log-done 'time)
-  (setq org-log-into-drawer t)
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (python . t)
-     (haskell . t)))
-  (push '("conf-unix" . conf-unix) org-src-lang-modes)
-  :bind
-  (:map org-mode-map
-        ("C-'" . org-edit-special)
-        ("C-o" . forward-char)
-        ("<C-return>" . l)
-        ("<C-S-return>" . l)
-        ("C-c S-l" . org-toggle-link-display)
-        ("C-c C-S-l" . org-insert-last-stored-link)
-        :map org-src-mode-map
-        ("C-'" . org-edit-src-exit)))
-#+end_src
-
-** Bullet (org-superstar.el)
-
-#+begin_src emacs-lisp
-(use-package org-superstar
-  :defer t
-  :config
-  (setq org-superstar-item-bullet-alist '((?* . ?•) (?+ . ?+) (?- . ?•)))
-  (setq org-superstar-remove-leading-stars t)
-  (setq org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●"))
-  :hook
-  (org-mode . org-superstar-mode))
-#+end_src
-
-** Source Block (org-tempo.el)
-
-#+begin_src emacs-lisp
-(use-package org-tempo ; this is needed as of Org 9.2
-  :straight (:type built-in)
-  :config
-  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("hk" . "src haskell"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python")))
-#+end_src
-
-** Habit (org-habit.el)
-
-#+begin_src emacs-lisp
-(use-package org-habit
-  :defer t
-  :straight nil
-  :config
-  (add-to-list 'org-modules 'org-habit)
-  (setq org-habit-graph-column 60))
-#+end_src
-
 * Utils
 ** Epub reader (nov.el)
 
 #+begin_src emacs-lisp
 (use-package shrface
-  :defer t
+  :after nov
   :config
   (shrface-basic)
   (shrface-trial)
@@ -1288,53 +1280,20 @@ Org mode setup.
   :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (add-hook 'nov-mode-hook 'ace/nov-font-setup)
-  (add-hook 'nov-mode-hook #'shrface-mode)
+  (add-hook 'nov-mode-hook 'ace/nov-setup)
   :config
   (advice-add 'nov-render-title :override #'ignore)
-
-  (defun doom-modeline-segment--nov-info ()
-    (concat
-     " "
-     (propertize
-      (cdr (assoc 'creator nov-metadata))
-      'face 'doom-modeline-project-parent-dir)
-     " "
-     (cdr (assoc 'title nov-metadata))
-     " "
-     (propertize
-      (format "%d/%d"
-              (1+ nov-documents-index)
-              (length nov-documents))
-      'face 'doom-modeline-info)))
-
-  (defun ace/nov-font-setup ()
-    (setq-local mode-line-format
-                `((:eval
-                    (doom-modeline-segment--workspace-name))
-                  (:eval
-                    (doom-modeline-segment--window-number))
-                  (:eval
-                    (doom-modeline-segment--nov-info))
-                  ,(propertize
-                    " %P "
-                    'face 'doom-modeline-buffer-minor-mode)
-                  ,(propertize
-                    " "
-                    'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
-                    'display `((space
-                                :align-to
-                                (- (+ right right-fringe right-margin)
-                                    ,(* (let ((width (doom-modeline--font-width)))
-                                          (or (and (= width 1) 1)
-                                              (/ width (frame-char-width) 1.0)))
-                                        (string-width
-                                        (format-mode-line (cons "" '(:eval (doom-modeline-segment--major-mode))))))))))
-                    (:eval (doom-modeline-segment--major-mode))))
+  (setq nov-shr-rendering-functions '((img . nov-render-img)
+                                      (title . nov-render-title)
+                                      (b . shr-tag-b)))
+  (setq nov-shr-rendering-functions
+        (append nov-shr-rendering-functions
+                shr-external-rendering-functions))
+  (defun ace/nov-setup ()
+    (require 'ace-modeline)
+    (ace-modeline-nov)
     (require 'shrface)
-    (setq nov-shr-rendering-functions '((img . nov-render-img) (title . nov-render-title) (b . shr-tag-b)))
-    (setq nov-shr-rendering-functions
-          (append nov-shr-rendering-functions shr-external-rendering-functions))))
+    (shrface-mode)))
 #+end_src
 
 ** Music Player (mpdel.el)
@@ -1347,10 +1306,9 @@ Org mode setup.
 
 #+begin_src emacs-lisp
 (use-package youdao-dictionary
-  :commands (youdao-dictionary-play-voice-of-current-word
-             youdao-dictionary-search-at-point-posframe)
+  :defer t
   :bind
-  ("C-c y" . youdao-dictionary-search-at-point-posframe)
+  ("C-x y" . youdao-dictionary-search-at-point-posframe)
   :init
   (setq url-automatic-caching t)
   (setq youdao-dictionary-use-chinese-word-segmentation t))
@@ -1361,20 +1319,6 @@ Org mode setup.
 Packages or custom functions for development.
 
 ** Major mode
-
-*** elisp mode
-
-#+begin_src emacs-lisp
-(transient-define-prefix ace/leader-eval ()
-  "Eval (elisp) commands"
-  ["Eval"
-   [("l" "Eval last s-expression" eval-last-sexp)
-    ("e" "Eval expression" eval-expression)
-    ("f" "Eval defun" eval-defun)
-    ("b" "Eval buffer" eval-buffer)
-    ("i" "Elisp repl" ielm)]])
-#+end_src
-
 *** lua mode
 
 #+begin_src emacs-lisp
@@ -1408,15 +1352,10 @@ Packages or custom functions for development.
 ** Version control (magit.el)
 
 #+begin_src emacs-lisp
-(setq vc-follow-symlinks t)
-
 (use-package magit
   :defer t
   :config
   (setq magit-define-global-key-bindings nil)
-  (define-key magit-mode-map (kbd "`") #'magit-diff-show-or-scroll-up)
-  (define-key magit-diff-mode-map (kbd "`") #'scroll-up)
-  (require 'git-commit)
   (setq git-commit-summary-max-length 50)
   (setq git-commit-known-pseudo-headers
         '("Signed-off-by"
@@ -1430,14 +1369,16 @@ Packages or custom functions for development.
   (setq git-commit-style-convention-checks
         '(non-empty-second-line
           overlong-summary-line))
-  (require 'magit-diff)
-  (define-key magit-diff-section-base-map (kbd "<C-return>") #'magit-diff-visit-file-other-window)
   (setq magit-diff-refine-hunk t)
-  (require 'magit-repos)
   (setq magit-repository-directories
-        '(("~/Dev" . 1))))
+        '(("~/Code" . 1)))
+  :bind
+  (:map magit-mode-map ("`" . magit-diff-show-or-scroll-up)
+   :map magit-diff-section-base-map ("<C-return>" . magit-diff-visit-file-other-window)
+   :map magit-diff-mode-map ("`" . scroll-up)))
 
 (use-package git-gutter
+  :defer t
   :config
   (custom-set-variables
    '(git-gutter:modified-sign "⏽")
@@ -1445,6 +1386,7 @@ Packages or custom functions for development.
    '(git-gutter:deleted-sign "⏽")))
 
 (use-package ediff
+  :defer t
   :config
   (setq ediff-keep-variants nil)
   (setq ediff-make-buffers-readonly-at-startup nil)
@@ -1452,17 +1394,14 @@ Packages or custom functions for development.
   (setq ediff-show-clashes-only t)
   (setq ediff-split-window-function 'split-window-horizontally)
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-
   ;; Tweak those for safer identification and removal
   (setq ediff-combination-pattern
         '("<<<<<<< ace-ediff-combine Variant A" A
           ">>>>>>> ace-ediff-combine Variant B" B
           "####### ace-ediff-combine Ancestor" Ancestor
           "======= ace-ediff-combine End"))
-
   (defun ace/ediff-flush-combination-pattern ()
     "Remove my custom `ediff-combination-pattern' markers.
-
 This is a quick-and-dirty way to get rid of the markers that are
 left behind by `smerge-ediff' when combining the output of two
 diffs.  While this could be automated via a hook, I am not yet
@@ -1488,22 +1427,20 @@ sure this is a good approach."
           (?t "Tag switch" ace/project-retrieve-tag)
           (?m "Magit" ace/project-magit-status)
           (?l "Log VC" ace/project-commit-log)
-          (?e "Eshell" project-eshell)))
-  :bind-keymap
-  ("H-." . project-prefix-map))
+          (?e "Eshell" project-eshell))))
 
 (use-package ace-project
   :straight nil
   :config
-  (setq ace/project-project-roots '("~/Dev/" "~/"))
+  (setq ace/project-project-roots '("~/Code/" "~/"))
   (setq ace/project-commit-log-limit 25)
   (setq ace/project-large-file-lines 1000)
-  (let ((map global-map))
-    (define-key map (kbd "C-x p DEL") #'ace/project-remove-project)
-    (define-key map (kbd "C-x p l") #'ace/project-commit-log)
-    (define-key map (kbd "C-x p m") #'ace/project-magit-status)
-    (define-key map (kbd "C-x p s") #'ace/project-find-subdir)
-    (define-key map (kbd "C-x p t") #'ace/project-retrieve-tag)))
+  :bind
+  ("C-x p DEL" . ace/project-remove-project)
+  ("C-x p l" . ace/project-commit-log)
+  ("C-x p m" . ace/project-magit-status)
+  ("C-x p s" . ace/project-find-subdir)
+  ("C-x p t" . ace/project-retrieve-tag))
 #+end_src
 
 ** Language server protocol (lsp-mode.el)
@@ -1514,11 +1451,12 @@ sure this is a good approach."
   :config
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
-  (dolist (mode '(sh lua haskell web typescript ace/vue))
-    (add-hook (intern (format "%s-mode-hook" mode)) #'lsp-deferred))
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+  :hook
+  ((sh-mode lua-mode haskell-mode ace/vue-mode typescript-mode) . #'lsp-deferred))
 
 (use-package lsp-tailwindcss
+  :after (lsp-mode web-mode)
   :init
   (setq lsp-tailwindcss-add-on-mode t))
 
@@ -1576,16 +1514,6 @@ sure this is a good approach."
 ;;  :config
 ;; 	(setq flymake-diagnostic-at-point-display-diagnostic-function
 ;; 			  'flymake-diagnostic-at-point-display-minibuffer))
-#+end_src
-
-** Comment (evil-nerd-commenter.el)
-
-Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=) doesn't always comment things in the way you might expect so we use [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]] to provide a more familiar behavior.  I've bound it to =s-/= since other editors sometimes use this binding but you could also replace Emacs' =M-;= binding with this command.
-
-#+begin_src emacs-lisp
-(use-package evil-nerd-commenter
-  :defer t
-  :bind ("s-/" . evilnc-comment-or-uncomment-lines))
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
