@@ -160,7 +160,7 @@ delete current frame. With optional prefix
 ARG (\\[universal-argument]) kill current buffer frame as well."
   (interactive "P")
   (when force (kill-buffer))
-  (if (lf-live-p)
+  (if (and (featurep 'lf) (lf-live-p))
       (lf-quit)
     (condition-case nil
         (delete-window)
@@ -176,7 +176,7 @@ ARG (\\[universal-argument]) kill current buffer frame as well."
 (defun ace/simple-winmove-r/d (&optional down)
   (interactive "P")
   (cond
-   ((lf-live-p)
+   ((and (featurep 'lf) (lf-live-p))
     (ace/windmove--wm-takeover "1"))
    (down
     (condition-case nil (windmove-down)
@@ -190,7 +190,7 @@ ARG (\\[universal-argument]) kill current buffer frame as well."
 (defun ace/simple-winmove-l/u (&optional up)
   (interactive "P")
   (cond
-   ((lf-live-p)
+   ((and (featurep 'lf) (lf-live-p))
     (ace/windmove--wm-takeover "-1"))
    (up
     (condition-case nil (windmove-up)
