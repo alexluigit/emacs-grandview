@@ -110,7 +110,8 @@ current one have different `default-directory'."
         (unless (string= dir (expand-file-name default-directory))
           (let ((default-directory dir))
             (ace/eshell-new))))
-      (when (featurep 'evil) (evil-insert-state)))))
+      (when (featurep 'evil) (evil-insert-state))
+      (when (featurep 'meow) (meow-insert)))))
 
 (defun ace/eshell-get--index (buf)
   (let* ((name (buffer-name buf)))
