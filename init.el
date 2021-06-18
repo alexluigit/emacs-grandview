@@ -16,6 +16,9 @@
 
 (straight-use-package 'use-package)
 
+;; No ask for follow link
+(setq vc-follow-symlinks t)
+
 (push (concat ace/init-dot-repo "lisp") load-path)
 
 ;; Load configurations.
@@ -25,7 +28,7 @@
         (init-org (concat ace/init-dot-repo "ace.org")))
     (if (file-exists-p init-el)
         (load-file init-el)
-      (require 'org)
+      (require 'ob-tangle)
       (org-babel-tangle-file init-org init-el)
       (load-file init-el))))
 
@@ -36,6 +39,7 @@
 Add this to `after-save-hook' in `org-mode-hook'."
   (let ((init-el (concat user-emacs-directory "ace.el"))
         (init-org (concat ace/init-dot-repo "ace.org")))
+    (require 'ob-tangle)
     (org-babel-tangle-file init-org init-el)
     (byte-compile-file init-el)))
 
