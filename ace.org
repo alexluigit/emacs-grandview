@@ -959,7 +959,7 @@ Org mode setup.
 #+begin_src emacs-lisp
 (use-package org
   :defer t
-  :straight (:type built-in)
+  :straight nil
   :hook
   (org-mode . ace/font-org-setup)
   (org-tab-first . org-end-of-line)
@@ -996,8 +996,8 @@ Org mode setup.
   (setq org-src-window-setup 'split-window-right))
 
 (use-package org-tempo ; this is needed as of Org 9.2
-  :straight (:type built-in)
   :after org
+  :straight (:type built-in)
   :config
   (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
