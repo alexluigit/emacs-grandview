@@ -116,7 +116,7 @@ Return the decoded text as multibyte string."
     (run-with-timer 0.1 nil
                     (lambda (p)
                       (split-window-right)
-                      (windmove-right)
+                      (other-window 1)
                       (find-file p)
                       (meow--update-cursor))
                     cand)

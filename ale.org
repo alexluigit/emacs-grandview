@@ -84,8 +84,6 @@ Some handful small utility function for debugging.
   (setq ale/simple-time-specifier "%R %z")
   :bind
   (("s-x" . execute-extended-command)
-   ;; ("s-n" . ale/simple-winmove-r/d)
-   ;; ("s-p" . ale/simple-winmove-l/u)
    ("s-m" . ale/simple-monocle)
    ("C-c C-M-d" . ale/simple-insert-date)
    ("C-c C-M-e" . ale/simple-escape-url)
@@ -641,6 +639,197 @@ reposition it).
 (setq-default scroll-margin 0)
 #+end_src
 
+** Viewports
+
+I believe that Emacs's true power lies in its buffer management rather
+than its multiplexing.  The latter becomes inefficient at scale, since
+it tries to emulate the limitations of the real world, namely, the
+placement of things on a desk.
+
+By leveraging the power of the computer, we can use search methods to
+easily reach any item.  There is no need to remain confined to the idea
+of a finite space (screen real estate) that needs to be carefully
+managed.
+
+That granted, Emacs' multiplexing can be turned into a powerhouse as
+well, covering everything from window placement rules, to the recording
+of history and layouts, as well as directional or direct window
+navigation.
+
+*** Window rules (window.el)
+
+The =display-buffer-alist= is intended as a rule-set for controlling the
+display of windows.  The objective is to create a more intuitive
+workflow where targeted buffer groups or types are always shown in a
+given location, on the premise that predictability improves usability.
+
+For each buffer action in =display-buffer-alist= we can define several
+functions for selecting the appropriate window.  These are executed in
+sequence, but my usage thus far suggests that a simpler method is just
+as effective for my case.
+
+#+begin_src emacs-lisp
+(use-package window
+  :straight nil
+  :bind ("s-i" . next-buffer) ("s-o" . previous-buffer)
+  :config
+  (setq display-buffer-alist
+	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+	         (display-buffer-in-side-window)
+	         (window-height . 0.3)
+	         (side . bottom))
+	        ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
+	         (display-buffer-in-side-window)
+	         (window-width . 0.4)
+	         (side . right))
+	        ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
+	         (display-buffer-at-bottom))))
+  (setq window-combination-resize t)
+  (setq even-window-sizes 'height-only)
+  (setq window-sides-vertical nil)
+  (setq switch-to-buffer-in-dedicated-window 'pop)
+  ;; Disable window close when calling 'keyboard-escape-quit'
+  (defadvice keyboard-escape-quit (around keep-windows activate)
+    (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
+#+end_src
+
+*** Index based window motions (ale-window.el)
+
+#+begin_src emacs-lisp
+(use-package ale-window
+  :straight nil
+  :defer t
+  :bind
+  ("s-n" . ale/window-move-next)
+  ("s-p" . ale/window-move-prev))
+#+end_src
+
+*** Window position (transpose-frame.el)
+
+The =transpose-frame= library defines a set of commands for shifting the
+layout of Emacs windows.  Rather than me describing how these work, I
+strongly encourage you to read the "Commentary" section in the source
+code.  Do it with =M-x find-library transpose-frame=.
+
+#+begin_src emacs-lisp
+(use-package transpose-frame :defer t)
+#+end_src
+
+*** Tabs (ale-tab.el)
+
+The =tab-bar= library, is best understood as the equivalent of "virtual desktops",
+as these are used in most desktop environments or window managers. You can, for
+example, have your current project on tab (workspace) 1, your email and news
+reader on 2, music on 3, and so on.  Of course, this can also be achieved by
+using separate frames for each of these, though I generally prefer working in a
+single frame (plus you can define a window configuration or frameset in a
+register).
+
+For me tabs are useful as groups of buffers in a given window
+configuration.  I do not want a persistent bar with buttons that
+introduces extra visual clutter.  Switching to tabs is done through
+completion, specifically =ale/tab-select-tab-dwim=.
+
+All settings I configure here are meant to work in accordance with this
+abstract conception of "tabs are work spaces".  Here are the main key
+chords for =tab-bar= (they will all work properly if you keep the mode
+active):
+
+| Key     | Description                    |
+|---------+--------------------------------|
+| C-x t b | Open a buffer in a new tab     |
+| C-x t d | Open a directory in a new tab  |
+| C-x t f | Open a file in a new tab       |
+| C-x t 0 | Close current tab              |
+| C-x t 1 | Close all other tabs           |
+| C-x t 2 | Open current buffer in new tab |
+
+To keeps the overall aesthetics minimalist, I explicitly disable the
+presentation of the tab bar, even though I still use its functionality.  The
+problem with such a configuration is that we lose context: it is no longer
+possible to determine the number of open tabs nor understand the position of the
+current one in the list.
+
+This is where Fritz Grabo's =tab-bar-echo-area.el= enters the fray: it
+prints a message in the echo area showing the tab list, while it
+highlights the current item.  So we can retain both our minimalism and
+the contextuality a bar offers.  Simple, yet super effective!
+
+These are consistent with the standard commands for handling windows and
+accessing buffers/files in the "other window" (the =C-x 4 KEY= pattern).
+There is also a command for giving a name to the current tab, accessed
+via =C-x t r=, though I find I do not use it.
+
+#+begin_src emacs-lisp
+(use-package tab-bar
+  :config
+  (setq tab-bar-tab-choice "NewTab")
+  (setq tab-bar-new-button-show nil)
+  (setq tab-bar-close-button-show nil)
+  (setq tab-bar-close-last-tab-choice 'tab-bar-mode-disable)
+  (setq tab-bar-close-tab-select 'recent)
+  (setq tab-bar-new-tab-choice t)
+  (setq tab-bar-new-tab-to 'right)
+  (setq tab-bar-position nil)
+  (setq tab-bar-show nil)
+  (setq tab-bar-tab-hints nil)
+  (setq tab-bar-tab-name-function 'tab-bar-tab-name-all)
+  (tab-bar-mode -1)
+  (tab-bar-history-mode -1)
+  (custom-set-faces
+   '(tab-bar ((t (:inherit nil :height 1.1))))
+   '(tab-bar-tab ((t (:inherit tab-bar :underline nil :weight bold))))
+   '(tab-bar-tab-inactive ((t (:inherit tab-bar :weight normal :height 1.0))))))
+
+(use-package ale-tab
+  :straight nil
+  :bind
+  ("C-x t h" . ale/tab-tab-bar-toggle)
+  ("C-x t t" . ale/tab-select-tab-dwim))
+
+(use-package tab-bar-echo-area
+  :config
+  (tab-bar-echo-area-mode 1))
+#+end_src
+
+*** Buffer management (ibuffer.el)
+
+=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
+=list-buffers=.  Compared to its counterpart, it allows for granular
+control over the buffer list and is more powerful overall.
+
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :bind
+  (:map ibuffer-mode-map
+        ("* f" . ibuffer-mark-by-file-name-regexp)
+        ("* g" . ibuffer-mark-by-content-regexp)
+        ("* n" . ibuffer-mark-by-name-regexp)
+        ("s n" . ibuffer-do-sort-by-alphabetic)
+        ("/ g" . ibuffer-filter-by-content))
+  :config
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+#+end_src
+
 * Minibuffer Completion
 
 The optimal way of using Emacs is through searching and narrowing
@@ -798,217 +987,6 @@ for visualising the standard completion framework's output
   :after embark
   :config
   (ale/embark-extras-keymaps 1))
-#+end_src
-
-* Viewports
-
-I believe that Emacs's true power lies in its buffer management rather
-than its multiplexing.  The latter becomes inefficient at scale, since
-it tries to emulate the limitations of the real world, namely, the
-placement of things on a desk.
-
-By leveraging the power of the computer, we can use search methods to
-easily reach any item.  There is no need to remain confined to the idea
-of a finite space (screen real estate) that needs to be carefully
-managed.
-
-That granted, Emacs' multiplexing can be turned into a powerhouse as
-well, covering everything from window placement rules, to the recording
-of history and layouts, as well as directional or direct window
-navigation.
-
-** Window rules (window.el)
-
-The =display-buffer-alist= is intended as a rule-set for controlling the
-display of windows.  The objective is to create a more intuitive
-workflow where targeted buffer groups or types are always shown in a
-given location, on the premise that predictability improves usability.
-
-For each buffer action in =display-buffer-alist= we can define several
-functions for selecting the appropriate window.  These are executed in
-sequence, but my usage thus far suggests that a simpler method is just
-as effective for my case.
-
-#+begin_src emacs-lisp
-(use-package window
-  :straight nil
-  :bind ("s-i" . next-buffer) ("s-o" . previous-buffer)
-  :config
-  (setq display-buffer-alist
-	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
-	         (display-buffer-in-side-window)
-	         (window-height . 0.3)
-	         (side . bottom))
-	        ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
-	         (display-buffer-in-side-window)
-	         (window-width . 0.4)
-	         (side . right))
-	        ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
-	         (display-buffer-at-bottom))))
-  (setq window-combination-resize t)
-  (setq even-window-sizes 'height-only)
-  (setq window-sides-vertical nil)
-  (setq switch-to-buffer-in-dedicated-window 'pop)
-  ;; Disable window close when calling 'keyboard-escape-quit'
-  (defadvice keyboard-escape-quit (around keep-windows activate)
-    (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
-#+end_src
-
-** Index based window motions (ace-window.el)
-
-#+begin_src emacs-lisp
-(use-package ace-window
-  :defer t
-  :init
-  (require 'ale-window)
-  :bind
-  ("s-n" . ale/window-move-next)
-  ("s-p" . ale/window-move-prev))
-#+end_src
-
-** Window position (transpose-frame.el)
-
-The =transpose-frame= library defines a set of commands for shifting the
-layout of Emacs windows.  Rather than me describing how these work, I
-strongly encourage you to read the "Commentary" section in the source
-code.  Do it with =M-x find-library transpose-frame=.
-
-#+begin_src emacs-lisp
-(use-package transpose-frame :defer t)
-#+end_src
-
-** Directional window motions (windmove.el)
-
-Windmove is also built into Emacs.  It provides functions for selecting
-a window in any of the cardinal directions.  A decent addition to the
-simpler =other-window= command (=C-x o= by default).
-
-The =windmove-create-window= specifies what should happen when trying to
-move past the edge of the frame.  The idea with this is to allow it to
-create a new window with the contents of the current buffer.  I tried it
-for a while but felt that the times it would interfere with my layout
-where more than those it would actually speed up my workflow.
-
-#+begin_src emacs-lisp
-(use-package windmove
-  :straight (:type built-in)
-  :config
-  (setq windmove-create-window nil))
-#+end_src
-
-** Tabs (ale-tab.el)
-
-The =tab-bar= library, is best understood as the equivalent of "virtual desktops",
-as these are used in most desktop environments or window managers. You can, for
-example, have your current project on tab (workspace) 1, your email and news
-reader on 2, music on 3, and so on.  Of course, this can also be achieved by
-using separate frames for each of these, though I generally prefer working in a
-single frame (plus you can define a window configuration or frameset in a
-register).
-
-For me tabs are useful as groups of buffers in a given window
-configuration.  I do not want a persistent bar with buttons that
-introduces extra visual clutter.  Switching to tabs is done through
-completion, specifically =ale/tab-select-tab-dwim=.
-
-All settings I configure here are meant to work in accordance with this
-abstract conception of "tabs are work spaces".  Here are the main key
-chords for =tab-bar= (they will all work properly if you keep the mode
-active):
-
-| Key     | Description                    |
-|---------+--------------------------------|
-| C-x t b | Open a buffer in a new tab     |
-| C-x t d | Open a directory in a new tab  |
-| C-x t f | Open a file in a new tab       |
-| C-x t 0 | Close current tab              |
-| C-x t 1 | Close all other tabs           |
-| C-x t 2 | Open current buffer in new tab |
-
-To keeps the overall aesthetics minimalist, I explicitly disable the
-presentation of the tab bar, even though I still use its functionality.  The
-problem with such a configuration is that we lose context: it is no longer
-possible to determine the number of open tabs nor understand the position of the
-current one in the list.
-
-This is where Fritz Grabo's =tab-bar-echo-area.el= enters the fray: it
-prints a message in the echo area showing the tab list, while it
-highlights the current item.  So we can retain both our minimalism and
-the contextuality a bar offers.  Simple, yet super effective!
-
-These are consistent with the standard commands for handling windows and
-accessing buffers/files in the "other window" (the =C-x 4 KEY= pattern).
-There is also a command for giving a name to the current tab, accessed
-via =C-x t r=, though I find I do not use it.
-
-#+begin_src emacs-lisp
-(use-package tab-bar
-  :config
-  (setq tab-bar-tab-choice "NewTab")
-  (setq tab-bar-new-button-show nil)
-  (setq tab-bar-close-button-show nil)
-  (setq tab-bar-close-last-tab-choice 'tab-bar-mode-disable)
-  (setq tab-bar-close-tab-select 'recent)
-  (setq tab-bar-new-tab-choice t)
-  (setq tab-bar-new-tab-to 'right)
-  (setq tab-bar-position nil)
-  (setq tab-bar-show nil)
-  (setq tab-bar-tab-hints nil)
-  (setq tab-bar-tab-name-function 'tab-bar-tab-name-all)
-  (tab-bar-mode -1)
-  (tab-bar-history-mode -1)
-  (custom-set-faces
-   '(tab-bar ((t (:inherit nil :height 1.1))))
-   '(tab-bar-tab ((t (:inherit tab-bar :underline nil :weight bold))))
-   '(tab-bar-tab-inactive ((t (:inherit tab-bar :weight normal :height 1.0))))))
-
-(use-package ale-tab
-  :straight nil
-  :bind
-  ("C-x t h" . ale/tab-tab-bar-toggle)
-  ("C-x t t" . ale/tab-select-tab-dwim))
-
-(use-package tab-bar-echo-area
-  :config
-  (tab-bar-echo-area-mode 1))
-#+end_src
-
-** Buffer list (ibuffer.el)
-
-=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
-=list-buffers=.  Compared to its counterpart, it allows for granular
-control over the buffer list and is more powerful overall.
-
-#+begin_src emacs-lisp
-(use-package ibuffer
-  :bind
-  (:map ibuffer-mode-map
-        ("* f" . ibuffer-mark-by-file-name-regexp)
-        ("* g" . ibuffer-mark-by-content-regexp)
-        ("* n" . ibuffer-mark-by-name-regexp)
-        ("s n" . ibuffer-do-sort-by-alphabetic)
-        ("/ g" . ibuffer-filter-by-content))
-  :config
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-movement-cycle nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups nil)
-  (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
 #+end_src
 
 * Major modes
@@ -1648,7 +1626,7 @@ If region is active, add its contents to the new buffer."
   (setq youdao-dictionary-use-chinese-word-segmentation t))
 #+end_src
 
-** Murl
+** Video url (ale-murl.el)
 
 #+begin_src emacs-lisp
 (use-package ale-murl
