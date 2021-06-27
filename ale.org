@@ -66,7 +66,9 @@ first possible option, which is exactly what I want.
 Some handful small utility function for debugging.
 
 #+begin_src emacs-lisp
-(require 'ale-debug)
+(use-package ale-debug
+  :straight nil
+  :bind ("C-c C-M-m" . 'ale/debug-show-messages))
 #+end_src
 
 ** Simple (ale-simple.el)
@@ -128,13 +130,6 @@ package and built-in help buffer:
                     (switch-to-prev-buffer)
                     (setq ale/helpful-initialized t))))
     (visual-line-mode)))
-#+end_src
-
-** Info (info.el)
-
-Change some annoying keybindings in Info-mode.
-
-#+begin_src emacs-lisp
 #+end_src
 
 ** Keybindings (transient.el)
