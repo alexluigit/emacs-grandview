@@ -92,6 +92,16 @@
   (interactive)
   (meow-open-below) (meow-insert-exit))
 
+(defun ale/meow-yank-ad (fn &rest args)
+  "Vim style paste."
+  (when-let* ((clip (condition-case nil (current-kill 0 t) (error "")))
+              (remove-syntax (set-text-properties 0 (length clip) nil clip))
+              (end-with-newline (string-suffix-p "\n" clip)))
+    (goto-char (line-beginning-position)))
+  (apply fn args))
+
+(advice-add 'yank :around #'ale/meow-yank-ad)
+
 (defun ale/meow--bounds-of-tag ()
   (meow--bounds-of-regexp "<.*>"))
 
@@ -128,12 +138,12 @@
    '(";" . ale/meow-comment-or-uncomment-region)
    '(":" . eval-expression)
    '("`" . ale/init-edit-config)
-   '("/" . lf)
    '("n" . meow-last-buffer)
    '("p" . ale/window-buffers-major-mode)
    '("a" . ace-select-window)
    '("e" . eval-last-sexp)
    '("q" . ale/simple-kill-window-current)
+   '("o" . lf)
    '("w" . save-buffer)
    '("z" . window-toggle-side-windows)
    '("t" . consult-outline)
