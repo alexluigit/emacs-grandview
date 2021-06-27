@@ -6,8 +6,8 @@ alias ll exa -lu --color=always --group-directories-first --no-user --no-permiss
 alias lt exa -aT --color=always --git-ignore -I=.git --group-directories-first
 alias ka killall $1
 alias px export HTTP_PROXY=http://127.0.0.1:1088; export HTTPS_PROXY=http://127.0.0.1:1088
-alias yd youtube-dl --write-sub --write-auto-sub -o "~/Downloads/%(title)s-%(id)s.%(ext)s" $1
-alias ydl youtube-dl --yes-playlist --write-sub --write-auto-sub -o "~/Downloads/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" $1
+alias yd youtube-dl --proxy 127.0.0.1:1088 --write-sub --write-auto-sub -o "~/Downloads/%(title)s-%(id)s.%(ext)s" $1
+alias ydl youtube-dl --proxy 127.0.0.1:1088 --yes-playlist --write-sub --write-auto-sub -o "~/Downloads/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" $1
 alias pai ale/eshell-pacman-install
 alias pau ale/eshell-pacman-uninstall
 alias esrc git clone -s ~/.cache/paru/clone/emacs-git/emacs-git ~/.cache/paru/clone/emacs-git/src/emacs-git
