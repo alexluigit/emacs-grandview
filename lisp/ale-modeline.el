@@ -1,4 +1,4 @@
-(defun ace-modeline-nov ()
+(defun ale-modeline-nov ()
   (setq-local mode-line-format
               `((:eval
                  (doom-modeline-segment--workspace-name))
@@ -35,4 +35,4 @@
                                        (cons "" '(:eval (doom-modeline-segment--major-mode))))))))))
                 (:eval (doom-modeline-segment--major-mode)))))
 
-(provide 'ace-modeline)
+(provide 'ale-modeline)

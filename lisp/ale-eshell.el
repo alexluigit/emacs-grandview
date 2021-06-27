@@ -2,34 +2,34 @@
 (require 'esh-mode)
 (eval-when-compile (require 'subr-x))
 (require 'cl-seq)
-(declare-function ace/files-read "ace-files")
+(declare-function ale/files-read "ace-files")
 
-(defcustom ace/eshell-position '((window-width . 0.4) (side . right))
+(defcustom ale/eshell-position '((window-width . 0.4) (side . right))
   "doc")
 
-(defvar ace/eshell-buffers nil
+(defvar ale/eshell-buffers nil
   "The list of non-dedicated eshell buffers.")
 
-(defvar ace/eshell-index 0
+(defvar ale/eshell-index 0
   "The list of non-dedicated eshell buffers.")
 
-(defun ace/get-current-package-version ()
+(defun ale/get-current-package-version ()
   (interactive)
   (let ((package-json-file (concat (eshell/pwd) "/package.json")))
     (when (file-exists-p package-json-file)
-      (let* ((package-json-contents (ace/files-read package-json-file))
+      (let* ((package-json-contents (ale/files-read package-json-file))
              (package-json (ignore-errors (json-parse-string package-json-contents))))
         (when package-json
           (ignore-errors (gethash "version" package-json)))))))
 
-(defun ace/map-line-to-status-char (line)
+(defun ale/map-line-to-status-char (line)
   (cond ((string-match "^?\\? " line) "?")))
 
-(defun ace/get-git-status-prompt ()
+(defun ale/get-git-status-prompt ()
   (let ((status-lines (cdr (process-lines "git" "status" "--porcelain" "-b"))))
-    (seq-uniq (seq-filter 'identity (mapcar 'ace/map-line-to-status-char status-lines)))))
+    (seq-uniq (seq-filter 'identity (mapcar 'ale/map-line-to-status-char status-lines)))))
 
-(defun ace/get-prompt-path ()
+(defun ale/get-prompt-path ()
   (let* ((current-path (eshell/pwd))
          (git-output (shell-command-to-string "git rev-parse --show-toplevel"))
          (has-path (not (string-match "^fatal" git-output))))
@@ -39,19 +39,19 @@
 
 ;; This prompt function mostly replicates my custom zsh prompt setup
 ;; that is powered by github.com/denysdovhan/spaceship-prompt.
-(defun ace/eshell-prompt ()
+(defun ale/eshell-prompt ()
   (let* ((br-cmd "git symbolic-ref HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null")
          (br-raw (shell-command-to-string br-cmd))
          (current-branch (replace-regexp-in-string "\\(refs/heads/\\)\\|\\(\n\\)$" "" br-raw))
-         (shell-index (number-to-string (ace/eshell-get--index (current-buffer))))
-         (package-version (ace/get-current-package-version)))
+         (shell-index (number-to-string (ale/eshell-get--index (current-buffer))))
+         (package-version (ale/get-current-package-version)))
     (concat
      (if (= (user-uid) 0)
          (propertize (concat "S-" shell-index) 'face `(:foreground "red2"))
        (propertize (concat "S-" shell-index) 'face `(:foreground "#62aeed")))
      (propertize " • " 'face `(:foreground "white"))
      (propertize "  " 'face `(:foreground "#82cfd3"))
-     (propertize (ace/get-prompt-path) 'face `(:foreground "#82cfd3"))
+     (propertize (ale/get-prompt-path) 'face `(:foreground "#82cfd3"))
      (when (not (string= current-branch ""))
        (concat
         (propertize " • " 'face `(:foreground "white"))
@@ -67,7 +67,7 @@
        (propertize "\nλ" 'face `(:foreground "#EC6261")))
      (propertize " " 'face `(:foreground "white")))))
 
-(defun ace/eshell-configure ()
+(defun ale/eshell-configure ()
   (push 'eshell-tramp eshell-modules-list)
   ;; Save command history when commands are entered
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
@@ -78,7 +78,7 @@
   ;; Initialize the shell history
   (eshell-hist-initialize)
   (setenv "PAGER" "cat")
-  (setq eshell-prompt-function      'ace/eshell-prompt
+  (setq eshell-prompt-function      'ale/eshell-prompt
         eshell-prompt-regexp        "^λ "
         eshell-history-size         10000
         eshell-buffer-maximum-lines 10000
@@ -88,9 +88,9 @@
         eshell-prefer-lisp-functions nil))
 
 (add-hook 'eshell-exit-hook
-          (lambda () (setq ace/eshell-buffers (delq (current-buffer) ace/eshell-buffers))))
+          (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
 
-(defun ace/eshell-toggle (&optional force-new)
+(defun ale/eshell-toggle (&optional force-new)
   "Toggle eshell.
 If called with prefix argument, create a new eshell buffer if
 current one have different `default-directory'."
@@ -101,70 +101,71 @@ current one have different `default-directory'."
             `(("^\\*[e]shell.*"
                (display-buffer-in-side-window)
                (window-parameters . ((mode-line-format . none)))
-               ,@ace/eshell-position)))
-           (buf (nth ace/eshell-index ace/eshell-buffers))
+               ,@ale/eshell-position)))
+           (buf (nth ale/eshell-index ale/eshell-buffers))
            (dir (expand-file-name default-directory))
-           (index (if buf (ace/eshell-get--index buf) 0)))
-      (add-to-list 'ace/eshell-buffers (eshell index))
+           (index (if buf (ale/eshell-get--index buf) 0)))
+      (add-to-list 'ale/eshell-buffers (eshell index))
       (when force-new
         (unless (string= dir (expand-file-name default-directory))
           (let ((default-directory dir))
-            (ace/eshell-new))))
+            (ale/eshell-new))))
       (when (featurep 'evil) (evil-insert-state))
       (when (featurep 'meow) (meow-insert)))))
 
-(defun ace/eshell-get--index (buf)
+(defun ale/eshell-get--index (buf)
   (let* ((name (buffer-name buf)))
     (string-match "\\*eshell\\*\<\\([0-9]+\\)\>" name)
     (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
 
-(defun ace/eshell-new ()
+(defun ale/eshell-new ()
   "Create new eshell buffer."
   (interactive)
-  (let ((new-index (1+ (ace/eshell-get--index (car ace/eshell-buffers))))
+  (let ((new-index (1+ (ale/eshell-get--index (car ale/eshell-buffers))))
         (display-buffer-alist
          `(("^\\*[e]shell.*"
             (display-buffer-in-side-window)
             (window-parameters . ((mode-line-format . none)))
-            ,@ace/eshell-position))))
-    (add-to-list 'ace/eshell-buffers (eshell new-index))))
+            ,@ale/eshell-position))))
+    (add-to-list 'ale/eshell-buffers (eshell new-index))))
 
-(defun ace/eshell-next (&optional arg)
+(defun ale/eshell-next (&optional arg)
   "Select next eshell buffer.
 Create new one if no eshell buffer exists."
   (interactive "P")
-  (let* ((curr-index (cl-position (current-buffer) ace/eshell-buffers))
+  (let* ((curr-index (cl-position (current-buffer) ale/eshell-buffers))
          (new-index (+ curr-index (or arg -1)))
-         (buf (nth new-index ace/eshell-buffers)))
+         (buf (nth new-index ale/eshell-buffers)))
     (when buf
       (switch-to-buffer buf)
-      (setq ace/eshell-index new-index))))
+      (setq ale/eshell-index new-index))))
 
-(defun ace/eshell-prev (&optional arg)
+(defun ale/eshell-prev (&optional arg)
   "Select previous eshell buffer."
   (interactive "p")
-  (ace/eshell-next arg))
+  (ale/eshell-next arg))
 
-(defun ace/eshell-clear-buffer ()
+(defun ale/eshell-clear-buffer ()
   "Clear eshell buffer."
   (interactive)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (eshell-send-input nil nil t)))
 
-(defun ace/eshell-pacman-install ()
+(defun ale/eshell-pacman-install ()
   "Choose a package to install using paru."
   (interactive)
-  (let* ((p-list-raw (ace/files-read "/home/alex/.local/share/paru/pkglist"))
+  (let* ((p-list-raw (ale/files-read "/home/alex/.local/share/paru/pkglist"))
          (p-list (split-string p-list-raw "\n" t))
-         (res (completing-read "Install: " p-list)))
-    (insert (concat "paru " res))))
+         (res (completing-read "Install: " p-list))
+         (emacs-p (if (string= res "emacs-git") "; esrc" "")))
+    (insert (concat "paru " res emacs-p))))
 
-(defun ace/eshell-pacman-uninstall ()
+(defun ale/eshell-pacman-uninstall ()
   "Choose a package to uninstall using paru."
   (let* ((p-list-raw (shell-command-to-string "pacman -Qeq"))
          (p-list (split-string p-list-raw "\n" t))
-         (res (completing-read "Uninstall: " p-list)))
-    (insert (concat "paru -Rns " res))))
+         (res (completing-read "Uninstall: " p-list))
+    (insert (concat "paru -Rns " res)))))
 
-(provide 'ace-eshell)
+(provide 'ale-eshell)

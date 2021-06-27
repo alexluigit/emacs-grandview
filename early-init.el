@@ -1,4 +1,4 @@
-(defvar ace/init-dot-repo (file-truename user-emacs-directory)
+(defvar ale/init-dot-repo (file-truename user-emacs-directory)
   "Get dotfiles repo path before changing `user-emacs-directory'.")
 
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
@@ -13,7 +13,6 @@
 
 (setq frame-inhibit-implied-resize t) ; Don't resize frame at this stage
 
-(scroll-bar-mode -1)                  ; Disable scrollbar
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar

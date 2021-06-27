@@ -10,7 +10,7 @@ My Emacs configuration file written in org format.
 
 - Init file (init.el / early-init.el)
 - Custom libraries (lisp/*)
-- Main config file (ace.org)
+- Main config file (ale.org)
 
 ** Usage
 
@@ -46,7 +46,7 @@ that you accidentally evaluated from messing up with your carefully designed
 #+begin_src emacs-lisp
 (put 'list-timers 'disabled nil)
 (put 'erase-buffer 'disabled nil)
-(setq custom-file "/tmp/ace-emacs-custom.el")
+(setq custom-file "/tmp/ale-emacs-custom.el")
 #+end_src
 
 ** History / State
@@ -61,60 +61,73 @@ minibuffer's history of inputs allows the completion framework to guess
 the most likely course of action. Typing =M-x g= gives me =gnus= as the
 first possible option, which is exactly what I want.
 
-** Async facilities (async.el)
+** Debugging emacs (ale-debug.el)
 
-This package provides some asynchronous processing facilities for
-various Emacs interfaces, such as for Dired's copy and rename operations
-(also read [[#h:c519300f-8a9a-472b-b26d-c2f49adbdb5d][Dired (directory editor, file manager)]]).
+Some handful small utility function for debugging.
 
 #+begin_src emacs-lisp
-(use-package async
-  :defer t)
+(require 'ale-debug)
 #+end_src
 
-** Simple (ace-simple.el)
+** Simple (ale-simple.el)
 
 =ace-simple.el= contains a wide range of commands that are broadly in line with the built-in =simple.el= and =lisp.el= libraries.
 
 #+begin_src emacs-lisp
-(use-package ace-simple
+(use-package ale-simple
   :straight nil
   :defer t
   :config
-  (setq ace/simple-date-specifier "%F")
-  (setq ace/simple-time-specifier "%R %z")
+  (setq ale/simple-date-specifier "%F")
+  (setq ale/simple-time-specifier "%R %z")
   :bind
-  (("s-s" . scroll-up)
-   ("s-r" . scroll-down)
-   ("s-w" . save-buffer)
-   ("s-x" . execute-extended-command)
-   ("s-n" . ace/simple-winmove-r/d)
-   ("s-p" . ace/simple-winmove-l/u)
-   ("s-m" . ace/simple-monocle)
-   ("s-q" . ace/simple-kill-window-current)
-   ("C-c C-M-d" . ace/simple-insert-date)
-   ("C-c C-M-e" . ace/simple-escape-url)
-   ("C-c C-M-q" . ace/simple-unfill-region-or-paragraph)
-   ("C-c C-M-r" . ace/simple-rename-file-and-buffer)
+  (("s-x" . execute-extended-command)
+   ("s-n" . ale/simple-winmove-r/d)
+   ("s-p" . ale/simple-winmove-l/u)
+   ("s-m" . ale/simple-monocle)
+   ("C-c C-M-d" . ale/simple-insert-date)
+   ("C-c C-M-e" . ale/simple-escape-url)
+   ("C-c C-M-q" . ale/simple-unfill-region-or-paragraph)
+   ("C-c C-M-r" . ale/simple-rename-file-and-buffer)
    ("C-c C-M-=" . count-words)
    ("<escape>" . keyboard-escape-quit)))
 #+end_src
 
 ** Help (help[ful].el)
 
-A better help buffer.
+=Helpful.el= provides a better help buffer. Here are some tweaks I made for this
+package and built-in help buffer:
+
+- disable auto jump to other end when cycle through buttons using =M-n= and =M-p=.
+- never open new window when invoking =helpful-visit-references=.
+- auto focus newly opened help buffer (same behaviour as helpful.el)
 
 #+begin_src emacs-lisp
-  (use-package helpful
-    :defer t
-    :bind
-    ("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
-    ([remap describe-function] . #'helpful-callable)
-    ([remap describe-variable] . #'helpful-symbol)
-    ([remap describe-key] . #'helpful-key)
-    :config
-    (add-hook 'help-mode-hook #'visual-line-mode)
-    (setq help-window-select t))
+(use-package helpful
+  :defer t
+  :init
+  (setq help-window-select t)
+  (defvar ale/helpful-initialized nil)
+  :hook (helpful-mode . ale/helpful-mode-hook)
+  :bind
+  (("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
+   ([remap describe-function] . #'helpful-callable)
+   ([remap describe-variable] . #'helpful-symbol)
+   ([remap describe-key] . #'helpful-key)
+   :map helpful-mode-map
+   ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
+   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t))))
+  :config
+  (defun ale/helpful-mode-hook ()
+    ;; FIXME: A better way?
+    (setq ale/helpful-initialized nil)
+    (advice-add 'find-file :before
+                (lambda (&rest _)
+                  (when (and (not ale/helpful-initialized) (derived-mode-p 'helpful-mode))
+                    (switch-to-buffer "*scratch*")
+                    (switch-to-prev-buffer)
+                    (setq ale/helpful-initialized t))))
+    (visual-line-mode)))
 #+end_src
 
 ** Info (info.el)
@@ -143,84 +156,81 @@ Change some annoying keybindings in Info-mode.
 (use-package meow
   :demand t
   :init
-  (require 'ace-meow)
   (meow-global-mode 1)
   :config
+  (require 'ale-meow)
+  (ale/meow-setup)
+  (setq meow-visit-sanitize-completion nil)
+  (setq meow-esc-delay 0.001)
+  (setq meow-keypad-describe-delay 0.5)
+  (setq meow-select-on-change t)
+  (setq meow-cursor-type-normal 'box)
+  (setq meow-cursor-type-insert '(bar . 4))
+  (setq meow-selection-command-fallback
+        '((meow-replace . meow-yank)
+          (meow-change . meow-change-char)
+          (meow-save . ale/meow-save-line)
+          (meow-kill . ale/meow-kill-whole-line)
+          (meow-cancel . keyboard-quit)
+          (meow-pop . meow-pop-grab)
+          (meow-delete . meow-C-d)))
+  (setq meow-char-thing-table
+        '((?r . round)
+          (?\[ . square)
+          (?c . curly)
+          (?s . string)
+          (?e . symbol)
+          (?w . window)
+          (?b . buffer)
+          (?p . paragraph)
+          (?\^? . line)
+          (?' . line)
+          (?. . line)
+          (?, . line)
+          (?d . defun)
+          (?i . indent)
+          (?t . tag)
+          (?x . extend)))
   (add-to-list 'meow-mode-state-list '(helpful-mode . normal))
-  (add-to-list 'meow-mode-state-list '(eshell-mode . insert))
-  (add-to-list 'meow-char-thing-table '(?> . line))
-  (add-to-list 'meow-char-thing-table '(?< . line))
-  (meow-setup)
   (meow-setup-line-number))
 #+end_src
-** Lines / Paragraphs (ace-fill.el)
 
-The =ace-fill.el= library (reproduced below) is a tiny wrapper around
-some Emacs settings and modes that are scrattered around several files,
-which control (i) how paragraphs or comments in programming modes should
-be wrapped to a given column count, and (ii) what constitutes a
-sentence.  I put them all together here to make things easier to track.
-- With regard to paragraphs, I find that a double space is the best way
-  to delimit sentences in source form, where a monospaced typeface is
-  customary.  There is no worry that this will be shown on a website or
-  rendered version of a document, because processors know how to handle
-  spacing.  We do this to make phrases easier to tell apart, but also to
-  render unambiguous commands like =forward-sentence=.
-- =ace/fill-fill-mode= sets my desired default column width for all
-  buffers, while it applies another value for programming modes (in case
-  there is a need to control the two cases separately).  Those values
-  are stored in the variables =ace/fill-default-column= and
-  =ace/fill-prog-mode-column= respectively.  My minor mode also enables
-  =auto-fill-mode= in =text-mode= and =prog-mode= buffers through the
-  appropriate hooks.  Disabling =ace/fill-fill-mode= will remove all
-  those customisations.
+** Symbols
+*** Auto pairs (electric.el)
 
-#+begin_src emacs-lisp
-(use-package ace-fill
-  :straight nil
-  :config
-  (setq-default truncate-lines t)
-  (setq ace/fill-default-column 80)
-  (setq ace/fill-prog-mode-column 80)  ; Set this to another value if you want
-  (setq sentence-end-double-space t)
-  (setq sentence-end-without-period nil)
-  (setq colon-double-space nil)
-  (setq use-hard-newlines nil)
-  (setq adaptive-fill-mode t)
-  (ace/fill-fill-mode 1))
-#+end_src
-
-** Symbols 
-*** Pairs (electric.el & paren.el)
-
-Emacs labels as =electric= any behaviour that involves contextual
-auto-insertion of characters.  This is a summary of my settings:
+Emacs labels as =electric= any behaviour that involves contextual auto-insertion
+of characters.  This is a summary of my settings:
 
 - Indent automatically.
 - If =electric-pair-mode= is enabled (which I might do manually), insert quotes
-   and brackets in pairs.  Only do so if there is no alphabetic character after
-   the cursor.
-- To get those numbers, evaluate =(string-to-char CHAR)= where CHAR is the one
-   you are interested in.  For example, get the literal tab's character with
-   =(string-to-char "\t")=.
+  and brackets in pairs.  Only do so if there is no alphabetic character after
+  the cursor.
+- To get those numbers, evaluate =(string-to-char CHAR)= where CHAR is the one you
+  are interested in.  For example, get the literal tab's character with
+  =(string-to-char "\t")=.
 - While inputting a pair, inserting the closing character will just skip over
-   the existing one, rather than add a new one.  So typing =(= will insert =()= and
-   then typing =)= will just be the same as moving forward one character =C-f=.
+  the existing one, rather than add a new one.  So typing =(= will insert =()= and
+  then typing =)= will just be the same as moving forward one character =C-f=.
 - Do not skip over whitespace when operating on pairs.  Combined with the above
-   point, this means that a new character will be inserted, rather than be
-   skipped over.  I find this better, because it prevents the point from jumping
-   forward, plus it allows for more natural editing.
+  point, this means that a new character will be inserted, rather than be
+  skipped over.  I find this better, because it prevents the point from jumping
+  forward, plus it allows for more natural editing.
 - The rest concern the conditions for transforming quotes into their curly
-   equivalents.  I keep this disabled, because curly quotes are distinct
-   characters.  It is difficult to search for them.  Just note that on GNU/Linux
-   you can type them directly by hitting the "compose" key and then an angled
-   bracket (=<= or =>=) followed by a quote mark.
-
+  equivalents.  I keep this disabled, because curly quotes are distinct
+  characters.  It is difficult to search for them.  Just note that on GNU/Linux
+  you can type them directly by hitting the "compose" key and then an angled
+  bracket (=<= or =>=) followed by a quote mark.
+- I don't like the behavior of wrapping a pair around the active region.  If I
+  want to do it, I will do it using =insert-pair=.
 
 #+begin_src emacs-lisp
 (use-package electric
   :config
-  (setq electric-pair-inhibit-predicate'electric-pair-conservative-inhibit)
+  (advice-add 'electric-pair-post-self-insert-function :around
+              (lambda (fn &rest args)
+                (let ((mark-active nil))
+                  (apply fn args))))
+  (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
   (setq electric-pair-preserve-balance t)
   (setq electric-pair-pairs
         '((8216 . 8217)
@@ -238,238 +248,7 @@ auto-insertion of characters.  This is a summary of my settings:
   (electric-quote-mode -1))
 #+end_src
 
-*** Prettify symbols (prog-mode.el)
-
-#+begin_src emacs-lisp
-(use-package prog-mode
-  :straight nil
-  :hook (prog-mode . prettify-symbols-mode)
-  :init
-  (setq-default prettify-symbols-alist
-                '(("lambda" . ?λ)
-                  ("<-" . ?←)
-                  ("->" . ?→)
-                  ("->>" . ?↠)
-                  ("=>" . ?⇒)
-                  ("/=" . ?≠)
-                  ("!=" . ?≠)
-                  ("==" . ?≡)
-                  ("<=" . ?≤)
-                  (">=" . ?≥)
-                  ("=<<" . (?= (Br . Bl) ?≪))
-                  (">>=" . (?≫ (Br . Bl) ?=))
-                  ("<=<" . ?↢)
-                  (">=>" . ?↣)))
-  (setq prettify-symbols-unprettify-at-point 'right-edge))
-#+end_src
-
-** Tabs / indentation
-
-I believe tabs, in the sense of inserting the tab character, are best
-suited for indentation.  While spaces are superior at precisely aligning
-text.  However, I understand that elisp uses its own approach, which I
-do not want to interfere with.  Also, Emacs tends to perform alignments
-by mixing tabs with spaces, which /can actually lead to misalignments/
-depending on certain variables such as the size of the tab.  As such, I
-am disabling tabs by default.
-
-If there ever is a need to use different settings in other modes, we can
-customise them via hooks.  This is not an issue I have encountered yet
-and am therefore refraining from solving a problem that does not affect
-me.
-
-Note that =tab-always-indent= will first do indentation and then try to
-complete whatever you have typed in.
-
-#+begin_src emacs-lisp
-(setq-default tab-always-indent 'complete)
-(setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
-(setq-default tab-width 2)
-(setq-default indent-tabs-mode nil)
-#+end_src
-
-** Search / Replace
-** Comment (evil-nerd-commenter.el)
-
-Emacs' built in commenting functionality =comment-dwim= (usually bound to =M-;=) doesn't always comment things in the way you might expect so we use [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]] to provide a more familiar behavior.  I've bound it to =s-/= since other editors sometimes use this binding but you could also replace Emacs' =M-;= binding with this command.
-
-#+begin_src emacs-lisp
-(use-package evil-nerd-commenter)
-#+end_src
-
-
-*** COMMENT Regular expressions (re-builder.el)
-
-To learn more about regular expressions, read the relevant pages in
-the official manual.  Assuming you have this installed properly on
-your system, run =C-h r i regexp= to get to the starting chapter.
-
-Emacs offers a built-in package for practising regular expressions.
-By default, =re-builder= uses Emacs-style escape notation, in the form
-of double backslashes.  You can switch between the various styles by
-using =C-c TAB= inside of the regexp builder's buffer.  I choose to keep
-this style as the default.  Other options are =string= and =rx=.
-
-#+begin_src emacs-lisp
-(use-package re-builder
-  :config
-  (setq reb-re-syntax 'read))
-#+end_src
-
-*** Writable grep (wgrep.el)
-
-With =wgrep= we can directly edit the results of a =grep= and save the
-changes to all affected buffers.  In principle, this is the same as what
-the built-in =occur= offers.  We can use it to operate on a list of
-matches by leveraging the full power of Emacs' editing capabilities
-(e.g. keyboard macros, query and replace a regexp...).
-
-#+begin_src emacs-lisp
-(use-package wgrep
-  :config
-  (setq wgrep-auto-save-buffer t)
-  (setq wgrep-change-readonly-file t)
-  :bind
-  (:map wgrep-mode-map
-        ("M-n" . next-error-no-select)
-        ("M-p" . previous-error-no-select)))
-#+end_src
-
-*** Cross-references (xref.el)
-
-Xref provides helpful commands for code navigation and discovery, such
-as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
-(=M-,=).  It is a library that gets used by a variety of tools, including
-=project.el= (see [[#h:7862f39e-aed0-4d02-9f1e-60c4601a9734][Projects (project.el and ace/project.el)]]).
-
-#+begin_src emacs-lisp
-(use-package xref
-  :config
-  ;; All those have been changed for Emacs 28
-  (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
-  (setq xref-show-xrefs-function #'xref-show-definitions-completing-read)
-  (setq xref-file-name-display 'project-relative)
-  (setq xref-search-program 'ripgrep))
-#+end_src
-
-*** Ripgrep (rg.el)
-
-#+begin_src emacs-lisp
-(use-package rg
-  :custom
-  (rg-command-line-flags '("--context 3"))
-  :config
-  (rg-define-search ace/rg-project-dwim
-    "Run ripgrep with every file (respect ignore) in current
-project. Use word at point, no prompt."
-    :files "everything"
-    :query point
-    :dir project))
-#+end_src
-
-** Focus
-
-#+begin_src emacs-lisp
-(use-package visual-fill-column)
-#+end_src
-
-* Interface
-
-General interface section including fontface/icon/etc function
-definition.
-
-** GUI / Frame
-
-Change some default frame configuration to my liking.
-
-*** Terminal key fix
-
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =Tab=, =C-m= and =Return=, etc. By default, emacs follow
-this convention, but it doesn't mean emacs are not able to tell the
-difference. To change this behaviour, we can use =input-decode-map= to give, for
-example, =C-m= different meaning.
-
-#+begin_src emacs-lisp
-(defun ace/key-fix (&optional frame)
-  "To distinguish C-m from RET."
-  (with-selected-frame (or frame (selected-frame))
-    (when window-system
-      (define-key input-decode-map [?\C-i] [C-i])
-      (define-key input-decode-map [?\C-m] [C-m]))))
-(add-hook 'after-make-frame-functions #'ace/key-fix)
-#+end_src
-
-*** Fringe-mode
-
-#+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(internal-border-width . 30))
-(fringe-mode 1)
-#+end_src
-
-*** Window divider
-
-This is a built-in mode that draws vertical window borders in a slightly
-different way than the default, which I find more consistent.  Only
-using it because of that, though it can also adjust the size of the
-# borders as well as their placement.
-
-#+begin_src emacs-lisp
-(setq window-divider-default-right-width 10)
-(setq window-divider-default-places 'right-only)
-(add-hook 'after-init-hook #'window-divider-mode)
-#+end_src
-
-** Theme & icons
-   
-#+begin_src emacs-lisp
-(use-package kaolin-themes
-  :config
-  (load-theme 'kaolin-dark t))
-
-(use-package all-the-icons
-  :defer t)
-#+end_src
-
-** Better modeline (doom-modeline.el)
-
-#+begin_src emacs-lisp
-(use-package doom-modeline
-  :config
-  (doom-modeline-mode t)
-  (column-number-mode)
-  (setq doom-modeline-height 30)
-  (setq doom-modeline-major-mode-icon t))
-#+end_src
-
-** Fontface (ace-font.el)
-
-#+begin_src emacs-lisp
-(use-package ace-fonts
-  :straight nil
-  :config
-  (setq ace/font-size 140)
-  (setq ace/zh-font-size 31)
-  (setq ace/default-fonts '("Iosevka SS04" "Victor Mono" "Microsoft Yahei" "STHeiti"))
-  (setq ace/fixed-fonts '("Victor Mono" "Fira Code Retina"))
-  (setq ace/variable-fonts '("Iosevka SS04" "Victor Mono" "Fira Code Retina"))
-  (setq ace/zh-fonts '("Sarasa Mono SC" "PingFang SC" "Microsoft Yahei"))
-  (setq ace/org-fonts '("Iosevka SS04" "ETBembo" "Fira Code Retina"))
-  (setq ace/zh-font-scale 1))
-#+end_src
-
-** Line Number
-
-#+begin_src emacs-lisp
-(use-package display-line-numbers
-  :straight nil
-  :init
-  (global-display-line-numbers-mode t)
-  :hook
-  ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
-#+end_src
-
-** Parentheses (paren.el / rainbow-delimiters.el)
+*** Parentheses (paren.el / rainbow-delimiters.el)
 
 Configure the mode that highlights matching delimiters or parentheses.
 I consider this of utmost importance when working with languages such as
@@ -507,6 +286,347 @@ Summary of what these do:
   (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
+*** COMMENT Pair insert (lisp.el)
+
+#+begin_src emacs-lisp
+(use-package lisp
+  :straight (:type built-in)
+  :init
+  (define-prefix-command 'ale/symbol-pair)
+  (defun insert-quote () (interactive) (insert-pair nil ?\" ?\"))
+  (defun insert-round () (interactive) (insert-pair nil ?\( ?\)))
+  (defun insert-keyword () (interactive) (insert-pair nil ?\= ?\=))
+  (defun insert-square () (interactive) (insert-pair nil ?\[ ?\]))
+  (defun insert-angle () (interactive) (insert-pair nil ?\< ?\>))
+  :bind
+  ("C-s" . ale/symbol-pair)
+  ("C-s '" . insert-pair)
+  ("C-s q" . insert-quote)
+  ("C-s r" . insert-round)
+  ("C-s =" . insert-keyword)
+  ("C-s s" . insert-square)
+  ("C-s a" . insert-angle)
+  ("C-s r" . insert-quote))
+#+end_src
+
+*** Pair insert (embrace.el)
+
+#+begin_src emacs-lisp
+(use-package embrace
+  ;; :config
+  
+  )
+#+end_src
+
+*** Prettify symbols (prog-mode.el)
+
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :straight nil
+  :hook (prog-mode . prettify-symbols-mode)
+  :init
+  (setq-default prettify-symbols-alist
+                '(("lambda" . ?λ)
+                  ("<-" . ?←)
+                  ("->" . ?→)
+                  ("->>" . ?↠)
+                  ("=>" . ?⇒)
+                  ("/=" . ?≠)
+                  ("!=" . ?≠)
+                  ("==" . ?≡)
+                  ("<=" . ?≤)
+                  (">=" . ?≥)
+                  ("=<<" . (?= (Br . Bl) ?≪))
+                  (">>=" . (?≫ (Br . Bl) ?=))
+                  ("<=<" . ?↢)
+                  (">=>" . ?↣)))
+  (setq prettify-symbols-unprettify-at-point 'right-edge))
+#+end_src
+
+** Spelling (ispell.el)
+
+#+begin_src emacs-lisp
+(use-package ispell
+  :straight (:type built-in)
+  :commands ispell-lookup-words
+  :init
+  (defun ale/ispell-word ()
+    "Complete the symbol at point based on entries in the
+dictionary."
+    (interactive)
+    (when-let* ((word (thing-at-point 'symbol t))
+                (boundaries (bounds-of-thing-at-point 'symbol))
+                (start (car boundaries))
+                (end (cdr boundaries))
+                (words (ispell-lookup-words word))
+                (selection (completing-read "Words: " words)))
+      (delete-region start end) (insert selection)))
+  :bind ("C-x d" . ale/ispell-word))
+#+end_src
+
+** Tabs / indentation
+
+I believe tabs, in the sense of inserting the tab character, are best
+suited for indentation.  While spaces are superior at precisely aligning
+text.  However, I understand that elisp uses its own approach, which I
+do not want to interfere with.  Also, Emacs tends to perform alignments
+by mixing tabs with spaces, which /can actually lead to misalignments/
+depending on certain variables such as the size of the tab.  As such, I
+am disabling tabs by default.
+
+If there ever is a need to use different settings in other modes, we can
+customise them via hooks.  This is not an issue I have encountered yet
+and am therefore refraining from solving a problem that does not affect
+me.
+
+Note that =tab-always-indent= will first do indentation and then try to
+complete whatever you have typed in.
+
+#+begin_src emacs-lisp
+(setq-default tab-always-indent 'complete)
+(setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
+(setq-default tab-width 2)
+(setq-default indent-tabs-mode nil)
+#+end_src
+
+** Search / Replace
+*** Regular expressions (re-builder.el)
+
+To learn more about regular expressions, read the relevant pages in
+the official manual.  Assuming you have this installed properly on
+your system, run =C-h r i regexp= to get to the starting chapter.
+
+Emacs offers a built-in package for practising regular expressions.
+By default, =re-builder= uses Emacs-style escape notation, in the form
+of double backslashes.  You can switch between the various styles by
+using =C-c TAB= inside of the regexp builder's buffer.  I choose to keep
+this style as the default.  Other options are =string= and =rx=.
+
+#+begin_src emacs-lisp
+(use-package re-builder
+  :defer t
+  :config
+  (setq reb-re-syntax 'read))
+#+end_src
+
+*** Writable grep (wgrep.el)
+
+With =wgrep= we can directly edit the results of a =grep= and save the
+changes to all affected buffers.  In principle, this is the same as what
+the built-in =occur= offers.  We can use it to operate on a list of
+matches by leveraging the full power of Emacs' editing capabilities
+(e.g. keyboard macros, query and replace a regexp...).
+
+#+begin_src emacs-lisp
+(use-package wgrep
+  :config
+  (setq wgrep-auto-save-buffer t)
+  (setq wgrep-change-readonly-file t)
+  :bind
+  (:map wgrep-mode-map
+        ("M-n" . next-error-no-select)
+        ("M-p" . previous-error-no-select)))
+#+end_src
+
+*** Interactive query replace (anzu.el)
+
+#+begin_src emacs-lisp
+(use-package anzu
+  :init (global-anzu-mode +1))
+#+end_src
+
+*** Cross-references (xref.el)
+
+Xref provides helpful commands for code navigation and discovery, such
+as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
+(=M-,=).  It is a library that gets used by a variety of tools, including
+=project.el= (see [[#h:7862f39e-aed0-4d02-9f1e-60c4601a9734][Projects (project.el and ale/project.el)]]).
+
+#+begin_src emacs-lisp
+(use-package xref
+  :defer t
+  :config
+  ;; All those have been changed for Emacs 28
+  (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
+  (setq xref-show-xrefs-function #'xref-show-definitions-completing-read)
+  (setq xref-file-name-display 'project-relative)
+  (setq xref-search-program 'ripgrep))
+#+end_src
+
+*** Ripgrep (deadgrep.el)
+
+#+begin_src emacs-lisp
+(use-package deadgrep
+  :bind ("s-r" . deadgrep))
+#+end_src
+
+** Lines
+*** Fill-column (visual-fill-column.el)
+
+#+begin_src emacs-lisp
+(use-package visual-fill-column)
+#+end_src
+
+*** Paragragh (ale-fill.el)
+
+The =ace-fill.el= library (reproduced below) is a tiny wrapper around
+some Emacs settings and modes that are scrattered around several files,
+which control (i) how paragraphs or comments in programming modes should
+be wrapped to a given column count, and (ii) what constitutes a
+sentence.  I put them all together here to make things easier to track.
+- With regard to paragraphs, I find that a double space is the best way
+  to delimit sentences in source form, where a monospaced typeface is
+  customary.  There is no worry that this will be shown on a website or
+  rendered version of a document, because processors know how to handle
+  spacing.  We do this to make phrases easier to tell apart, but also to
+  render unambiguous commands like =forward-sentence=.
+- =ale/fill-fill-mode= sets my desired default column width for all
+  buffers, while it applies another value for programming modes (in case
+  there is a need to control the two cases separately).  Those values
+  are stored in the variables =ale/fill-default-column= and
+  =ale/fill-prog-mode-column= respectively.  My minor mode also enables
+  =auto-fill-mode= in =text-mode= and =prog-mode= buffers through the
+  appropriate hooks.  Disabling =ale/fill-fill-mode= will remove all
+  those customisations.
+
+#+begin_src emacs-lisp
+(use-package ale-fill
+  :straight nil
+  :init
+  (setq-default truncate-lines t)
+  :config
+  (setq ale/fill-default-column 80)
+  (setq ale/fill-prog-mode-column 80)  ; Set this to another value if you want
+  (setq sentence-end-double-space t)
+  (setq sentence-end-without-period nil)
+  (setq colon-double-space nil)
+  (setq use-hard-newlines nil)
+  (setq adaptive-fill-mode t)
+  (ale/fill-fill-mode 1))
+#+end_src
+
+** Jump list (better-jumper.el)
+
+#+begin_src emacs-lisp
+(use-package better-jumper
+  :config
+  (better-jumper-mode +1)
+  (defvar ale/better-jumper-cmd-alist
+    '(meow-next
+      meow-prev
+      meow-visit
+      meow-page-up
+      meow-page-down
+      meow-search
+      consult-outline
+      consult-line
+      consult-project-imenu
+      er/expand-region)
+    "A list of file, adviced function, and advice function.")
+  (defun ale/better-jumper-advice (fn &rest args)
+    (let ((old-pos (point)))
+      (apply fn args)
+      (when (> (abs (- (line-number-at-pos old-pos) (line-number-at-pos (point)))) 1)
+        (better-jumper-set-jump old-pos))))
+  (dolist (sym ale/better-jumper-cmd-alist)
+    (advice-add sym :around 'ale/better-jumper-advice)))
+#+end_src
+
+* Interface
+
+General interface section including fontfale/icon/etc function
+definition.
+
+** GUI / Frame
+
+Change some default frame configuration to my liking.
+
+*** Terminal key fix
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =Tab=, =C-m= and =Return=, etc. By default, emacs follow
+this convention, but it doesn't mean emacs are not able to tell the
+difference. To change this behaviour, we can use =input-decode-map= to give, for
+example, =C-m= different meaning.
+
+#+begin_src emacs-lisp
+(defun ale/key-fix (&optional frame)
+  "To distinguish C-m from RET."
+  (with-selected-frame (or frame (selected-frame))
+    (when window-system
+      (define-key input-decode-map [?\C-i] [C-i]))))
+(add-hook 'after-make-frame-functions #'ale/key-fix)
+#+end_src
+
+*** Fringe-mode
+
+#+begin_src emacs-lisp
+(add-to-list 'default-frame-alist '(internal-border-width . 30))
+(fringe-mode 1)
+#+end_src
+
+*** Window divider
+
+This is a built-in mode that draws vertical window borders in a slightly
+different way than the default, which I find more consistent.  Only
+using it because of that, though it can also adjust the size of the
+# borders as well as their placement.
+
+#+begin_src emacs-lisp
+(setq window-divider-default-right-width 10)
+(setq window-divider-default-places 'right-only)
+(add-hook 'after-init-hook #'window-divider-mode)
+#+end_src
+
+** Theme & icons
+
+#+begin_src emacs-lisp
+(use-package kaolin-themes
+  :config
+  (load-theme 'kaolin-dark t))
+
+(use-package all-the-icons
+  :defer t)
+#+end_src
+
+** Better modeline (doom-modeline.el)
+
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :config
+  (doom-modeline-mode t)
+  (column-number-mode)
+  (setq doom-modeline-height 30)
+  (setq doom-modeline-major-mode-icon t))
+#+end_src
+
+** Fontface (ale-font.el)
+
+#+begin_src emacs-lisp
+(use-package ale-fonts
+  :straight nil
+  :config
+  (setq ale/font-size 140)
+  (setq ale/zh-font-size 31)
+  (setq ale/default-fonts '("Victor Mono" "Microsoft Yahei" "STHeiti"))
+  (setq ale/fixed-fonts '("Victor Mono" "Fira Code Retina"))
+  (setq ale/variable-fonts '("Iosevka SS04" "Victor Mono" "Fira Code Retina"))
+  (setq ale/zh-fonts '("Sarasa Mono SC" "PingFang SC" "Microsoft Yahei"))
+  (setq ale/org-fonts '("Iosevka SS04" "ETBembo" "Fira Code Retina"))
+  (setq ale/zh-font-scale 1))
+#+end_src
+
+** Line Number
+
+#+begin_src emacs-lisp
+(use-package display-line-numbers
+  :straight nil
+  :init
+  (global-display-line-numbers-mode t)
+  :hook
+  ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
+#+end_src
+
 ** Scrolling behaviour
 
 By default, page scrolling should keep the point at the same visual
@@ -534,13 +654,13 @@ on the screen and more on how fast you can bring them into focus.  This
 is, of course, a matter of realigning priorities, as we still wish to
 control every aspect of the interface.
 
-** Minibuffer (minibuffer.el)
+** Minibuffer (minibuffer.el & ale-minibuffer.el)
 
 #+begin_src emacs-lisp
 (use-package minibuffer
   :straight (:type built-in)
   :config
-  (require 'ace-minibuffer)
+  (require 'ale-minibuffer)
   (setq completion-styles '(orderless flex)) ; Handle it to `orderless.el'
   (setq completion-category-defaults nil)
   (setq completion-cycle-threshold 3)
@@ -555,15 +675,12 @@ control every aspect of the interface.
   (setq read-file-name-completion-ignore-case t)
   (setq enable-recursive-minibuffers t)
   (setq read-answer-short t)
-  (setq resize-mini-windows t)
+  (setq resize-mini-windows 'grow-only)
   (setq minibuffer-eldef-shorten-default t)
   (setq echo-keystrokes 0.25)           ; from the C source code
   (file-name-shadow-mode 1)
   (minibuffer-depth-indicate-mode 1)
-  (minibuffer-electric-default-mode 1)
-  (let ((map minibuffer-local-map))
-    (define-key map (kbd "C-u") #'kill-whole-line)
-    (define-key map (kbd "C-w") #'backward-kill-word)))
+  (minibuffer-electric-default-mode 1))
 #+end_src
 
 ** Incremental narrowing (vertico.el)
@@ -575,8 +692,7 @@ A minimalistic completion UI.
   :defer t
   :init
   (vertico-mode 1)
-  (set-face-attribute 'vertico-current nil :inherit 'ace/pulse-line)
-  (advice-add 'vertico--resize-window :override #'ignore))
+  (set-face-attribute 'vertico-current nil :inherit 'ale/pulse-line))
 #+end_src
 
 ** Completion style (orderless.el)
@@ -584,18 +700,18 @@ A minimalistic completion UI.
 #+begin_src emacs-lisp
 (use-package orderless
   :config
-  (require 'ace-orderless)
+  (require 'ale-orderless)
   (setq orderless-component-separator " +")
   (setq orderless-matching-styles
-        '(ace/pinyin-build-regexp-string
+        '(ale/pinyin-build-regexp-string
           orderless-strict-leading-initialism
           orderless-prefixes
           orderless-regexp
           orderless-literal))
   (setq orderless-style-dispatchers
-        '(ace/orderless-literal-dispatcher
-          ace/orderless-initialism-dispatcher
-          ace/orderless-pinyin-dispatcher))
+        '(ale/orderless-literal-dispatcher
+          ale/orderless-initialism-dispatcher
+          ale/orderless-pinyin-dispatcher))
   (define-key minibuffer-local-completion-map "SPC" nil))
 #+end_src
 
@@ -618,7 +734,7 @@ for visualising the standard completion framework's output
 #+end_src
 
 ** Minibuffer commands (consult.el)
-   
+
 #+begin_src emacs-lisp
 (use-package consult
   :init
@@ -628,16 +744,16 @@ for visualising the standard completion framework's output
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
   :bind
-  ("M-s g" . consult-grep)
+  ("M-s s" . consult-grep)
   ("M-s k" . consult-keep-lines)
   ("M-s f" . consult-focus-lines)
   ("M-s i" . consult-imenu)
   ("M-s I" . consult-project-imenu)
-  ("M-s r" . consult-consult-register)
-  ("M-s k" . consult-yank)
+  ("M-s r" . consult-register)
+  ("M-s y" . consult-yank)
   ("M-s m" . consult-minor-mode-menu)
-  ("M-s l" . consult-complex-command)
-  ("M-s c" . consult-mode-command)
+  ("M-s c" . consult-complex-command)
+  ("M-s C" . consult-mode-command)
   :config
   (setq consult-line-numbers-widen t)
   (setq completion-in-region-function #'consult-completion-in-region)
@@ -646,16 +762,16 @@ for visualising the standard completion framework's output
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">"))
 
-(use-package ace-consult
+(use-package ale-consult
   :straight nil
   :config
-  (setq ace/consult-command-centre-list
+  (setq ale/consult-command-centre-list
         '(consult-line
           consult-mark
           consult-outline
           consult-project-imenu))
-  (setq ace/consult-command-top-list '())
-  (ace/consult-set-up-hooks-mode 1))
+  (setq ale/consult-command-top-list '())
+  (ale/consult-set-up-hooks-mode 1))
 #+end_src
 
 ** Minibuffer actions (embark.el)
@@ -682,26 +798,16 @@ for visualising the standard completion framework's output
 	        (cons act (concat act " on '%s'"))))
   (setq embark-become-indicator (propertize "Become" 'face 'warning)))
 
-(use-package ace-embark
+(use-package ale-embark
   :straight nil
   :after embark
   :config
-  (ace/embark-extras-keymaps 1))
-#+end_src
-
-** Completion utils (ace-completing.el)
-
-#+begin_src emacs-lisp
-(use-package ace-completing
-  :straight nil
-  :bind
-  (("C-x d" . ace/completing-word-ispell)))
+  (ale/embark-extras-keymaps 1))
 #+end_src
 
 * Viewports
 
-
-I believe that Emacs' true power lies in its buffer management rather
+I believe that Emacs's true power lies in its buffer management rather
 than its multiplexing.  The latter becomes inefficient at scale, since
 it tries to emulate the limitations of the real world, namely, the
 placement of things on a desk.
@@ -731,25 +837,26 @@ as effective for my case.
 #+begin_src emacs-lisp
 (use-package window
   :straight nil
+  :bind ("s-i" . next-buffer) ("s-o" . previous-buffer)
   :config
   (setq display-buffer-alist
-	`(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
-	   (display-buffer-in-side-window)
-	   (window-height . 0.3)
-	   (side . bottom))
-	  ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
-	   (display-buffer-in-side-window)
-	   (window-width . 0.4)
-	   (side . right))
-	  ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
-	   (display-buffer-at-bottom))))
-(setq window-combination-resize t)
-(setq even-window-sizes 'height-only)
-(setq window-sides-vertical nil)
-(setq switch-to-buffer-in-dedicated-window 'pop)
-;; Disable window close when calling 'keyboard-escape-quit'
-(defadvice keyboard-escape-quit (around keep-windows activate)
-  (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
+	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+	         (display-buffer-in-side-window)
+	         (window-height . 0.3)
+	         (side . bottom))
+	        ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
+	         (display-buffer-in-side-window)
+	         (window-width . 0.4)
+	         (side . right))
+	        ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
+	         (display-buffer-at-bottom))))
+  (setq window-combination-resize t)
+  (setq even-window-sizes 'height-only)
+  (setq window-sides-vertical nil)
+  (setq switch-to-buffer-in-dedicated-window 'pop)
+  ;; Disable window close when calling 'keyboard-escape-quit'
+  (defadvice keyboard-escape-quit (around keep-windows activate)
+    (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
 #+end_src
 
 ** Index based window motions (ace-window.el)
@@ -784,14 +891,12 @@ where more than those it would actually speed up my workflow.
 
 #+begin_src emacs-lisp
 (use-package windmove
+  :straight (:type built-in)
   :config
-  (setq windmove-create-window nil)    ; Emacs 27.1
-  :bind
-  ("s-h" . (lambda () (interactive) (split-window-right) (windmove-right)))
-  ("s-v" . (lambda () (interactive) (split-window-below) (windmove-down))))
+  (setq windmove-create-window nil))
 #+end_src
 
-** Tabs (ace-tab.el)
+** Tabs (ale-tab.el)
 
 The =tab-bar= library, is best understood as the equivalent of "virtual desktops",
 as these are used in most desktop environments or window managers. You can, for
@@ -804,7 +909,7 @@ register).
 For me tabs are useful as groups of buffers in a given window
 configuration.  I do not want a persistent bar with buttons that
 introduces extra visual clutter.  Switching to tabs is done through
-completion, specifically =ace/tab-select-tab-dwim=.
+completion, specifically =ale/tab-select-tab-dwim=.
 
 All settings I configure here are meant to work in accordance with this
 abstract conception of "tabs are work spaces".  Here are the main key
@@ -852,20 +957,16 @@ via =C-x t r=, though I find I do not use it.
   (setq tab-bar-tab-name-function 'tab-bar-tab-name-all)
   (tab-bar-mode -1)
   (tab-bar-history-mode -1)
-  (let ((map global-map))
-    (define-key map (kbd "H-s-<tab>") #'tab-next)
-    (define-key map (kbd "H-s-`") #'tab-previous))
   (custom-set-faces
    '(tab-bar ((t (:inherit nil :height 1.1))))
    '(tab-bar-tab ((t (:inherit tab-bar :underline nil :weight bold))))
    '(tab-bar-tab-inactive ((t (:inherit tab-bar :weight normal :height 1.0))))))
 
-(use-package ace-tab
+(use-package ale-tab
   :straight nil
-  :config
-  (let ((map global-map))
-    (define-key map (kbd "C-x t h") #'ace/tab-tab-bar-toggle)
-    (define-key map (kbd "C-x t t") #'ace/tab-select-tab-dwim)))
+  :bind
+  ("C-x t h" . ale/tab-tab-bar-toggle)
+  ("C-x t t" . ale/tab-select-tab-dwim))
 
 (use-package tab-bar-echo-area
   :config
@@ -881,8 +982,12 @@ control over the buffer list and is more powerful overall.
 #+begin_src emacs-lisp
 (use-package ibuffer
   :bind
-  ("s-i" . (lambda (a) (interactive "P") (if a (ibuffer) (next-buffer))))
-  ("s-o" . (lambda (a) (interactive "P") (if a (ibuffer) (previous-buffer))))
+  (:map ibuffer-mode-map
+        ("* f" . ibuffer-mark-by-file-name-regexp)
+        ("* g" . ibuffer-mark-by-content-regexp)
+        ("* n" . ibuffer-mark-by-name-regexp)
+        ("s n" . ibuffer-do-sort-by-alphabetic)
+        ("/ g" . ibuffer-filter-by-content))
   :config
   (setq ibuffer-expert t)
   (setq ibuffer-display-summary nil)
@@ -902,66 +1007,23 @@ control over the buffer list and is more powerful overall.
                 " " filename-and-process)
           (mark " " (name 16 -1) " " filename)))
   (setq ibuffer-saved-filter-groups nil)
-  (add-to-list 'ibuffer-never-show-predicates "^\\ ")
   (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0)))
-  (let ((map ibuffer-mode-map))
-    (define-key map (kbd "* f") #'ibuffer-mark-by-file-name-regexp)
-    (define-key map (kbd "* g") #'ibuffer-mark-by-content-regexp) ; "g" is for "grep"
-    (define-key map (kbd "* n") #'ibuffer-mark-by-name-regexp)
-    (define-key map (kbd "s n") #'ibuffer-do-sort-by-alphabetic)  ; "sort name" mnemonic
-    (define-key map (kbd "/ g") #'ibuffer-filter-by-content)))
+  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
 #+end_src
 
-** Scratch buffers (scratch.el)
-This package will produce a buffer that matches the major mode of the
-one you are currently in.  Use it with =M-x scratch=.  Doing that with a
-prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
-super effective!
-
-The =ace/scratch-buffer-setup= simply adds some text in the buffer and
-renames it appropriately for the sake of easier discovery.  I got the
-idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
-
-#+begin_src emacs-lisp
-(use-package scratch
-  :defer t
-  :config
-  (defun ace/scratch-buffer-setup ()
-    "Add contents to `scratch' buffer and name it accordingly.
-If region is active, add its contents to the new buffer."
-    (let* ((mode major-mode)
-           (string (format "Scratch buffer for: %s\n\n" mode))
-           (region (with-current-buffer (current-buffer)
-                     (if (region-active-p)
-                         (buffer-substring-no-properties
-                          (region-beginning)
-                          (region-end)))
-                     ""))
-           (text (concat string region)))
-      (when scratch-buffer
-	      (save-excursion
-          (insert text)
-          (goto-char (point-min))
-          (comment-region (point-at-bol) (point-at-eol)))
-	      (forward-line 2))
-      (rename-buffer (format "*Scratch for %s*" mode) t)))
-  (add-hook 'scratch-create-buffer-hook #'ace/scratch-buffer-setup)
-  (define-key global-map (kbd "C-c s") #'scratch))
-#+end_src
-
-* Org mode
+* Major modes
+** Org mode
 
 Org mode setup.
 
-** Org (org.el)
+*** Org (org.el)
 
 #+begin_src emacs-lisp
 (use-package org
   :defer t
   :straight nil
   :hook
-  (org-mode . ace/font-org-setup)
+  (org-mode . ale/font-org-setup)
   (org-tab-first . org-end-of-line)
   :config
   (setq org-adapt-indentation nil)
@@ -984,7 +1046,7 @@ Org mode setup.
         ("C-c C-S-l" . org-insert-last-stored-link)))
 #+end_src
 
-** Source block (org-src.el)
+*** Source block (org-src.el)
 
 #+begin_src emacs-lisp
 (use-package org-src
@@ -1005,7 +1067,7 @@ Org mode setup.
   (add-to-list 'org-structure-template-alist '("py" . "src python")))
 #+end_src
 
-** Bullet (org-superstar.el)
+*** Bullet (org-superstar.el)
 
 #+begin_src emacs-lisp
 (use-package org-superstar
@@ -1018,7 +1080,7 @@ Org mode setup.
   (org-mode . org-superstar-mode))
 #+end_src
 
-** Habit (org-habit.el)
+*** Habit (org-habit.el)
 
 #+begin_src emacs-lisp
 (use-package org-habit
@@ -1029,31 +1091,63 @@ Org mode setup.
   (setq org-habit-graph-column 60))
 #+end_src
 
-* Eshell
-** Basic (eshell.el & ace-eshell.el)
+** lua mode
 
 #+begin_src emacs-lisp
-(use-package ace-eshell
+(use-package lua-mode
+  :defer t
+  :config
+  (setq lua-indent-level 2))
+#+end_src
+
+** yaml mode
+
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :defer t)
+#+end_src
+
+** web mode
+
+#+begin_src emacs-lisp
+(use-package web-mode
+  :defer t
+  :config
+  (define-derived-mode ale/vue-mode web-mode "ale/vue"
+    "A major mode derived from web-mode, for editing .vue files with LSP support.")
+  :hook
+  (web-mode . (lambda ()
+                (setq web-mode-markup-indent-offset 2)
+                (setq web-mode-code-indent-offset 2)
+                (setq web-mode-script-padding 0)))
+  :mode ("\\.vue\\'" . ale/vue-mode))
+#+end_src
+
+* Eshell
+** Basic (eshell.el & ale-eshell.el)
+
+#+begin_src emacs-lisp
+(use-package ale-eshell
   :straight nil
   :defer t
   :config
   (setq eshell-banner-message "")
-  (setq eshell-aliases-file (concat ace/init-dot-repo "eshell/aliases"))
-  (add-hook 'eshell-first-time-mode-hook 'ace/eshell-configure)
+  (setq eshell-aliases-file (concat ale/init-dot-repo "eshell/aliases"))
+  (add-hook 'eshell-first-time-mode-hook 'ale/eshell-configure)
   (with-eval-after-load 'esh-opt
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "nvim")))
   :bind
-  (("s-e" . ace/eshell-toggle)
+  (("s-e" . ale/eshell-toggle)
    :map eshell-mode-map
+   ("C-\\" . (lambda () (interactive) (eshell/cd "..") (eshell-emit-prompt)))
    ("C-r" . consult-history)
-   ("C-u" . eshell-kill-input)
-   ("C-n" . eshell-next-prompt)
-   ("C-p" . eshell-previous-prompt)
-   ("s-<backspace>" . ace/eshell-clear-buffer)
-   ("s-c" . ace/eshell-new)
-   ("s-i" . ace/eshell-next)
-   ("s-o" . ace/eshell-prev)))
+   ("<C-i>" . eshell-next-prompt)
+   ("C-o" . eshell-previous-prompt)
+   ("C-l" . ale/eshell-clear-buffer)
+   ("s-c" . ale/eshell-new)
+   ("s-i" . ale/eshell-next)
+   ("s-o" . ale/eshell-prev)))
 #+end_src
 
 ** Import environment vars (exec-path-from-shell.el)
@@ -1100,6 +1194,7 @@ branches in =git= commands.
 
 #+begin_src emacs-lisp
 (use-package eshell-z
+  :defer t
   :hook ((eshell-mode . (lambda () (require 'eshell-z)))
          (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
 #+end_src
@@ -1131,11 +1226,12 @@ branches in =git= commands.
 
 Configuration about dired, lf, files, recentf etc.
 
-** User directory (ace-files.el)
+** User directory (ale-files.el)
 
 #+begin_src emacs-lisp
-(use-package ace-files
-  :straight nil)
+(use-package ale-files
+  :straight nil
+  :bind (:map minibuffer-local-map ("s-<return>" . ale/files-other-window)))
 #+end_src
 
 ** Dired (dired.el)
@@ -1146,6 +1242,20 @@ file management operations inside of an Emacs buffer.  It is simply superb!
 #+begin_src emacs-lisp
 (use-package dired
   :straight (:type built-in)
+  :bind
+  (:map dired-mode-map
+        ("/" . dired-goto-file)
+        ("I" . dired-insert-subdir)
+        ("e" . dired-create-empty-file)
+        ("E" . dired-find-file-other-window)
+        ("i" . dired-find-file)
+        ("a" . ale/dired-file-rename-eol)
+        ("<" . beginning-of-buffer)
+        (">" . end-of-buffer)
+        ("[" . dired-prev-dirline)
+        ("]" . dired-next-dirline)
+        ("o" . dired-up-directory)
+        ("." . dired-omit-mode))
   :config
   (with-eval-after-load 'doom-modeline
     (remove-hook 'dired-mode-hook #'doom-modeline-set-project-modeline))
@@ -1155,18 +1265,11 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   (setq delete-by-moving-to-trash t)
   (setq dired-dwim-target t)
   (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso")
-  (defun ace/dired-file-rename-eol ()
+  (defun ale/dired-file-rename-eol ()
     (interactive)
     (end-of-line)
-    (wdired-change-to-wdired-mode))
-  (define-key dired-mode-map "I"  #'dired-insert-subdir)
-  (define-key dired-mode-map "E"  #'dired-create-empty-file)
-  (define-key dired-mode-map "i"  #'wdired-change-to-wdired-mode)
-  (define-key dired-mode-map "a"  #'ace/dired-file-rename-eol)
-  (define-key dired-mode-map "["  #'beginning-of-buffer)
-  (define-key dired-mode-map "]"  #'end-of-buffer)
-  (define-key dired-mode-map "h"  #'dired-up-directory)
-  (define-key dired-mode-map "."  #'dired-omit-mode))
+    (wdired-change-to-wdired-mode)
+    (when (featurep 'meow) (meow-append))))
 #+end_src
 
 ** Wdired (wdired.el)
@@ -1188,16 +1291,18 @@ well. See details at: https://github.com/alexluigit/lf.el
 #+begin_src emacs-lisp
 (use-package lf
   :straight (lf :type git :host github :repo "alexluigit/lf.el")
+  :bind (:map lf-mode-map ("s-e" . ale/lf-eshell))
   :init
-  (setq lf-routes '(("h" "Home"        "~")
+  (setq lf-routes '(("o" "Home"        "~")
                     ("u" "Emacs cache" "~/.cache/emacs")
-                    ("c" "Code"        "~/Code")
-                    ("d" "Downloads"   "~/Downloads")
-                    ("p" "Wallpaper"   "~/Pictures/wallpaper")
+                    ("p" "Code"        "~/Code")
+                    ("n" "Downloads"   "~/Downloads")
+                    ("w" "Wallpaper"   "~/Pictures/wallpaper")
                     ("m" "Drives"      "/media")
                     ("t" "Trash"       "~/.local/share/Trash")))
   :config
-  (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files") ("/media/Cloud/" . ".Trash/files")))
+  (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
+                             ("/media/Cloud/" . ".Trash/files")))
   (setq lf-completing-preview-position
         (lambda (info)
           (cons (/ (- (plist-get info :parent-frame-width)
@@ -1207,17 +1312,16 @@ well. See details at: https://github.com/alexluigit/lf.el
   (lf-override-dired-mode)
   (lf-completing-preview-mode)
   (add-hook 'lf-mode-hook (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
-  (add-hook 'lf-preview-setup-hook (lambda () (setq cursor-type nil) (setq truncate-lines t)))
-  (defun ace/ts-ext-fix (entry)
+  (add-hook 'lf-preview-setup-hook (lambda () (setq cursor-type nil)))
+  (defun ale/ts-ext-fix (entry)
     (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
         (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
       (find-file-noselect entry t nil)))
-  (add-to-list 'lf-preview-cmd-alist '(("ts") (ace/ts-ext-fix . ())))
-  (define-key lf-mode-map (kbd "s-e")
-    (lambda ()
-      (interactive)
-      (let ((ace/eshell-position '((window-height . 0.35) (side . bottom))))
-        (ace/eshell-toggle t)))))
+  (defun ale/lf-eshell ()
+    (interactive)
+    (let ((ale/eshell-position '((window-height . 0.35) (side . bottom))))
+      (ale/eshell-toggle t)))
+  (add-to-list 'lf-preview-cmd-alist '(("ts") (ale/ts-ext-fix . ()))))
 #+end_src
 
 ** Highlighting (diredfl.el)
@@ -1226,6 +1330,7 @@ Additional syntax highlighting in dired / lf buffer.
 
 #+begin_src emacs-lisp
 (use-package diredfl
+  :defer t
   :hook (dired-mode . diredfl-mode))
 #+end_src
 
@@ -1254,100 +1359,18 @@ Basically, its interaction model is as follows:
 - =x= to execute these special marks.
 
 #+begin_src emacs-lisp
-;; (use-package trashed
-;;   :config
-;;   (setq trashed-action-confirmer 'y-or-n-p)
-;;   (setq trashed-use-header-line t)
-;;   (setq trashed-sort-key '("Date deleted" . t))
-;;   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
-#+end_src
-
-* Utils
-** Epub reader (nov.el)
-
-#+begin_src emacs-lisp
-(use-package shrface
-  :after nov
-  :config
-  (shrface-basic)
-  (shrface-trial)
-  (add-to-list 'shr-external-rendering-functions
-               '(span . shrface-tag-span))
-  (shrface-default-keybindings) ; setup default keybindings
-  (setq shrface-href-versatile t))
-
-(use-package nov
+(use-package trashed
   :defer t
-  :init
-  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (add-hook 'nov-mode-hook 'ace/nov-setup)
   :config
-  (advice-add 'nov-render-title :override #'ignore)
-  (setq nov-shr-rendering-functions '((img . nov-render-img)
-                                      (title . nov-render-title)
-                                      (b . shr-tag-b)))
-  (setq nov-shr-rendering-functions
-        (append nov-shr-rendering-functions
-                shr-external-rendering-functions))
-  (defun ace/nov-setup ()
-    (require 'ace-modeline)
-    (ace-modeline-nov)
-    (require 'shrface)
-    (shrface-mode)))
-#+end_src
-
-** Music Player (mpdel.el)
-
-#+begin_src emacs-lisp
-;; (use-package mpdel)
-#+end_src
-
-** Dictionary
-
-#+begin_src emacs-lisp
-(use-package youdao-dictionary
-  :defer t
-  :bind
-  ("C-x y" . youdao-dictionary-search-at-point-posframe)
-  :init
-  (setq url-automatic-caching t)
-  (setq youdao-dictionary-use-chinese-word-segmentation t))
+  (setq trashed-action-confirmer 'y-or-n-p)
+  (setq trashed-use-header-line t)
+  (setq trashed-sort-key '("Date deleted" . t))
+  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 #+end_src
 
 * Development
 
 Packages or custom functions for development.
-
-** Major mode
-*** lua mode
-
-#+begin_src emacs-lisp
-(use-package lua-mode
-  :defer t)
-#+end_src
-
-*** yaml mode
-
-#+begin_src emacs-lisp
-(use-package yaml-mode
-  :defer t)
-#+end_src
-
-*** web mode
-
-#+begin_src emacs-lisp
-(use-package web-mode
-  :defer t
-  :config
-  (define-derived-mode ace/vue-mode web-mode "ace/vue"
-    "A major mode derived from web-mode, for editing .vue files with LSP support.")
-  :hook
-  (web-mode . (lambda ()
-                (setq web-mode-markup-indent-offset 2)
-                (setq web-mode-code-indent-offset 2)
-                (setq web-mode-script-padding 0)))
-  :mode ("\\.vue\\'" . ace/vue-mode))
-#+end_src
 
 ** Version control (magit.el)
 
@@ -1371,9 +1394,10 @@ Packages or custom functions for development.
           overlong-summary-line))
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories
-        '(("~/Code" . 1)))
+        '(("~/Code" . 1) ("~" . 1)))
   :bind
-  (:map magit-mode-map ("`" . magit-diff-show-or-scroll-up)
+  (:map global-map ("C-M-g" . magit-status-here)
+   :map magit-mode-map ("`" . magit-diff-show-or-scroll-up)
    :map magit-diff-section-base-map ("<C-return>" . magit-diff-visit-file-other-window)
    :map magit-diff-mode-map ("`" . scroll-up)))
 
@@ -1396,51 +1420,48 @@ Packages or custom functions for development.
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
   ;; Tweak those for safer identification and removal
   (setq ediff-combination-pattern
-        '("<<<<<<< ace-ediff-combine Variant A" A
-          ">>>>>>> ace-ediff-combine Variant B" B
-          "####### ace-ediff-combine Ancestor" Ancestor
-          "======= ace-ediff-combine End"))
-  (defun ace/ediff-flush-combination-pattern ()
+        '("<<<<<<< ale-ediff-combine Variant A" A
+          ">>>>>>> ale-ediff-combine Variant B" B
+          "####### ale-ediff-combine Ancestor" Ancestor
+          "======= ale-ediff-combine End"))
+  (defun ale/ediff-flush-combination-pattern ()
     "Remove my custom `ediff-combination-pattern' markers.
 This is a quick-and-dirty way to get rid of the markers that are
 left behind by `smerge-ediff' when combining the output of two
 diffs.  While this could be automated via a hook, I am not yet
 sure this is a good approach."
     (interactive)
-    (flush-lines ".*ace-ediff.*" (point-min) (point-max) nil)))
+    (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil)))
 ;; (use-package forge)
 #+end_src
 
-** Project management (project.el)
+** Project management (project.el & ale-project.el)
 
 #+begin_src emacs-lisp
 (use-package project
   :straight (:type built-in)
+  :init
+  (define-key global-map (kbd "C-x C-p") nil)
+  (require 'ale-project)
   :config
   (setq project-switch-commands
-        '((?f "File" project-find-file)
-          (?s "Subdir" ace/project-find-subdir)
-          (?g "Grep" project-find-regexp)
-          (?d "Dired" project-dired)
-          (?b "Buffer" project-switch-to-buffer)
-          (?q "Query replace" project-query-replace-regexp)
-          (?t "Tag switch" ace/project-retrieve-tag)
-          (?m "Magit" ace/project-magit-status)
-          (?l "Log VC" ace/project-commit-log)
-          (?e "Eshell" project-eshell))))
-
-(use-package ace-project
-  :straight nil
-  :config
-  (setq ace/project-project-roots '("~/Code/" "~/"))
-  (setq ace/project-commit-log-limit 25)
-  (setq ace/project-large-file-lines 1000)
+        '((project-find-file "File" ?\r)
+          (ale/project-find-subdir "Subdir" ?s)
+          (project-find-regexp "Grep" ?g)
+          (project-dired "Dired" ?d)
+          (ale/project-retrieve-tag "Tag switch" ?t)
+          (ale/project-magit-status "Magit" ?m)
+          (ale/project-commit-log "Log VC" ?l)))
+  (setq ale/project-project-roots '("~/Code/" "~/"))
+  (setq ale/project-commit-log-limit 25)
+  (setq ale/project-large-file-lines 1000)
   :bind
-  ("C-x p DEL" . ace/project-remove-project)
-  ("C-x p l" . ace/project-commit-log)
-  ("C-x p m" . ace/project-magit-status)
-  ("C-x p s" . ace/project-find-subdir)
-  ("C-x p t" . ace/project-retrieve-tag))
+  (:map project-prefix-map
+        ("DEL" . ale/project-remove-project)
+        ("l" . ale/project-commit-log)
+        ("m" . ale/project-magit-status)
+        ("s" . ale/project-find-subdir)
+        ("t" . ale/project-retrieve-tag)))
 #+end_src
 
 ** Language server protocol (lsp-mode.el)
@@ -1453,7 +1474,7 @@ sure this is a good approach."
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   :hook
-  ((sh-mode lua-mode haskell-mode ace/vue-mode typescript-mode) . #'lsp-deferred))
+  ((sh-mode lua-mode haskell-mode ale/vue-mode typescript-mode) . #'lsp-deferred))
 
 (use-package lsp-tailwindcss
   :after (lsp-mode web-mode)
@@ -1492,28 +1513,35 @@ sure this is a good approach."
     (define-key map (kbd "C-n") #'company-select-next)))
 #+end_src
 
-** Flycheck
+** Snippet (yasnippet.el)
 
 #+begin_src emacs-lisp
-;; (use-package flymake
-;;   :config
-;;   (setq flymake-fringe-indicator-position 'left-fringe)
-;;   (setq flymake-suppress-zero-counters t)
-;;   (setq flymake-start-on-flymake-mode t)
-;;   (setq flymake-no-changes-timeout nil)
-;;   (setq flymake-start-on-save-buffer t)
-;;   (setq flymake-proc-compilation-prevents-syntax-check t)
-;;   (setq flymake-wrap-around nil)
-;;   (let ((map flymake-mode-map))
-;;     (define-key map (kbd "C-c ! s") #'flymake-start)
-;;     (define-key map (kbd "C-c ! d") #'flymake-show-diagnostics-buffer)
-;;     (define-key map (kbd "C-c ! n") #'flymake-goto-next-error)
-;;     (define-key map (kbd "C-c ! p") #'flymake-goto-prev-error)))
+(use-package yasnippet
+  :defer t)
+#+end_src
 
-;; (use-package flymake-diagnostic-at-point
-;;  :config
-;; 	(setq flymake-diagnostic-at-point-display-diagnostic-function
-;; 			  'flymake-diagnostic-at-point-display-minibuffer))
+** COMMENT Flycheck
+
+#+begin_src emacs-lisp
+(use-package flymake
+  :config
+  (setq flymake-fringe-indicator-position 'left-fringe)
+  (setq flymake-suppress-zero-counters t)
+  (setq flymake-start-on-flymake-mode t)
+  (setq flymake-no-changes-timeout nil)
+  (setq flymake-start-on-save-buffer t)
+  (setq flymake-proc-compilation-prevents-syntax-check t)
+  (setq flymake-wrap-around nil)
+  (let ((map flymake-mode-map))
+    (define-key map (kbd "C-c ! s") #'flymake-start)
+    (define-key map (kbd "C-c ! d") #'flymake-show-diagnostics-buffer)
+    (define-key map (kbd "C-c ! n") #'flymake-goto-next-error)
+    (define-key map (kbd "C-c ! p") #'flymake-goto-prev-error)))
+
+(use-package flymake-diagnostic-at-point
+ :config
+	(setq flymake-diagnostic-at-point-display-diagnostic-function
+			  'flymake-diagnostic-at-point-display-minibuffer))
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
@@ -1529,6 +1557,103 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package format-all
-  :defer t)
+  :defer t
+  :bind ("C-c C-M-f" . format-all-buffer))
+#+end_src
+
+* Utils
+** COMMENT Scratch buffers (scratch.el)
+This package will produce a buffer that matches the major mode of the
+one you are currently in.  Use it with =M-x scratch=.  Doing that with a
+prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
+super effective!
+
+The =ale/scratch-buffer-setup= simply adds some text in the buffer and
+renames it appropriately for the sake of easier discovery.  I got the
+idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
+
+#+begin_src emacs-lisp
+(use-package scratch
+  :config
+  (defun ale/scratch-buffer-setup ()
+    "Add contents to `scratch' buffer and name it accordingly.
+If region is active, add its contents to the new buffer."
+    (let* ((mode major-mode)
+           (string (format "Scratch buffer for: %s\n\n" mode))
+           (region (with-current-buffer (current-buffer)
+                     (if (region-active-p)
+                         (buffer-substring-no-properties
+                          (region-beginning)
+                          (region-end)))
+                     ""))
+           (text (concat string region)))
+      (when scratch-buffer
+	      (save-excursion
+          (insert text)
+          (goto-char (point-min))
+          (comment-region (point-at-bol) (point-at-eol)))
+	      (forward-line 2))
+      (rename-buffer (format "*Scratch for %s*" mode) t)))
+  (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
+  (define-key global-map (kbd "C-c s") #'scratch))
+#+end_src
+** COMMENT Epub reader (nov.el)
+
+#+begin_src emacs-lisp
+(use-package shrface
+  :after nov
+  :config
+  (shrface-basic)
+  (shrface-trial)
+  (add-to-list 'shr-external-rendering-functions
+               '(span . shrface-tag-span))
+  (shrface-default-keybindings) ; setup default keybindings
+  (setq shrface-href-versatile t))
+
+(use-package nov
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+  (add-hook 'nov-mode-hook 'ale/nov-setup)
+  :config
+  (advice-add 'nov-render-title :override #'ignore)
+  (setq nov-shr-rendering-functions '((img . nov-render-img)
+                                      (title . nov-render-title)
+                                      (b . shr-tag-b)))
+  (setq nov-shr-rendering-functions
+        (append nov-shr-rendering-functions
+                shr-external-rendering-functions))
+  (defun ale/nov-setup ()
+    (require 'ale-modeline)
+    (ale-modeline-nov)
+    (require 'shrface)
+    (shrface-mode)))
+#+end_src
+
+** COMMENT Music Player (mpdel.el)
+
+#+begin_src emacs-lisp
+(use-package mpdel)
+#+end_src
+
+** COMMENT Dictionary
+
+#+begin_src emacs-lisp
+(use-package youdao-dictionary
+  :defer t
+  :bind
+  ("C-x y" . youdao-dictionary-search-at-point-posframe)
+  :init
+  (setq url-automatic-caching t)
+  (setq youdao-dictionary-use-chinese-word-segmentation t))
+#+end_src
+
+** Murl
+
+#+begin_src emacs-lisp
+(use-package ale-murl
+  :straight nil
+  :defer t
+  :bind ("C-x C-M-u" . ale/murl-open))
 #+end_src
 

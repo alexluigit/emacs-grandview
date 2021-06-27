@@ -8,5 +8,5 @@ alias ka killall $1
 alias px export HTTP_PROXY=http://127.0.0.1:1088; export HTTPS_PROXY=http://127.0.0.1:1088
 alias yd youtube-dl --write-sub --write-auto-sub -o "~/Downloads/%(title)s-%(id)s.%(ext)s" $1
 alias ydl youtube-dl --yes-playlist --write-sub --write-auto-sub -o "~/Downloads/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" $1
-alias pai ace/eshell-pacman-install
-alias pau ace/eshell-pacman-uninstall
+alias pai ale/eshell-pacman-install
+alias pau ale/eshell-pacman-uninstall

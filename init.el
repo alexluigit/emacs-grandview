@@ -19,33 +19,33 @@
 ;; No ask for follow link
 (setq vc-follow-symlinks t)
 
-(push (concat ace/init-dot-repo "lisp") load-path)
+(push (concat ale/init-dot-repo "lisp") load-path)
 
 ;; Load configurations.
-(defun ace/init-load-config ()
+(defun ale/init-load-config ()
   "Load main Emacs configurations, either '.el' or '.org' file."
-  (let ((init-el (concat user-emacs-directory "ace.el"))
-        (init-org (concat ace/init-dot-repo "ace.org")))
+  (let ((init-el (concat user-emacs-directory "ale.el"))
+        (init-org (concat ale/init-dot-repo "ale.org")))
     (if (file-exists-p init-el)
         (load-file init-el)
       (require 'ob-tangle)
       (org-babel-tangle-file init-org init-el)
       (load-file init-el))))
 
-(ace/init-load-config)
+(ale/init-load-config)
 
-(defun ace/init-build-config ()
+(defun ale/init-build-config ()
   "Automatically tangle main init org file at saving when current buffer name matches.
 Add this to `after-save-hook' in `org-mode-hook'."
-  (let ((init-el (concat user-emacs-directory "ace.el"))
-        (init-org (concat ace/init-dot-repo "ace.org")))
+  (let ((init-el (concat user-emacs-directory "ale.el"))
+        (init-org (concat ale/init-dot-repo "ale.org")))
     (require 'ob-tangle)
     (org-babel-tangle-file init-org init-el)
     (byte-compile-file init-el)))
 
-(defun ace/init-edit-config ()
+(defun ale/init-edit-config ()
   "A util function for finding init file quickly."
   (interactive)
-  (find-file (concat ace/init-dot-repo "ace.org")))
+  (find-file (concat ale/init-dot-repo "ale.org")))
 
-(add-hook 'kill-emacs-hook #'ace/init-build-config)
+(add-hook 'kill-emacs-hook #'ale/init-build-config)

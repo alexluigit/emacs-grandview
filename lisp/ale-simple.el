@@ -1,25 +1,25 @@
-(defgroup ace-simple ()
+(defgroup ale-simple ()
   "Generic utilities for my dotemacs."
   :group 'editing)
 
-(defcustom ace/simple-date-specifier "%F"
+(defcustom ale/simple-date-specifier "%F"
   "Date specifier for `format-time-string'.
-Used by `ace/simple-insert-date'."
+Used by `ale/simple-insert-date'."
   :type 'string
-  :group 'ace/simple)
+  :group 'ale/simple)
 
-(defcustom ace/simple-time-specifier "%R %z"
+(defcustom ale/simple-time-specifier "%R %z"
   "Time specifier for `format-time-string'.
-Used by `ace/simple-insert-date'."
+Used by `ale/simple-insert-date'."
   :type 'string
-  :group 'ace/simple)
+  :group 'ale/simple)
 
 ;;; Commands
 
 ;;;; Comands for text editing
 
 ;;;###autoload
-(defun ace/simple-replace-line-or-region ()
+(defun ale/simple-replace-line-or-region ()
   "Replace line or region with latest kill.
 This command can then be followed by the standard
 `yank-pop' (default is bound to \\[yank-pop])."
@@ -30,17 +30,17 @@ This command can then be followed by the standard
   (yank))
 
 ;;;###autoload
-(defun ace/simple-insert-date (&optional arg)
-  "Insert the current date as `ace/simple-date-specifier'.
+(defun ale/simple-insert-date (&optional arg)
+  "Insert the current date as `ale/simple-date-specifier'.
 
 With optional prefix ARG (\\[universal-argument]) also append the
-current time understood as `ace/simple-time-specifier'.
+current time understood as `ale/simple-time-specifier'.
 
 When region is active, delete the highlighted text and replace it
 with the specified date."
   (interactive "P")
-  (let* ((date ace/simple-date-specifier)
-         (time ace/simple-time-specifier)
+  (let* ((date ale/simple-date-specifier)
+         (time ale/simple-time-specifier)
          (format (if arg (format "%s %s" date time) date)))
     (when (use-region-p)
       (delete-region (region-beginning) (region-end)))
@@ -51,7 +51,7 @@ with the specified date."
 (defvar ffap-string-at-point-region)
 
 ;;;###autoload
-(defun ace/simple-escape-url ()
+(defun ale/simple-escape-url ()
   "Wrap URL in angled brackets."
   (interactive)
   (when-let ((url (ffap-url-at-point)))
@@ -67,7 +67,7 @@ with the specified date."
 ;;;; Commands for code navigation (work in progress)
 
 ;;;###autoload
-(defun ace/simple-downward-list (&optional arg)
+(defun ale/simple-downward-list (&optional arg)
   "Like `backward-up-list' but defaults to a forward motion.
 With optional ARG, move that many times in the given
 direction (negative is forward due to this being a
@@ -77,33 +77,33 @@ direction (negative is forward due to this being a
 
 ;;;; Commands for paragraphs
 
-(defvar-local ace/simple--auto-fill-cycle-state 1
-  "Representation of `ace/simple-auto-fill-cycle' state.")
+(defvar-local ale/simple--auto-fill-cycle-state 1
+  "Representation of `ale/simple-auto-fill-cycle' state.")
 
 ;; Based on gungadin-cylocal.el (private communication with Christopher
 ;; Dimech---disclosed with permission).
 ;;;###autoload
-(defun ace/simple-auto-fill-cycle ()
+(defun ale/simple-auto-fill-cycle ()
   "Cycles auto fill for comments, everything, nothing."
   (interactive)
-  (let ((n ace/simple--auto-fill-cycle-state))
+  (let ((n ale/simple--auto-fill-cycle-state))
     (pcase n
       (2
        (message "Auto fill %s" (propertize "buffer" 'face 'warning))
        (setq-local comment-auto-fill-only-comments nil)
-       (setq-local ace/simple--auto-fill-cycle-state (1+ n)))
+       (setq-local ale/simple--auto-fill-cycle-state (1+ n)))
       (3
        (message "Disable auto fill")
        (auto-fill-mode 0)
-       (setq-local ace/simple--auto-fill-cycle-state (1+ n)))
+       (setq-local ale/simple--auto-fill-cycle-state (1+ n)))
       (_
        (message "Auto fill %s" (propertize "comments" 'face 'success))
        (setq-local comment-auto-fill-only-comments t)
        (auto-fill-mode 1)
-       (setq-local ace/simple--auto-fill-cycle-state 2)))))
+       (setq-local ale/simple--auto-fill-cycle-state 2)))))
 
 ;;;###autoload
-(defun ace/simple-unfill-region-or-paragraph (&optional beg end)
+(defun ale/simple-unfill-region-or-paragraph (&optional beg end)
   "Unfill paragraph or, when active, the region.
 Join all lines in region delimited by BEG and END, if active,
 while respecting any empty lines (so multiple paragraphs are not
@@ -120,41 +120,41 @@ paragraph.  The idea is to produce the opposite effect of both
 
 ;; Inspired by Pierre Neidhardt's windower:
 ;; https://gitlab.com/ambrevar/emacs-windower/-/blob/master/windower.el
-(defvar ace/simple--windows-current nil
+(defvar ale/simple--windows-current nil
   "Current window configuration.")
 
 ;;;###autoload
-(define-minor-mode ace/simple-monocle
+(define-minor-mode ale/simple-monocle
   "Toggle between multiple windows and single window.
 This is the equivalent of maximising a window.  Tiling window
 managers such as DWM, BSPWM refer to this state as 'monocle'."
   :lighter " -M-"
   :global nil
-  (let ((config ace/simple--windows-current)
+  (let ((config ale/simple--windows-current)
         (buf (current-buffer)))
     (if (one-window-p)
         (when config
           (set-window-configuration config))
-      (setq ace/simple--windows-current (current-window-configuration))
+      (setq ale/simple--windows-current (current-window-configuration))
       (when (window-parameter nil 'window-side) (delete-window))
       (delete-other-windows)
       (switch-to-buffer buf))))
 
-(defun ace/simple--monocle-disable ()
-  "Set variable `ace/simple-monocle' to nil, when appropriate.
+(defun ale/simple--monocle-disable ()
+  "Set variable `ale/simple-monocle' to nil, when appropriate.
 To be hooked to `window-configuration-change-hook'."
-  (when (and ace/simple-monocle
+  (when (and ale/simple-monocle
              (not (and (featurep 'transient) (window-live-p transient--window)))
              (not (one-window-p)))
     (delete-other-windows)
-    (ace/simple-monocle -1)
-    (set-window-configuration ace/simple--windows-current)))
+    (ale/simple-monocle -1)
+    (set-window-configuration ale/simple--windows-current)))
 
-(add-hook 'window-configuration-change-hook #'ace/simple--monocle-disable)
+(add-hook 'window-configuration-change-hook #'ale/simple--monocle-disable)
 
 ;;;; Commands for buffers
 
-(defun ace/simple-kill-window-current (&optional force)
+(defun ale/simple-kill-window-current (&optional force)
   "Kill current window. If current window is the only window,
 delete current frame. With optional prefix
 ARG (\\[universal-argument]) kill current buffer frame as well."
@@ -166,43 +166,43 @@ ARG (\\[universal-argument]) kill current buffer frame as well."
         (delete-window)
       (error (delete-frame)))))
 
-(defun ace/windmove--wm-takeover (direction)
+(defun ale/windmove--wm-takeover (direction)
   (let ((cmd "awesome-client")
         (args (concat
                "require(\"awful\").client.focus.byidx\("
                direction "\)")))
     (start-process "" nil cmd args)))
 
-(defun ace/simple-winmove-r/d (&optional down)
+(defun ale/simple-winmove-r/d (&optional down)
   (interactive "P")
   (cond
    ((and (featurep 'lf) (lf-live-p))
-    (ace/windmove--wm-takeover "1"))
+    (ale/windmove--wm-takeover "1"))
    (down
     (condition-case nil (windmove-down)
-      (user-error (ace/windmove--wm-takeover "1"))))
+      (user-error (ale/windmove--wm-takeover "1"))))
    (t
     (condition-case nil (windmove-right)
       (user-error
        (condition-case nil (windmove-down)
-         (user-error (ace/windmove--wm-takeover "1"))))))))
+         (user-error (ale/windmove--wm-takeover "1"))))))))
 
-(defun ace/simple-winmove-l/u (&optional up)
+(defun ale/simple-winmove-l/u (&optional up)
   (interactive "P")
   (cond
    ((and (featurep 'lf) (lf-live-p))
-    (ace/windmove--wm-takeover "-1"))
+    (ale/windmove--wm-takeover "-1"))
    (up
     (condition-case nil (windmove-up)
-      (user-error (ace/windmove--wm-takeover "-1"))))
+      (user-error (ale/windmove--wm-takeover "-1"))))
    (t
     (condition-case nil (windmove-left)
       (user-error
        (condition-case nil (windmove-up)
-         (user-error (ace/windmove--wm-takeover "-1"))))))))
+         (user-error (ale/windmove--wm-takeover "-1"))))))))
 
 ;;;###autoload
-(defun ace/simple-rename-file-and-buffer (name)
+(defun ale/simple-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."
   (interactive
@@ -213,6 +213,6 @@ Do not try to make a new directory or anything fancy."
       (rename-file file name))
     (set-visited-file-name name t t)))
 
-(provide 'ace-simple)
+(provide 'ale-simple)
 
-;;; ace/simple.el ends here
+;;; ale/simple.el ends here

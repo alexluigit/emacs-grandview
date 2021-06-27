@@ -2,30 +2,30 @@
 (require 'cl-lib)
 (require 'project)
 (require 'vc)
-(require 'ace-completing)
+(require 'ale-minibuffer)
 
-(defgroup ace/project ()
+(defgroup ale/project ()
   "Extensions for project.el and related libraries."
   :group 'project)
 
-(defcustom ace/project-project-roots (list "~/Code")
+(defcustom ale/project-project-roots (list "~/Code")
   "List of directories with version-controlled projects.
-To be used by `ace/project-switch-project'."
+To be used by `ale/project-switch-project'."
   :type 'list
-  :group 'ace/project)
+  :group 'ale/project)
 
-(defcustom ace/project-commit-log-limit 25
+(defcustom ale/project-commit-log-limit 25
   "Limit commit logs for project to N entries by default.
 A value of 0 means 'unlimited'."
   :type 'integer
-  :group 'ace/project)
+  :group 'ale/project)
 
-(defcustom ace/project-large-file-lines 1000
+(defcustom ale/project-large-file-lines 1000
   "How many lines constitute a 'large file' (integer).
 This determines whether some automatic checks should be executed
-or not, such as `ace/project-flymake-mode-activate'."
+or not, such as `ale/project-flymake-mode-activate'."
   :type 'integer
-  :group 'ace/project)
+  :group 'ale/project)
 
 (cl-defmethod project-root ((project (head local)))
   "Project root for PROJECT with HEAD and LOCAL."
@@ -33,7 +33,7 @@ or not, such as `ace/project-flymake-mode-activate'."
 
 ;; Copied from Manuel Uberti and tweaked accordingly:
 ;; <https://www.manueluberti.eu/emacs/2020/11/14/extending-project/>.
-(defun ace/project--project-files-in-directory (dir)
+(defun ale/project--project-files-in-directory (dir)
   "Use `fd' to list files in DIR."
   (unless (executable-find "fd")
     (error "Cannot find 'fd' command is shell environment $PATH"))
@@ -47,12 +47,12 @@ or not, such as `ace/project-flymake-mode-activate'."
   "Override `project-files' to use `fd' in local projects.
 Project root for PROJECT with HEAD and VC, plus optional
 DIRS."
-  (mapcan #'ace/project--project-files-in-directory
+  (mapcan #'ale/project--project-files-in-directory
           (or dirs (list (project-root project)))))
 
-(defun ace/project--list-projects ()
-  "Produce list of projects in `ace/project-project-roots'."
-  (let* ((dirs ace/project-project-roots)
+(defun ale/project--list-projects ()
+  "Produce list of projects in `ale/project-project-roots'."
+  (let* ((dirs ale/project-project-roots)
          (dotless directory-files-no-dot-files-regexp)
          (cands (mapcan (lambda (d)
                           (directory-files d t dotless))
@@ -61,36 +61,17 @@ DIRS."
               (list (abbreviate-file-name d)))
             cands)))
 
-;; ;;;###autoload
-;; (defun ace/project-fd-other-window ()
-;;   "Same as `project-find-file', but open file in other window
-
-;; The completion default is the filename at point, determined by
-;; `thing-at-point' (whether such file exists or not)."
-;;   (interactive)
-;;   (let* ((pr (project-current t))
-;;          (dirs (list (project-root pr)))
-;;          (all-files (project-files pr dirs))
-;;          (completion-ignore-case read-file-name-completion-ignore-case)
-;;          (filename (thing-at-point 'filename))
-;;          (file (funcall project-read-file-name-function
-;;                                  "Find file" all-files nil nil
-;;                                  filename)))
-;;   (if (string= file "")
-;;           (user-error "You didn't specify the file")
-;;         (find-file-other-window file))))
-
 ;;;###autoload
-(defun ace/project-add-projects ()
-  "Append `ace/project--list-projects' to `project--list'."
+(defun ale/project-add-projects ()
+  "Append `ale/project--list-projects' to `project--list'."
   (interactive)
   (project--ensure-read-project-list)
-  (let ((projects (ace/project--list-projects)))
+  (let ((projects (ale/project--list-projects)))
     (setq project--list (append projects project--list))
     (project--write-project-list)))
 
 ;;;###autoload
-(defun ace/project-remove-project ()
+(defun ale/project-remove-project ()
   "Remove project from `project--list' using completion."
   (interactive)
   (project--ensure-read-project-list)
@@ -99,38 +80,38 @@ DIRS."
     (setq project--list (delete (assoc dir projects) projects))
     (project--write-project-list)))
 
-(defun ace/project--directory-subdirs (dir)
+(defun ale/project--directory-subdirs (dir)
   "Return list of subdirectories in DIR."
   (cl-remove-if (lambda (x) (string-match-p "\\.git" x))
     (cl-remove-if-not (lambda (x) (file-directory-p x))
       (directory-files-recursively dir ".*" t t))))
 
 ;;;###autoload
-(defun ace/project-find-subdir ()
+(defun ale/project-find-subdir ()
   "Find subdirectories in the current project, using completion."
   (interactive)
   (let* ((pr (project-current t))
          (dir (cdr pr))
-         (dirs-raw (ace/project--directory-subdirs dir))
-         (subdirs (ace/completing-append-metadata 'file dirs-raw))
+         (dirs-raw (ale/project--directory-subdirs dir))
+         (subdirs (ale/minibuffer-append-metadata 'file dirs-raw))
          (directory (completing-read "Select Project subdir: " subdirs)))
     (dired directory)))
 
 ;;;###autoload
-(defun ace/project-commit-log (&optional arg)
+(defun ale/project-commit-log (&optional arg)
   "Print commit log for the current project.
 With optional prefix ARG (\\[universal-argument]) shows expanded
 commit messages and corresponding diffs.
 
 The log is limited to the integer specified by
-`ace/project-commit-log-limit'.  A value of 0 means
+`ale/project-commit-log-limit'.  A value of 0 means
 'unlimited'."
   (interactive "P")
   (let* ((pr (project-current t))
          (dir (cdr pr))
          (default-directory dir) ; otherwise fails at spontaneous M-x calls
          (backend (vc-responsible-backend dir))
-         (num ace/project-commit-log-limit)
+         (num ale/project-commit-log-limit)
          (int (if (numberp num) num (error "%s is not a number" n)))
          (limit (if (= int 0) t int))
          (diffs (if arg 'with-diff nil))
@@ -138,7 +119,7 @@ The log is limited to the integer specified by
     (vc-print-log-internal backend (list dir) nil nil limit diffs)))
 
 ;;;###autoload
-(defun ace/project-retrieve-tag ()
+(defun ale/project-retrieve-tag ()
   "Run `vc-retrieve-tag' on project and switch to the root dir.
 Basically switches to a new branch or tag."
   (interactive)
@@ -155,11 +136,11 @@ Basically switches to a new branch or tag."
 (autoload 'magit-status "magit")
 
 ;;;###autoload
-(defun ace/project-magit-status ()
+(defun ale/project-magit-status ()
   "Run `magit-status' on project."
   (interactive)
   (let* ((pr (project-current t))
          (dir (cdr pr)))
     (magit-status dir)))
 
-(provide 'ace-project)
+(provide 'ale-project)
