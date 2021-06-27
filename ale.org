@@ -84,8 +84,8 @@ Some handful small utility function for debugging.
   (setq ale/simple-time-specifier "%R %z")
   :bind
   (("s-x" . execute-extended-command)
-   ("s-n" . ale/simple-winmove-r/d)
-   ("s-p" . ale/simple-winmove-l/u)
+   ;; ("s-n" . ale/simple-winmove-r/d)
+   ;; ("s-p" . ale/simple-winmove-l/u)
    ("s-m" . ale/simple-monocle)
    ("C-c C-M-d" . ale/simple-insert-date)
    ("C-c C-M-e" . ale/simple-escape-url)
@@ -858,7 +858,12 @@ as effective for my case.
 
 #+begin_src emacs-lisp
 (use-package ace-window
-  :defer t)
+  :defer t
+  :init
+  (require 'ale-window)
+  :bind
+  ("s-n" . ale/window-move-next)
+  ("s-p" . ale/window-move-prev))
 #+end_src
 
 ** Window position (transpose-frame.el)

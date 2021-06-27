@@ -166,41 +166,6 @@ ARG (\\[universal-argument]) kill current buffer frame as well."
         (delete-window)
       (error (delete-frame)))))
 
-(defun ale/windmove--wm-takeover (direction)
-  (let ((cmd "awesome-client")
-        (args (concat
-               "require(\"awful\").client.focus.byidx\("
-               direction "\)")))
-    (start-process "" nil cmd args)))
-
-(defun ale/simple-winmove-r/d (&optional down)
-  (interactive "P")
-  (cond
-   ((and (featurep 'lf) (lf-live-p))
-    (ale/windmove--wm-takeover "1"))
-   (down
-    (condition-case nil (windmove-down)
-      (user-error (ale/windmove--wm-takeover "1"))))
-   (t
-    (condition-case nil (windmove-right)
-      (user-error
-       (condition-case nil (windmove-down)
-         (user-error (ale/windmove--wm-takeover "1"))))))))
-
-(defun ale/simple-winmove-l/u (&optional up)
-  (interactive "P")
-  (cond
-   ((and (featurep 'lf) (lf-live-p))
-    (ale/windmove--wm-takeover "-1"))
-   (up
-    (condition-case nil (windmove-up)
-      (user-error (ale/windmove--wm-takeover "-1"))))
-   (t
-    (condition-case nil (windmove-left)
-      (user-error
-       (condition-case nil (windmove-up)
-         (user-error (ale/windmove--wm-takeover "-1"))))))))
-
 ;;;###autoload
 (defun ale/simple-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
