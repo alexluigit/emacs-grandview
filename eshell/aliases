@@ -10,3 +10,4 @@ alias yd youtube-dl --write-sub --write-auto-sub -o "~/Downloads/%(title)s-%(id)
 alias ydl youtube-dl --yes-playlist --write-sub --write-auto-sub -o "~/Downloads/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" $1
 alias pai ale/eshell-pacman-install
 alias pau ale/eshell-pacman-uninstall
+alias esrc git clone -s ~/.cache/paru/clone/emacs-git/emacs-git ~/.cache/paru/clone/emacs-git/src/emacs-git
