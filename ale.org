@@ -828,7 +828,7 @@ control over the buffer list and is more powerful overall.
   (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
 #+end_src
 
-* Minibuffer Completion
+* Minibuffer
 
 The optimal way of using Emacs is through searching and narrowing
 selection candidates.  Spend less time worrying about where things are
@@ -1221,11 +1221,9 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   :straight (:type built-in)
   :bind
   (:map dired-mode-map
-        ("/" . dired-goto-file)
+        ("/" . dired-create-empty-file)
         ("I" . dired-insert-subdir)
-        ("e" . dired-create-empty-file)
         ("E" . dired-find-file-other-window)
-        ("i" . dired-find-file)
         ("a" . ale/dired-file-rename-eol)
         ("<" . beginning-of-buffer)
         (">" . end-of-buffer)
@@ -1475,15 +1473,11 @@ sure this is a good approach."
   (after-init . global-company-mode)
   :config
   (setq company-idle-delay 0.0)
-  (let ((map company-active-map))
-    (define-key map (kbd "<tab>") #'company-complete-selection)
-    (define-key map (kbd "C-p") #'company-select-previous)
-    (define-key map (kbd "C-n") #'company-select-next))
-  (setq company-idle-delay 0.0)
-  (let ((map company-active-map))
-    (define-key map (kbd "<tab>") #'company-complete-selection)
-    (define-key map (kbd "C-p") #'company-select-previous)
-    (define-key map (kbd "C-n") #'company-select-next)))
+  :bind
+  (:map company-active-map
+        ("<tab>" . #'company-complete-selection)
+        ("C-p" . #'company-select-previous)
+        ("C-n" . #'company-select-next)))
 #+end_src
 
 ** Snippet (yasnippet.el)
@@ -1627,6 +1621,6 @@ If region is active, add its contents to the new buffer."
 (use-package ale-murl
   :straight nil
   :defer t
-  :bind ("C-x C-M-u" . ale/murl-open))
+  :bind ("C-c C-M-u" . ale/murl-open))
 #+end_src
 
