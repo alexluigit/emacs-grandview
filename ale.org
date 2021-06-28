@@ -1107,6 +1107,7 @@ Org mode setup.
 #+begin_src emacs-lisp
 (use-package ale-eshell
   :straight nil
+  :commands ale/eshell-toggle-bottom
   :defer t
   :config
   (setq eshell-banner-message "")
@@ -1269,7 +1270,7 @@ well. See details at: https://github.com/alexluigit/lf.el
 #+begin_src emacs-lisp
 (use-package lf
   :straight (lf :type git :host github :repo "alexluigit/lf.el")
-  :bind (:map lf-mode-map ("s-e" . ale/lf-eshell))
+  :bind (:map lf-mode-map ("s-e" . ale/eshell-toggle-bottom))
   :init
   (setq lf-routes '(("o" "Home"        "~")
                     ("u" "Emacs cache" "~/.cache/emacs")
@@ -1295,10 +1296,6 @@ well. See details at: https://github.com/alexluigit/lf.el
     (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
         (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
       (find-file-noselect entry t nil)))
-  (defun ale/lf-eshell ()
-    (interactive)
-    (let ((ale/eshell-position '((window-height . 0.35) (side . bottom))))
-      (ale/eshell-toggle t)))
   (add-to-list 'lf-preview-cmd-alist '(("ts") (ale/ts-ext-fix . ()))))
 #+end_src
 

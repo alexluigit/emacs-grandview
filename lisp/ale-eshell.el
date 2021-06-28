@@ -113,6 +113,12 @@ current one have different `default-directory'."
       (when (featurep 'evil) (evil-insert-state))
       (when (featurep 'meow) (meow-insert)))))
 
+(defun ale/eshell-toggle-bottom ()
+  "Same as `ale/eshell-toggle', just place window at bottom."
+  (interactive)
+  (let ((ale/eshell-position '((window-height . 0.35) (side . bottom))))
+    (ale/eshell-toggle t)))
+
 (defun ale/eshell-get--index (buf)
   (let* ((name (buffer-name buf)))
     (string-match "\\*eshell\\*\<\\([0-9]+\\)\>" name)
