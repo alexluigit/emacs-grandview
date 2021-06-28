@@ -1,7 +1,6 @@
 (require 'cl-lib)
 
-(defvar ale/font-size 140)
-(defvar ale/zh-font-size 31)
+(defvar ale/font-size 32)
 (defvar ale/default-fonts '("Sarasa Mono SC" "Iosevka SS04" "Victor Mono" "Fira Code Retina"))
 (defvar ale/fixed-fonts '("Victor Mono" "Fira Code Retina"))
 (defvar ale/variable-fonts '("Iosevka SS04" "Victor Mono" "Fira Code Retina"))
@@ -13,17 +12,18 @@
   (cl-find-if
    (lambda (f) (if (null (x-list-fonts f)) nil t)) fonts))
 
-(defun ale/font-set ()
+(defun ale/font-setup ()
+  (interactive)
   (let ((default (ale/font-chooser ale/default-fonts))
         (fixed (ale/font-chooser ale/fixed-fonts))
         (variable (ale/font-chooser ale/variable-fonts))
-        (zh-font (font-spec :family (ale/font-chooser ale/zh-fonts))))
+        (zh-font (font-spec :family (ale/font-chooser ale/zh-fonts) :size ale/font-size)))
     (setq doom-modeline-icon t)
     (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
       (all-the-icons-install-fonts t))
-    (set-face-attribute 'default nil :font default :height ale/font-size)
-    (set-face-attribute 'fixed-pitch nil :font fixed :height ale/font-size)
-    (set-face-attribute 'variable-pitch nil :font variable :height ale/font-size)
+    (set-face-attribute 'default nil :font (font-spec :family default :size ale/font-size))
+    (set-face-attribute 'fixed-pitch nil :font (font-spec :family fixed :size ale/font-size))
+    (set-face-attribute 'variable-pitch nil :font (font-spec :family variable :size ale/font-size))
     (custom-set-faces '(font-lock-keyword-face ((t (:slant italic)))))
     (custom-set-faces '(font-lock-variable-name-face ((t (:weight demibold)))))
     (custom-set-faces '(font-lock-function-name-face ((t (:weight demibold)))))
@@ -35,6 +35,7 @@
       (set-fontset-font (frame-parameter nil 'font) charset zh-font))))
 
 (defun ale/font-org-setup ()
+  (interactive)
   (variable-pitch-mode)
   (org-indent-mode)
   (visual-line-mode)
@@ -46,15 +47,15 @@
     (visual-fill-column-mode 1))
   ;; Setup font
   (let* ((var-font `(:font ,(ale/font-chooser ale/org-fonts)))
-         (base-font-color     (face-foreground 'font-lock-string-face nil 'default))
-         (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+         (base-font-color (face-foreground 'font-lock-string-face nil 'default))
+         (headline `(:inherit default :weight bold :foreground ,base-font-color)))
     (custom-theme-set-faces
      'user
      `(org-level-4 ((t (,@headline ,@var-font :height 1.1))))
      `(org-level-3 ((t (,@headline ,@var-font :height 1.2))))
      `(org-level-2 ((t (,@headline ,@var-font :height 1.3))))
      `(org-level-1 ((t (,@headline ,@var-font :height 1.4))))
-      ;; ensure that anything that should be fixed-pitch in Org files appears that way
+     ;; ensure that anything that should be fixed-pitch in Org files appears that way
      '(org-block ((t (:inherit fixed-pitch))))
      '(org-code ((t (:inherit (shadow fixed-pitch)))))
      '(org-document-info ((t (:foreground "dark orange"))))
@@ -65,14 +66,13 @@
      '(org-property-value ((t (:inherit fixed-pitch))) t)
      '(org-checkbox ((t (:inherit fixed-pitch))) t)
      '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-     '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
      '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
      '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))))
 
 (if (daemonp)
     (add-hook 'after-make-frame-functions
               (lambda (frame)
-                (with-selected-frame frame (ale/font-set))))
-  (ale/font-set))
+                (with-selected-frame frame (ale/font-setup))))
+  (ale/font-setup))
 
 (provide 'ale-fonts)

@@ -599,14 +599,12 @@ using it because of that, though it can also adjust the size of the
 (use-package ale-fonts
   :straight nil
   :config
-  (setq ale/font-size 140)
-  (setq ale/zh-font-size 31)
-  (setq ale/default-fonts '("Victor Mono" "Microsoft Yahei" "STHeiti"))
-  (setq ale/fixed-fonts '("Victor Mono" "Fira Code Retina"))
-  (setq ale/variable-fonts '("Iosevka SS04" "Victor Mono" "Fira Code Retina"))
-  (setq ale/zh-fonts '("Sarasa Mono SC" "PingFang SC" "Microsoft Yahei"))
-  (setq ale/org-fonts '("Iosevka SS04" "ETBembo" "Fira Code Retina"))
-  (setq ale/zh-font-scale 1))
+  (setq ale/font-size 32)
+  (setq ale/default-fonts '("Victor Mono"))
+  (setq ale/fixed-fonts '("Victor Mono"))
+  (setq ale/variable-fonts '("Sarasa Mono SC"))
+  (setq ale/zh-fonts '("WenQuanYi Micro Hei"))
+  (setq ale/org-fonts '("Sarasa Mono SC")))
 #+end_src
 
 ** Line Number
