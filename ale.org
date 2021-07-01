@@ -60,16 +60,6 @@ minibuffer's history of inputs allows the completion framework to guess
 the most likely course of action. Typing =M-x g= gives me =gnus= as the
 first possible option, which is exactly what I want.
 
-** Debugging emacs (ale-debug.el)
-
-Some handful small utility function for debugging.
-
-#+begin_src emacs-lisp
-(use-package ale-debug
-  :straight nil
-  :bind ("C-c C-M-m" . 'ale/debug-show-messages))
-#+end_src
-
 ** Simple (ale-simple.el)
 
 =ace-simple.el= contains a wide range of commands that are broadly in line with the built-in =simple.el= and =lisp.el= libraries.
@@ -95,6 +85,17 @@ Some handful small utility function for debugging.
    ("=" . count-words)))
 #+end_src
 
+** Debugging emacs (ale-debug.el)
+
+Some handful small utility function for debugging.
+
+#+begin_src emacs-lisp
+(use-package ale-debug
+  :straight nil
+  :bind
+  (:map ale/simple-map
+        ("m" . ale/debug-show-messages)
+        ("<backspace>" . ale/debug-erase-messages)))
 #+end_src
 
 ** Help (help[ful].el)

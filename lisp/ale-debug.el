@@ -6,12 +6,15 @@
   (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
 
 (defun ale/debug-show-messages ()
-  "Show empty *messages* buffer."
+  "Show *Messages* buffer."
   (interactive)
   (if-let ((win (get-buffer-window "*Messages*")))
       (delete-window win)
-    (let ((inhibit-read-only t))
-      (display-buffer-in-side-window (get-buffer "*Messages*") '((side . right)))
-      (with-current-buffer "*Messages*" (erase-buffer)))))
+    (display-buffer-in-side-window (get-buffer "*Messages*") '((side . right)))))
+
+(defun ale/debug-erase-messages ()
+  (interactive)
+  (let ((inhibit-read-only t))
+    (with-current-buffer "*Messages*" (erase-buffer))))
 
 (provide 'ale-debug)
