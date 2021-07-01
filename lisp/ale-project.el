@@ -39,7 +39,7 @@ or not, such as `ale/project-flymake-mode-activate'."
     (error "Cannot find 'fd' command is shell environment $PATH"))
   (let* ((default-directory dir)
          (localdir (file-local-name (expand-file-name dir)))
-         (command (format "fd -t f -0 . %s" localdir)))
+         (command (format "fd -t f -H -0 . %s" localdir)))
     (project--remote-file-names
      (split-string (shell-command-to-string command) "\0" t))))
 
