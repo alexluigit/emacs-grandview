@@ -1292,13 +1292,15 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   (:map dired-mode-map
         ("/" . dired-create-empty-file)
         ("I" . dired-insert-subdir)
-        ("E" . dired-find-file-other-window)
+        ("^" . dired-find-file-other-window)
         ("a" . ale/dired-file-rename-eol)
+        ("d" . dired-kill-subdir)
         ("<" . beginning-of-buffer)
         (">" . end-of-buffer)
         ("[" . dired-prev-dirline)
         ("]" . dired-next-dirline)
         ("o" . dired-up-directory)
+        ("x" . dired-do-delete)
         ("." . dired-omit-mode))
   :config
   (with-eval-after-load 'doom-modeline
