@@ -19,6 +19,18 @@ Used by `ale/simple-insert-date'."
 ;;;; Comands for text editing
 
 ;;;###autoload
+(defun ale/simple-yank-ad (fn &rest args)
+  "Make `yank' behave like paste (p) command in vim.
+Used for advice-add around `yank' function."
+  (when-let* ((clip (condition-case nil (current-kill 0 t) (error "")))
+              (remove-syntax (set-text-properties 0 (length clip) nil clip))
+              (end-with-newline (string-suffix-p "\n" clip)))
+    (goto-char (line-beginning-position)))
+  (apply fn args))
+
+(advice-add 'yank :around #'ale/simple-yank-ad)
+
+;;;###autoload
 (defun ale/simple-replace-line-or-region ()
   "Replace line or region with latest kill.
 This command can then be followed by the standard
@@ -45,7 +57,6 @@ with the specified date."
     (when (use-region-p)
       (delete-region (region-beginning) (region-end)))
     (insert (format-time-string format))))
-
 
 (autoload 'ffap-url-at-point "ffap")
 (defvar ffap-string-at-point-region)

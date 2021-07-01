@@ -27,7 +27,6 @@ doc
 (setq auto-save-list-file-prefix nil)
 (setq auto-save-default nil)
 (setq make-backup-files nil)
-(setq auto-save-list-file-prefix nil)
 #+end_src
 
 ** Auto appending
@@ -76,21 +75,26 @@ Some handful small utility function for debugging.
 =ace-simple.el= contains a wide range of commands that are broadly in line with the built-in =simple.el= and =lisp.el= libraries.
 
 #+begin_src emacs-lisp
-(use-package ale-simple
+(use-package simple
   :straight nil
+  :init
+  (require 'ale-simple)
+  (define-prefix-command 'ale/simple-map)
   :defer t
   :config
   (setq ale/simple-date-specifier "%F")
   (setq ale/simple-time-specifier "%R %z")
   :bind
-  (("s-x" . execute-extended-command)
-   ("s-m" . ale/simple-monocle)
-   ("C-c C-M-d" . ale/simple-insert-date)
-   ("C-c C-M-e" . ale/simple-escape-url)
-   ("C-c C-M-q" . ale/simple-unfill-region-or-paragraph)
-   ("C-c C-M-r" . ale/simple-rename-file-and-buffer)
-   ("C-c C-M-=" . count-words)
-   ("<escape>" . keyboard-escape-quit)))
+  (("<escape>" . keyboard-escape-quit)
+   ("<f1>" . ale/simple-monocle)
+   :map ale/simple-map
+   ("d" . ale/simple-insert-date)
+   ("e" . ale/simple-escape-url)
+   ("q" . ale/simple-unfill-region-or-paragraph)
+   ("r" . ale/simple-rename-file-and-buffer)
+   ("=" . count-words)))
+#+end_src
+
 #+end_src
 
 ** Help (help[ful].el)
