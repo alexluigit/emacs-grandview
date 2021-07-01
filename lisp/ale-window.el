@@ -47,39 +47,7 @@ Windows are numbered top down, left to right."
 (defun ale/window-list ()
   (sort (window-list) 'ale/window<))
 
-(defun ale/window--wm-takeover (direction)
-  (let ((cmd "awesome-client")
-        (args (concat
-               "require(\"awful\").client.focus.byidx\("
-               direction "\)")))
-    (start-process "" nil cmd args)))
-
-(defun ale/window-move-next ()
-  (interactive)
-  (cond
-   ((and (featurep 'lf) (lf-live-p))
-    (ale/window--wm-takeover "1"))
-   (t
-    (let* ((w-list (ale/window-list))
-           (old-w-index (cl-position (selected-window) w-list))
-           (w-amount (length w-list)))
-      (if (>= old-w-index (1- w-amount))
-          (ale/window--wm-takeover "1")
-        (select-window (nth (1+ old-w-index) w-list))
-        (ale/pulse-pulse-line))))))
-
-(defun ale/window-move-prev ()
-  (interactive)
-  (cond
-   ((and (featurep 'lf) (lf-live-p))
-    (ale/window--wm-takeover "-1"))
-   (t
-    (let* ((w-list (ale/window-list))
-           (old-w-index (cl-position (selected-window) w-list))
-           (w-amount (length w-list)))
-      (if (= old-w-index 0)
-          (ale/window--wm-takeover "-1")
-        (select-window (nth (1- old-w-index) w-list))
-        (ale/pulse-pulse-line))))))
+(defun ale/window-select-by-index (index)
+  (select-window (nth index (ale/window-list))))
 
 (provide 'ale-window)

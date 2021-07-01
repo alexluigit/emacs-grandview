@@ -701,10 +701,14 @@ as effective for my case.
 #+begin_src emacs-lisp
 (use-package ale-window
   :straight nil
+  :commands ale/window-buffers-major-mode
   :defer t
   :bind
-  ("s-n" . ale/window-move-next)
-  ("s-p" . ale/window-move-prev))
+  ("M-1" . (lambda () (interactive) (ale/window-select-by-index 0)))
+  ("M-2" . (lambda () (interactive) (ale/window-select-by-index 1)))
+  ("M-3" . (lambda () (interactive) (ale/window-select-by-index 2)))
+  ("M-4" . (lambda () (interactive) (ale/window-select-by-index 3)))
+  ("M-5" . (lambda () (interactive) (ale/window-select-by-index 4))))
 #+end_src
 
 *** Window position (transpose-frame.el)
