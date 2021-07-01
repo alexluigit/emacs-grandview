@@ -608,7 +608,7 @@ using it because of that, though it can also adjust the size of the
   (setq ale/default-fonts '("Victor Mono"))
   (setq ale/fixed-fonts '("Victor Mono"))
   (setq ale/variable-fonts '("Sarasa Mono SC"))
-  (setq ale/zh-fonts '("WenQuanYi Micro Hei"))
+  (setq ale/zh-fonts '("Sarasa Mono SC"))
   (setq ale/org-fonts '("Sarasa Mono SC")))
 #+end_src
 

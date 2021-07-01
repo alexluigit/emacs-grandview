@@ -17,7 +17,7 @@
   (let ((default (ale/font-chooser ale/default-fonts))
         (fixed (ale/font-chooser ale/fixed-fonts))
         (variable (ale/font-chooser ale/variable-fonts))
-        (zh-font (font-spec :family (ale/font-chooser ale/zh-fonts) :size ale/font-size)))
+        (zh-font (font-spec :family (ale/font-chooser ale/zh-fonts))))
     (setq doom-modeline-icon t)
     (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
       (all-the-icons-install-fonts t))
