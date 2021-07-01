@@ -1598,6 +1598,15 @@ sure this is a good approach."
 #+end_src
 
 * Utils
+
+Emacs can be used for everything.  Here we just create a shortcut for accessing
+all of the utils. In my current setup, I bind this prefix to =SPC o= (see
+=ale-meow.el=).
+
+#+begin_src emacs-lisp
+(define-prefix-command 'ale/utils-map)
+#+end_src
+
 ** COMMENT Scratch buffers (scratch.el)
 This package will produce a buffer that matches the major mode of the
 one you are currently in.  Use it with =M-x scratch=.  Doing that with a
@@ -1690,6 +1699,8 @@ If region is active, add its contents to the new buffer."
 (use-package ale-murl
   :straight nil
   :defer t
-  :bind ("C-c C-M-u" . ale/murl-open))
+  :bind
+  (:map ale/utils-map
+        ("m" . ale/murl-open)))
 #+end_src
 
