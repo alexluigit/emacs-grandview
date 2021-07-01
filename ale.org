@@ -623,6 +623,16 @@ using it because of that, though it can also adjust the size of the
   ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
 #+end_src
 
+** Pulse line (ale-pulse.el)
+
+Give some code navigation / window switch commands better visual clue.
+
+#+begin_src emacs-lisp
+(use-package ale-pulse
+  :straight nil
+  :init
+  (ale/pulse-advice-commands-mode 1))
+#+end_src
 ** Scrolling behaviour
 
 By default, page scrolling should keep the point at the same visual

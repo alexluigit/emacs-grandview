@@ -5,7 +5,7 @@
   :group 'editing)
 
 (defcustom ale/pulse-pulse-command-list
-  '(recenter-top-bottom reposition-window)
+  '(recenter-top-bottom reposition-window other-window ale/window-select-by-index)
   "Commands that should automatically `ale/pulse-pulse-line'.
 You must restart function `ale/pulse-advice-commands-mode' for
 changes to take effect."
