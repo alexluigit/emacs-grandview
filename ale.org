@@ -1012,7 +1012,7 @@ for visualising the standard completion framework's output
 #+end_src
 
 * Major modes
-** Org mode
+** .org
 
 Org mode setup.
 
@@ -1091,7 +1091,7 @@ Org mode setup.
   (setq org-habit-graph-column 60))
 #+end_src
 
-** lua mode
+** .lua
 
 #+begin_src emacs-lisp
 (use-package lua-mode
@@ -1100,14 +1100,14 @@ Org mode setup.
   (setq lua-indent-level 2))
 #+end_src
 
-** yaml mode
+** .yaml
 
 #+begin_src emacs-lisp
 (use-package yaml-mode
   :defer t)
 #+end_src
 
-** web mode
+** .vue
 
 #+begin_src emacs-lisp
 (use-package web-mode
@@ -1121,6 +1121,39 @@ Org mode setup.
                 (setq web-mode-code-indent-offset 2)
                 (setq web-mode-script-padding 0)))
   :mode ("\\.vue\\'" . ale/vue-mode))
+#+end_src
+
+** .js
+
+#+begin_src emacs-lisp
+(use-package js
+  :straight (:type built-in)
+  :config
+  (setq js-indent-level 2))
+#+end_src
+
+** .el
+
+#+begin_src emacs-lisp
+(use-package elisp-mode
+  :straight (:type built-in)
+  :init
+  (define-prefix-command 'ale/elisp-eval-map)
+  :bind
+  (:map ale/elisp-eval-map
+        ("e" . eval-last-sexp)
+        ("x" . eval-expression)
+        ("f" . eval-defun)))
+#+end_src
+
+** .(sh|zsh)
+
+#+begin_src emacs-lisp
+(use-package sh-script
+  :straight (:type built-in)
+  :config
+  ;; (setq sh-indentation 2)
+  (setq sh-basic-offset 2))
 #+end_src
 
 * Eshell
