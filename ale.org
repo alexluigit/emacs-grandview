@@ -272,29 +272,6 @@ Summary of what these do:
   (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
-*** COMMENT Pair insert (lisp.el)
-
-#+begin_src emacs-lisp
-(use-package lisp
-  :straight (:type built-in)
-  :init
-  (define-prefix-command 'ale/symbol-pair)
-  (defun insert-quote () (interactive) (insert-pair nil ?\" ?\"))
-  (defun insert-round () (interactive) (insert-pair nil ?\( ?\)))
-  (defun insert-keyword () (interactive) (insert-pair nil ?\= ?\=))
-  (defun insert-square () (interactive) (insert-pair nil ?\[ ?\]))
-  (defun insert-angle () (interactive) (insert-pair nil ?\< ?\>))
-  :bind
-  ("C-s" . ale/symbol-pair)
-  ("C-s '" . insert-pair)
-  ("C-s q" . insert-quote)
-  ("C-s r" . insert-round)
-  ("C-s =" . insert-keyword)
-  ("C-s s" . insert-square)
-  ("C-s a" . insert-angle)
-  ("C-s r" . insert-quote))
-#+end_src
-
 *** Pair insert (embrace.el)
 
 #+begin_src emacs-lisp
