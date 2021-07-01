@@ -75,9 +75,10 @@ Return the decoded text as multibyte string."
     (apply fn file args)))
 
 (advice-add #'find-file :around #'ale/files-find-file-advisor)
+(advice-add #'find-file-other-window :around #'ale/files-find-file-advisor)
 
 (defun ale/files-in-user-dirs (&optional skip-menu)
-  "Select video or stream to play in mpv."
+  "Open files in directories defined in `ale/files-dir-alist'."
   (interactive (list (if current-prefix-arg "  System Files" nil)))
   (when skip-menu (setq skip-menu "  System Files"))
   (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ale/files-dir-alist))
@@ -89,6 +90,16 @@ Return the decoded text as multibyte string."
          (title (or skip-menu (completing-read "Open: " cands)))
          (path (funcall get-item title 'path)))
     (ale/minibuffer--files-in-directory path (concat title ": "))))
+
+(defun ale/files-dotfiles ()
+  "Open files in dotfiles repo."
+  (interactive)
+  (ale/files-in-user-dirs t))
+
+(defun ale/files-edit-emacs-config ()
+  "Editing emacs init file."
+  (interactive)
+  (find-file (concat ale/init-dot-repo "ale.org")))
 
 (defun ale/files-recent ()
   "Open file from `recentf-list' with completion."

@@ -44,9 +44,4 @@ Add this to `after-save-hook' in `org-mode-hook'."
     (org-babel-tangle-file init-org init-el)
     (byte-compile-file init-el)))
 
-(defun ale/init-edit-config ()
-  "A util function for finding init file quickly."
-  (interactive)
-  (find-file (concat ale/init-dot-repo "ale.org")))
-
 (add-hook 'kill-emacs-hook #'ale/init-build-config)

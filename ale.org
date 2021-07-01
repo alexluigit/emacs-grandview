@@ -1208,7 +1208,19 @@ Configuration about dired, lf, files, recentf etc.
 #+begin_src emacs-lisp
 (use-package ale-files
   :straight nil
-  :bind (:map minibuffer-local-map ("s-<return>" . ale/files-other-window)))
+  :init
+  (define-prefix-command 'ale/files-map)
+  :bind
+  (:map
+   minibuffer-local-map
+   ("M-<return>" . ale/files-other-window)
+   :map
+   ale/files-map
+   ("." . ale/files-dotfiles)
+   ("e" . ale/files-edit-emacs-config)
+   ("u" . ale/files-in-user-dirs)
+   ("r" . ale/files-recent)
+   ("l" . find-library)))
 #+end_src
 
 ** Dired (dired.el)
