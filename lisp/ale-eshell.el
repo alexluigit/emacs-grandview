@@ -2,9 +2,11 @@
 (require 'esh-mode)
 (eval-when-compile (require 'subr-x))
 (require 'cl-seq)
+(require 'dash)
 (declare-function ale/files-read "ace-files")
 
-(defcustom ale/eshell-position '((window-width . 0.4) (side . right))
+(defcustom ale/eshell-position
+  '((default . ((window-width . 0.4) (side . bottom))))
   "doc")
 
 (defvar ale/eshell-buffers nil
@@ -90,6 +92,20 @@
 (add-hook 'eshell-exit-hook
           (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
 
+(defun ale/eshell--get-win-params ()
+  "Parse `ale/eshell-position' to get eshell display parameters."
+  (let (pos)
+    (cl-dolist (setting ale/eshell-position)
+      (-when-let ((mode . alist) setting)
+        (when (derived-mode-p mode)
+          (setq pos alist) (cl-return))
+        (when (eq mode 'default)
+          (setq pos alist))))
+    `(("^\\*[e]shell.*"
+       (display-buffer-in-side-window)
+       (window-parameters . ((mode-line-format . none)))
+       ,@pos))))
+
 (defun ale/eshell-toggle (&optional force-new)
   "Toggle eshell.
 If called with prefix argument, create a new eshell buffer if
@@ -97,11 +113,7 @@ current one have different `default-directory'."
   (interactive "P")
   (if (eq major-mode 'eshell-mode)
       (delete-window)
-    (let* ((display-buffer-alist
-            `(("^\\*[e]shell.*"
-               (display-buffer-in-side-window)
-               (window-parameters . ((mode-line-format . none)))
-               ,@ale/eshell-position)))
+    (let* ((display-buffer-alist (ale/eshell--get-win-params))
            (buf (nth ale/eshell-index ale/eshell-buffers))
            (dir (expand-file-name default-directory))
            (index (if buf (ale/eshell-get--index buf) 0)))
@@ -113,12 +125,6 @@ current one have different `default-directory'."
       (when (featurep 'evil) (evil-insert-state))
       (when (featurep 'meow) (meow-insert)))))
 
-(defun ale/eshell-toggle-bottom ()
-  "Same as `ale/eshell-toggle', just place window at bottom."
-  (interactive)
-  (let ((ale/eshell-position '((window-height . 0.35) (side . bottom))))
-    (ale/eshell-toggle t)))
-
 (defun ale/eshell-get--index (buf)
   (let* ((name (buffer-name buf)))
     (string-match "\\*eshell\\*\<\\([0-9]+\\)\>" name)
@@ -128,12 +134,10 @@ current one have different `default-directory'."
   "Create new eshell buffer."
   (interactive)
   (let ((new-index (1+ (ale/eshell-get--index (car ale/eshell-buffers))))
-        (display-buffer-alist
-         `(("^\\*[e]shell.*"
-            (display-buffer-in-side-window)
-            (window-parameters . ((mode-line-format . none)))
-            ,@ale/eshell-position))))
-    (add-to-list 'ale/eshell-buffers (eshell new-index))))
+        (display-buffer-alist (ale/eshell--get-win-params)))
+    (add-to-list 'ale/eshell-buffers (eshell new-index))
+    (when (featurep 'evil) (evil-insert-state))
+    (when (featurep 'meow) (meow-insert))))
 
 (defun ale/eshell-next (&optional arg)
   "Select next eshell buffer.

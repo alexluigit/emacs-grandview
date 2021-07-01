@@ -1115,16 +1115,16 @@ Org mode setup.
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "nvim")))
   :bind
-  (("s-e" . ale/eshell-toggle)
+  (("s-t" . ale/eshell-toggle)
    :map eshell-mode-map
    ("C-\\" . (lambda () (interactive) (eshell/cd "..") (eshell-emit-prompt)))
    ("C-r" . consult-history)
    ("<C-i>" . eshell-next-prompt)
    ("C-o" . eshell-previous-prompt)
    ("C-l" . ale/eshell-clear-buffer)
-   ("s-c" . ale/eshell-new)
-   ("s-i" . ale/eshell-next)
-   ("s-o" . ale/eshell-prev)))
+   ("M-q" . ale/eshell-new)
+   ("M-]" . ale/eshell-next)
+   ("M-[" . ale/eshell-prev)))
 #+end_src
 
 ** Import environment vars (exec-path-from-shell.el)
@@ -1278,7 +1278,7 @@ well. See details at: https://github.com/alexluigit/lf.el
 #+begin_src emacs-lisp
 (use-package lf
   :straight (lf :type git :host github :repo "alexluigit/lf.el")
-  :bind (:map lf-mode-map ("s-e" . ale/eshell-toggle-bottom))
+  :bind (("s-f" . lf))
   :init
   (setq lf-routes '(("o" "Home"        "~")
                     ("u" "Emacs cache" "~/.cache/emacs")
