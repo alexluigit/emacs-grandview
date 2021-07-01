@@ -135,18 +135,6 @@ package and built-in help buffer:
     (visual-line-mode)))
 #+end_src
 
-** Keybindings (transient.el)
-
-#+begin_src emacs-lisp
-(use-package transient
-  :defer t
-  :config
-  (setq transient-show-popup -0.5)
-  (transient-bind-q-to-quit)
-  (define-key transient-map (kbd "<escape>") #'transient-quit-all)
-  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
-#+end_src
-
 * Text Editing
 ** Meow
 
@@ -455,17 +443,30 @@ as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
 
 #+begin_src emacs-lisp
 (use-package deadgrep
+  :defer t
   :bind ("s-r" . deadgrep))
 #+end_src
 
-** Lines
-*** Fill-column (visual-fill-column.el)
+** Paragraphs
+*** Paragraph navigation (paragraph.el)
+
+Utilize =M-n= and =M-p= for navigating between paragraphs.
+
+#+begin_src emacs-lisp
+(use-package paragraphs
+  :straight (:type built-in)
+  :bind
+  ("M-n" . forward-paragraph)
+  ("M-p" . backward-paragraph))
+#+end_src
+
+*** Fill column (visual-fill-column.el)
 
 #+begin_src emacs-lisp
 (use-package visual-fill-column)
 #+end_src
 
-*** Paragragh (ale-fill.el)
+*** Line / sentence (ale-fill.el)
 
 The =ace-fill.el= library (reproduced below) is a tiny wrapper around
 some Emacs settings and modes that are scrattered around several files,
@@ -532,13 +533,10 @@ sentence.  I put them all together here to make things easier to track.
 
 * Interface
 
-General interface section including fontfale/icon/etc function
+General interface section including fontface/icon/etc function
 definition.
 
-** GUI / Frame
-
-Change some default frame configuration to my liking.
-
+** Keys
 *** Terminal key fix
 
 For historical reason, terminal can not tell the difference between some key
@@ -556,24 +554,24 @@ example, =C-m= different meaning.
 (add-hook 'after-make-frame-functions #'ale/key-fix)
 #+end_src
 
-*** Fringe-mode
+*** Key bindings hint (which-key.el)
 
 #+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(internal-border-width . 30))
-(fringe-mode 1)
+(use-package which-key
+  :init
+  (which-key-mode 1 ))
 #+end_src
 
-*** Window divider
-
-This is a built-in mode that draws vertical window borders in a slightly
-different way than the default, which I find more consistent.  Only
-using it because of that, though it can also adjust the size of the
-# borders as well as their placement.
+*** Prefix / Suffix keys (transient.el)
 
 #+begin_src emacs-lisp
-(setq window-divider-default-right-width 10)
-(setq window-divider-default-places 'right-only)
-(add-hook 'after-init-hook #'window-divider-mode)
+(use-package transient
+  :defer t
+  :config
+  (setq transient-show-popup -0.5)
+  (transient-bind-q-to-quit)
+  (define-key transient-map (kbd "<escape>") #'transient-quit-all)
+  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
 #+end_src
 
 ** Theme & icons
@@ -669,6 +667,26 @@ well, covering everything from window placement rules, to the recording
 of history and layouts, as well as directional or direct window
 navigation.
 
+*** Fringe-mode
+
+#+begin_src emacs-lisp
+(add-to-list 'default-frame-alist '(internal-border-width . 30))
+(fringe-mode 1)
+#+end_src
+
+*** Window divider
+
+This is a built-in mode that draws vertical window borders in a slightly
+different way than the default, which I find more consistent.  Only using it
+because of that, though it can also adjust the size of the borders as well as
+their placement.
+
+#+begin_src emacs-lisp
+(setq window-divider-default-right-width 10)
+(setq window-divider-default-places 'right-only)
+(add-hook 'after-init-hook #'window-divider-mode)
+#+end_src
+
 *** Window rules (window.el)
 
 The =display-buffer-alist= is intended as a rule-set for controlling the
@@ -683,15 +701,21 @@ as effective for my case.
 
 #+begin_src emacs-lisp
 (use-package window
-  :straight nil
-  :bind ("s-i" . next-buffer) ("s-o" . previous-buffer)
+  :straight (:type built-in)
+  :bind
+  ("M-i" . (lambda () (interactive) (other-window 1)))
+  ("M-o" . (lambda () (interactive) (other-window -1)))
   :config
   (setq display-buffer-alist
 	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
 	         (display-buffer-in-side-window)
 	         (window-height . 0.3)
 	         (side . bottom))
-	        ("^\\*?\\(Help\\|helpful\\|magit:\\).*"
+	        ("^\\*?\\(Help\\|helpful\\).*"
+	         (display-buffer-in-side-window)
+	         (window-width . 0.25)
+	         (side . right))
+	        ("magit:.*"
 	         (display-buffer-in-side-window)
 	         (window-width . 0.4)
 	         (side . right))
@@ -819,11 +843,11 @@ control over the buffer list and is more powerful overall.
 (use-package ibuffer
   :bind
   (:map ibuffer-mode-map
-        ("* f" . ibuffer-mark-by-file-name-regexp)
-        ("* g" . ibuffer-mark-by-content-regexp)
-        ("* n" . ibuffer-mark-by-name-regexp)
-        ("s n" . ibuffer-do-sort-by-alphabetic)
-        ("/ g" . ibuffer-filter-by-content))
+   ("* f" . ibuffer-mark-by-file-name-regexp)
+   ("* g" . ibuffer-mark-by-content-regexp)
+   ("* n" . ibuffer-mark-by-name-regexp)
+   ("s n" . ibuffer-do-sort-by-alphabetic)
+   ("/ g" . ibuffer-filter-by-content))
   :config
   (setq ibuffer-expert t)
   (setq ibuffer-display-summary nil)
