@@ -690,8 +690,8 @@ as effective for my case.
 	         (side . bottom))
 	        ("^\\*?\\(Help\\|helpful\\).*"
 	         (display-buffer-in-side-window)
-	         (window-width . 0.25)
-	         (side . right))
+	         (window-width . 0.4)
+	         (side . bottom))
 	        ("magit:.*"
 	         (display-buffer-in-side-window)
 	         (window-width . 0.4)
@@ -1291,6 +1291,7 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   :bind
   (:map dired-mode-map
         ("/" . dired-create-empty-file)
+        ("?" . dired-create-directory)
         ("I" . dired-insert-subdir)
         ("^" . dired-find-file-other-window)
         ("a" . ale/dired-file-rename-eol)
