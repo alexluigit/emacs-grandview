@@ -605,7 +605,7 @@ Give some code navigation / window switch commands better visual clue.
 #+begin_src emacs-lisp
 (use-package ale-pulse
   :straight nil
-  :init
+  :config
   (ale/pulse-advice-commands-mode 1))
 #+end_src
 ** Scrolling behaviour
