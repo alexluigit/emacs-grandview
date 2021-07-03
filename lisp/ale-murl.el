@@ -21,6 +21,6 @@
            (annotation (lambda (s) (marginalia--documentation (funcall get-url s))))
            (cands (ale/minibuffer-append-metadata annotation cands-raw))
            (title (completing-read "murls: " cands)))
-      (call-process "murl" nil 0 nil "-P 1088" "-d 25%x25%+2870+10" (funcall get-url title)))))
+      (call-process "murl" nil 0 nil "-P" "1088" "-d" "25%x25%+2870+10" (funcall get-url title)))))
 
 (provide 'ale-murl)
