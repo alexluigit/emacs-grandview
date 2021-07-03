@@ -1184,17 +1184,6 @@ Org mode setup.
    ("M-[" . ale/eshell-prev)))
 #+end_src
 
-** Import environment vars (exec-path-from-shell.el)
-
-#+begin_src emacs-lisp
-(use-package exec-path-from-shell
-  :init
-  (setq exec-path-from-shell-check-startup-files nil)
-  :config
-  (when (memq window-system '(mac ns x))
-    (exec-path-from-shell-initialize)))
-#+end_src
-
 ** Colors
 
 We want to use xterm-256color when running interactive commands in eshell but
