@@ -48,6 +48,23 @@ that you accidentally evaluated from messing up with your carefully designed
 (setq custom-file "/tmp/ale-emacs-custom.el")
 #+end_src
 
+** Elisp (elisp-mode.el)
+
+We can change emacs's setting on the fly at any given time by evaluating elisp
+code.  Here are some keybindings relevent to this feature.
+
+#+begin_src emacs-lisp
+(use-package elisp-mode
+  :straight (:type built-in)
+  :init
+  (define-prefix-command 'ale/elisp-eval-map)
+  :bind
+  (:map ale/elisp-eval-map
+        ("e" . eval-last-sexp)
+        ("x" . eval-expression)
+        ("f" . eval-defun)))
+#+end_src
+
 ** History / State
 
 This section contains configurations for packages that are dedicated to
@@ -1011,12 +1028,11 @@ for visualising the standard completion framework's output
   (ale/embark-extras-keymaps 1))
 #+end_src
 
-* Major modes
-** .org
+* Org mode
 
 Org mode setup.
 
-*** Org (org.el)
+** Org (org.el)
 
 #+begin_src emacs-lisp
 (use-package org
@@ -1046,7 +1062,7 @@ Org mode setup.
         ("C-c C-S-l" . org-insert-last-stored-link)))
 #+end_src
 
-*** Source block (org-src.el)
+** Source block (org-src.el)
 
 #+begin_src emacs-lisp
 (use-package org-src
@@ -1067,7 +1083,7 @@ Org mode setup.
   (add-to-list 'org-structure-template-alist '("py" . "src python")))
 #+end_src
 
-*** Bullet (org-superstar.el)
+** Bullet (org-superstar.el)
 
 #+begin_src emacs-lisp
 (use-package org-superstar
@@ -1080,7 +1096,7 @@ Org mode setup.
   (org-mode . org-superstar-mode))
 #+end_src
 
-*** Habit (org-habit.el)
+** Habit (org-habit.el)
 
 #+begin_src emacs-lisp
 (use-package org-habit
@@ -1091,6 +1107,7 @@ Org mode setup.
   (setq org-habit-graph-column 60))
 #+end_src
 
+* Languages
 ** .lua
 
 #+begin_src emacs-lisp
@@ -1130,20 +1147,6 @@ Org mode setup.
   :straight (:type built-in)
   :config
   (setq js-indent-level 2))
-#+end_src
-
-** .el
-
-#+begin_src emacs-lisp
-(use-package elisp-mode
-  :straight (:type built-in)
-  :init
-  (define-prefix-command 'ale/elisp-eval-map)
-  :bind
-  (:map ale/elisp-eval-map
-        ("e" . eval-last-sexp)
-        ("x" . eval-expression)
-        ("f" . eval-defun)))
 #+end_src
 
 ** .(sh|zsh)
