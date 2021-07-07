@@ -579,6 +579,16 @@ definition.
   (load-theme 'kaolin-dark t))
 #+end_src
 
+*** Transparency (frame.el)
+
+#+begin_src emacs-lisp
+(use-package ale-frame
+  :straight nil
+  :bind
+  (:map ale/simple-map
+        ("t" . ale/frame-adjust-transparency)))
+#+end_src
+
 *** Icons (all-the-icons.el)
 
 #+begin_src emacs-lisp
