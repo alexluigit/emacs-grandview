@@ -153,6 +153,23 @@ package and built-in help buffer:
     (visual-line-mode)))
 #+end_src
 
+** Terminal key fix
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =Tab=, =C-m= and =Return=, etc. By default, emacs follow
+this convention, but it doesn't mean emacs are not able to tell the
+difference. To change this behaviour, we can use =input-decode-map= to give, for
+example, =C-m= different meaning.
+
+#+begin_src emacs-lisp
+(defun ale/key-fix (&optional frame)
+  "To distinguish C-m from RET."
+  (with-selected-frame (or frame (selected-frame))
+    (when window-system
+      (define-key input-decode-map [?\C-i] [C-i]))))
+(add-hook 'after-make-frame-functions #'ale/key-fix)
+#+end_src
+
 * Text Editing
 ** Meow
 
@@ -531,24 +548,7 @@ sentence.  I put them all together here to make things easier to track.
 General interface section including fontface/icon/etc function
 definition.
 
-** Keys
-*** Terminal key fix
-
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =Tab=, =C-m= and =Return=, etc. By default, emacs follow
-this convention, but it doesn't mean emacs are not able to tell the
-difference. To change this behaviour, we can use =input-decode-map= to give, for
-example, =C-m= different meaning.
-
-#+begin_src emacs-lisp
-(defun ale/key-fix (&optional frame)
-  "To distinguish C-m from RET."
-  (with-selected-frame (or frame (selected-frame))
-    (when window-system
-      (define-key input-decode-map [?\C-i] [C-i]))))
-(add-hook 'after-make-frame-functions #'ale/key-fix)
-#+end_src
-
+** Keys Chords
 *** Key bindings hint (which-key.el)
 
 #+begin_src emacs-lisp
@@ -570,13 +570,18 @@ example, =C-m= different meaning.
   (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
 #+end_src
 
-** Theme & icons
+** Appearance
+*** Theme
 
 #+begin_src emacs-lisp
 (use-package kaolin-themes
   :config
   (load-theme 'kaolin-dark t))
+#+end_src
 
+*** Icons (all-the-icons.el)
+
+#+begin_src emacs-lisp
 (use-package all-the-icons
   :defer t)
 #+end_src
