@@ -1284,7 +1284,6 @@ Configuration about dired, lf, files, recentf etc.
    ale/files-map
    ("." . ale/files-dotfiles)
    ("e" . ale/files-edit-emacs-config)
-   ("f" . lf)
    ("u" . ale/files-in-user-dirs)
    ("r" . ale/files-recent)
    ("l" . find-library)))
@@ -1316,7 +1315,7 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   :config
   (with-eval-after-load 'doom-modeline
     (remove-hook 'dired-mode-hook #'doom-modeline-set-project-modeline))
-  (setq large-file-warning-threshold nil)
+  (setq large-file-warning-threshold 50000000)
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)

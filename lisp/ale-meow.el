@@ -74,6 +74,7 @@
    '("e" . ale/elisp-eval-map)
    '("f" . ale/files-map)
    '("o" . ale/utils-map)
+   '("n" . lf)
    '("p" . ale/window-buffers-major-mode)
    '("s" . ale/simple-map)
    '("t" . ale/consult-map)
