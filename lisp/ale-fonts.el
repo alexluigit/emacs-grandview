@@ -73,6 +73,6 @@
     (add-hook 'after-make-frame-functions
               (lambda (frame)
                 (with-selected-frame frame (ale/font-setup))))
-  (ale/font-setup))
+  (when (display-graphic-p) (ale/font-setup)))
 
 (provide 'ale-fonts)
