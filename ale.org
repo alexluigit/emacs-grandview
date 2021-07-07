@@ -93,7 +93,8 @@ first possible option, which is exactly what I want.
   (setq ale/simple-time-specifier "%R %z")
   :bind
   (("<escape>" . keyboard-escape-quit)
-   ("<f1>" . ale/simple-monocle)
+   ("s-m" . ale/simple-monocle)
+   ("s-x" . execute-extended-command)
    :map ale/simple-map
    ("d" . ale/simple-insert-date)
    ("e" . ale/simple-escape-url)
@@ -173,7 +174,7 @@ package and built-in help buffer:
         '((meow-replace . meow-yank)
           (meow-change . meow-change-char)
           (meow-save . ale/meow-save-line)
-          (meow-kill . ale/meow-kill-whole-line)
+          (meow-kill . ale/simple-kill-whole-line)
           (meow-cancel . keyboard-quit)
           (meow-pop . meow-pop-grab)
           (meow-delete . meow-C-d)))
@@ -697,8 +698,8 @@ as effective for my case.
 (use-package window
   :straight (:type built-in)
   :bind
-  ("M-i" . (lambda () (interactive) (other-window 1)))
-  ("M-o" . (lambda () (interactive) (other-window -1)))
+  ("s-i" . (lambda () (interactive) (other-window 1)))
+  ("s-o" . (lambda () (interactive) (other-window -1)))
   :config
   (setq display-buffer-alist
 	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
@@ -1175,16 +1176,16 @@ Org mode setup.
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "nvim")))
   :bind
-  (("s-t" . ale/eshell-toggle)
+  (("s-e" . ale/eshell-toggle)
    :map eshell-mode-map
    ("C-\\" . (lambda () (interactive) (eshell/cd "..") (eshell-emit-prompt)))
    ("C-r" . consult-history)
-   ("<C-i>" . eshell-next-prompt)
-   ("C-o" . eshell-previous-prompt)
    ("C-l" . ale/eshell-clear-buffer)
-   ("M-q" . ale/eshell-new)
-   ("M-]" . ale/eshell-next)
-   ("M-[" . ale/eshell-prev)))
+   ("s-," . eshell-next-prompt)
+   ("s-." . eshell-previous-prompt)
+   ("s-t" . ale/eshell-new)
+   ("s-]" . ale/eshell-next)
+   ("s-[" . ale/eshell-prev)))
 #+end_src
 
 ** Colors
@@ -1241,8 +1242,8 @@ branches in =git= commands.
   :hook (eshell-mode . esh-autosuggest-mode)
   :bind
   (:map esh-autosuggest-active-map
-        ("C-f" . esh-autosuggest-complete-word)
-        ("C-<return>" . company-complete-selection))
+        ("M-f" . esh-autosuggest-complete-word)
+        ("C-e" . company-complete-selection))
   :config
   (set-face-foreground 'company-preview-common "#4b5668")
   (set-face-background 'company-preview nil))
@@ -1262,11 +1263,12 @@ Configuration about dired, lf, files, recentf etc.
   :bind
   (:map
    minibuffer-local-map
-   ("M-<return>" . ale/files-other-window)
+   ("s-<return>" . ale/files-other-window)
    :map
    ale/files-map
    ("." . ale/files-dotfiles)
    ("e" . ale/files-edit-emacs-config)
+   ("f" . lf)
    ("u" . ale/files-in-user-dirs)
    ("r" . ale/files-recent)
    ("l" . find-library)))

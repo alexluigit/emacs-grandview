@@ -17,6 +17,9 @@
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar
 
+(setq x-super-keysym 'meta)           ; Swap meta / super in apple keyboard
+(setq x-meta-keysym 'super)
+
 (setq visible-bell nil)               ; Set up the visible bell
 (setq use-dialog-box t)               ; Only for mouse events
 (setq use-file-dialog nil)
