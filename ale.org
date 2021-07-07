@@ -561,6 +561,7 @@ example, =C-m= different meaning.
 
 #+begin_src emacs-lisp
 (use-package transient
+  :straight (:type built-in)
   :defer t
   :config
   (setq transient-show-popup -0.5)
@@ -1331,8 +1332,10 @@ well. See details at: https://github.com/alexluigit/lf.el
 
 #+begin_src emacs-lisp
 (use-package lf
-  :straight (lf :type git :host github :repo "alexluigit/lf.el")
-  :bind (("s-f" . lf))
+  :straight (lf :type git :depth full :host github :repo "alexluigit/lf.el")
+  :hook
+  ((lf-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+   (lf-preview-setup . (lambda () (setq cursor-type nil))))
   :init
   (setq lf-routes '(("o" "Home"        "~")
                     ("u" "Emacs cache" "~/.cache/emacs")
@@ -1342,6 +1345,7 @@ well. See details at: https://github.com/alexluigit/lf.el
                     ("m" "Drives"      "/media")
                     ("t" "Trash"       "~/.local/share/Trash")))
   (lf-override-dired-mode)
+  (lf-minibuf-preview-mode)
   :config
   (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
                              ("/media/Cloud/" . ".Trash/files")))
@@ -1351,9 +1355,6 @@ well. See details at: https://github.com/alexluigit/lf.el
                       (plist-get info :posframe-width)) 2)
                 (or (frame-parameter nil 'internal-border-width) 30))))
   (setq lf-header-position '(0 . 30))
-  (lf-completing-preview-mode)
-  (add-hook 'lf-mode-hook (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
-  (add-hook 'lf-preview-setup-hook (lambda () (setq cursor-type nil)))
   (defun ale/ts-ext-fix (entry)
     (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
         (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
