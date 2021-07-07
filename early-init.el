@@ -26,4 +26,4 @@
 (setq inhibit-startup-message t)
 (setq inhibit-startup-screen t)
 (setq inhibit-startup-buffer-menu t)
-(fset 'yes-or-no-p 'y-or-n-p) ; y,n for yes,no
+(fset 'yes-or-no-p 'y-or-n-p)         ; y,n for yes,no
