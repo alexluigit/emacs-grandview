@@ -18,6 +18,45 @@ Used by `ale/simple-insert-date'."
 
 ;;;; Comands for text editing
 
+(defun ale/simple--char-readonly ()
+  (get-text-property (1- (point)) 'read-only))
+
+(defun ale/simple-forward-char ()
+  (interactive)
+  (when (< (point) (point-at-eol))
+    (forward-char)))
+
+(defun ale/simple-backward-char ()
+  (interactive)
+  (when (and (not (ale/simple--char-readonly))
+             (> (point) (point-at-bol)))
+    (backward-char)))
+
+(defun ale/simple-backward-delete-char ()
+  (interactive)
+  (when (and (not (ale/simple--char-readonly))
+             (> (point) (point-at-bol)))
+    (backward-delete-char 1)))
+
+(defun ale/simple-backward-kill-word ()
+  (interactive)
+  (unless (ale/simple--char-readonly)
+    (backward-kill-word 1)))
+
+(defun ale/simple-kill-whole-line ()
+  (interactive)
+  (cond ((derived-mode-p 'eshell-mode)
+         (eshell-kill-input))
+        ((ale/simple--char-readonly)
+         nil)
+        (t
+         (call-interactively 'kill-whole-line))))
+
+(defun ale/simple-top-join-line ()
+  "Join the current line with the line beneath it."
+  (interactive)
+  (delete-indentation 1))
+
 ;;;###autoload
 (defun ale/simple-yank-ad (fn &rest args)
   "Make `yank' behave like paste (p) command in vim.
@@ -29,17 +68,6 @@ Used for advice-add around `yank' function."
   (apply fn args))
 
 (advice-add 'yank :around #'ale/simple-yank-ad)
-
-;;;###autoload
-(defun ale/simple-replace-line-or-region ()
-  "Replace line or region with latest kill.
-This command can then be followed by the standard
-`yank-pop' (default is bound to \\[yank-pop])."
-  (interactive)
-  (if (use-region-p)
-      (delete-region (region-beginning) (region-end))
-    (delete-region (point-at-bol) (point-at-eol)))
-  (yank))
 
 ;;;###autoload
 (defun ale/simple-insert-date (&optional arg)
@@ -74,17 +102,6 @@ with the specified date."
                      url)))
       (delete-region beg end)
       (insert (format "<%s>" string)))))
-
-;;;; Commands for code navigation (work in progress)
-
-;;;###autoload
-(defun ale/simple-downward-list (&optional arg)
-  "Like `backward-up-list' but defaults to a forward motion.
-With optional ARG, move that many times in the given
-direction (negative is forward due to this being a
-'backward'-facing command)."
-  (interactive "P")
-  (backward-up-list (or arg -1)))
 
 ;;;; Commands for paragraphs
 
