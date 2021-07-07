@@ -1691,6 +1691,21 @@ If region is active, add its contents to the new buffer."
   (setq youdao-dictionary-use-chinese-word-segmentation t))
 #+end_src
 
+** COMMENT Emacs application framework (eaf.el)
+
+#+begin_src emacs-lisp
+(use-package eaf
+  :straight
+  (:host github :repo "manateelazycat/emacs-application-framework"
+         :files ("*") :pre-build ("./install-eaf.sh"))
+  :defer t
+  :init
+  (use-package epc :defer t)
+  (use-package ctable :defer t)
+  (use-package deferred :defer t)
+  (use-package s :defer t))
+#+end_src
+
 ** Video url (ale-murl.el)
 
 #+begin_src emacs-lisp
