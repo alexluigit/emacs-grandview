@@ -1,6 +1,6 @@
 (defvar bootstrap-version)
 (setq straight-use-package-by-default t)
-(setq straight-vc-git-default-clone-depth 'full)
+(setq straight-vc-git-default-clone-depth 1)
 
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
