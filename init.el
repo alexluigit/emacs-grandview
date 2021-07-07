@@ -17,6 +17,11 @@
 
 (straight-use-package 'use-package)
 
+;; Setup garbage collection before loading main init file
+(use-package gcmh
+  :init
+  (gcmh-mode 1))
+
 ;; No ask for follow link
 (setq vc-follow-symlinks t)
 
