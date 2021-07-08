@@ -651,23 +651,29 @@ Give some code navigation / window switch commands better visual clue.
   :config
   (ale/pulse-advice-commands-mode 1))
 #+end_src
-** Scrolling behaviour
+** Smooth scrolling (good-scroll.el)
 
-By default, page scrolling should keep the point at the same visual
-position, rather than force it to the top or bottom of the viewport.
-This eliminates the friction of guessing where the point has warped to.
+By default, page scrolling should keep the point at the same visual position,
+rather than force it to the top or bottom of the viewport.  This eliminates the
+friction of guessing where the point has warped to.
 
 As for per-line scrolling, I dislike the default behaviour of visually
-re-centring the point: it is too aggressive as a standard mode of
-interaction.  With the following =setq-default=, the point will stay at
-the top/bottom of the screen while moving in that direction (use =C-l= to
-reposition it).
+re-centring the point: it is too aggressive as a standard mode of interaction.
+With the following =setq-default=, the point will stay at the top/bottom of the
+screen while moving in that direction (use =C-l= to reposition it).
+
+The =good-scroll= library provides a set of commands for pixelwise (linear or
+bezier) scrolling in emacs, =good-scroll-down-full-screen= and
+=good-scroll-up-full-screen= are bind to '[' and ']' in normal mode.
 
 #+begin_src emacs-lisp
-(setq-default scroll-preserve-screen-position t)
-(setq-default scroll-conservatively 1) ; affects `scroll-step'
-(setq-default auto-window-vscroll nil)
-(setq-default scroll-margin 0)
+(use-package good-scroll
+  :init
+  (setq-default scroll-preserve-screen-position t)
+  (setq-default scroll-conservatively 10000) ; affects `scroll-step'
+  (setq-default auto-window-vscroll nil)
+  (setq-default scroll-margin 0)
+  (good-scroll-mode 1))
 #+end_src
 
 ** Viewports
