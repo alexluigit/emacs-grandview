@@ -46,19 +46,16 @@
     (setq visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
   ;; Setup font
-  (let ((var-font `(:font ,(ale/font-chooser ale/org-fonts)))
-        (headline `(:inherit default :weight bold)))
+  (let ((var-font `(:font ,(ale/font-chooser ale/org-fonts))))
     (custom-theme-set-faces
      'user
-     `(org-level-4 ((t (,@headline ,@var-font :height 1.2))))
-     `(org-level-3 ((t (,@headline ,@var-font :height 1.3))))
-     `(org-level-2 ((t (,@headline ,@var-font :height 1.4))))
-     `(org-level-1 ((t (,@headline ,@var-font :height 1.5))))
+     `(org-level-4 ((t (,@var-font :height 1.2))))
+     `(org-level-3 ((t (,@var-font :height 1.3))))
+     `(org-level-2 ((t (,@var-font :height 1.4))))
+     `(org-level-1 ((t (,@var-font :height 1.5))))
      ;; ensure that anything that should be fixed-pitch in Org files appears that way
      '(org-block ((t (:inherit fixed-pitch))))
      '(org-code ((t (:inherit (shadow fixed-pitch)))))
-     '(org-document-info ((t (:foreground "dark orange"))))
-     '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
      '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
      '(org-link ((t (:foreground "royal blue" :underline t))))
      '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
