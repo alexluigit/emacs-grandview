@@ -180,7 +180,7 @@ example, =C-m= different meaning.
 #+end_src
 
 * Text Editing
-** Meow
+** Meow (meow.el & ale-meow.el)
 
 #+begin_src emacs-lisp
 (use-package meow
