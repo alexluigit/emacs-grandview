@@ -30,6 +30,7 @@ changes to take effect."
                  (line-beginning-position 0)
                (line-beginning-position)))
         (end (line-beginning-position 2))
+        (pulse-flag t)
         (pulse-delay .04)
         (face (or face 'ale/pulse-line)))
     (pulse-momentary-highlight-region beg end face)))
