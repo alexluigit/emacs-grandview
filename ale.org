@@ -116,7 +116,8 @@ Some handful small utility function for debugging.
         ("<backspace>" . ale/debug-erase-messages)))
 #+end_src
 
-** Help (help[ful].el)
+** Introspection
+*** Help commmand (help[ful].el)
 
 =Helpful.el= provides a better help buffer. Here are some tweaks I made for this
 package and built-in help buffer:
@@ -151,6 +152,14 @@ package and built-in help buffer:
                     (switch-to-prev-buffer)
                     (setq ale/helpful-initialized t))))
     (visual-line-mode)))
+#+end_src
+
+*** Info (info.el)
+
+#+begin_src emacs-lisp
+(use-package info
+  :straight (:type built-in)
+  :bind (:map Info-mode-map ("/" . consult-line)))
 #+end_src
 
 ** Terminal key fix
