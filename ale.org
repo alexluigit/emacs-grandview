@@ -93,8 +93,7 @@ first possible option, which is exactly what I want.
   (setq ale/simple-time-specifier "%R %z")
   :bind
   (("<escape>" . keyboard-escape-quit)
-   ("s-m" . ale/simple-monocle)
-   ("s-x" . execute-extended-command)
+   ("s-SPC" . ale/simple-monocle)
    :map ale/simple-map
    ("d" . ale/simple-insert-date)
    ("e" . ale/simple-escape-url)
@@ -160,6 +159,18 @@ package and built-in help buffer:
 (use-package info
   :straight (:type built-in)
   :bind (:map Info-mode-map ("/" . consult-line)))
+#+end_src
+
+*** Man page (man.el)
+
+#+begin_src emacs-lisp
+(use-package man
+  :straight (:type built-in)
+  :config
+  (setq Man-notify-method 'newframe)
+  :bind
+  (:map Man-mode-map
+        ("/" . consult-line)))
 #+end_src
 
 ** Terminal key fix
@@ -319,10 +330,7 @@ Summary of what these do:
 *** Pair insert (embrace.el)
 
 #+begin_src emacs-lisp
-(use-package embrace
-  ;; :config
-  
-  )
+(use-package embrace)
 #+end_src
 
 *** Prettify symbols (prog-mode.el)
@@ -348,6 +356,17 @@ Summary of what these do:
                   ("<=<" . ?↢)
                   (">=>" . ?↣)))
   (setq prettify-symbols-unprettify-at-point 'right-edge))
+#+end_src
+
+** Line Numbers
+
+#+begin_src emacs-lisp
+(use-package display-line-numbers
+  :straight (:type built-in)
+  :init
+  (global-display-line-numbers-mode t)
+  :hook
+  ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
 #+end_src
 
 ** Spelling (ispell.el)
@@ -464,8 +483,7 @@ as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
 
 #+begin_src emacs-lisp
 (use-package deadgrep
-  :defer t
-  :bind ("s-r" . deadgrep))
+  :defer t)
 #+end_src
 
 ** Paragraphs
@@ -557,7 +575,71 @@ sentence.  I put them all together here to make things easier to track.
 General interface section including fontface/icon/etc function
 definition.
 
-** Keys Chords
+** Appearance
+*** Theme
+
+The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
+
+#+begin_src emacs-lisp
+(load-theme 'modus-vivendi)
+#+end_src
+
+*** Transparency (frame.el)
+
+#+begin_src emacs-lisp
+(use-package ale-frame
+  :straight nil
+  :after ale-simple
+  :bind
+  (:map ale/simple-map
+        ("t" . ale/frame-adjust-transparency)))
+#+end_src
+
+*** Modeline (doom-modeline.el)
+
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :config
+  (doom-modeline-mode t)
+  (column-number-mode)
+  (setq doom-modeline-height 30)
+  (setq doom-modeline-major-mode-icon t))
+#+end_src
+
+*** Fonts (ale-fonts.el)
+
+#+begin_src emacs-lisp
+(use-package ale-fonts
+  :straight nil
+  :config
+  (setq ale/font-size 32)
+  (setq ale/default-fonts '("Victor Mono"))
+  (setq ale/fixed-fonts '("Victor Mono"))
+  (setq ale/variable-fonts '("Sarasa Mono SC"))
+  (setq ale/zh-fonts '("Sarasa Mono SC"))
+  (setq ale/org-fonts '("Sarasa Mono SC")))
+#+end_src
+*** Icons (all-the-icons.el)
+
+#+begin_src emacs-lisp
+(use-package all-the-icons
+  :defer t)
+#+end_src
+
+*** Window divider
+
+This is a built-in mode that draws vertical window borders in a slightly
+different way than the default, which I find more consistent.  Only using it
+because of that, though it can also adjust the size of the borders as well as
+their placement.
+
+#+begin_src emacs-lisp
+(setq window-divider-default-right-width 10)
+(setq window-divider-default-places 'right-only)
+(add-hook 'after-init-hook #'window-divider-mode)
+#+end_src
+
+** Visual hint
 *** Key bindings hint (which-key.el)
 
 #+begin_src emacs-lisp
@@ -579,69 +661,7 @@ definition.
   (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
 #+end_src
 
-** Appearance
-*** Theme
-
-The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
-
-#+begin_src emacs-lisp
-(load-theme 'modus-vivendi)
-#+end_src
-
-*** Transparency (frame.el)
-
-#+begin_src emacs-lisp
-(use-package ale-frame
-  :straight nil
-  :bind
-  (:map ale/simple-map
-        ("t" . ale/frame-adjust-transparency)))
-#+end_src
-
-*** Icons (all-the-icons.el)
-
-#+begin_src emacs-lisp
-(use-package all-the-icons
-  :defer t)
-#+end_src
-
-** Better modeline (doom-modeline.el)
-
-#+begin_src emacs-lisp
-(use-package doom-modeline
-  :config
-  (doom-modeline-mode t)
-  (column-number-mode)
-  (setq doom-modeline-height 30)
-  (setq doom-modeline-major-mode-icon t))
-#+end_src
-
-** Fontface (ale-font.el)
-
-#+begin_src emacs-lisp
-(use-package ale-fonts
-  :straight nil
-  :config
-  (setq ale/font-size 32)
-  (setq ale/default-fonts '("Victor Mono"))
-  (setq ale/fixed-fonts '("Victor Mono"))
-  (setq ale/variable-fonts '("Sarasa Mono SC"))
-  (setq ale/zh-fonts '("Sarasa Mono SC"))
-  (setq ale/org-fonts '("Sarasa Mono SC")))
-#+end_src
-
-** Line Number
-
-#+begin_src emacs-lisp
-(use-package display-line-numbers
-  :straight nil
-  :init
-  (global-display-line-numbers-mode t)
-  :hook
-  ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
-#+end_src
-
-** Pulse line (ale-pulse.el)
+*** Pulse line (ale-pulse.el)
 
 Give some code navigation / window switch commands better visual clue.
 
@@ -650,30 +670,6 @@ Give some code navigation / window switch commands better visual clue.
   :straight nil
   :config
   (ale/pulse-advice-commands-mode 1))
-#+end_src
-** Smooth scrolling (good-scroll.el)
-
-By default, page scrolling should keep the point at the same visual position,
-rather than force it to the top or bottom of the viewport.  This eliminates the
-friction of guessing where the point has warped to.
-
-As for per-line scrolling, I dislike the default behaviour of visually
-re-centring the point: it is too aggressive as a standard mode of interaction.
-With the following =setq-default=, the point will stay at the top/bottom of the
-screen while moving in that direction (use =C-l= to reposition it).
-
-The =good-scroll= library provides a set of commands for pixelwise (linear or
-bezier) scrolling in emacs, =good-scroll-down-full-screen= and
-=good-scroll-up-full-screen= are bind to '[' and ']' in normal mode.
-
-#+begin_src emacs-lisp
-(use-package good-scroll
-  :init
-  (setq-default scroll-preserve-screen-position t)
-  (setq-default scroll-conservatively 10000) ; affects `scroll-step'
-  (setq-default auto-window-vscroll nil)
-  (setq-default scroll-margin 0)
-  (good-scroll-mode 1))
 #+end_src
 
 ** Viewports
@@ -700,19 +696,6 @@ navigation.
 (fringe-mode 1)
 #+end_src
 
-*** Window divider
-
-This is a built-in mode that draws vertical window borders in a slightly
-different way than the default, which I find more consistent.  Only using it
-because of that, though it can also adjust the size of the borders as well as
-their placement.
-
-#+begin_src emacs-lisp
-(setq window-divider-default-right-width 10)
-(setq window-divider-default-places 'right-only)
-(add-hook 'after-init-hook #'window-divider-mode)
-#+end_src
-
 *** Window rules (window.el)
 
 The =display-buffer-alist= is intended as a rule-set for controlling the
@@ -729,8 +712,8 @@ as effective for my case.
 (use-package window
   :straight (:type built-in)
   :bind
-  ("s-i" . (lambda () (interactive) (other-window 1)))
-  ("s-o" . (lambda () (interactive) (other-window -1)))
+  ("M-i" . (lambda () (interactive) (other-window 1)))
+  ("M-o" . (lambda () (interactive) (other-window -1)))
   :config
   (setq display-buffer-alist
 	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
@@ -859,42 +842,29 @@ via =C-x t r=, though I find I do not use it.
   (tab-bar-echo-area-mode 1))
 #+end_src
 
-*** Buffer management (ibuffer.el)
+*** Smooth scrolling (good-scroll.el)
 
-=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
-=list-buffers=.  Compared to its counterpart, it allows for granular
-control over the buffer list and is more powerful overall.
+By default, page scrolling should keep the point at the same visual position,
+rather than force it to the top or bottom of the viewport.  This eliminates the
+friction of guessing where the point has warped to.
+
+As for per-line scrolling, I dislike the default behaviour of visually
+re-centring the point: it is too aggressive as a standard mode of interaction.
+With the following =setq-default=, the point will stay at the top/bottom of the
+screen while moving in that direction (use =C-l= to reposition it).
+
+The =good-scroll= library provides a set of commands for pixelwise (linear or
+bezier) scrolling in emacs, =good-scroll-down-full-screen= and
+=good-scroll-up-full-screen= are bind to '[' and ']' in normal mode.
 
 #+begin_src emacs-lisp
-(use-package ibuffer
-  :bind
-  (:map ibuffer-mode-map
-   ("* f" . ibuffer-mark-by-file-name-regexp)
-   ("* g" . ibuffer-mark-by-content-regexp)
-   ("* n" . ibuffer-mark-by-name-regexp)
-   ("s n" . ibuffer-do-sort-by-alphabetic)
-   ("/ g" . ibuffer-filter-by-content))
-  :config
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-movement-cycle nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups nil)
-  (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+(use-package good-scroll
+  :init
+  (setq-default scroll-preserve-screen-position t)
+  (setq-default scroll-conservatively 10000) ; affects `scroll-step'
+  (setq-default auto-window-vscroll nil)
+  (setq-default scroll-margin 0)
+  (good-scroll-mode 1))
 #+end_src
 
 * Minibuffer
@@ -996,6 +966,7 @@ for visualising the standard completion framework's output
         xref-show-definitions-function #'consult-xref)
   (define-prefix-command 'ale/consult-map)
   :bind
+  ("/" . consult-line)
   (:map ale/consult-map
         ("l" . consult-line)
         ("r" . consult-ripgrep)
@@ -1197,26 +1168,25 @@ Org mode setup.
 #+begin_src emacs-lisp
 (use-package ale-eshell
   :straight nil
-  :commands ale/eshell-toggle-bottom
   :defer t
   :config
   (setq eshell-banner-message "")
   (setq eshell-aliases-file (concat ale/init-dot-repo "eshell/aliases"))
-  (add-hook 'eshell-first-time-mode-hook 'ale/eshell-configure)
   (with-eval-after-load 'esh-opt
     (setq eshell-destroy-buffer-when-process-dies t)
     (setq eshell-visual-commands '("htop" "zsh" "nvim")))
+  :hook
+  (eshell-first-time-mode . ale/eshell-configure)
   :bind
-  (("s-e" . ale/eshell-toggle)
+  (("<f12>" . ale/eshell-toggle)
    :map eshell-mode-map
-   ("C-\\" . (lambda () (interactive) (eshell/cd "..") (eshell-emit-prompt)))
-   ("C-r" . consult-history)
+   ("M-<f12>" . ale/eshell-new)
    ("C-l" . ale/eshell-clear-buffer)
-   ("s-," . eshell-next-prompt)
-   ("s-." . eshell-previous-prompt)
-   ("s-t" . ale/eshell-new)
-   ("s-]" . ale/eshell-next)
-   ("s-[" . ale/eshell-prev)))
+   ("C-\\" . (lambda () (interactive) (eshell/cd "..") (eshell-emit-prompt)))
+   ("s-n" . eshell-next-prompt)
+   ("s-p" . eshell-previous-prompt)
+   ("M-]" . ale/eshell-next)
+   ("M-[" . ale/eshell-prev)))
 #+end_src
 
 ** Colors
@@ -1266,7 +1236,7 @@ branches in =git= commands.
   (eshell-syntax-highlighting-global-mode +1))
 #+end_src
 
-** History Autocompletion (esh-autosuggest.el)
+** History completion (esh-autosuggest.el)
 
 #+begin_src emacs-lisp
 (use-package esh-autosuggest
@@ -1411,6 +1381,79 @@ Additional syntax highlighting in dired / lf buffer.
   (recentf-mode 1))
 #+end_src
 
+** Buffer management
+*** Buffer list (ibuffer.el)
+=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
+=list-buffers=.  Compared to its counterpart, it allows for granular
+control over the buffer list and is more powerful overall.
+
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :bind
+  (:map ibuffer-mode-map
+   ("* f" . ibuffer-mark-by-file-name-regexp)
+   ("* g" . ibuffer-mark-by-content-regexp)
+   ("* n" . ibuffer-mark-by-name-regexp)
+   ("s n" . ibuffer-do-sort-by-alphabetic)
+   ("/ g" . ibuffer-filter-by-content))
+  :config
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+#+end_src
+
+*** COMMENT Scratch buffers (scratch.el)
+This package will produce a buffer that matches the major mode of the
+one you are currently in.  Use it with =M-x scratch=.  Doing that with a
+prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
+super effective!
+
+The =ale/scratch-buffer-setup= simply adds some text in the buffer and
+renames it appropriately for the sake of easier discovery.  I got the
+idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
+
+#+begin_src emacs-lisp
+(use-package scratch
+  :config
+  (defun ale/scratch-buffer-setup ()
+    "Add contents to `scratch' buffer and name it accordingly.
+If region is active, add its contents to the new buffer."
+    (let* ((mode major-mode)
+           (string (format "Scratch buffer for: %s\n\n" mode))
+           (region (with-current-buffer (current-buffer)
+                     (if (region-active-p)
+                         (buffer-substring-no-properties
+                          (region-beginning)
+                          (region-end)))
+                     ""))
+           (text (concat string region)))
+      (when scratch-buffer
+	      (save-excursion
+          (insert text)
+          (goto-char (point-min))
+          (comment-region (point-at-bol) (point-at-eol)))
+	      (forward-line 2))
+      (rename-buffer (format "*Scratch for %s*" mode) t)))
+  (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
+  (define-key global-map (kbd "C-c s") #'scratch))
+#+end_src
 ** Trash (trashed.el)
 
 =trashed= applies the principles of =dired= to the management of the user's
@@ -1635,41 +1678,6 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
 (define-prefix-command 'ale/utils-map)
 #+end_src
 
-** COMMENT Scratch buffers (scratch.el)
-This package will produce a buffer that matches the major mode of the
-one you are currently in.  Use it with =M-x scratch=.  Doing that with a
-prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
-super effective!
-
-The =ale/scratch-buffer-setup= simply adds some text in the buffer and
-renames it appropriately for the sake of easier discovery.  I got the
-idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
-
-#+begin_src emacs-lisp
-(use-package scratch
-  :config
-  (defun ale/scratch-buffer-setup ()
-    "Add contents to `scratch' buffer and name it accordingly.
-If region is active, add its contents to the new buffer."
-    (let* ((mode major-mode)
-           (string (format "Scratch buffer for: %s\n\n" mode))
-           (region (with-current-buffer (current-buffer)
-                     (if (region-active-p)
-                         (buffer-substring-no-properties
-                          (region-beginning)
-                          (region-end)))
-                     ""))
-           (text (concat string region)))
-      (when scratch-buffer
-	      (save-excursion
-          (insert text)
-          (goto-char (point-min))
-          (comment-region (point-at-bol) (point-at-eol)))
-	      (forward-line 2))
-      (rename-buffer (format "*Scratch for %s*" mode) t)))
-  (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
-  (define-key global-map (kbd "C-c s") #'scratch))
-#+end_src
 ** COMMENT Epub reader (nov.el)
 
 #+begin_src emacs-lisp
