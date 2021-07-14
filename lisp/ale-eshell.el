@@ -1,5 +1,6 @@
 (require 'eshell)
 (require 'esh-mode)
+(require 'em-hist)
 (eval-when-compile (require 'subr-x))
 (require 'cl-seq)
 (require 'dash)
@@ -75,8 +76,7 @@
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
   ;; Truncate buffer for performance
   (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-  ;; Use completion-at-point to provide completions in eshell
-  (define-key eshell-mode-map (kbd "<tab>") 'completion-at-point)
+  (define-key eshell-hist-mode-map (kbd "M-r") 'consult-history)
   ;; Initialize the shell history
   (eshell-hist-initialize)
   (setenv "PAGER" "cat")
@@ -175,7 +175,7 @@ Create new one if no eshell buffer exists."
   "Choose a package to uninstall using paru."
   (let* ((p-list-raw (shell-command-to-string "pacman -Qeq"))
          (p-list (split-string p-list-raw "\n" t))
-         (res (completing-read "Uninstall: " p-list))
-    (insert (concat "paru -Rns " res)))))
+         (res (completing-read "Uninstall: " p-list)))
+    (insert (concat "paru -Rns " res))))
 
 (provide 'ale-eshell)
