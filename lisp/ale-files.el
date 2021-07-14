@@ -109,6 +109,16 @@ Return the decoded text as multibyte string."
               (fname (completing-read "File name: " cands nil nil)))
     (find-file (expand-file-name fname))))
 
+(defun ale/files-browse-all-directories ()
+  "Browse all directories using `fd' command."
+  (interactive)
+  (let* ((command "fd -H -td -0 . /")
+         (output (shell-command-to-string command))
+         (files-raw (split-string output "\0" t))
+         (files (ale/minibuffer-append-metadata 'file files-raw))
+         (file (completing-read "Goto: " files)))
+    (find-file file)))
+
 (defun ale/files-other-window ()
   "Doc."
   (interactive)

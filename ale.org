@@ -1284,7 +1284,7 @@ branches in =git= commands.
 
 Configuration about dired, lf, files, recentf etc.
 
-** User directory (ale-files.el)
+** File open (ale-files.el)
 
 #+begin_src emacs-lisp
 (use-package ale-files
@@ -1294,13 +1294,14 @@ Configuration about dired, lf, files, recentf etc.
   :bind
   (:map
    minibuffer-local-map
-   ("s-<return>" . ale/files-other-window)
+   ("S-<return>" . ale/files-other-window)
    :map
    ale/files-map
    ("." . ale/files-dotfiles)
    ("e" . ale/files-edit-emacs-config)
    ("u" . ale/files-in-user-dirs)
    ("r" . ale/files-recent)
+   ("o" . ale/files-browse-all-directories)
    ("l" . find-library)))
 #+end_src
 
