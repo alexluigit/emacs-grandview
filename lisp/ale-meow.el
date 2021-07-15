@@ -1,5 +1,4 @@
 (declare-function ale/pulse-pulse-line "ale-pulse")
-(require 'ale-files)
 (require 'ale-window)
 (require 'ale-simple)
 (require 'dash)
@@ -78,7 +77,7 @@
   (define-key minibuffer-local-map (kbd "C-o") #'ale/simple-backward-char)
   (define-key minibuffer-local-map (kbd "<C-i>") #'ale/simple-forward-char)
   (meow-leader-define-key
-   '("SPC" . project-find-file)
+   '("SPC" . ale/project-find-file)
    '("RET" . ibuffer)
    '("?" . describe-keymap)
    '(";" . ale/meow-comment-or-uncomment-region)

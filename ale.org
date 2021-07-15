@@ -744,7 +744,6 @@ as effective for my case.
 #+begin_src emacs-lisp
 (use-package ale-window
   :straight nil
-  :commands ale/window-buffers-major-mode
   :defer t
   :bind
   ("M-1" . (lambda () (interactive) (ale/window-select-by-index 0)))

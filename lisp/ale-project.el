@@ -100,4 +100,14 @@ Basically switches to a new branch or tag."
          (dir (cdr pr)))
     (magit-status dir)))
 
+(defun ale/project-find-file (&optional force)
+  "Same as `project-find-file' except using magit for project
+choosing.
+With a universal prefix to choose project anyway."
+  (interactive "P")
+  (if (or force (null (project-current)))
+      (let ((current-prefix-arg '(4)))
+        (call-interactively 'magit-status))
+    (project-find-file)))
+
 (provide 'ale-project)
