@@ -7,7 +7,7 @@
 (declare-function ale/files-read "ace-files")
 
 (defcustom ale/eshell-position
-  '((default . ((window-width . 0.4) (side . bottom))))
+  '((default . ((window-height . 0.4) (side . bottom))))
   "doc")
 
 (defvar ale/eshell-buffers nil

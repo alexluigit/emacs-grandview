@@ -1173,7 +1173,7 @@ Org mode setup.
   :bind
   (("s-t" . ale/eshell-toggle)
    :map eshell-mode-map
-   ("<f12>" . ale/eshell-new)
+   ("<delete>" . ale/eshell-new)
    ("C-l" . ale/eshell-clear-buffer)
    ("C-\\" . ale/eshell-updir)
    ("s-n" . eshell-next-prompt)
