@@ -723,10 +723,6 @@ as effective for my case.
 	        ("^\\*?\\(Help\\|helpful\\).*"
 	         (display-buffer-in-side-window)
 	         (window-width . 0.4)
-	         (side . bottom))
-	        ("magit:.*"
-	         (display-buffer-in-side-window)
-	         (window-width . 0.4)
 	         (side . right))
 	        ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
 	         (display-buffer-at-bottom))))
@@ -1502,6 +1498,18 @@ Packages or custom functions for development.
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories
         '(("~/Code" . 1) ("~" . 1)))
+  (setq magit-display-buffer-function
+      (lambda (buffer)
+        (display-buffer
+         buffer (if (and (derived-mode-p 'magit-mode)
+                         (memq (with-current-buffer buffer major-mode)
+                               '(magit-process-mode
+                                 magit-revision-mode
+                                 magit-diff-mode
+                                 magit-stash-mode
+                                 magit-status-mode)))
+                    nil
+                  '(display-buffer-same-window)))))
   :bind
   (:map global-map ("C-M-g" . magit-status-here)
    :map magit-mode-map ("`" . magit-diff-show-or-scroll-up)
