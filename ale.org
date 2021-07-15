@@ -958,6 +958,7 @@ for visualising the standard completion framework's output
 #+begin_src emacs-lisp
 (use-package consult
   :init
+  (setq completion-in-region-function #'consult-completion-in-region)
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
   (advice-add #'register-preview :override #'consult-register-window)
@@ -981,7 +982,6 @@ for visualising the standard completion framework's output
         ("C" . consult-mode-command))
   :config
   (setq consult-line-numbers-widen t)
-  (setq completion-in-region-function #'consult-completion-in-region)
   (setq consult-async-min-input 3)
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
@@ -1171,7 +1171,6 @@ Org mode setup.
   :config
   (setq eshell-banner-message "")
   (setq eshell-aliases-file (concat ale/init-dot-repo "eshell/aliases"))
-  (setq eshell-cmpl-cycle-completions nil)
   :hook
   (eshell-first-time-mode . ale/eshell-init)
   :bind
@@ -1220,7 +1219,7 @@ branches in =git= commands.
 #+begin_src emacs-lisp
 (use-package eshell-z
   :defer t
-  :hook ((eshell-mode . (lambda () (require 'eshell-z)))
+  :hook ((eshell-first-time-mode . (lambda () (require 'eshell-z)))
          (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
 #+end_src
 

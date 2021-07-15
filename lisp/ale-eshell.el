@@ -89,9 +89,6 @@
   (setq eshell-scroll-to-bottom-on-input t)
   (setq eshell-prefer-lisp-functions nil))
 
-;; Use minibuffer for selecting completion candidates
-(add-hook 'eshell-mode-hook (lambda () (setq pcomplete-cycle-completions nil)))
-
 (add-hook 'eshell-exit-hook
           (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
 
