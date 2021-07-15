@@ -70,7 +70,7 @@
        (propertize "\nλ" 'face `(:foreground "#EC6261")))
      (propertize " " 'face `(:foreground "white")))))
 
-(defun ale/eshell-configure ()
+(defun ale/eshell-init ()
   (push 'eshell-tramp eshell-modules-list)
   ;; Save command history when commands are entered
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
@@ -80,17 +80,26 @@
   ;; Initialize the shell history
   (eshell-hist-initialize)
   (setenv "PAGER" "cat")
-  (setq eshell-prompt-function      'ale/eshell-prompt
-        eshell-prompt-regexp        "^λ "
-        eshell-history-size         10000
-        eshell-buffer-maximum-lines 10000
-        eshell-hist-ignoredups t
-        eshell-highlight-prompt t
-        eshell-scroll-to-bottom-on-input t
-        eshell-prefer-lisp-functions nil))
+  (setq eshell-prompt-function      'ale/eshell-prompt)
+  (setq eshell-prompt-regexp        "^λ ")
+  (setq eshell-history-size         10000)
+  (setq eshell-buffer-maximum-lines 10000)
+  (setq eshell-hist-ignoredups t)
+  (setq eshell-highlight-prompt t)
+  (setq eshell-scroll-to-bottom-on-input t)
+  (setq eshell-prefer-lisp-functions nil))
+
+;; Use minibuffer for selecting completion candidates
+(add-hook 'eshell-mode-hook (lambda () (setq pcomplete-cycle-completions nil)))
 
 (add-hook 'eshell-exit-hook
           (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
+
+(defun ale/eshell-updir ()
+  "Up a directory in eshell."
+  (interactive)
+  (eshell/cd "..")
+  (eshell-emit-prompt))
 
 (defun ale/eshell--get-win-params ()
   "Parse `ale/eshell-position' to get eshell display parameters."

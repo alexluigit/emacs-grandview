@@ -1172,17 +1172,15 @@ Org mode setup.
   :config
   (setq eshell-banner-message "")
   (setq eshell-aliases-file (concat ale/init-dot-repo "eshell/aliases"))
-  (with-eval-after-load 'esh-opt
-    (setq eshell-destroy-buffer-when-process-dies t)
-    (setq eshell-visual-commands '("htop" "zsh" "nvim")))
+  (setq eshell-cmpl-cycle-completions nil)
   :hook
-  (eshell-first-time-mode . ale/eshell-configure)
+  (eshell-first-time-mode . ale/eshell-init)
   :bind
-  (("<f12>" . ale/eshell-toggle)
+  (("s-t" . ale/eshell-toggle)
    :map eshell-mode-map
-   ("M-<f12>" . ale/eshell-new)
+   ("<f12>" . ale/eshell-new)
    ("C-l" . ale/eshell-clear-buffer)
-   ("C-\\" . (lambda () (interactive) (eshell/cd "..") (eshell-emit-prompt)))
+   ("C-\\" . ale/eshell-updir)
    ("s-n" . eshell-next-prompt)
    ("s-p" . eshell-previous-prompt)
    ("M-]" . ale/eshell-next)
