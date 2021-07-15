@@ -8,22 +8,9 @@
   "Extensions for project.el and related libraries."
   :group 'project)
 
-(defcustom ale/project-project-roots (list "~/Code")
-  "List of directories with version-controlled projects.
-To be used by `ale/project-switch-project'."
-  :type 'list
-  :group 'ale/project)
-
 (defcustom ale/project-commit-log-limit 25
   "Limit commit logs for project to N entries by default.
 A value of 0 means 'unlimited'."
-  :type 'integer
-  :group 'ale/project)
-
-(defcustom ale/project-large-file-lines 1000
-  "How many lines constitute a 'large file' (integer).
-This determines whether some automatic checks should be executed
-or not, such as `ale/project-flymake-mode-activate'."
   :type 'integer
   :group 'ale/project)
 
@@ -49,36 +36,6 @@ Project root for PROJECT with HEAD and VC, plus optional
 DIRS."
   (mapcan #'ale/project--project-files-in-directory
           (or dirs (list (project-root project)))))
-
-(defun ale/project--list-projects ()
-  "Produce list of projects in `ale/project-project-roots'."
-  (let* ((dirs ale/project-project-roots)
-         (dotless directory-files-no-dot-files-regexp)
-         (cands (mapcan (lambda (d)
-                          (directory-files d t dotless))
-                        dirs)))
-    (mapcar (lambda (d)
-              (list (abbreviate-file-name d)))
-            cands)))
-
-;;;###autoload
-(defun ale/project-add-projects ()
-  "Append `ale/project--list-projects' to `project--list'."
-  (interactive)
-  (project--ensure-read-project-list)
-  (let ((projects (ale/project--list-projects)))
-    (setq project--list (append projects project--list))
-    (project--write-project-list)))
-
-;;;###autoload
-(defun ale/project-remove-project ()
-  "Remove project from `project--list' using completion."
-  (interactive)
-  (project--ensure-read-project-list)
-  (let* ((projects project--list)
-         (dir (completing-read "REMOVE project from list: " projects nil t)))
-    (setq project--list (delete (assoc dir projects) projects))
-    (project--write-project-list)))
 
 (defun ale/project--directory-subdirs (dir)
   "Return list of subdirectories in DIR."

@@ -1563,12 +1563,9 @@ sure this is a good approach."
           (ale/project-retrieve-tag "Tag switch" ?t)
           (ale/project-magit-status "Magit" ?m)
           (ale/project-commit-log "Log VC" ?l)))
-  (setq ale/project-project-roots '("~/Code/" "~/"))
   (setq ale/project-commit-log-limit 25)
-  (setq ale/project-large-file-lines 1000)
   :bind
   (:map project-prefix-map
-        ("DEL" . ale/project-remove-project)
         ("l" . ale/project-commit-log)
         ("m" . ale/project-magit-status)
         ("s" . ale/project-find-subdir)
