@@ -3,9 +3,9 @@
 (defvar ale/font-size 32)
 (defvar ale/default-fonts '("Sarasa Mono SC" "Iosevka SS04" "Victor Mono" "Fira Code Retina"))
 (defvar ale/fixed-fonts '("Victor Mono" "Fira Code Retina"))
-(defvar ale/variable-fonts '("Iosevka SS04" "Victor Mono" "Fira Code Retina"))
+(defvar ale/variable-fonts '("Sarasa Mono SC" "Victor Mono" "Fira Code Retina"))
 (defvar ale/zh-fonts '("Sarasa Mono SC" "Source Han Sans CN" "PingFang SC" "Microsoft Yahei"))
-(defvar ale/org-fonts '("Iosevka SS04" "ETBembo" "Fira Code Retina"))
+(defvar ale/org-fonts '("Sarasa Mono SC" "ETBembo" "Fira Code Retina"))
 (defvar ale/zh-font-scale 1)
 
 (defun ale/font-chooser (fonts)
