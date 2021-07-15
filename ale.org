@@ -878,7 +878,6 @@ control every aspect of the interface.
   :straight (:type built-in)
   :config
   (require 'ale-minibuffer)
-  (setq completion-styles '(orderless flex)) ; Handle it to `orderless.el'
   (setq completion-category-defaults nil)
   (setq completion-cycle-threshold 3)
   (setq completion-flex-nospace nil)
@@ -918,6 +917,7 @@ A minimalistic completion UI.
 (use-package orderless
   :config
   (require 'ale-orderless)
+  (setq completion-styles '(orderless))
   (setq orderless-component-separator " +")
   (setq orderless-matching-styles
         '(ale/pinyin-build-regexp-string
