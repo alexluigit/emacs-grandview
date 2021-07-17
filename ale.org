@@ -675,20 +675,18 @@ Give some code navigation / window switch commands better visual clue.
 
 ** Viewports
 
-I believe that Emacs's true power lies in its buffer management rather
-than its multiplexing.  The latter becomes inefficient at scale, since
-it tries to emulate the limitations of the real world, namely, the
-placement of things on a desk.
+I believe that Emacs's true power lies in its buffer management rather than its
+multiplexing.  The latter becomes inefficient at scale, since it tries to
+emulate the limitations of the real world, namely, the placement of things on a
+desk.
 
-By leveraging the power of the computer, we can use search methods to
-easily reach any item.  There is no need to remain confined to the idea
-of a finite space (screen real estate) that needs to be carefully
-managed.
+By leveraging the power of the computer, we can use search methods to easily
+reach any item.  There is no need to remain confined to the idea of a finite
+space (screen real estate) that needs to be carefully managed.
 
-That granted, Emacs' multiplexing can be turned into a powerhouse as
-well, covering everything from window placement rules, to the recording
-of history and layouts, as well as directional or direct window
-navigation.
+That granted, Emacs' multiplexing can be turned into a powerhouse as well,
+covering everything from window placement rules, to the recording of history and
+layouts, as well as directional or direct window navigation.
 
 *** Fringe-mode
 
@@ -699,15 +697,17 @@ navigation.
 
 *** Window rules (window.el)
 
-The =display-buffer-alist= is intended as a rule-set for controlling the
-display of windows.  The objective is to create a more intuitive
-workflow where targeted buffer groups or types are always shown in a
-given location, on the premise that predictability improves usability.
+The =display-buffer-alist= is intended as a rule-set for controlling the display
+of windows.  The objective is to create a more intuitive workflow where targeted
+buffer groups or types are always shown in a given location, on the premise that
+predictability improves usability.
 
-For each buffer action in =display-buffer-alist= we can define several
-functions for selecting the appropriate window.  These are executed in
-sequence, but my usage thus far suggests that a simpler method is just
-as effective for my case.
+For each buffer action in =display-buffer-alist= we can define several functions
+for selecting the appropriate window.  These are executed in sequence, but my
+usage thus far suggests that a simpler method is just as effective for my case.
+
+Additionally, I've set =split-height-threshold= to nil and =split-width-threshold=
+to 0 to ensure every new window will open in horizontal split.
 
 #+begin_src emacs-lisp
 (use-package window
@@ -721,7 +721,7 @@ as effective for my case.
 	         (display-buffer-in-side-window)
 	         (window-height . 0.3)
 	         (side . bottom))
-	        ("^\\*?\\(Help\\|helpful\\).*"
+	        ("^\\*?\\(magit: \\|Help\\|helpful\\).*"
 	         (display-buffer-in-side-window)
 	         (window-width . 0.4)
 	         (side . right))
@@ -731,9 +731,8 @@ as effective for my case.
   (setq even-window-sizes 'height-only)
   (setq window-sides-vertical nil)
   (setq switch-to-buffer-in-dedicated-window 'pop)
-  ;; Disable window close when calling 'keyboard-escape-quit'
-  (defadvice keyboard-escape-quit (around keep-windows activate)
-    (let ((buffer-quit-function (lambda () ()))) ad-do-it)))
+  (setq split-height-threshold nil)
+  (setq split-width-threshold 0))
 #+end_src
 
 *** Index based window motions (ale-window.el)
@@ -1495,18 +1494,6 @@ Packages or custom functions for development.
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories
         '(("~/Code" . 1) ("~" . 1)))
-  (setq magit-display-buffer-function
-      (lambda (buffer)
-        (display-buffer
-         buffer (if (and (derived-mode-p 'magit-mode)
-                         (memq (with-current-buffer buffer major-mode)
-                               '(magit-process-mode
-                                 magit-revision-mode
-                                 magit-diff-mode
-                                 magit-stash-mode
-                                 magit-status-mode)))
-                    nil
-                  '(display-buffer-same-window)))))
   :bind
   (:map global-map ("C-M-g" . magit-status-here)
    :map magit-mode-map ("`" . magit-diff-show-or-scroll-up)
