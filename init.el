@@ -36,17 +36,9 @@
         (load-file init-el)
       (require 'ob-tangle)
       (org-babel-tangle-file init-org init-el)
-      (load-file init-el))))
+      (load-file init-el)
+      (if (native-comp-available-p)
+          (native-compile init-el)
+        (byte-compile-file init-el)))))
 
 (ale/init-load-config)
-
-(defun ale/init-build-config ()
-  "Automatically tangle main init org file at saving when current buffer name matches.
-Add this to `after-save-hook' in `org-mode-hook'."
-  (let ((init-el (concat user-emacs-directory "ale.el"))
-        (init-org (concat ale/init-dot-repo "ale.org")))
-    (require 'ob-tangle)
-    (org-babel-tangle-file init-org init-el)
-    (byte-compile-file init-el)))
-
-(add-hook 'kill-emacs-hook #'ale/init-build-config)
