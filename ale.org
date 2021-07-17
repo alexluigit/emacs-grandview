@@ -1343,11 +1343,6 @@ well. See details at: https://github.com/alexluigit/lf.el
   :config
   (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
                              ("/media/Cloud/" . ".Trash/files")))
-  (setq lf-completing-preview-position
-        (lambda (info)
-          (cons (/ (- (plist-get info :parent-frame-width)
-                      (plist-get info :posframe-width)) 2)
-                (or (frame-parameter nil 'internal-border-width) 30))))
   (setq lf-header-position '(0 . 30))
   (defun ale/ts-ext-fix (entry)
     (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
