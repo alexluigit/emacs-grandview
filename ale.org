@@ -856,8 +856,6 @@ bezier) scrolling in emacs, =good-scroll-down-full-screen= and
 #+begin_src emacs-lisp
 (use-package good-scroll
   :init
-  (setq-default scroll-preserve-screen-position t)
-  (setq-default scroll-conservatively 10000) ; affects `scroll-step'
   (setq-default auto-window-vscroll nil)
   (setq-default scroll-margin 0)
   (good-scroll-mode 1))
@@ -1171,7 +1169,7 @@ Org mode setup.
   :hook
   (eshell-first-time-mode . ale/eshell-init)
   :bind
-  (("s-t" . ale/eshell-toggle)
+  (("s-<tab>" . ale/eshell-toggle)
    :map eshell-mode-map
    ("<delete>" . ale/eshell-new)
    ("C-l" . ale/eshell-clear-buffer)
