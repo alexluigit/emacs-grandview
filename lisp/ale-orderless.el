@@ -20,4 +20,8 @@
   (when (string-prefix-p "`" pattern)
     `(ale/orderless-pinyin-only-initialism . ,(substring pattern 1))))
 
+(defun ale/orderless-without-literal-dispatcher (pattern _index _total)
+  (when (string-prefix-p "~" pattern)
+    `(orderless-without-literal . ,(substring pattern 1))))
+
 (provide 'ale-orderless)

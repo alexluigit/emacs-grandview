@@ -927,14 +927,15 @@ A minimalistic completion UI.
   (setq orderless-component-separator " +")
   (setq orderless-matching-styles
         '(ale/pinyin-build-regexp-string
-          orderless-strict-leading-initialism
+          orderless-initialism
           orderless-prefixes
-          orderless-regexp
-          orderless-literal))
+          orderless-regexp))
   (setq orderless-style-dispatchers
         '(ale/orderless-literal-dispatcher
           ale/orderless-initialism-dispatcher
+          ale/orderless-without-literal-dispatcher
           ale/orderless-pinyin-dispatcher))
+  ;; SPC should never complete: use it for `orderless' groups.
   (define-key minibuffer-local-completion-map "SPC" nil))
 #+end_src
 
