@@ -873,6 +873,15 @@ control every aspect of the interface.
 #+begin_src emacs-lisp
 (use-package minibuffer
   :straight (:type built-in)
+  :after ale-simple
+  :bind
+  (:map minibuffer-local-map
+        ("/" . (lambda () (interactive) (self-insert-command 1)))
+        ("DEL" . #'ale/simple-backward-delete-char)
+        ("C-w" . #'backward-kill-word)
+        ("C-u" . #'ale/simple-kill-whole-line)
+        ("C-o" . #'ale/simple-backward-char)
+        ("<C-i>" . #'ale/simple-forward-char))
   :config
   (require 'ale-minibuffer)
   (setq completion-category-defaults nil)
