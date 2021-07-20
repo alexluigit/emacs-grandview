@@ -1568,6 +1568,7 @@ sure this is a good approach."
   :defer t
   :config
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
+  (add-to-list 'warning-suppress-types '(lsp-mode))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   :hook
