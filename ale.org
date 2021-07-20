@@ -1344,7 +1344,6 @@ well. See details at: https://github.com/alexluigit/lf.el
   :config
   (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
                              ("/media/Cloud/" . ".Trash/files")))
-  (setq lf-header-position '(0 . 30))
   (defun ale/ts-ext-fix (entry)
     (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
         (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
