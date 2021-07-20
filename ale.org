@@ -1282,9 +1282,10 @@ file management operations inside of an Emacs buffer.  It is simply superb!
   :straight (:type built-in)
   :bind
   (:map dired-mode-map
-        ("/" . dired-create-empty-file)
-        ("?" . dired-create-directory)
+        ("/" . dired-goto-file)
+        ("i" . dired-create-empty-file)
         ("I" . dired-insert-subdir)
+        ("?" . dired-create-directory)
         ("^" . dired-find-file-other-window)
         ("a" . ale/dired-file-rename-eol)
         ("d" . dired-kill-subdir)
