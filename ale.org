@@ -45,7 +45,7 @@ that you accidentally evaluated from messing up with your carefully designed
 #+begin_src emacs-lisp
 (put 'list-timers 'disabled nil)
 (put 'erase-buffer 'disabled nil)
-(setq custom-file "/tmp/ale-emacs-custom.el")
+(setq custom-file (concat user-emacs-directory "ale-custom.el"))
 #+end_src
 
 ** Elisp (elisp-mode.el)
