@@ -74,6 +74,7 @@
   (meow-leader-define-key
    '("SPC" . ale/project-find-file)
    '("?" . describe-keymap)
+   '("/" . helpful-symbol)
    '(";" . ale/meow-comment-or-uncomment-region)
    '("e" . ale/elisp-eval-map)
    '("f" . ale/files-map)
@@ -114,7 +115,6 @@
    '("'" . meow-end-of-thing)
    '("\\" . meow-pop-search)
    '("^" . meow-last-buffer)
-   '("?" . helpful-symbol)
    '("<backspace>" . meow-beginning-of-thing)
    '("<escape>" . ale/meow-escape)
    '("<C-i>" . better-jumper-jump-forward)
