@@ -2,6 +2,10 @@
   "Generic utilities for my dotemacs."
   :group 'editing)
 
+(defadvice keyboard-escape-quit (around keep-windows activate)
+  "Do not close any window when calling `keyboard-escape-quit'."
+  (let ((buffer-quit-function #'ignore) ad-do-it)))
+
 (defcustom ale/simple-date-specifier "%F"
   "Date specifier for `format-time-string'.
 Used by `ale/simple-insert-date'."
