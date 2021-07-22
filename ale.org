@@ -1119,6 +1119,14 @@ Org mode setup.
 #+end_src
 
 * Languages
+** .rs
+
+#+begin_src emacs-lisp
+(use-package rust-mode
+  :hook
+  (rust-mode . (lambda () (setq indent-tabs-mode nil))))
+#+end_src
+
 ** .lua
 
 #+begin_src emacs-lisp
