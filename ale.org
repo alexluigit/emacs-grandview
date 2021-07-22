@@ -1512,11 +1512,14 @@ Packages or custom functions for development.
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories
         '(("~/Code" . 1) ("~" . 1)))
-  :bind
-  (:map global-map ("C-M-g" . magit-status-here)
-   :map magit-mode-map ("`" . magit-diff-show-or-scroll-up)
-   :map magit-diff-section-base-map ("<C-return>" . magit-diff-visit-file-other-window)
-   :map magit-diff-mode-map ("`" . scroll-up)))
+  :bind (("C-M-g" . magit-status-here)
+         :map magit-mode-map
+         ("q" . kill-this-buffer)
+         ("`" . magit-diff-show-or-scroll-up)
+         :map magit-diff-section-base-map
+         ("<C-return>" . magit-diff-visit-file-other-window)
+         :map magit-diff-mode-map
+         ("`" . scroll-up)))
 
 (use-package git-gutter
   :defer t
