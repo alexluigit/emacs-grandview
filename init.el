@@ -1,3 +1,5 @@
+(require 'ale-gc)
+
 (defvar bootstrap-version)
 (setq straight-use-package-by-default t)
 (setq straight-vc-git-default-clone-depth 1)
@@ -17,17 +19,6 @@
 
 (straight-use-package 'use-package)
 
-;; Setup garbage collection before loading main init file
-(use-package gcmh
-  :init
-  (gcmh-mode 1))
-
-;; No ask for follow link
-(setq vc-follow-symlinks t)
-
-(push (concat ale/init-dot-repo "lisp") load-path)
-
-;; Load configurations.
 (defun ale/init-load-config ()
   "Load main Emacs configurations, either '.el' or '.org' file."
   (let ((init-el (concat user-emacs-directory "ale.el"))
@@ -42,3 +33,4 @@
         (byte-compile-file init-el)))))
 
 (ale/init-load-config)
+

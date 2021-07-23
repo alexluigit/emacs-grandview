@@ -1,5 +1,9 @@
+(setq gc-cons-threshold 100000000)    ; Defer GC
+
 (defvar ale/init-dot-repo (file-truename user-emacs-directory)
   "Get dotfiles repo path before changing `user-emacs-directory'.")
+
+(push (concat ale/init-dot-repo "lisp") load-path)
 
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
 (setq url-history-file (expand-file-name "url/history" user-emacs-directory))
