@@ -30,6 +30,7 @@
   (load bootstrap-file nil 'nomessage))
 
 (straight-use-package 'use-package)
+(setq use-package-always-defer t)
 
 (defun ale/init-load-config ()
   "Load main Emacs configurations, either '.el' or '.org' file."

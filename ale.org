@@ -87,7 +87,6 @@ first possible option, which is exactly what I want.
   :init
   (require 'ale-simple)
   (define-prefix-command 'ale/simple-map)
-  :defer t
   :config
   (setq ale/simple-date-specifier "%F")
   (setq ale/simple-time-specifier "%R %z")
@@ -127,7 +126,6 @@ package and built-in help buffer:
 
 #+begin_src emacs-lisp
 (use-package helpful
-  :defer t
   :init
   (setq help-window-select t)
   (defvar ale/helpful-initialized nil)
@@ -315,7 +313,6 @@ Summary of what these do:
 
 #+begin_src emacs-lisp
 (use-package paren
-  :defer t
   :config
   (setq show-paren-style 'parenthesis)
   (setq show-paren-when-point-in-periphery nil)
@@ -429,7 +426,6 @@ this style as the default.  Other options are =string= and =rx=.
 
 #+begin_src emacs-lisp
 (use-package re-builder
-  :defer t
   :config
   (setq reb-re-syntax 'read))
 #+end_src
@@ -469,7 +465,6 @@ as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
 
 #+begin_src emacs-lisp
 (use-package xref
-  :defer t
   :config
   ;; All those have been changed for Emacs 28
   (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
@@ -481,8 +476,7 @@ as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
 *** Ripgrep (deadgrep.el)
 
 #+begin_src emacs-lisp
-(use-package deadgrep
-  :defer t)
+(use-package deadgrep)
 #+end_src
 
 ** Paragraphs
@@ -603,6 +597,7 @@ The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Prot
 
 #+begin_src emacs-lisp
 (use-package doom-modeline
+  :demand t
   :config
   (remove-hook 'dired-mode-hook #'doom-modeline-set-project-modeline)
   (doom-modeline-mode t)
@@ -616,6 +611,7 @@ The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Prot
 #+begin_src emacs-lisp
 (use-package ale-fonts
   :straight nil
+  :demand t
   :config
   (setq ale/font-size 32)
   (setq ale/default-fonts '("Victor Mono"))
@@ -627,15 +623,13 @@ The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Prot
 *** Icons (all-the-icons.el)
 
 #+begin_src emacs-lisp
-(use-package all-the-icons
-  :defer t)
+(use-package all-the-icons)
 #+end_src
 
 *** Emoji (emojify.el)
 
 #+begin_src emacs-lisp
 (use-package emojify
-  :defer t
   :hook (after-init . global-emojify-mode))
 #+end_src
 
@@ -666,7 +660,6 @@ their placement.
 #+begin_src emacs-lisp
 (use-package transient
   :straight (:type built-in)
-  :defer t
   :config
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
@@ -681,6 +674,7 @@ Give some code navigation / window switch commands better visual clue.
 #+begin_src emacs-lisp
 (use-package ale-pulse
   :straight nil
+  :demand t
   :config
   (ale/pulse-advice-commands-mode 1))
 #+end_src
@@ -752,7 +746,6 @@ to 0 to ensure every new window will open in horizontal split.
 #+begin_src emacs-lisp
 (use-package ale-window
   :straight nil
-  :defer t
   :bind
   ("M-1" . (lambda () (interactive) (ale/window-select-by-index 0)))
   ("M-2" . (lambda () (interactive) (ale/window-select-by-index 1)))
@@ -769,7 +762,7 @@ strongly encourage you to read the "Commentary" section in the source
 code.  Do it with =M-x find-library transpose-frame=.
 
 #+begin_src emacs-lisp
-(use-package transpose-frame :defer t)
+(use-package transpose-frame)
 #+end_src
 
 *** Tabs (ale-tab.el)
@@ -923,7 +916,6 @@ A minimalistic completion UI.
 
 #+begin_src emacs-lisp
 (use-package vertico
-  :defer t
   :init
   (vertico-mode 1)
   (set-face-attribute 'vertico-current nil :inherit 'ale/pulse-line))
@@ -933,6 +925,7 @@ A minimalistic completion UI.
 
 #+begin_src emacs-lisp
 (use-package orderless
+  :demand t
   :config
   (require 'ale-orderless)
   (setq completion-styles '(orderless))
@@ -961,11 +954,11 @@ for visualising the standard completion framework's output
 
 #+begin_src emacs-lisp
 (use-package marginalia
-  :after minibuffer
   :config
   (setq marginalia-annotators
 	      '(marginalia-annotators-heavy
 	        marginalia-annotators-light))
+  :init
   (marginalia-mode))
 #+end_src
 
@@ -1050,7 +1043,6 @@ Org mode setup.
 
 #+begin_src emacs-lisp
 (use-package org
-  :defer t
   :straight nil
   :hook
   (org-mode . ale/font-org-setup)
@@ -1089,6 +1081,7 @@ Org mode setup.
 
 (use-package org-tempo ; this is needed as of Org 9.2
   :after org
+  :demand t
   :straight (:type built-in)
   :config
   (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
@@ -1101,7 +1094,6 @@ Org mode setup.
 
 #+begin_src emacs-lisp
 (use-package org-superstar
-  :defer t
   :config
   (setq org-superstar-item-bullet-alist '((?* . ?•) (?+ . ?+) (?- . ?•)))
   (setq org-superstar-remove-leading-stars t)
@@ -1114,7 +1106,6 @@ Org mode setup.
 
 #+begin_src emacs-lisp
 (use-package org-habit
-  :defer t
   :straight nil
   :config
   (add-to-list 'org-modules 'org-habit)
@@ -1134,7 +1125,6 @@ Org mode setup.
 
 #+begin_src emacs-lisp
 (use-package lua-mode
-  :defer t
   :config
   (setq lua-indent-level 2))
 #+end_src
@@ -1142,15 +1132,13 @@ Org mode setup.
 ** .yaml
 
 #+begin_src emacs-lisp
-(use-package yaml-mode
-  :defer t)
+(use-package yaml-mode)
 #+end_src
 
 ** .vue
 
 #+begin_src emacs-lisp
 (use-package web-mode
-  :defer t
   :config
   (define-derived-mode ale/vue-mode web-mode "ale/vue"
     "A major mode derived from web-mode, for editing .vue files with LSP support.")
@@ -1187,7 +1175,6 @@ Org mode setup.
 #+begin_src emacs-lisp
 (use-package ale-eshell
   :straight nil
-  :defer t
   :config
   (setq eshell-banner-message "")
   (setq eshell-aliases-file (concat ale/init-dot-repo "eshell/aliases"))
@@ -1238,7 +1225,6 @@ branches in =git= commands.
 
 #+begin_src emacs-lisp
 (use-package eshell-z
-  :defer t
   :hook ((eshell-first-time-mode . (lambda () (require 'eshell-z)))
          (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
 #+end_src
@@ -1377,7 +1363,6 @@ Additional syntax highlighting in dired / lf buffer.
 
 #+begin_src emacs-lisp
 (use-package diredfl
-  :defer t
   :hook (dired-mode . diredfl-mode))
 #+end_src
 
@@ -1386,6 +1371,7 @@ Additional syntax highlighting in dired / lf buffer.
 #+begin_src emacs-lisp
 (use-package recentf
   :straight (:type built-in)
+  :demand t
   :config
   (recentf-mode 1))
 #+end_src
@@ -1480,7 +1466,6 @@ Basically, its interaction model is as follows:
 
 #+begin_src emacs-lisp
 (use-package trashed
-  :defer t
   :config
   (setq trashed-action-confirmer 'y-or-n-p)
   (setq trashed-use-header-line t)
@@ -1498,7 +1483,6 @@ Packages or custom functions for development.
 #+begin_src emacs-lisp
 (use-package vc-hooks
   :straight (:type built-in)
-  :defer t
   :config
   ;; No ask for follow symlink
   (setq vc-follow-symlinks t))
@@ -1508,7 +1492,6 @@ Packages or custom functions for development.
 
 #+begin_src emacs-lisp
 (use-package magit
-  :defer t
   :config
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 50)
@@ -1541,7 +1524,6 @@ Packages or custom functions for development.
 
 #+begin_src emacs-lisp
 (use-package git-gutter
-  :defer t
   :config
   (custom-set-variables
    '(git-gutter:modified-sign "⏽")
@@ -1553,7 +1535,6 @@ Packages or custom functions for development.
 
 #+begin_src emacs-lisp
 (use-package ediff
-  :defer t
   :config
   (setq ediff-keep-variants nil)
   (setq ediff-make-buffers-readonly-at-startup nil)
@@ -1613,7 +1594,6 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
-  :defer t
   :config
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (add-to-list 'warning-suppress-types '(lsp-mode))
@@ -1628,7 +1608,6 @@ sure this is a good approach."
   (setq lsp-tailwindcss-add-on-mode t))
 
 (use-package lsp-ui
-  :defer t
   :config
   (setq lsp-ui-sideline-show-code-actions nil)
   (setq lsp-ui-doc-position 'bottom)
@@ -1640,7 +1619,6 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package company
-  :defer t
   :hook
   (after-init . global-company-mode)
   :config
@@ -1657,8 +1635,7 @@ sure this is a good approach."
 #+begin_src emacs-lisp
 (use-package yasnippet
   :init
-  (yas-global-mode)
-  :defer t)
+  (yas-global-mode))
 #+end_src
 
 ** COMMENT Flycheck
@@ -1689,7 +1666,6 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package rainbow-mode
-  :defer t
   :hook
   (prog-mode . rainbow-mode))
 #+end_src
@@ -1698,7 +1674,6 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package format-all
-  :defer t
   :bind ("C-c C-M-f" . format-all-buffer))
 #+end_src
 
@@ -1726,7 +1701,6 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
   (setq shrface-href-versatile t))
 
 (use-package nov
-  :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
   (add-hook 'nov-mode-hook 'ale/nov-setup)
@@ -1755,7 +1729,6 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
 
 #+begin_src emacs-lisp
 (use-package youdao-dictionary
-  :defer t
   :bind
   ("C-x y" . youdao-dictionary-search-at-point-posframe)
   :init
@@ -1770,12 +1743,11 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
   :straight
   (:host github :repo "manateelazycat/emacs-application-framework"
          :files ("*") :pre-build ("./install-eaf.sh"))
-  :defer t
   :init
-  (use-package epc :defer t)
-  (use-package ctable :defer t)
-  (use-package deferred :defer t)
-  (use-package s :defer t))
+  (use-package epc)
+  (use-package ctable)
+  (use-package deferred)
+  (use-package s))
 #+end_src
 
 ** Video url (ale-murl.el)
@@ -1783,7 +1755,6 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
 #+begin_src emacs-lisp
 (use-package ale-murl
   :straight nil
-  :defer t
   :bind
   (:map ale/utils-map
         ("m" . ale/murl-open)))
