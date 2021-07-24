@@ -60,7 +60,6 @@
   (variable-pitch-mode)
   (org-indent-mode)
   (visual-line-mode)
-  (display-line-numbers-mode -1)
   ;; Centering text
   (when (fboundp 'visual-fill-column-mode)
     (setq visual-fill-column-width 120)

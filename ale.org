@@ -364,10 +364,8 @@ Summary of what these do:
 #+begin_src emacs-lisp
 (use-package display-line-numbers
   :straight (:type built-in)
-  :init
-  (global-display-line-numbers-mode t)
   :hook
-  ((nov-mode eshell-mode dired-mode) . (lambda () (display-line-numbers-mode 0))))
+  (prog-mode . display-line-numbers-mode))
 #+end_src
 
 ** Spelling (ispell.el)
