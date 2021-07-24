@@ -202,6 +202,7 @@ example, =C-m= different meaning.
   (require 'ale-meow)
   (ale/meow-setup)
   (setq meow-visit-sanitize-completion nil)
+  (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
   (setq meow-keypad-describe-delay 0.5)
   (setq meow-select-on-change t)
@@ -547,6 +548,9 @@ sentence.  I put them all together here to make things easier to track.
 
 #+begin_src emacs-lisp
 (use-package better-jumper
+  :bind
+  ("<C-i>" . better-jumper-jump-forward)
+  ("C-o" . better-jumper-jump-backward)
   :config
   (better-jumper-mode +1)
   (defvar ale/better-jumper-cmd-alist
@@ -889,8 +893,8 @@ control every aspect of the interface.
         ("DEL" . #'ale/simple-backward-delete-char)
         ("C-w" . #'backward-kill-word)
         ("C-u" . #'ale/simple-kill-whole-line)
-        ("C-o" . #'ale/simple-backward-char)
-        ("<C-i>" . #'ale/simple-forward-char))
+        ("C-b" . #'ale/simple-backward-char)
+        ("C-f" . #'ale/simple-forward-char))
   :config
   (require 'ale-minibuffer)
   (setq completion-category-defaults nil)
