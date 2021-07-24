@@ -106,7 +106,8 @@ choosing.
 With a universal prefix to choose project anyway."
   (interactive "P")
   (if (or force (null (project-current)))
-      (let ((current-prefix-arg '(4)))
+      (let ((current-prefix-arg '(4))
+            (display-buffer-alist '(("magit: .*" (display-buffer-same-window)))))
         (call-interactively 'magit-status))
     (project-find-file)))
 

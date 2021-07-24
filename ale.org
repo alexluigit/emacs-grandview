@@ -730,8 +730,8 @@ to 0 to ensure every new window will open in horizontal split.
   (setq display-buffer-alist
 	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
 	         (display-buffer-in-side-window)
-	         (window-height . 0.3)
-	         (side . bottom))
+	         (window-height . 0.2)
+	         (side . top))
 	        ("^\\*?\\(magit: \\|Help\\|helpful\\).*"
 	         (display-buffer-in-side-window)
 	         (window-width . 0.4)
