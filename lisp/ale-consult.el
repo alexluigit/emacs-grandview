@@ -5,14 +5,15 @@
   "Tweaks for consult.el."
   :group 'minibuffer)
 
-(defcustom ale/consult-command-centre-list '(consult-line consult-mark)
+(defcustom ale/consult-command-centre-list
+  '(consult-line consult-mark consult-outline consult-project-imenu)
   "Commands to run `ale/consult-jump-recentre-hook'.
 You must restart function `ale/consult-set-up-hooks-mode' for
 changes to take effect."
   :group 'ale/consult
   :type 'list)
 
-(defcustom ale/consult-command-top-list '(consult-outline)
+(defcustom ale/consult-command-top-list '()
   "Commands to run `ale/consult-jump-top-hook'.
 You must restart function `ale/consult-set-up-hooks-mode' for
 changes to take effect."

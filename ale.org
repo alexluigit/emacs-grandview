@@ -967,10 +967,13 @@ for visualising the standard completion framework's output
 #+begin_src emacs-lisp
 (use-package consult
   :init
+  (require 'ale-consult)
+  (ale/consult-set-up-hooks-mode 1)
   (setq completion-in-region-function #'consult-completion-in-region)
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
   (advice-add #'register-preview :override #'consult-register-window)
+  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
   (define-prefix-command 'ale/consult-map)
@@ -995,17 +998,6 @@ for visualising the standard completion framework's output
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">"))
-
-(use-package ale-consult
-  :straight nil
-  :config
-  (setq ale/consult-command-centre-list
-        '(consult-line
-          consult-mark
-          consult-outline
-          consult-project-imenu))
-  (setq ale/consult-command-top-list '())
-  (ale/consult-set-up-hooks-mode 1))
 #+end_src
 
 ** Minibuffer actions (embark.el)
