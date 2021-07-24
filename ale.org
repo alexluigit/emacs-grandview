@@ -556,9 +556,6 @@ sentence.  I put them all together here to make things easier to track.
   (defvar ale/better-jumper-cmd-alist
     '(meow-next
       meow-prev
-      meow-visit
-      meow-page-up
-      meow-page-down
       meow-search
       consult-outline
       consult-line
@@ -1158,7 +1155,6 @@ Org mode setup.
 (use-package sh-script
   :straight (:type built-in)
   :config
-  ;; (setq sh-indentation 2)
   (setq sh-basic-offset 2))
 #+end_src
 
