@@ -561,7 +561,8 @@ sentence.  I put them all together here to make things easier to track.
       consult-outline
       consult-line
       consult-project-imenu
-      er/expand-region)
+      er/expand-region
+      xref-find-definitions)
     "A list of file, adviced function, and advice function.")
   (defun ale/better-jumper-advice (fn &rest args)
     (let ((old-pos (point)))
@@ -1193,9 +1194,9 @@ Org mode setup.
   :hook
   (eshell-first-time-mode . ale/eshell-init)
   :bind
-  (("s-<tab>" . ale/eshell-toggle)
+  (("<delete>" . ale/eshell-toggle)
    :map eshell-mode-map
-   ("<delete>" . ale/eshell-new)
+   ("M-<delete>" . ale/eshell-new)
    ("C-l" . ale/eshell-clear-buffer)
    ("C-\\" . ale/eshell-updir)
    ("s-n" . eshell-next-prompt)
@@ -1491,7 +1492,19 @@ Basically, its interaction model is as follows:
 
 Packages or custom functions for development.
 
-** Version control (magit.el)
+** Version control
+*** Built-in vc config
+
+#+begin_src emacs-lisp
+(use-package vc-hooks
+  :straight (:type built-in)
+  :defer t
+  :config
+  ;; No ask for follow symlink
+  (setq vc-follow-symlinks t))
+#+end_src
+
+*** Git porcelain (magit.el)
 
 #+begin_src emacs-lisp
 (use-package magit
@@ -1522,7 +1535,11 @@ Packages or custom functions for development.
          ("<C-return>" . magit-diff-visit-file-other-window)
          :map magit-diff-mode-map
          ("`" . scroll-up)))
+#+end_src
 
+*** Hunk indicator (git-gutter.el)
+
+#+begin_src emacs-lisp
 (use-package git-gutter
   :defer t
   :config
@@ -1530,7 +1547,11 @@ Packages or custom functions for development.
    '(git-gutter:modified-sign "⏽")
    '(git-gutter:added-sign "⏽")
    '(git-gutter:deleted-sign "⏽")))
+#+end_src
 
+*** Resolve conflict (ediff.el)
+
+#+begin_src emacs-lisp
 (use-package ediff
   :defer t
   :config
@@ -1554,7 +1575,12 @@ diffs.  While this could be automated via a hook, I am not yet
 sure this is a good approach."
     (interactive)
     (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil)))
-;; (use-package forge)
+#+end_src
+
+*** COMMENT Forges (forge.el)
+
+#+begin_src emacs-lisp
+(use-package forge)
 #+end_src
 
 ** Project management (project.el & ale-project.el)
@@ -1608,9 +1634,6 @@ sure this is a good approach."
   (setq lsp-ui-doc-position 'bottom)
   :hook
   (lsp-mode . lsp-ui-mode))
-
-(use-package lsp-treemacs
-  :defer t)
 #+end_src
 
 ** Auto completion (company-mode.el)
@@ -1633,6 +1656,8 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package yasnippet
+  :init
+  (yas-global-mode)
   :defer t)
 #+end_src
 
