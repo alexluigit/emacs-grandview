@@ -918,8 +918,8 @@ A minimalistic completion UI.
 #+begin_src emacs-lisp
 (use-package vertico
   :init
-  (vertico-mode 1)
-  (set-face-attribute 'vertico-current nil :inherit 'ale/pulse-line))
+  (vertico-mode 1))
+  (set-face-background 'vertico-current (face-attribute 'ale/pulse-line :background))
 #+end_src
 
 ** Completion style (orderless.el)

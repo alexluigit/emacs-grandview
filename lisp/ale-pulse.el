@@ -16,9 +16,7 @@ changes to take effect."
   '((default :extend t)
     (((class color) (min-colors 88) (background light))
      :background "#8eecf4")
-    (((class color) (min-colors 88) (background dark))
-     :background "#004065")
-    (t :inverse-video t))
+    (t :inverse-video t :background "#004065"))
   "Default face for `ale/pulse-pulse-line'."
   :group 'ale/pulse)
 
