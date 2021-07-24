@@ -1,5 +1,10 @@
 (setq gc-cons-threshold 100000000)    ; Defer GC
 
+;; Setup native compilation
+(when (boundp 'native-comp-eln-load-path)
+  (add-to-list 'native-comp-eln-load-path "~/.cache/emacs/eln/"))
+(setq native-comp-async-report-warnings-errors 'silent)
+
 (setq package-quickstart nil)
 (setq package-enable-at-startup nil)  ; Prevent package.el loading packages prior to their init-file
 
