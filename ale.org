@@ -626,13 +626,6 @@ The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Prot
 (use-package all-the-icons)
 #+end_src
 
-*** Emoji (emojify.el)
-
-#+begin_src emacs-lisp
-(use-package emojify
-  :hook (after-init . global-emojify-mode))
-#+end_src
-
 *** Window divider
 
 This is a built-in mode that draws vertical window borders in a slightly
