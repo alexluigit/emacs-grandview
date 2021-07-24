@@ -1,3 +1,15 @@
+(defvar ale/init-dot-repo (file-truename user-emacs-directory)
+  "Get dotfiles repo path before changing `user-emacs-directory'.")
+
+(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
+(setq url-history-file (expand-file-name "url/history" user-emacs-directory))
+
+(when (boundp 'native-comp-eln-load-path)
+  (add-to-list 'native-comp-eln-load-path (concat user-emacs-directory "eln/")))
+(setq native-comp-async-report-warnings-errors 'silent)
+
+(push (concat ale/init-dot-repo "lisp") load-path)
+
 (require 'ale-gc)
 
 (defvar bootstrap-version)
