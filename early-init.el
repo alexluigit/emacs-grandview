@@ -1,4 +1,4 @@
-(setq gc-cons-threshold 100000000)    ; Defer GC
+(setq gc-cons-threshold 134217728)    ; Defer GC (see `ale-gc.el')
 
 ;; Setup native compilation
 (when (boundp 'native-comp-eln-load-path)
