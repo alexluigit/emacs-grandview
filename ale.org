@@ -71,6 +71,7 @@ Some handful small utility function for debugging.
 #+begin_src emacs-lisp
 (use-package ale-debug
   :straight nil
+  :commands ale/debug-unadvice
   :bind
   (:map ale/simple-map
         ("m" . ale/debug-show-messages)
