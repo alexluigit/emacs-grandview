@@ -61,6 +61,13 @@
       (meow-cancel)
     (call-interactively 'execute-extended-command)))
 
+(defun ale/meow-update ()
+  "Update current buffer."
+  (interactive)
+  (if (derived-mode-p 'helpful-mode)
+      (helpful-update)
+    (revert-buffer)))
+
 (defun ale/meow--bounds-of-tag ()
   (meow--bounds-of-regexp "<.*>"))
 
@@ -142,8 +149,7 @@
    '("E" . er/expand-region)
    '("f" . meow-next-word)
    '("F" . meow-next-symbol)
-   '("g" . meow-grab)
-   '("G" . meow-swap-grab)
+   '("g" . ale/meow-update)
    '("h" . embrace-commander)
    '("i" . meow-insert)
    '("I" . ale/meow-insert-at-first-non-whitespace)
@@ -170,6 +176,8 @@
    '("W" . meow-block-expand)
    '("x" . meow-save)
    '("y" . meow-replace)
-   '("Y" . meow-yank-pop)))
+   '("Y" . meow-yank-pop)
+   '("z" . meow-grab)
+   '("Z" . meow-swap-grab)))
 
 (provide 'ale-meow)
