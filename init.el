@@ -8,7 +8,7 @@
 (require 'ale-package)
 
 (defun ale/init-load-config ()
-  "Tangle (if needed) `ale.org' and load `ale.el'"
+  "Tangle (if needed) `ale.org' and load `ale.el'."
   (let ((init-el (concat user-emacs-directory "ale.el"))
         (init-org (concat ale/init-dot-repo "ale.org")))
     (unless (file-exists-p init-el)

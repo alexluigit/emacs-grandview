@@ -41,7 +41,35 @@ doc
 doc
 
 * Basic
-** Elisp
+** Primitive libs
+*** Simple (ale-simple.el)
+
+=ace-simple.el= contains a wide range of commands that are broadly in
+line with the built-in =simple.el= and =lisp.el= libraries.
+
+A prefix keymap named =ale/elisp-simple-map= is defined to include these
+commands, which will be bind to certain leader key sequence (eg. =SPC s)= key in normal mode.
+
+#+begin_src emacs-lisp
+(use-package simple
+  :straight nil
+  :init
+  (require 'ale-simple)
+  (define-prefix-command 'ale/simple-map)
+  :config
+  (setq ale/simple-date-specifier "%F")
+  (setq ale/simple-time-specifier "%R %z")
+  :bind
+  (("<escape>" . keyboard-escape-quit)
+   ("s-SPC" . ale/simple-monocle)
+   :map ale/simple-map
+   ("d" . ale/simple-insert-date)
+   ("e" . ale/simple-escape-url)
+   ("q" . ale/simple-unfill-region-or-paragraph)
+   ("r" . ale/simple-rename-file-and-buffer)
+   ("=" . count-words)))
+#+end_src
+
 *** Code evaluation (elisp-mode.el)
 
 We can change emacs's setting on the fly at any given time by
@@ -170,8 +198,8 @@ well. See details at: https://github.com/alexluigit/lf.el
 (use-package lf
   :straight (lf :type git :depth full :host github :repo "alexluigit/lf.el")
   :hook
-  ((lf-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
-   (lf-preview-setup . (lambda () (setq cursor-type nil))))
+  (lf-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+  (lf-preview-setup . (lambda () (setq cursor-type nil)))
   :init
   (setq lf-routes '(("o" "Home"        "~")
                     ("u" "Emacs cache" "~/.cache/emacs")
@@ -375,35 +403,7 @@ example, =C-m= different meaning.
 
 * Text Editing
 ** Modal Editing
-*** Simple (ale-simple.el)
-
-=ace-simple.el= contains a wide range of commands that are broadly in
-line with the built-in =simple.el= and =lisp.el= libraries.
-
-A prefix keymap named =ale/elisp-simple-map= is defined to include these
-commands, which will be bind to certain leader key sequence (eg. =SPC s)= key in normal mode.
-
-#+begin_src emacs-lisp
-(use-package simple
-  :straight nil
-  :init
-  (require 'ale-simple)
-  (define-prefix-command 'ale/simple-map)
-  :config
-  (setq ale/simple-date-specifier "%F")
-  (setq ale/simple-time-specifier "%R %z")
-  :bind
-  (("<escape>" . keyboard-escape-quit)
-   ("s-SPC" . ale/simple-monocle)
-   :map ale/simple-map
-   ("d" . ale/simple-insert-date)
-   ("e" . ale/simple-escape-url)
-   ("q" . ale/simple-unfill-region-or-paragraph)
-   ("r" . ale/simple-rename-file-and-buffer)
-   ("=" . count-words)))
-#+end_src
-
-*** Modal Editing (meow.el & ale-meow.el)
+*** Modal editing on wish (meow.el & ale-meow.el)
 
 #+begin_src emacs-lisp
 (use-package meow
@@ -916,6 +916,7 @@ The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Prot
   (setq ale/zh-fonts '("Sarasa Mono SC"))
   (setq ale/org-fonts '("Sarasa Mono SC")))
 #+end_src
+
 *** Icons (all-the-icons.el)
 
 #+begin_src emacs-lisp
@@ -1255,8 +1256,8 @@ A minimalistic completion UI.
 #+begin_src emacs-lisp
 (use-package vertico
   :init
-  (vertico-mode 1))
-  (set-face-background 'vertico-current (face-attribute 'ale/pulse-line :background))
+  (vertico-mode 1)
+  (set-face-background 'vertico-current (face-attribute 'ale/pulse-line :background)))
 #+end_src
 
 *** Completion style (orderless.el)
