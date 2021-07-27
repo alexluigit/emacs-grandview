@@ -463,10 +463,9 @@ example, =C-m= different meaning.
 
 #+begin_src emacs-lisp
 (use-package avy
-  :bind
-  ("/" . avy-goto-char-timer)
   :config
   (setq avy-timeout-seconds 0.3)
+  (setq avy-all-windows nil)
   (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 #+end_src
 
@@ -1321,19 +1320,19 @@ for visualising the standard completion framework's output
         xref-show-definitions-function #'consult-xref)
   (define-prefix-command 'ale/consult-map)
   :bind
-  (:map ale/consult-map
-        ("n" . consult-line)
-        ("r" . consult-ripgrep)
-        ("k" . consult-keep-lines)
-        ("f" . consult-focus-lines)
-        ("i" . consult-imenu)
-        ("o" . consult-outline)
-        ("I" . consult-project-imenu)
-        ("R" . consult-register)
-        ("y" . consult-yank)
-        ("m" . consult-minor-mode-menu)
-        ("c" . consult-complex-command)
-        ("C" . consult-mode-command))
+  (("/" . consult-line)
+   :map ale/consult-map
+   ("r" . consult-ripgrep)
+   ("k" . consult-keep-lines)
+   ("f" . consult-focus-lines)
+   ("i" . consult-imenu)
+   ("o" . consult-outline)
+   ("I" . consult-project-imenu)
+   ("R" . consult-register)
+   ("y" . consult-yank)
+   ("m" . consult-minor-mode-menu)
+   ("c" . consult-complex-command)
+   ("C" . consult-mode-command))
   :config
   (setq consult-line-numbers-widen t)
   (setq consult-async-min-input 3)

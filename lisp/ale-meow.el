@@ -173,6 +173,7 @@
    '("t" . ale/meow-tail)
    '("u" . meow-undo)
    '("U" . undo-redo)
+   '("v" . avy-goto-char-timer)
    '("w" . meow-back-word)
    '("W" . meow-back-symbol)
    '("x" . meow-save)
