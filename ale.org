@@ -1198,8 +1198,15 @@ bezier) scrolling in emacs, =good-scroll-down-full-screen= and
 #+begin_src emacs-lisp
 (use-package good-scroll
   :init
-  (setq-default auto-window-vscroll nil)
-  (setq-default scroll-margin 0)
+  (setq scroll-step 1)
+  (setq scroll-margin 1)
+  (setq scroll-conservatively 101)
+  (setq scroll-up-aggressively 0.01)
+  (setq scroll-down-aggressively 0.01)
+  (setq auto-window-vscroll nil)
+  (setq fast-but-imprecise-scrolling nil)
+  (setq hscroll-step 1)
+  (setq hscroll-margin 1)
   (good-scroll-mode 1))
 #+end_src
 
