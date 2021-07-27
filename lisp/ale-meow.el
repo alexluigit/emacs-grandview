@@ -51,6 +51,7 @@
   (if (region-active-p)
       (progn
         (call-interactively 'kill-ring-save)
+        (meow-cancel-selection)
         (run-with-timer 0.05 nil 'yank)
         (anzu-query-replace arg))
     (anzu-query-replace-at-cursor)))
