@@ -13,6 +13,7 @@
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar
+(scroll-bar-mode -1)                  ; Disable scroll bar
 
 (setq visible-bell nil)               ; Set up the visible bell
 (setq use-dialog-box t)               ; Only for mouse events

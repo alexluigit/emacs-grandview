@@ -889,17 +889,14 @@ The =modus-vivendi= is a built-in theme in emacs (version >= 28) created by Prot
         ("t" . ale/frame-adjust-transparency)))
 #+end_src
 
-*** Modeline (doom-modeline.el)
+*** Modeline (ale-modeline.el)
 
 #+begin_src emacs-lisp
-(use-package doom-modeline
+(use-package ale-modeline
+  :straight nil
   :demand t
   :config
-  (remove-hook 'dired-mode-hook #'doom-modeline-set-project-modeline)
-  (doom-modeline-mode t)
-  (column-number-mode)
-  (setq doom-modeline-height 30)
-  (setq doom-modeline-major-mode-icon t))
+  (ale/modeline-mode 1))
 #+end_src
 
 *** Fonts (ale-fonts.el)
@@ -1873,8 +1870,6 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
         (append nov-shr-rendering-functions
                 shr-external-rendering-functions))
   (defun ale/nov-setup ()
-    (require 'ale-modeline)
-    (ale-modeline-nov)
     (require 'shrface)
     (shrface-mode)))
 #+end_src
