@@ -1,7 +1,7 @@
 ;;; ale-modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
 
 (defvar flycheck-current-errors)
-(defvar flymake--mode-line-format)
+(defvar flymake-mode-line-format)
 (defvar anzu--state)
 (defvar anzu--cached-count)
 (defvar anzu--overflow-p)
@@ -228,8 +228,8 @@
 
 (defun ale/modeline-segment-flymake ()
   "Displays information about the current status of flymake in the mode-line (if available)."
-  (when (and (boundp 'flymake-mode) flymake-mode)
-    (concat (ale/modeline--string-trim (format-mode-line flymake--mode-line-format)) "  ")))
+  (when (bound-and-true-p flymake-mode)
+    (concat (ale/modeline--string-trim (format-mode-line flymake-mode-line-format)) " ")))
 
 (defun ale/modeline-segment-process ()
   "Displays the current value of `mode-line-process' in the mode-line."
