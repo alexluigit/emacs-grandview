@@ -122,6 +122,7 @@
    '("7" . meow-expand-7)
    '("8" . meow-expand-8)
    '("9" . meow-expand-9)
+   '("%" . ale/simple-match-paren)
    '("`" . negative-argument)
    '(";" . meow-reverse)
    '("," . meow-inner-of-thing)

@@ -61,6 +61,22 @@ Used by `ale/simple-insert-date'."
   (interactive)
   (delete-indentation 1))
 
+(defun ale/simple-match-paren (arg)
+  "Go to the matching paren if on a paren; otherwise
+forward-list (backward-list if `arg' is Non-nil).
+This command emulates the `%' key in vim."
+  (interactive "p")
+  (cond
+   ((char-equal 41 (char-before)) (backward-list 1))
+   ((char-equal 125 (char-before)) (backward-list 1))
+   ((and
+     (char-equal 123 (char-before))
+     (char-equal 10 (char-after)))
+    (backward-char 1) (forward-list 1))
+   ((looking-at "\\s\(") (forward-list 1))
+   ((looking-at "\\s\)") (backward-list 1))
+   (t (if arg (backward-list 1) (forward-list 1)))))
+
 ;;;###autoload
 (defun ale/simple-yank-ad (fn &rest args)
   "Make `yank' behave like paste (p) command in vim.
