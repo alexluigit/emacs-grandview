@@ -42,34 +42,6 @@ doc
 
 * Basic
 ** Primitive libs
-*** Simple (ale-simple.el)
-
-=ace-simple.el= contains a wide range of commands that are broadly in
-line with the built-in =simple.el= and =lisp.el= libraries.
-
-A prefix keymap named =ale/elisp-simple-map= is defined to include these
-commands, which will be bind to certain leader key sequence (eg. =SPC s)= key in normal mode.
-
-#+begin_src emacs-lisp
-(use-package simple
-  :straight nil
-  :init
-  (require 'ale-simple)
-  (define-prefix-command 'ale/simple-map)
-  :config
-  (setq ale/simple-date-specifier "%F")
-  (setq ale/simple-time-specifier "%R %z")
-  :bind
-  (("<escape>" . keyboard-escape-quit)
-   ("s-SPC" . ale/simple-monocle)
-   :map ale/simple-map
-   ("d" . ale/simple-insert-date)
-   ("e" . ale/simple-escape-url)
-   ("q" . ale/simple-unfill-region-or-paragraph)
-   ("r" . ale/simple-rename-file-and-buffer)
-   ("=" . count-words)))
-#+end_src
-
 *** Code evaluation (elisp-mode.el)
 
 We can change emacs's setting on the fly at any given time by
@@ -84,9 +56,9 @@ mode.
 (use-package elisp-mode
   :straight (:type built-in)
   :init
-  (define-prefix-command 'ale/elisp-eval-map)
+  (define-prefix-command 'ale/elisp-map)
   :bind
-  (:map ale/elisp-eval-map
+  (:map ale/elisp-map
         ("e" . eval-last-sexp)
         ("x" . eval-expression)
         ("f" . eval-defun)))
@@ -94,14 +66,19 @@ mode.
 
 *** Debugging emacs (ale-debug.el)
 
-Some handful small utility function for debugging.
+Some handful small utility commands for debugging elisp.
+
+A prefix keymap named =ale/debug-elisp-map= is defined to include these
+commands, which will be bind to certain leader key sequence (eg. =SPC
+d)= in normal mode.
+
 
 #+begin_src emacs-lisp
 (use-package ale-debug
   :straight nil
-  :commands ale/debug-unadvice
   :bind
-  (:map ale/simple-map
+  (:map ale/elisp-map
+        ("u" . ale/debug-unadvice)
         ("m" . ale/debug-show-messages)
         ("<backspace>" . ale/debug-erase-messages)))
 #+end_src
@@ -403,6 +380,35 @@ example, =C-m= different meaning.
 
 * Text Editing
 ** Modal Editing
+*** Simple (ale-simple.el)
+
+=ace-simple.el= contains a wide range of commands that are broadly in
+line with the built-in =simple.el= and =lisp.el= libraries.
+
+A prefix keymap named =ale/elisp-simple-map= is defined to include these
+commands, which will be bind to certain leader key sequence (eg. =SPC
+s)= in normal mode.
+
+#+begin_src emacs-lisp
+(use-package simple
+  :straight nil
+  :init
+  (require 'ale-simple)
+  (define-prefix-command 'ale/simple-map)
+  :config
+  (setq ale/simple-date-specifier "%F")
+  (setq ale/simple-time-specifier "%R %z")
+  :bind
+  (("<escape>" . keyboard-escape-quit)
+   ("s-SPC" . ale/simple-monocle)
+   :map ale/simple-map
+   ("d" . ale/simple-insert-date)
+   ("e" . ale/simple-escape-url)
+   ("q" . ale/simple-unfill-region-or-paragraph)
+   ("r" . ale/simple-rename-file-and-buffer)
+   ("=" . count-words)))
+#+end_src
+
 *** Modal editing on wish (meow.el & ale-meow.el)
 
 #+begin_src emacs-lisp
