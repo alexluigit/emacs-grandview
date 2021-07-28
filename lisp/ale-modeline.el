@@ -155,6 +155,11 @@
         (t
          "")))
 
+(defsubst ale/modeline-segment-macro-recording ()
+  "Display current macro being recorded."
+  (when (or defining-kbd-macro executing-kbd-macro)
+    (propertize " ▶ " 'face 'mode-line-highlight)))
+
 (defun ale/modeline-segment-modified ()
   "Displays a color-coded buffer modification/read-only indicator in the mode-line."
   (if (not (string-match-p "\\*.*\\*" (buffer-name)))
@@ -259,6 +264,7 @@
                           (format-mode-line
                            '(" "
                              (:eval (ale/modeline-segment-editing-state))
+                             (:eval (ale/modeline-segment-macro-recording))
                              (:eval (ale/modeline-segment-modified))
                              (:eval (ale/modeline-segment-buffer-name))
                              (:eval (ale/modeline-segment-anzu))
