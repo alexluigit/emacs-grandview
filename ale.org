@@ -197,6 +197,32 @@ well. See details at: https://github.com/alexluigit/lf.el
   (add-to-list 'lf-preview-cmd-alist '(("ts") (ale/ts-ext-fix . ()))))
 #+end_src
 
+*** Project management (project.el & ale-project.el)
+
+#+begin_src emacs-lisp
+(use-package project
+  :straight (:type built-in)
+  :init
+  (define-key global-map (kbd "C-x C-p") nil)
+  (require 'ale-project)
+  :config
+  (setq project-switch-commands
+        '((project-find-file "File" ?\r)
+          (ale/project-find-subdir "Subdir" ?s)
+          (project-find-regexp "Grep" ?g)
+          (project-dired "Dired" ?d)
+          (ale/project-retrieve-tag "Tag switch" ?t)
+          (ale/project-magit-status "Magit" ?m)
+          (ale/project-commit-log "Log VC" ?l)))
+  (setq ale/project-commit-log-limit 25)
+  :bind
+  (:map project-prefix-map
+        ("l" . ale/project-commit-log)
+        ("m" . ale/project-magit-status)
+        ("s" . ale/project-find-subdir)
+        ("t" . ale/project-retrieve-tag)))
+#+end_src
+
 *** Trash (trashed.el)
 
 =trashed= applies the principles of =dired= to the management of the user's
@@ -1498,6 +1524,7 @@ contains several subsections as follows:
   (setq org-habit-graph-column 60))
 #+end_src
 
+*** Wiki (org-roam.el)
 * Development
 
 Packages or custom functions for development.
@@ -1693,33 +1720,8 @@ sure this is a good approach."
 (use-package forge)
 #+end_src
 
-** Project management (project.el & ale-project.el)
-
-#+begin_src emacs-lisp
-(use-package project
-  :straight (:type built-in)
-  :init
-  (define-key global-map (kbd "C-x C-p") nil)
-  (require 'ale-project)
-  :config
-  (setq project-switch-commands
-        '((project-find-file "File" ?\r)
-          (ale/project-find-subdir "Subdir" ?s)
-          (project-find-regexp "Grep" ?g)
-          (project-dired "Dired" ?d)
-          (ale/project-retrieve-tag "Tag switch" ?t)
-          (ale/project-magit-status "Magit" ?m)
-          (ale/project-commit-log "Log VC" ?l)))
-  (setq ale/project-commit-log-limit 25)
-  :bind
-  (:map project-prefix-map
-        ("l" . ale/project-commit-log)
-        ("m" . ale/project-magit-status)
-        ("s" . ale/project-find-subdir)
-        ("t" . ale/project-retrieve-tag)))
-#+end_src
-
-** Language server protocol (lsp-mode.el)
+** Language server
+*** LSP (lsp-mode.el)
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
@@ -1730,12 +1732,19 @@ sure this is a good approach."
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   :hook
   ((sh-mode lua-mode haskell-mode ale/vue-mode typescript-mode) . #'lsp-deferred))
+#+end_src
 
+*** Extensions
+
+#+begin_src emacs-lisp
 (use-package lsp-tailwindcss
   :after (lsp-mode web-mode)
   :init
   (setq lsp-tailwindcss-add-on-mode t))
+#+end_src
 
+*** UI integrations (lsp-ui.el)
+#+begin_src emacs-lisp
 (use-package lsp-ui
   :config
   (setq lsp-ui-sideline-show-code-actions nil)
@@ -1744,7 +1753,8 @@ sure this is a good approach."
   (lsp-mode . lsp-ui-mode))
 #+end_src
 
-** Colorizer (rainbow-mode.el)
+** Toolbox
+*** Colorizer (rainbow-mode.el)
 
 #+begin_src emacs-lisp
 (use-package rainbow-mode
@@ -1752,18 +1762,21 @@ sure this is a good approach."
   (prog-mode . rainbow-mode))
 #+end_src
 
-** Formatter (format-all.el)
+*** Formatter (format-all.el)
 
 #+begin_src emacs-lisp
 (use-package format-all
   :bind ("C-c C-M-f" . format-all-buffer))
 #+end_src
 
-** COMMENT Flycheck
+*** Syntax checker (flymake.el)
 
 #+begin_src emacs-lisp
 (use-package flymake
+  :straight (:type built-in)
   :config
+  (setq elisp-flymake-byte-compile-load-path
+        (append elisp-flymake-byte-compile-load-path load-path))
   (setq flymake-fringe-indicator-position 'left-fringe)
   (setq flymake-suppress-zero-counters t)
   (setq flymake-start-on-flymake-mode t)
@@ -1771,19 +1784,15 @@ sure this is a good approach."
   (setq flymake-start-on-save-buffer t)
   (setq flymake-proc-compilation-prevents-syntax-check t)
   (setq flymake-wrap-around nil)
-  (let ((map flymake-mode-map))
-    (define-key map (kbd "C-c ! s") #'flymake-start)
-    (define-key map (kbd "C-c ! d") #'flymake-show-diagnostics-buffer)
-    (define-key map (kbd "C-c ! n") #'flymake-goto-next-error)
-    (define-key map (kbd "C-c ! p") #'flymake-goto-prev-error)))
-
-(use-package flymake-diagnostic-at-point
- :config
-	(setq flymake-diagnostic-at-point-display-diagnostic-function
-			  'flymake-diagnostic-at-point-display-minibuffer))
+  :bind
+  (:map flymake-mode-map
+  ("C-c ! s" . flymake-start)
+  ("C-c ! d" . flymake-show-diagnostics-buffer)
+  ("C-c ! n" . flymake-goto-next-error)
+  ("C-c ! p" . flymake-goto-prev-error)))
 #+end_src
 
-** COMMENT Scratch buffers (scratch.el)
+*** COMMENT Scratch buffers (scratch.el)
 This package will produce a buffer that matches the major mode of the
 one you are currently in.  Use it with =M-x scratch=.  Doing that with a
 prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
