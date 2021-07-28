@@ -1,4 +1,5 @@
-(setq gc-cons-threshold 134217728)    ; Defer GC (see `ale-gc.el')
+(setq gc-cons-threshold most-positive-fixnum) ; Defer GC (see `ale-gc.el')
+(setq-default read-process-output-max (* 1024 1024)) ; For performance
 
 ;; Setup native compilation
 (when (boundp 'native-comp-eln-load-path)
