@@ -726,7 +726,24 @@ matches by leveraging the full power of Emacs' editing capabilities
 
 #+begin_src emacs-lisp
 (use-package anzu
-  :init (global-anzu-mode +1))
+  :init (global-anzu-mode +1)
+  :bind
+  ("M-%" . anzu-isearch-query-replace))
+#+end_src
+
+*** Minibuffer query string input (isearch-mb.el)
+
+#+begin_src emacs-lisp
+(use-package isearch-mb
+  :init
+  (isearch-mb-mode)
+  :config
+  (add-to-list 'isearch-mb--with-buffer #'consult-isearch)
+  (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
+  :bind
+  (:map isearch-mb-minibuffer-map
+        ("M-r" . consult-isearch)
+        ("M-%" . anzu-isearch-query-replace)))
 #+end_src
 
 *** Cross-references (xref.el)
