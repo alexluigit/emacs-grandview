@@ -1065,9 +1065,6 @@ to 0 to ensure every new window will open in horizontal split.
 #+begin_src emacs-lisp
 (use-package window
   :straight (:type built-in)
-  :bind
-  ("M-i" . (lambda () (interactive) (other-window 1)))
-  ("M-o" . (lambda () (interactive) (other-window -1)))
   :config
   (setq display-buffer-alist
 	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
@@ -1088,17 +1085,12 @@ to 0 to ensure every new window will open in horizontal split.
   (setq split-width-threshold 0))
 #+end_src
 
-*** Index based window motions (ale-window.el)
+*** Index based window motions (ace-window.el)
 
 #+begin_src emacs-lisp
-(use-package ale-window
-  :straight nil
+(use-package ace-window
   :bind
-  ("M-1" . (lambda () (interactive) (ale/window-select-by-index 0)))
-  ("M-2" . (lambda () (interactive) (ale/window-select-by-index 1)))
-  ("M-3" . (lambda () (interactive) (ale/window-select-by-index 2)))
-  ("M-4" . (lambda () (interactive) (ale/window-select-by-index 3)))
-  ("M-5" . (lambda () (interactive) (ale/window-select-by-index 4))))
+  ("M-o" . ace-select-window))
 #+end_src
 
 *** Window position (transpose-frame.el)
@@ -1543,6 +1535,28 @@ contains several subsections as follows:
 #+end_src
 
 *** Wiki (org-roam.el)
+
+#+begin_src emacs-lisp
+(use-package org-roam
+  :init
+  (setq org-id-link-to-org-use-id t)
+  (setq org-roam-v2-ack t)
+  (define-prefix-command 'ale/roam-map)
+  :custom
+  (org-roam-directory (file-truename "~/Documents/roam"))
+  (org-roam-completion-everywhere t)
+  :bind
+  (:map ale/roam-map
+        ("l" . org-roam-buffer-toggle)
+        ("f" . org-roam-node-find)
+        ("g" . org-roam-graph)
+        ("i" . org-roam-node-insert)
+        ("c" . org-roam-capture)
+        ("j" . org-roam-dailies-capture-today))
+  :config
+  (org-roam-setup))
+#+end_src
+
 * Development
 
 Packages or custom functions for development.
