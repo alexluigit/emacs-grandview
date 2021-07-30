@@ -95,17 +95,14 @@ Configuration about dired, lf, files, recentf etc.
   :init
   (define-prefix-command 'ale/files-map)
   :bind
-  (:map
-   minibuffer-local-map
-   ("S-<return>" . ale/files-other-window)
-   :map
-   ale/files-map
-   ("." . ale/files-dotfiles)
-   ("e" . ale/files-edit-emacs-config)
-   ("u" . ale/files-in-user-dirs)
-   ("r" . ale/files-recent)
-   ("o" . ale/files-browse-all-directories)
-   ("l" . find-library)))
+  (:map minibuffer-local-map
+        ("S-<return>" . ale/files-other-window))
+  (:map ale/files-map
+        ("." . ale/files-dotfiles)
+        ("e" . ale/files-edit-emacs-config)
+        ("u" . ale/files-in-user-dirs)
+        ("o" . ale/files-browse-all-directories)
+        ("l" . find-library)))
 #+end_src
 
 *** Dired (dired.el)
@@ -1415,6 +1412,10 @@ for visualising the standard completion framework's output
 	      (let ((act (propertize "Act" 'face 'success)))
 	        (cons act (concat act " on '%s'"))))
   (setq embark-become-indicator (propertize "Become" 'face 'warning)))
+
+(use-package embark-consult
+  :after (embark consult)
+  :demand t)
 #+end_src
 
 ** In-buffer completion

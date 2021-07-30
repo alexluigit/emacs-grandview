@@ -6,21 +6,6 @@
   (interactive)
   (split-window-below) (other-window 1))
 
-(defun ale/window-buffers-major-mode (&optional arg)
-  "Select buffers to switch to. Same as `switch-to-buffer'.
-With optional prefix ARG (\\[universal-argument]) select buffers
-that match the current buffer's major mode."
-  (interactive "P")
-  (let* ((major major-mode)
-         (prompt "Buffers for"))
-    (if arg
-        (switch-to-buffer
-              (read-buffer
-                (format "%s %s:" prompt major) nil t
-                (lambda (pair) ; pair is (name-string . buffer-object)
-                  (with-current-buffer (cdr pair) (derived-mode-p major)))))
-      (switch-to-buffer (read-buffer "Switch to buffer: ")))))
-
 ;; Copied from ace-window.el
 (defun ale/window< (wnd1 wnd2)
   "Return true if WND1 is less than WND2.

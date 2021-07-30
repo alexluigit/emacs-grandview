@@ -101,14 +101,6 @@ Return the decoded text as multibyte string."
   (interactive)
   (find-file (concat ale/init-dot-repo "ale.org")))
 
-(defun ale/files-recent ()
-  "Open file from `recentf-list' with completion."
-  (interactive)
-  (when-let* ((cands-raw (mapcar #'abbreviate-file-name recentf-list))
-              (cands (ale/minibuffer-append-metadata 'file cands-raw))
-              (fname (completing-read "File name: " cands nil nil)))
-    (find-file (expand-file-name fname))))
-
 (defun ale/files-browse-all-directories ()
   "Browse all directories using `fd' command."
   (interactive)
