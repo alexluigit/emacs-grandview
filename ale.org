@@ -14,6 +14,30 @@ My Emacs configuration file written in org format.
 + Main config file (ale.org)
 
 Why lisp/*?
+doc
+
+*** Startup script
+
+Script for starting up emacs.
+
+Why use shell rather than lisp to restart Emacs?
+doc
+
+#+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash"
+restart () {
+  notify-send "Restarting emacs..." 2>/dev/null
+  killall emacs
+  [[ $1 == 1 ]] && rm -rf ~/.cache/emacs/{ale.el,straight/build,eln} 2>/dev/null
+  emacs --daemon
+  xdotool set_desktop 0
+  emacsclient -cn
+}
+
+lf () { floatwin -g 2000x2080+10+10 -n lf-emacs emacsclient -e '\(lf-new-frame\)'; }
+
+[[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { restart ${@:1}; exit 0; }
+$1 ${@:1}
+#+end_src
 
 *** COPYING
 
