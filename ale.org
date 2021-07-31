@@ -1753,17 +1753,18 @@ sure this is a good approach."
 #+end_src
 
 ** Language server
-*** LSP (lsp-mode.el)
+*** LSP (lsp-mode.el & ale-lsp.el)
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
+  :init
+  (require 'ale-lsp)
+  (ale/lsp-mode)
   :config
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (add-to-list 'warning-suppress-types '(lsp-mode))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  :hook
-  ((sh-mode lua-mode haskell-mode ale/vue-mode typescript-mode) . #'lsp-deferred))
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 #+end_src
 
 *** Extensions
