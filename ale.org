@@ -278,6 +278,7 @@ also read the [[#h:c110e399-3f43-4555-8427-b1afe44c0779][Minibuffer configuratio
   :straight (:type built-in)
   :demand t
   :config
+  (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
   (recentf-mode 1))
 #+end_src
 
