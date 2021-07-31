@@ -1379,7 +1379,7 @@ for visualising the standard completion framework's output
   (setq consult-narrow-key ">"))
 #+end_src
 
-**** Minibuffer actions (embark.el)
+*** Minibuffer actions (embark.el)
 
 #+begin_src emacs-lisp
 (use-package embark
@@ -1390,7 +1390,6 @@ for visualising the standard completion framework's output
   :config
   (require 'ale-embark)
   (ale/embark-keymaps 1)
-  (ale/embark-toggle-which-key)
   (setq embark-collect-initial-view-alist
 	      '((file . list)
 	        (buffer . list)
