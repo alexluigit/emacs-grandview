@@ -713,7 +713,23 @@ Summary of what these do:
 *** Pair insert (embrace.el)
 
 #+begin_src emacs-lisp
-(use-package embrace)
+(use-package embrace
+  :straight
+  (embrace :type git :depth full :host github
+           :repo "cute-jumper/embrace.el"
+           :fork (:host github :repo "alexluigit/embrace.el"))
+  :init
+  (setq embrace-default-pairs '((?r . ("(" . ")"))
+                                (?R . ("( " . " )"))
+                                (?c . ("{" . "}"))
+                                (?C . ("{ " . " }"))
+                                (?\[ . ("[" . "]"))
+                                (?\] . ("[ " . " ]"))
+                                (?a . ("<" . ">"))
+                                (?A . ("< " . " >"))
+                                (?s . ("\"" . "\""))
+                                (?\' . ("\'" . "\'"))
+                                (?` . ("`" . "`")))))
 #+end_src
 
 *** Prettify symbols (prog-mode.el)
