@@ -154,7 +154,7 @@ We can change emacs's setting on the fly at any given time by
 evaluating elisp code. The relevant commands are: =eval-last-sexp=,
 =eval-expression=, =eval-defun=, etc.
 
-A prefix keymap named =ale/elisp-eval-map= is defined to include these
+A prefix keymap named =ale/elisp-map= is defined to include these
 commands, which will be bind to certain leader key sequence in normal
 mode.
 
@@ -170,23 +170,18 @@ mode.
         ("f" . eval-defun)))
 #+end_src
 
-*** Debugging emacs (ale-debug.el)
+*** Debugging emacs (ale-elisp.el)
 
 Some handful small utility commands for debugging elisp.
 
-A prefix keymap named =ale/debug-elisp-map= is defined to include these
-commands, which will be bind to certain leader key sequence (eg. =SPC
-d)= in normal mode.
-
-
 #+begin_src emacs-lisp
-(use-package ale-debug
+(use-package ale-elisp
   :straight nil
   :bind
   (:map ale/elisp-map
-        ("u" . ale/debug-unadvice)
-        ("m" . ale/debug-show-messages)
-        ("<backspace>" . ale/debug-erase-messages)))
+        ("u" . ale/elisp-unadvice)
+        ("m" . ale/elisp-show-messages)
+        ("<backspace>" . ale/elisp-erase-messages)))
 #+end_src
 
 ** File management
