@@ -6,7 +6,7 @@
 
 My Emacs configuration file written in org format.
 
-** About this project
+** About
 *** Structure
 
 + Init file (init.el / early-init.el)
@@ -35,22 +35,108 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 
 ** Usage
 
-doc
+Instructions on how to use this config.
 
-*** Startup script
+*** Dependencies
+
+required:
+fd
+rg
+git
+exa
+fish
+words
+noto-fonts-emoji
+z
+
+optional:
+sarasa-gothic
+victor-mono-nerd-font
+xdotool
+
+*** Installation
+
+1. Make sure to backup your own emacs config.
+
+2. Clone this repo:
+
+#+begin_src emacs-lisp :tangle no
+git clone https://www.github.com/alexluigit/emacs-grandview
+#+end_src
+
+3. Put this folder to the right path
+
+#+begin_src shell :tangle no
+mv ~/emacs-grandview ~/.emacs.d
+# or conform XDG spec
+mv ~/emacs-grandview ~/.config/emacs
+# or use symlink
+mv ~/emacs-grandview ~/Code/emacs-grandview
+ln -sf ~/Code/emacs-grandview ~/.config/emacs
+#+end_src
+
+4. Tangle the config
+
+#+begin_src bash :tangle no
+pidof emacs >/dev/null 2>&1 && kill -9 $(pidof emacs)
+emacs --daemon
+emacsclient -cne '(ale/init-build)'
+#+end_src
+
+*** Restart script
 
 Script for starting up emacs.
 
-Why use shell rather than lisp to restart Emacs?
-doc
++ *Why this bash script?*
+
+  Emacs is a single-threaded program, so if it hangs, we can not
+  expect it to evaluate any elisp code.
+
++ *What does this script do?*
+
+  If this org file get modified, =ale/init-build= function will tangle
+  this file.  After the build function finishes, it kill current emacs
+  and open emacs with new init file.
+
+  Since =ale/init-build= function is added to =kill-emacs-hook=, emacs
+  main process only get killed after the tangle function finishes
+  (unless we use '-9' flag in kill command).  In my case, it usually
+  takes emacs less than 1s to tangle this org file, so if emacs main
+  process keep alive for over 3s after ~killall emacs~ command, it
+  probably means emacs get frozen, so we just kill it with ~kill -9~.
+
++ *How to use this script?*
+
+  You don't need to install this script if you have followed
+  =Installation= section. This script will be tangled to
+  ~~/.local/bin/em~, so make ~~/.local/bin~ is in your ~$PATH~ environment
+  variable.
+
+  You can check if the script get installed successfully by print it
+  out:
+
+  #+begin_src shell :tangle no
+  cat ~/.local/bin/em
+  #+end_src
+
+  If everything goes fine, you can use ~em~ command to restart your
+  emacs from now on.
 
 #+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash"
 restart () {
   notify-send "Restarting emacs..." 2>/dev/null
+  emacs_pid=$(pidof emacs)
+  timeout=300
+  counter=0
   killall emacs
-  [[ $1 == 1 ]] && rm -rf ~/.cache/emacs/{ale.el,straight/build,eln} 2>/dev/null
+  while $(kill -0 $emacs_pid 2>/dev/null) && [[ $counter -lt $timeout ]]; do
+    counter=$((counter + 1))
+    sleep 0.01
+  done
+  kill -9 $emacs_pid 2>/dev/null
+  [[ $1 == 1 ]] && rm -rf ~/.cache/emacs/{*.el,straight/build,eln} 2>/dev/null
   emacs --daemon
-  xdotool set_desktop 0
+  command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
   emacsclient -cn
 }
 
@@ -59,10 +145,6 @@ lf () { floatwin -g 2000x2080+10+10 -n lf-emacs emacsclient -e '\(lf-new-frame\)
 [[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { restart ${@:1}; exit 0; }
 $1 ${@:1}
 #+end_src
-
-*** Dependencies
-
-doc
 
 * Basic
 ** Primitive libs
@@ -1466,7 +1548,7 @@ contains several subsections as follows:
 - How a =.org= file should look like
 - Basic bhhaviour of headings
 - Basic behaviour of source block
-  
+
 *** Org (org.el)
 
 #+begin_src emacs-lisp
