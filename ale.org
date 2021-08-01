@@ -16,6 +16,27 @@ My Emacs configuration file written in org format.
 Why lisp/*?
 doc
 
+*** COPYING
+
+Copyright (c) 2020-2021  Alex Lu <alexluigit@gmail.com>
+
+This file is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
+
+This file is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+** Usage
+
+doc
+
 *** Startup script
 
 Script for starting up emacs.
@@ -38,27 +59,6 @@ lf () { floatwin -g 2000x2080+10+10 -n lf-emacs emacsclient -e '\(lf-new-frame\)
 [[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { restart ${@:1}; exit 0; }
 $1 ${@:1}
 #+end_src
-
-*** COPYING
-
-Copyright (c) 2020-2021  Alex Lu <alexluigit@gmail.com>
-
-This file is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
-
-This file is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this file.  If not, see <http://www.gnu.org/licenses/>.
-
-** Usage
-
-doc
 
 *** Dependencies
 
