@@ -607,8 +607,7 @@ s)= in normal mode.
   :bind
   ("<C-i>" . better-jumper-jump-forward)
   ("C-o" . better-jumper-jump-backward)
-  :demand t
-  :config
+  :init
   (better-jumper-mode +1)
   (require 'ale-jumper))
 #+end_src
