@@ -521,7 +521,7 @@ s)= in normal mode.
   (setq ale/simple-time-specifier "%R %z")
   :bind
   (("<escape>" . keyboard-escape-quit)
-   ("s-SPC" . ale/simple-monocle)
+   ("M-SPC" . ale/simple-monocle) ; replaced `just-one-space'
    :map ale/simple-map
    ("d" . ale/simple-insert-date)
    ("e" . ale/simple-escape-url)
