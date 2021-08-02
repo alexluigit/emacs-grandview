@@ -4,57 +4,6 @@
   "Extensions for the minibuffer."
   :group 'minibuffer)
 
-(defcustom ale/minibuffer-completion-windows-regexp
-  "\\*\\(Completions\\|Embark Collect \\(Live\\|Completions\\)\\)"
-  "Regexp to match window names with completion candidates.
-Used by `ale/minibuffer--get-completion-window'."
-  :group 'ale/minibuffer
-  :type 'string)
-
-(defcustom ale/minibuffer-mini-cursors nil
-  "Allow `cursor-type' to be modified in the minibuffer.
-Refer to the source of `ale/minibuffer-mini-cursor' and
-`ale/minibuffer-completions-cursor'"
-  :group 'ale/minibuffer
-  :type 'boolean)
-
-;;;; Cursor appearance
-
-(defun ale/minibuffer--cursor-type ()
-  "Determine whether `cursor-type' is a list and return value.
-If it is a list, this actually returns its car."
-  (if (listp cursor-type)
-      (car cursor-type)
-    cursor-type))
-
-;;;###autoload
-(defun ale/minibuffer-mini-cursor ()
-  "Local value of `cursor-type' for `minibuffer-setup-hook'."
-  (when ale/minibuffer-mini-cursors
-    (pcase (ale/minibuffer--cursor-type)
-      ('hbar (setq-local cursor-type '(hbar . 8)))
-      ('bar (setq-local cursor-type '(hbar . 3)))
-      (_  (setq-local cursor-type '(bar . 2))))))
-
-;;;###autoload
-(defun ale/minibuffer-completions-cursor ()
-  "Local value of `cursor-type' for `completion-setup-hook'."
-  (when ale/minibuffer-mini-cursors
-    (pcase (ale/minibuffer--cursor-type)
-      ('hbar (setq-local cursor-type 'box))
-      ('bar (setq-local cursor-type '(hbar . 8)))
-      (_  (setq-local cursor-type '(bar . 3))))))
-
-;;;; Minibuffer interactions
-
-(defun ale/minibuffer--get-completion-window ()
-  "Find a live window showing completion candidates."
-  (get-window-with-predicate
-   (lambda (window)
-     (string-match-p
-      ale/minibuffer-completion-windows-regexp
-      (format "%s" window)))))
-
 ;;;; Minibuffer completions
 
 (defun ale/minibuffer-append-metadata (meta completions)
