@@ -2017,10 +2017,11 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
     (shrface-mode)))
 #+end_src
 
-** COMMENT Music Player (mpdel.el)
+** COMMENT Music Player (netease-cloud-music.el)
 
 #+begin_src emacs-lisp
-(use-package mpdel)
+(use-package netease-cloud-music
+  :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
 #+end_src
 
 ** COMMENT Emacs application framework (eaf.el)
@@ -2028,8 +2029,8 @@ all of the utils. In my current setup, I bind this prefix to =SPC o= (see
 #+begin_src emacs-lisp
 (use-package eaf
   :straight
-  (:host github :repo "manateelazycat/emacs-application-framework"
-         :files ("*") :pre-build ("./install-eaf.sh"))
+  (:host github :repo "manateelazycat/emacs-application-framework" :files ("*")
+         :pre-build (("sed" "-i" "s/sudo/doas/g" "./install-eaf.sh") ("./install-eaf.sh") ("git" "checkout" ".")))
   :init
   (use-package epc)
   (use-package ctable)
