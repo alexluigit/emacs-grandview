@@ -450,8 +450,7 @@ package and built-in help buffer:
 
 #+begin_src emacs-lisp
 (use-package info
-  :straight (:type built-in)
-  :bind (:map Info-mode-map ("/" . consult-line)))
+  :straight (:type built-in))
 #+end_src
 
 *** Man page (man.el)
@@ -460,10 +459,7 @@ package and built-in help buffer:
 (use-package man
   :straight (:type built-in)
   :config
-  (setq Man-notify-method 'newframe)
-  :bind
-  (:map Man-mode-map
-        ("/" . consult-line)))
+  (setq Man-notify-method 'newframe))
 #+end_src
 
 ** Misc
