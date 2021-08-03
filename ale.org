@@ -206,7 +206,7 @@ Configuration about dired, lf, files, recentf etc.
         ("l" . find-library)))
 #+end_src
 
-*** Dired (dired.el)
+*** Dired (dired.el & ale-dired.el)
 
 The directory editor abbreviated as "Dired" is a built-in tool that performs
 file management operations inside of an Emacs buffer.  It is simply superb!
@@ -214,6 +214,8 @@ file management operations inside of an Emacs buffer.  It is simply superb!
 #+begin_src emacs-lisp
 (use-package dired
   :straight (:type built-in)
+  :init
+  (require 'ale-dired)
   :bind
   (:map dired-mode-map
         ("/" . dired-goto-file)
@@ -229,19 +231,15 @@ file management operations inside of an Emacs buffer.  It is simply superb!
         ("]" . dired-next-dirline)
         ("o" . dired-up-directory)
         ("x" . dired-do-delete)
-        ("." . dired-omit-mode))
+        ("." . dired-omit-mode)
+        ("% SPC" . ale/dired-rename-space-to-underscore))
   :config
   (setq large-file-warning-threshold 50000000)
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
   (setq dired-dwim-target t)
-  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso")
-  (defun ale/dired-file-rename-eol ()
-    (interactive)
-    (end-of-line)
-    (wdired-change-to-wdired-mode)
-    (when (featurep 'meow) (meow-append))))
+  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
 #+end_src
 
 *** Wdired (wdired.el)
@@ -287,12 +285,7 @@ well. See details at: https://github.com/alexluigit/lf.el
   (lf-minibuf-preview-mode)
   :config
   (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
-                             ("/media/Cloud/" . ".Trash/files")))
-  (defun ale/ts-ext-fix (entry)
-    (if (> (file-attribute-size (file-attributes entry)) (* 1024 1024))
-        (lf-get--preview-create entry "ffmpegthumbnailer" '("-i" "%i" "-o" "%T" "-s 0"))
-      (find-file-noselect entry t nil)))
-  (add-to-list 'lf-preview-cmd-alist '(("ts") (ale/ts-ext-fix . ()))))
+                             ("/media/Cloud/" . ".Trash/files"))))
 #+end_src
 
 *** Project management (project.el & ale-project.el)

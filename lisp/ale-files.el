@@ -37,7 +37,7 @@ Return the decoded text as multibyte string."
 
 (defcustom ale/files-cmd-alist
   '(("video/"           ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
-    (("ts" "rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
+    (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
   "doc"
   :group 'lf :type '(alist :value-type ((choice list string) list)))
 
