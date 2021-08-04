@@ -56,31 +56,25 @@ xdotool
 
 *** Installation
 
-1. Make sure to backup your own emacs config.
-
-2. Clone this repo:
-
-#+begin_src emacs-lisp :tangle no
-git clone https://www.github.com/alexluigit/emacs-grandview
-#+end_src
-
-3. Put this folder to the right path
+Here is the script to install emacs-grandview. Make sure to backup
+your own emacs config before installation.
 
 #+begin_src shell :tangle no
+# Clone this repo
+git clone https://www.github.com/alexluigit/emacs-grandview
+
+# Put this folder to the right path
+# either put it to ~/.emacs.d
 mv ~/emacs-grandview ~/.emacs.d
 # or conform XDG spec
-mv ~/emacs-grandview ~/.config/emacs
+mv ~/emacs-grandview ~/.config/emacs/
 # or use symlink
 mv ~/emacs-grandview ~/Code/emacs-grandview
 ln -sf ~/Code/emacs-grandview ~/.config/emacs
-#+end_src
 
-4. Tangle the config
-
-#+begin_src bash :tangle no
-pidof emacs >/dev/null 2>&1 && kill -9 $(pidof emacs)
+# Tangle the config
 emacs --daemon
-emacsclient -cne '(ale/init-build)'
+emacsclient -e '(kill-emacs)'
 #+end_src
 
 *** Restart script
@@ -113,14 +107,12 @@ Script for starting up emacs.
   variable.
 
   You can check if the script get installed successfully by print it
-  out:
-
-  #+begin_src shell :tangle no
-  cat ~/.local/bin/em
-  #+end_src
+  out: ~cat ~/.local/bin/em~
 
   If everything goes fine, you can use ~em~ command to restart your
   emacs from now on.
+
+Here is the content of the script.
 
 #+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash"
 restart () {
@@ -147,43 +139,6 @@ $1 ${@:1}
 #+end_src
 
 * Basic
-** Primitive libs
-*** Code evaluation (elisp-mode.el)
-
-We can change emacs's setting on the fly at any given time by
-evaluating elisp code. The relevant commands are: =eval-last-sexp=,
-=eval-expression=, =eval-defun=, etc.
-
-A prefix keymap named =ale/elisp-map= is defined to include these
-commands, which will be bind to certain leader key sequence in normal
-mode.
-
-#+begin_src emacs-lisp
-(use-package elisp-mode
-  :straight (:type built-in)
-  :init
-  (define-prefix-command 'ale/elisp-map)
-  :bind
-  (:map ale/elisp-map
-        ("e" . eval-last-sexp)
-        ("x" . eval-expression)
-        ("f" . eval-defun)))
-#+end_src
-
-*** Debugging emacs (ale-elisp.el)
-
-Some handful small utility commands for debugging elisp.
-
-#+begin_src emacs-lisp
-(use-package ale-elisp
-  :straight nil
-  :bind
-  (:map ale/elisp-map
-        ("u" . ale/elisp-unadvice)
-        ("m" . ale/elisp-show-messages)
-        ("<backspace>" . ale/elisp-erase-messages)))
-#+end_src
-
 ** File management
 
 Configuration about dired, lf, files, recentf etc.
@@ -455,7 +410,125 @@ package and built-in help buffer:
   (setq Man-notify-method 'newframe))
 #+end_src
 
+** Utils
+
+Emacs can be used for everything.  Here we just create a shortcut for accessing
+all of the utils. In my current setup, I bind this prefix to =SPC o= (see
+=ale-meow.el=).
+
+#+begin_src emacs-lisp
+(define-prefix-command 'ale/utils-map)
+#+end_src
+
+*** Video url (ale-murl.el)
+
+#+begin_src emacs-lisp
+(use-package ale-murl
+  :straight nil
+  :bind
+  (:map ale/utils-map
+        ("m" . ale/murl-open)))
+#+end_src
+
+*** COMMENT Dictionary (youdao-dictionary.el)
+
+#+begin_src emacs-lisp
+(use-package youdao-dictionary
+  :bind
+  ("C-x y" . youdao-dictionary-search-at-point-posframe)
+  :init
+  (setq url-automatic-caching t)
+  (setq youdao-dictionary-use-chinese-word-segmentation t))
+#+end_src
+
+*** COMMENT Epub reader (nov.el)
+
+#+begin_src emacs-lisp
+(use-package shrface
+  :after nov
+  :config
+  (shrface-basic)
+  (shrface-trial)
+  (add-to-list 'shr-external-rendering-functions
+               '(span . shrface-tag-span))
+  (shrface-default-keybindings) ; setup default keybindings
+  (setq shrface-href-versatile t))
+
+(use-package nov
+  :init
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+  (add-hook 'nov-mode-hook 'ale/nov-setup)
+  :config
+  (advice-add 'nov-render-title :override #'ignore)
+  (setq nov-shr-rendering-functions '((img . nov-render-img)
+                                      (title . nov-render-title)
+                                      (b . shr-tag-b)))
+  (setq nov-shr-rendering-functions
+        (append nov-shr-rendering-functions
+                shr-external-rendering-functions))
+  (defun ale/nov-setup ()
+    (require 'shrface)
+    (shrface-mode)))
+#+end_src
+
+*** COMMENT Music Player (netease-cloud-music.el)
+
+#+begin_src emacs-lisp
+(use-package netease-cloud-music
+  :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
+#+end_src
+
+*** COMMENT Emacs application framework (eaf.el)
+
+#+begin_src emacs-lisp
+(use-package eaf
+  :straight
+  (:host github :repo "manateelazycat/emacs-application-framework" :files ("*")
+         :pre-build (("sed" "-i" "s/sudo/doas/g" "./install-eaf.sh") ("./install-eaf.sh") ("git" "checkout" ".")))
+  :init
+  (use-package epc)
+  (use-package ctable)
+  (use-package deferred)
+  (use-package s))
+#+end_src
+
 ** Misc
+*** Code evaluation (elisp-mode.el)
+
+We can change emacs's setting on the fly at any given time by
+evaluating elisp code. The relevant commands are: =eval-last-sexp=,
+=eval-expression=, =eval-defun=, etc.
+
+A prefix keymap named =ale/elisp-map= is defined to include these
+commands, which will be bind to certain leader key sequence in normal
+mode.
+
+#+begin_src emacs-lisp
+(use-package elisp-mode
+  :straight (:type built-in)
+  :init
+  (define-prefix-command 'ale/elisp-map)
+  :bind
+  (:map ale/elisp-map
+        ("e" . eval-last-sexp)
+        ("x" . eval-expression)
+        ("f" . eval-defun)))
+#+end_src
+
+*** Debugging emacs (ale-elisp.el)
+
+Some handful small utility commands for debugging elisp.
+
+#+begin_src emacs-lisp
+(use-package ale-elisp
+  :straight nil
+  :bind
+  (:map ale/elisp-map
+        ("u" . ale/elisp-unadvice)
+        ("m" . ale/elisp-show-messages)
+        ("<backspace>" . ale/elisp-erase-messages)))
+#+end_src
+
 *** Auto appending
 
 When you install a package or use the various customisation interfaces to tweak
@@ -474,7 +547,6 @@ that you accidentally evaluated from messing up with your carefully designed
 (put 'erase-buffer 'disabled nil)
 (setq custom-file (concat user-emacs-directory "ale-custom.el"))
 #+end_src
-
 *** Terminal key fix
 
 For historical reason, terminal can not tell the difference between some key
@@ -1949,85 +2021,3 @@ If region is active, add its contents to the new buffer."
   (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
   (define-key global-map (kbd "C-c s") #'scratch))
 #+end_src
-* Utils
-
-Emacs can be used for everything.  Here we just create a shortcut for accessing
-all of the utils. In my current setup, I bind this prefix to =SPC o= (see
-=ale-meow.el=).
-
-#+begin_src emacs-lisp
-(define-prefix-command 'ale/utils-map)
-#+end_src
-
-** Video url (ale-murl.el)
-
-#+begin_src emacs-lisp
-(use-package ale-murl
-  :straight nil
-  :bind
-  (:map ale/utils-map
-        ("m" . ale/murl-open)))
-#+end_src
-
-** COMMENT Dictionary (youdao-dictionary.el)
-
-#+begin_src emacs-lisp
-(use-package youdao-dictionary
-  :bind
-  ("C-x y" . youdao-dictionary-search-at-point-posframe)
-  :init
-  (setq url-automatic-caching t)
-  (setq youdao-dictionary-use-chinese-word-segmentation t))
-#+end_src
-
-** COMMENT Epub reader (nov.el)
-
-#+begin_src emacs-lisp
-(use-package shrface
-  :after nov
-  :config
-  (shrface-basic)
-  (shrface-trial)
-  (add-to-list 'shr-external-rendering-functions
-               '(span . shrface-tag-span))
-  (shrface-default-keybindings) ; setup default keybindings
-  (setq shrface-href-versatile t))
-
-(use-package nov
-  :init
-  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (add-hook 'nov-mode-hook 'ale/nov-setup)
-  :config
-  (advice-add 'nov-render-title :override #'ignore)
-  (setq nov-shr-rendering-functions '((img . nov-render-img)
-                                      (title . nov-render-title)
-                                      (b . shr-tag-b)))
-  (setq nov-shr-rendering-functions
-        (append nov-shr-rendering-functions
-                shr-external-rendering-functions))
-  (defun ale/nov-setup ()
-    (require 'shrface)
-    (shrface-mode)))
-#+end_src
-
-** COMMENT Music Player (netease-cloud-music.el)
-
-#+begin_src emacs-lisp
-(use-package netease-cloud-music
-  :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
-#+end_src
-
-** COMMENT Emacs application framework (eaf.el)
-
-#+begin_src emacs-lisp
-(use-package eaf
-  :straight
-  (:host github :repo "manateelazycat/emacs-application-framework" :files ("*")
-         :pre-build (("sed" "-i" "s/sudo/doas/g" "./install-eaf.sh") ("./install-eaf.sh") ("git" "checkout" ".")))
-  :init
-  (use-package epc)
-  (use-package ctable)
-  (use-package deferred)
-  (use-package s))
-#+end_src
-
