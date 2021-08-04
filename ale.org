@@ -1230,16 +1230,16 @@ to 0 to ensure every new window will open in horizontal split.
   :straight (:type built-in)
   :config
   (setq display-buffer-alist
-	      `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
-	         (display-buffer-in-side-window)
-	         (window-height . 0.2)
-	         (side . top))
-	        ("^\\*?\\(magit: \\|Help\\|helpful\\).*"
-	         (display-buffer-in-side-window)
-	         (window-width . 0.4)
-	         (side . right))
-	        ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
-	         (display-buffer-at-bottom))))
+        `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+           (display-buffer-in-side-window)
+           (window-height . 0.2)
+           (side . top))
+          ("^\\*?\\(magit: \\|Help\\|helpful\\).*"
+           (display-buffer-in-side-window)
+           (window-width . 0.4)
+           (side . right))
+          ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
+           (display-buffer-at-bottom))))
   (setq window-combination-resize t)
   (setq even-window-sizes 'height-only)
   (setq window-sides-vertical nil)
@@ -1498,8 +1498,8 @@ for visualising the standard completion framework's output
 (use-package marginalia
   :config
   (setq marginalia-annotators
-	      '(marginalia-annotators-heavy
-	        marginalia-annotators-light))
+        '(marginalia-annotators-heavy
+          marginalia-annotators-light))
   :init
   (marginalia-mode))
 #+end_src
@@ -1553,17 +1553,17 @@ for visualising the standard completion framework's output
   (require 'ale-embark)
   (ale/embark-keymaps 1)
   (setq embark-collect-initial-view-alist
-	      '((file . list)
-	        (buffer . list)
-	        (symbol . list)
-	        (line . list)
-	        (xref-location . list)
-	        (kill-ring . zebra)
-	        (t . list)))
+        '((file . list)
+          (buffer . list)
+          (symbol . list)
+          (line . list)
+          (xref-location . list)
+          (kill-ring . zebra)
+          (t . list)))
   (setq embark-quit-after-action t)
   (setq embark-action-indicator
-	      (let ((act (propertize "Act" 'face 'success)))
-	        (cons act (concat act " on '%s'"))))
+        (let ((act (propertize "Act" 'face 'success)))
+          (cons act (concat act " on '%s'"))))
   (setq embark-become-indicator (propertize "Become" 'face 'warning)))
 
 (use-package embark-consult
@@ -2012,11 +2012,11 @@ If region is active, add its contents to the new buffer."
                      ""))
            (text (concat string region)))
       (when scratch-buffer
-	      (save-excursion
+        (save-excursion
           (insert text)
           (goto-char (point-min))
           (comment-region (point-at-bol) (point-at-eol)))
-	      (forward-line 2))
+        (forward-line 2))
       (rename-buffer (format "*Scratch for %s*" mode) t)))
   (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
   (define-key global-map (kbd "C-c s") #'scratch))
