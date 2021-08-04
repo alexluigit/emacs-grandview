@@ -45,6 +45,7 @@ rg
 git
 exa
 fish
+mailcap
 words
 noto-fonts-emoji
 z
