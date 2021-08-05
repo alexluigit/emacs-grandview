@@ -7,7 +7,7 @@
 (require 'ale-gc)
 (require 'ale-package)
 
-(defun ale/init-build ()
+(defun ale/init-build (&optional force)
   "doc"
   (require 'ale-files)
   (let* ((init-org (concat ale/init-dot-repo "ale.org"))
@@ -16,7 +16,7 @@
          (old-md5 (when (file-exists-p init-md5)
                     (ale/files-read init-md5)))
          (new-md5 (secure-hash 'md5 (ale/files-read init-org))))
-    (unless (string= old-md5 new-md5)
+    (when (or force (not (string= old-md5 new-md5)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
@@ -27,4 +27,6 @@
 (add-hook 'kill-emacs-hook #'ale/init-build)
 
 (let ((init (concat user-emacs-directory "ale.el")))
-  (when (file-exists-p init) (load-file init)))
+  (unless (file-exists-p init)
+    (ale/init-build t))
+  (load-file init))
