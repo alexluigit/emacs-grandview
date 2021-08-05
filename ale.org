@@ -1452,6 +1452,9 @@ control every aspect of the interface.
   (setq resize-mini-windows 'grow-only)
   (setq minibuffer-eldef-shorten-default t)
   (setq echo-keystrokes 0.25)           ; from the C source code
+  (customize-set-variable
+   'minibuffer-prompt-properties
+   (quote (read-only t cursor-intangible t face minibuffer-prompt)))
   (file-name-shadow-mode 1)
   (minibuffer-depth-indicate-mode 1)
   (minibuffer-electric-default-mode 1))
