@@ -1256,7 +1256,9 @@ to 0 to ensure every new window will open in horizontal split.
 #+begin_src emacs-lisp
 (use-package ace-window
   :bind
-  ("M-o" . ace-select-window))
+  ("M-o" . ace-select-window)
+  :config
+  (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 #+end_src
 
 *** Window position (transpose-frame.el)

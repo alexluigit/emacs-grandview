@@ -97,7 +97,6 @@
    '("?" . describe-keymap)
    '("/" . helpful-symbol)
    '(";" . ale/meow-comment-or-uncomment-region)
-   '("`" . ace-select-window)
    '("d" . deadgrep)
    '("e" . ale/elisp-map)
    '("f" . ale/files-map)
