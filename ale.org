@@ -1212,7 +1212,7 @@ A change can happen externally or by some other tool inside of Emacs
 (fringe-mode 1)
 #+end_src
 
-*** Window rules (window.el)
+*** Window (window.el & ale-window.el)
 
 The =display-buffer-alist= is intended as a rule-set for controlling the display
 of windows.  The objective is to create a more intuitive workflow where targeted
@@ -1230,6 +1230,8 @@ to 0 to ensure every new window will open in horizontal split.
 (use-package window
   :straight (:type built-in)
   :config
+  (require 'ale-window)
+  (ale/window-recenter-mode)
   (setq display-buffer-alist
         `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
            (display-buffer-in-side-window)
@@ -1510,8 +1512,6 @@ for visualising the standard completion framework's output
 #+begin_src emacs-lisp
 (use-package consult
   :init
-  (require 'ale-consult)
-  (ale/consult-set-up-hooks-mode 1)
   (setq completion-in-region-function #'consult-completion-in-region)
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
