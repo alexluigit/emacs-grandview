@@ -133,7 +133,7 @@ restart () {
   emacsclient -cn
 }
 
-lf () { floatwin -g 2000x2080+10+10 -n lf-emacs emacsclient -e '\(lf-new-frame\)'; }
+file () { floatwin -g 2000x2080+10+10 -n danger-emacs emacsclient -e '\(danger-new-frame\)'; }
 
 [[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { restart ${@:1}; exit 0; }
 $1 ${@:1}
@@ -142,7 +142,7 @@ $1 ${@:1}
 * Basic
 ** File management
 
-Configuration about dired, lf, files, recentf etc.
+Configuration about dired, danger, files, recentf etc.
 
 *** Shortcuts (ale-files.el)
 
@@ -209,39 +209,39 @@ file management operations inside of an Emacs buffer.  It is simply superb!
 
 *** Dired mode highlighting (diredfl.el)
 
-Additional syntax highlighting in dired / lf buffer.
+Additional syntax highlighting in dired buffer.
 
 #+begin_src emacs-lisp
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
 #+end_src
 
-*** Lf (lf.el)
+*** A better dired interface (danger.el)
 
-Lf means 'list files'. This package is a clone of the popular file manager
-=ranger=, I wrote it on the basis of =ranger.el=. Compare to =ranger.el=, this package
-only keeps features I wanted, and some sensible functionalities were added as
-well. See details at: https://github.com/alexluigit/lf.el
+This package is inspired the popular file manager =ranger=, I created it
+on the basis of =ranger.el=. Compare to =ranger.el=, this package only
+keeps features I wanted, and some sensible functionalities were added
+as well. See details at: https://github.com/alexluigit/danger.el
 
 #+begin_src emacs-lisp
-(use-package lf
-  :straight (lf :type git :depth full :host github :repo "alexluigit/lf.el")
+(use-package danger
+  :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
   :hook
-  (lf-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
-  (lf-preview-setup . (lambda () (setq cursor-type nil)))
+  (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+  (danger-preview-setup . (lambda () (setq cursor-type nil)))
   :init
-  (setq lf-routes '(("o" "Home"        "~")
-                    ("u" "Emacs cache" "~/.cache/emacs")
-                    ("p" "Code"        "~/Code")
-                    ("n" "Downloads"   "~/Downloads")
-                    ("w" "Wallpaper"   "~/Pictures/wallpaper")
-                    ("m" "Drives"      "/media")
-                    ("t" "Trash"       "~/.local/share/Trash")))
-  (lf-override-dired-mode)
-  (lf-minibuf-preview-mode)
+  (setq danger-routes '(("o" "Home"        "~")
+                        ("u" "Emacs cache" "~/.cache/emacs")
+                        ("p" "Code"        "~/Code")
+                        ("n" "Downloads"   "~/Downloads")
+                        ("w" "Wallpaper"   "~/Pictures/wallpaper")
+                        ("m" "Drives"      "/media")
+                        ("t" "Trash"       "~/.local/share/Trash")))
+  (danger-override-dired-mode)
+  (danger-minibuf-preview-mode)
   :config
-  (setq lf-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
-                             ("/media/Cloud/" . ".Trash/files"))))
+  (setq danger-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
+                                 ("/media/Cloud/" . ".Trash/files"))))
 #+end_src
 
 *** Project management (project.el & ale-project.el)

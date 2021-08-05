@@ -208,8 +208,8 @@ delete current frame. With optional prefix
 ARG (\\[universal-argument]) kill current buffer frame as well."
   (interactive "P")
   (when force (kill-buffer))
-  (if (and (featurep 'lf) (lf-live-p))
-      (lf-quit)
+  (if (and (featurep 'danger) (danger-live-p))
+      (danger-quit)
     (condition-case nil
         (delete-window)
       (error (delete-frame)))))

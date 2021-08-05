@@ -36,10 +36,10 @@ Return the decoded text as multibyte string."
   (decode-coding-string (ale/files--read-bytes path) (or coding 'utf-8)))
 
 (defcustom ale/files-cmd-alist
-  '(("video/"           ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
+  '(("video/" ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
     (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
   "doc"
-  :group 'lf :type '(alist :value-type ((choice list string) list)))
+  :group 'files :type '(alist :value-type ((choice list string) list)))
 
 (cl-defun ale/files-match-mime (file)
   "To determine if `FILE' can be matched by `ale/files-cmd-alist'."
