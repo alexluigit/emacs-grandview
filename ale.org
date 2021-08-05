@@ -377,7 +377,7 @@ package and built-in help buffer:
   :bind
   (("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
    ([remap describe-function] . #'helpful-callable)
-   ([remap describe-variable] . #'helpful-symbol)
+   ([remap describe-symbol] . #'helpful-symbol)
    ([remap describe-key] . #'helpful-key)
    :map helpful-mode-map
    ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))

@@ -95,7 +95,7 @@
   (meow-leader-define-key
    '("SPC" . consult-buffer)
    '("?" . describe-keymap)
-   '("/" . helpful-symbol)
+   '("/" . describe-symbol)
    '(";" . ale/meow-comment-or-uncomment-region)
    '("d" . deadgrep)
    '("e" . ale/elisp-map)
