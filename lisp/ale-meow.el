@@ -86,10 +86,7 @@
   (meow--thing-register 'tag #'ale/meow--inner-of-tag #'ale/meow--bounds-of-tag)
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-colemak)
   (define-key meow-insert-state-keymap (kbd "/") (lambda () (interactive) (self-insert-command 1)))
-  (define-key meow-insert-state-keymap (kbd "C-w") #'ale/simple-backward-kill-word)
   (define-key meow-insert-state-keymap (kbd "C-u") #'ale/simple-kill-whole-line)
-  (define-key meow-insert-state-keymap (kbd "C-o") #'ale/simple-backward-char)
-  (define-key meow-insert-state-keymap (kbd "<C-i>") #'ale/simple-forward-char)
   (define-key meow-insert-state-keymap (kbd "C-;") #'meow-reverse)
   (define-key meow-motion-state-keymap (kbd "<escape>") #'ale/meow-escape)
   (meow-leader-define-key

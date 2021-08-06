@@ -33,27 +33,11 @@ Used by `ale/simple-insert-date'."
 (defun ale/simple--char-readonly ()
   (get-text-property (1- (point)) 'read-only))
 
-(defun ale/simple-forward-char ()
-  (interactive)
-  (when (< (point) (point-at-eol))
-    (forward-char)))
-
-(defun ale/simple-backward-char ()
-  (interactive)
-  (when (and (not (ale/simple--char-readonly))
-             (> (point) (point-at-bol)))
-    (backward-char)))
-
 (defun ale/simple-backward-delete-char ()
   (interactive)
   (when (and (not (ale/simple--char-readonly))
              (> (point) (point-at-bol)))
     (backward-delete-char 1)))
-
-(defun ale/simple-backward-kill-word ()
-  (interactive)
-  (unless (ale/simple--char-readonly)
-    (backward-kill-word 1)))
 
 (defun ale/simple-kill-whole-line ()
   (interactive)
