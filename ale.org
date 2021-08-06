@@ -895,7 +895,9 @@ matches by leveraging the full power of Emacs' editing capabilities
 
 #+begin_src emacs-lisp
 (use-package anzu
-  :init (global-anzu-mode +1)
+  :init
+  (require 'ale-anzu)
+  (global-anzu-mode +1)
   :bind
   ("M-%" . anzu-isearch-query-replace))
 #+end_src

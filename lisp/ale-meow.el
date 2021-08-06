@@ -46,16 +46,6 @@
       (push-mark end t t)
       (meow--execute-kbd-macro meow--kbd-kill-ring-save))))
 
-(defun ale/meow-query-replace (arg)
-  (interactive "p")
-  (if (region-active-p)
-      (progn
-        (call-interactively 'kill-ring-save)
-        (meow-cancel-selection)
-        (run-with-timer 0.05 nil 'yank)
-        (anzu-query-replace arg))
-    (anzu-query-replace-at-cursor)))
-
 (defun ale/meow-escape ()
   (interactive)
   (if (region-active-p)
@@ -131,7 +121,7 @@
    '("]" . good-scroll-up-full-screen)
    '("-" . meow-pop)
    '("_" . meow-pop-all-selection)
-   '("=" . ale/meow-query-replace)
+   '("=" . ale/anzu-query-replace)
    '("+" . anzu-query-replace-regexp)
    '("'" . meow-end-of-thing)
    '("\\" . meow-pop-search)
