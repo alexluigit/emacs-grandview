@@ -6,6 +6,14 @@
   "Do not close any window when calling `keyboard-escape-quit'."
   (let ((buffer-quit-function #'ignore)) ad-do-it))
 
+(defadvice next-error-no-select (around reuse-window activate)
+  "Do not open new window when calling `next-error-no-select'."
+  (let ((split-width-threshold nil)) ad-do-it))
+
+(defadvice previous-error-no-select (around reuse-window activate)
+  "Do not open new window when calling `previous-error-no-select'."
+  (let ((split-width-threshold nil)) ad-do-it))
+
 (defcustom ale/simple-date-specifier "%F"
   "Date specifier for `format-time-string'.
 Used by `ale/simple-insert-date'."
