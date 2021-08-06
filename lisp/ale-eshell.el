@@ -15,7 +15,7 @@
   "The list of non-dedicated eshell buffers.")
 
 (defvar ale/eshell-index 0
-  "The list of non-dedicated eshell buffers.")
+  "The index of current eshell buffer.")
 
 (defun ale/get-current-package-version ()
   (interactive)
@@ -42,7 +42,6 @@
       (string-remove-prefix (file-name-directory git-output) current-path))))
 
 ;; This prompt function mostly replicates my custom zsh prompt setup
-;; that is powered by github.com/denysdovhan/spaceship-prompt.
 (defun ale/eshell-prompt ()
   (let* ((br-cmd "git symbolic-ref HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null")
          (br-raw (shell-command-to-string br-cmd))
