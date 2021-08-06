@@ -932,10 +932,13 @@ as =xref-find-definitions= (=M-.=) and its counterpart =xref-pop-marker-stack=
   (setq xref-search-program 'ripgrep))
 #+end_src
 
-*** Ripgrep (deadgrep.el)
+*** Ripgrep (rg.el)
 
 #+begin_src emacs-lisp
-(use-package deadgrep)
+(use-package rg
+  :config
+  (rg-define-toggle "--context 3" (kbd "C"))
+  (rg-define-toggle "-A 5" (kbd "A")))
 #+end_src
 
 *** Spelling (ispell.el)
