@@ -46,6 +46,16 @@
       (push-mark end t t)
       (meow--execute-kbd-macro meow--kbd-kill-ring-save))))
 
+(defun ale/meow-inner-line ()
+  (interactive)
+  (save-window-excursion
+    (when-let ((bounds (meow--parse-inner-of-thing-char ?')))
+      (-> (meow--make-selection '(select . transient)
+                                (car bounds)
+                                (cdr bounds))
+          (meow--select))
+      (meow-reverse))))
+
 (defun ale/meow-escape ()
   (interactive)
   (if (region-active-p)
@@ -136,8 +146,8 @@
    '("C" . meow-change-save)
    '("d" . meow-delete)
    '("e" . meow-line)
-   '("E" . er/expand-region)
    '("f" . meow-next-word)
+   '("E" . ale/meow-inner-line)
    '("F" . meow-next-symbol)
    '("g" . ale/meow-update)
    '("h" . embrace-commander)

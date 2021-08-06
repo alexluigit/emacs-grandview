@@ -641,8 +641,6 @@ s)= in normal mode.
           (?p . paragraph)
           (?\^? . line)
           (?' . line)
-          (?. . line)
-          (?, . line)
           (?d . defun)
           (?i . indent)
           (?t . tag)
