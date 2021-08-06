@@ -3,10 +3,10 @@
 #+EMAIL: alexluigit@gmail.com
 
 * Overview
+** About
 
 My Emacs configuration file written in org format.
 
-** About
 *** Structure
 
 + Init file (init.el / early-init.el)
@@ -1086,10 +1086,6 @@ sentence.  I put them all together here to make things easier to track.
 #+end_src
 
 * Interface
-
-General interface section including fontface/icon/etc function
-definition.
-
 ** Appearance
 *** Theme
 
@@ -1188,36 +1184,37 @@ Give some code navigation / window switch commands better visual clue.
   (ale/pulse-advice-commands-mode 1))
 #+end_src
 
-** Viewports
+*** Smooth scrolling (good-scroll.el)
 
-I believe that Emacs's true power lies in its buffer management rather than its
-multiplexing.  The latter becomes inefficient at scale, since it tries to
-emulate the limitations of the real world, namely, the placement of things on a
-desk.
+By default, page scrolling should keep the point at the same visual position,
+rather than force it to the top or bottom of the viewport.  This eliminates the
+friction of guessing where the point has warped to.
 
-By leveraging the power of the computer, we can use search methods to easily
-reach any item.  There is no need to remain confined to the idea of a finite
-space (screen real estate) that needs to be carefully managed.
+As for per-line scrolling, I dislike the default behaviour of visually
+re-centring the point: it is too aggressive as a standard mode of interaction.
+With the following =setq-default=, the point will stay at the top/bottom of the
+screen while moving in that direction (use =C-l= to reposition it).
 
-That granted, Emacs' multiplexing can be turned into a powerhouse as well,
-covering everything from window placement rules, to the recording of history and
-layouts, as well as directional or direct window navigation.
-
-*** Auto revert mode
-
-This mode ensures that the buffer is updated whenever the file changes.
-A change can happen externally or by some other tool inside of Emacs
-(e.g. kill a Magit diff).
+The =good-scroll= library provides a set of commands for pixelwise (linear or
+bezier) scrolling in emacs, =good-scroll-down-full-screen= and
+=good-scroll-up-full-screen= are bind to '[' and ']' in normal mode.
 
 #+begin_src emacs-lisp
-(use-package autorevert
-  :straight (:type built-in)
-  :config
-  (setq auto-revert-verbose t)
-  :hook
-  (after-init . global-auto-revert-mode))
+(use-package good-scroll
+  :init
+  (setq scroll-step 1)
+  (setq scroll-margin 1)
+  (setq scroll-conservatively 101)
+  (setq scroll-up-aggressively 0.01)
+  (setq scroll-down-aggressively 0.01)
+  (setq auto-window-vscroll nil)
+  (setq fast-but-imprecise-scrolling nil)
+  (setq hscroll-step 1)
+  (setq hscroll-margin 1)
+  (good-scroll-mode 1))
 #+end_src
 
+** Layout
 *** Fringe-mode
 
 #+begin_src emacs-lisp
@@ -1283,6 +1280,73 @@ code.  Do it with =M-x find-library transpose-frame=.
 
 #+begin_src emacs-lisp
 (use-package transpose-frame)
+#+end_src
+
+** Buffer management
+
+I believe that Emacs's true power lies in its buffer management rather than its
+multiplexing.  The latter becomes inefficient at scale, since it tries to
+emulate the limitations of the real world, namely, the placement of things on a
+desk.
+
+By leveraging the power of the computer, we can use search methods to easily
+reach any item.  There is no need to remain confined to the idea of a finite
+space (screen real estate) that needs to be carefully managed.
+
+That granted, Emacs' multiplexing can be turned into a powerhouse as well,
+covering everything from window placement rules, to the recording of history and
+layouts, as well as directional or direct window navigation.
+
+*** Buffer list (ibuffer.el)
+=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
+=list-buffers=.  Compared to its counterpart, it allows for granular
+control over the buffer list and is more powerful overall.
+
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :bind
+  (:map ibuffer-mode-map
+   ("* f" . ibuffer-mark-by-file-name-regexp)
+   ("* g" . ibuffer-mark-by-content-regexp)
+   ("* n" . ibuffer-mark-by-name-regexp)
+   ("s n" . ibuffer-do-sort-by-alphabetic)
+   ("/ g" . ibuffer-filter-by-content))
+  :config
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+#+end_src
+
+*** Auto revert mode
+
+This mode ensures that the buffer is updated whenever the file changes.
+A change can happen externally or by some other tool inside of Emacs
+(e.g. kill a Magit diff).
+
+#+begin_src emacs-lisp
+(use-package autorevert
+  :straight (:type built-in)
+  :config
+  (setq auto-revert-verbose t)
+  :hook
+  (after-init . global-auto-revert-mode))
 #+end_src
 
 *** Tabs (ale-tab.el)
@@ -1356,73 +1420,6 @@ via =C-x t r=, though I find I do not use it.
 (use-package tab-bar-echo-area
   :config
   (tab-bar-echo-area-mode 1))
-#+end_src
-
-*** Buffer list (ibuffer.el)
-=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
-=list-buffers=.  Compared to its counterpart, it allows for granular
-control over the buffer list and is more powerful overall.
-
-#+begin_src emacs-lisp
-(use-package ibuffer
-  :bind
-  (:map ibuffer-mode-map
-   ("* f" . ibuffer-mark-by-file-name-regexp)
-   ("* g" . ibuffer-mark-by-content-regexp)
-   ("* n" . ibuffer-mark-by-name-regexp)
-   ("s n" . ibuffer-do-sort-by-alphabetic)
-   ("/ g" . ibuffer-filter-by-content))
-  :config
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-movement-cycle nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups nil)
-  (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
-#+end_src
-
-*** Smooth scrolling (good-scroll.el)
-
-By default, page scrolling should keep the point at the same visual position,
-rather than force it to the top or bottom of the viewport.  This eliminates the
-friction of guessing where the point has warped to.
-
-As for per-line scrolling, I dislike the default behaviour of visually
-re-centring the point: it is too aggressive as a standard mode of interaction.
-With the following =setq-default=, the point will stay at the top/bottom of the
-screen while moving in that direction (use =C-l= to reposition it).
-
-The =good-scroll= library provides a set of commands for pixelwise (linear or
-bezier) scrolling in emacs, =good-scroll-down-full-screen= and
-=good-scroll-up-full-screen= are bind to '[' and ']' in normal mode.
-
-#+begin_src emacs-lisp
-(use-package good-scroll
-  :init
-  (setq scroll-step 1)
-  (setq scroll-margin 1)
-  (setq scroll-conservatively 101)
-  (setq scroll-up-aggressively 0.01)
-  (setq scroll-down-aggressively 0.01)
-  (setq auto-window-vscroll nil)
-  (setq fast-but-imprecise-scrolling nil)
-  (setq hscroll-step 1)
-  (setq hscroll-margin 1)
-  (good-scroll-mode 1))
 #+end_src
 
 * Completion
@@ -1509,8 +1506,7 @@ A minimalistic completion UI.
 This is a utility jointly developed by Daniel Mendler and Omar Antolín
 Camarena that provides annotations to completion candidates.  It is
 meant to be framework-agnostic, so it works with Selectrum, Icomplete
-vertical, and Embark (since 2020-12-20, the latter has become my choice
-for visualising the standard completion framework's output
+vertico, and Embark.
 
 #+begin_src emacs-lisp
 (use-package marginalia
@@ -1612,6 +1608,7 @@ for visualising the standard completion framework's output
 #+end_src
 
 * Org mode
+** Common
 
 In its purest form, Org is a markup language that is similar to
 Markdown: symbols are used to denote the meaning of a construct in its
@@ -1626,8 +1623,6 @@ straightforward system of plain text notation.
 Couched in those terms, Org is at once a distribution of well integrated
 libraries and a vibrant ecosystem that keeps producing new ideas and
 workflows on how to organise one's life with plain text.
-
-** Common
 
 This section is all about basic configurations for Org-mode which
 contains several subsections as follows:
@@ -1736,9 +1731,6 @@ contains several subsections as follows:
 #+end_src
 
 * Development
-
-Packages or custom functions for development.
-
 ** Eshell
 *** Basic (eshell.el & ale-eshell.el)
 
