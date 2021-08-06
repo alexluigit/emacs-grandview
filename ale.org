@@ -1639,6 +1639,8 @@ contains several subsections as follows:
 #+begin_src emacs-lisp
 (use-package org
   :straight nil
+  :init
+  (define-prefix-command 'ale/org-map)
   :hook
   (org-mode . ale/font-org-setup)
   (org-tab-first . org-end-of-line)
@@ -1716,12 +1718,11 @@ contains several subsections as follows:
   :init
   (setq org-id-link-to-org-use-id t)
   (setq org-roam-v2-ack t)
-  (define-prefix-command 'ale/roam-map)
   :custom
   (org-roam-directory (file-truename "~/Documents/roam"))
   (org-roam-completion-everywhere t)
   :bind
-  (:map ale/roam-map
+  (:map ale/org-map
         ("l" . org-roam-buffer-toggle)
         ("f" . org-roam-node-find)
         ("g" . org-roam-graph)
