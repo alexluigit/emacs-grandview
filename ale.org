@@ -399,7 +399,15 @@ package and built-in help buffer:
 
 #+begin_src emacs-lisp
 (use-package info
-  :straight (:type built-in))
+  :straight (:type built-in)
+  :bind
+  (:map Info-mode-map
+        ("n" . next-line)
+        ("p" . previous-line)
+        ("C-n" . Info-next)
+        ("C-p" . Info-prev)
+        ("M-n" . forward-paragraph)
+        ("M-p" . backward-paragraph)))
 #+end_src
 
 *** Man page (man.el)
