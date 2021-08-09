@@ -1,5 +1,10 @@
 ;;; core/autoload/modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
 
+(use-package mlscroll
+  :hook (server-after-make-frame . mlscroll-mode)
+  :config
+  (setq mlscroll-in-color (face-attribute 'tool-bar :background)))
+
 (defvar flycheck-current-errors)
 (defvar flymake-mode-line-format)
 (defvar anzu--state)
