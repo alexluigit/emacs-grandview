@@ -1,4 +1,7 @@
-(defun ale/frame-adjust-transparency (&optional percent)
+;;; core/autoload/frame.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-frame-adjust-transparency (&optional percent)
   (interactive "p")
   (cond ((and current-prefix-arg (numberp current-prefix-arg))
          (set-frame-parameter (selected-frame) 'alpha `(,(* 10 percent) . 50)))
@@ -10,5 +13,3 @@
            (if (eq opa low)
                (set-frame-parameter (selected-frame) 'alpha `(,high . 50))
              (set-frame-parameter (selected-frame) 'alpha `(,low . 50)))))))
-
-(provide 'ale-frame)

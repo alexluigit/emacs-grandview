@@ -1,10 +1,8 @@
-(require 'eshell)
-(require 'esh-mode)
+;;; ale-eshell.el --- -*- lexical-binding: t -*-
+
 (require 'em-hist)
 (eval-when-compile (require 'subr-x))
 (require 'cl-seq)
-(require 'dash)
-(declare-function ale/files-read "ace-files")
 
 (defcustom ale/eshell-position
   '((danger-mode . ((window-height . 0.4) (side . bottom)))
@@ -21,7 +19,7 @@
   (interactive)
   (let ((package-json-file (concat (eshell/pwd) "/package.json")))
     (when (file-exists-p package-json-file)
-      (let* ((package-json-contents (ale/files-read package-json-file))
+      (let* ((package-json-contents (ale/f-read package-json-file))
              (package-json (ignore-errors (json-parse-string package-json-contents))))
         (when package-json
           (ignore-errors (gethash "version" package-json)))))))
@@ -70,6 +68,7 @@
        (propertize "\nλ" 'face `(:foreground "#EC6261")))
      (propertize " " 'face `(:foreground "white")))))
 
+;;;###autoload
 (defun ale/eshell-init ()
   (push 'eshell-tramp eshell-modules-list)
   ;; Save command history when commands are entered
@@ -92,6 +91,7 @@
 (add-hook 'eshell-exit-hook
           (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
 
+;;;###autoload
 (defun ale/eshell-updir ()
   "Up a directory in eshell."
   (interactive)
@@ -102,16 +102,16 @@
   "Parse `ale/eshell-position' to get eshell display parameters."
   (let (pos)
     (cl-dolist (setting ale/eshell-position)
-      (-when-let ((mode . alist) setting)
-        (when (derived-mode-p mode)
-          (setq pos alist) (cl-return))
-        (when (eq mode 'default)
-          (setq pos alist))))
+        (when (derived-mode-p (car setting))
+          (setq pos (cdr setting)) (cl-return))
+        (when (eq (car setting) 'default)
+          (setq pos (cdr setting))))
     `(("^\\*[e]shell.*"
        (display-buffer-in-side-window)
        (window-parameters . ((mode-line-format . none)))
        ,@pos))))
 
+;;;###autoload
 (defun ale/eshell-toggle (&optional force-new)
   "Toggle eshell.
 If called with prefix argument, create a new eshell buffer if
@@ -136,6 +136,7 @@ current one have different `default-directory'."
     (string-match "\\*eshell\\*\<\\([0-9]+\\)\>" name)
     (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
 
+;;;###autoload
 (defun ale/eshell-new ()
   "Create new eshell buffer."
   (interactive)
@@ -145,6 +146,7 @@ current one have different `default-directory'."
     (when (featurep 'evil) (evil-insert-state))
     (when (featurep 'meow) (meow-insert))))
 
+;;;###autoload
 (defun ale/eshell-next (&optional arg)
   "Select next eshell buffer.
 Create new one if no eshell buffer exists."
@@ -156,11 +158,13 @@ Create new one if no eshell buffer exists."
       (switch-to-buffer buf)
       (setq ale/eshell-index new-index))))
 
+;;;###autoload
 (defun ale/eshell-prev (&optional arg)
   "Select previous eshell buffer."
   (interactive "p")
   (ale/eshell-next arg))
 
+;;;###autoload
 (defun ale/eshell-clear-buffer ()
   "Clear eshell buffer."
   (interactive)
@@ -171,7 +175,7 @@ Create new one if no eshell buffer exists."
 (defun ale/eshell-pacman-install ()
   "Choose a package to install using paru."
   (interactive)
-  (let* ((p-list-raw (ale/files-read "/home/alex/.local/share/paru/pkglist"))
+  (let* ((p-list-raw (ale/f-read "/home/alex/.local/share/paru/pkglist"))
          (p-list (split-string p-list-raw "\n" t))
          (res (completing-read "Install: " p-list))
          (emacs-p (if (string= res "emacs-git") "; esrc" "")))

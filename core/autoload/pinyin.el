@@ -1,4 +1,6 @@
-(defconst ale/pinyin-xiaohe-char-table-simp
+;;; core/autoload/pinyin.el -*- lexical-binding: t; -*-
+
+(defconst ale-pinyin-xiaohe-char-table-simp
   '("阿啊呵腌嗄锕吖爱哀挨碍埃癌艾唉矮哎皑蔼隘暧霭捱嗳瑷嫒锿嗌砹安案按暗岸俺谙黯鞍氨庵桉鹌胺铵揞犴埯昂肮盎奥澳傲熬敖凹袄懊坳嗷拗鏖骜鳌翱岙廒遨獒聱媪螯鏊"
     "把八吧巴爸罢拔叭芭霸靶扒疤跋坝笆耙粑灞茇菝魃岜捌钯鲅百白败摆伯拜柏呗掰捭佰稗办半版般班板伴搬扮斑颁瓣拌扳绊阪坂瘢钣舨癍帮邦棒膀榜傍绑磅谤浜梆镑蚌蒡报保包暴宝抱薄胞爆鲍饱堡曝刨褒豹雹苞葆褓孢煲鸨龅趵被北备背悲辈杯倍贝碑卑蓓惫悖狈呗焙鹎孛邶陂埤碚褙鐾鞴萆钡本奔笨苯夯畚贲锛坌崩甭绷蹦迸甏泵嘣蚌比必笔毕币避闭鼻彼逼壁臂弊碧鄙毙蔽庇匕璧敝陛弼篦婢愎痹妣濞铋裨俾髀萆薜哔狴庳秕滗舭毖吡嬖蓖贲畀荸埤筚箅芘襞跸荜编便边变遍辩辨贬鞭辫扁卞砭苄匾汴蝙笾碥窆褊弁鳊忭煸缏表标彪镖膘骠镳裱杓飙瘭髟飚婊飑鳔别憋瘪蹩鳖宾滨彬斌鬓缤殡濒槟摈膑傧玢豳髌镔并病兵冰饼丙柄秉炳禀邴摒波播博伯勃薄拨泊柏剥玻驳卜脖搏膊饽簸掰舶跛礴菠帛铂钵渤檗钹擘箔趵孛鹁踣亳啵不部布步补捕怖卜簿哺埔卟埠钸逋醭晡瓿钚"
     "擦礤才采菜财材彩裁猜蔡踩睬参餐残惨灿惭蚕璨骖黪粲藏苍仓沧舱草操曹糙嘈槽螬艚漕策测侧厕册恻参岑涔曾层蹭倘焯膪此次词刺辞慈磁赐瓷兹茨雌祠疵呲鹚糍茈从匆聪丛葱囱琮淙枞苁骢璁凑楱辏腠促粗簇醋卒猝蹴蹙徂殂蔟酢攒窜篡蹿撺镩汆爨脆粹催摧崔萃翠瘁悴璀隹淬毳榱啐存村寸忖皴错措搓挫撮磋蹉矬嵯脞痤鹾厝锉"
@@ -27,7 +29,7 @@
     "杂砸咂匝拶在再载灾仔宰哉栽崽甾咱赞暂攒簪糌瓒拶昝趱錾藏脏葬臧驵早造遭糟澡灶躁噪凿枣皂燥蚤藻缲唣则责泽择啧仄迮笮箦舴帻赜昃贼怎谮增赠憎缯罾甑锃子自字资咨紫滋仔姿兹孜梓渍籽姊恣滓谘龇秭呲辎锱眦笫髭淄茈觜訾缁耔鲻嵫赀孳粢趑总宗纵踪综棕粽鬃偬腙枞走奏邹揍鲰诹陬鄹组足族祖租阻卒诅俎镞菹钻攥纂躜缵最罪嘴醉咀觜蕞尊遵樽鳟撙作做坐座左昨佐凿撮怍胙笮阼祚酢")
   "ASCII char in simplifed Chinese characters based on xiaohe double pinyin schema.")
 
-(defconst ale/pinyin-xiaohe-char-table-trad
+(defconst ale-pinyin-xiaohe-char-table-trad
   '("阿啊呵醃嗄錒吖愛哀挨礙埃癌艾唉矮哎皚藹隘曖靄捱噯璦嬡鎄嗌砹安案按暗岸俺諳黯鞍氨庵桉鵪胺銨揞犴垵昂骯盎奧澳傲熬敖凹襖懊坳嗷拗鏖驁鰲翱嶴廒遨獒聱媼螯鏊"
     "把八吧巴爸罷拔叭芭霸靶扒疤跋壩笆耙粑灞茇菝魃岜捌鈀鮁百白敗擺伯拜柏唄掰捭佰稗辦半版般班板伴搬扮斑頒瓣拌扳絆阪阪瘢鈑舨癍幫邦棒膀榜傍綁磅謗浜梆鎊蚌蒡報保包暴寶抱薄胞爆鮑飽堡曝刨褒豹雹苞葆褓孢煲鴇齙趵被北備背悲輩杯倍貝碑卑蓓憊悖狽唄焙鵯孛邶陂埤碚褙鐾鞴萆鋇本奔笨苯夯畚賁錛坌崩甭繃蹦迸甏泵嘣蚌比必筆畢幣避閉鼻彼逼壁臂弊碧鄙斃蔽庇匕璧敝陛弼篦婢愎痹妣濞鉍裨俾髀萆薜嗶狴庳秕潷舭毖吡嬖蓖賁畀荸埤篳箅芘襞蹕蓽編便邊變遍辯辨貶鞭辮扁卞砭苄匾汴蝙籩碥窆褊弁鯿忭煸緶表標彪鏢膘驃鑣裱杓飆瘭髟飈婊颮鰾別憋癟蹩鱉賓濱彬斌鬢繽殯瀕檳擯臏儐玢豳髕鑌並病兵冰餅丙柄秉炳稟邴摒波播博伯勃薄撥泊柏剝玻駁卜脖搏膊餑簸掰舶跛礴菠帛鉑鉢渤檗鈸擘箔趵孛鵓踣亳啵不部布步補捕怖卜簿哺埔卟埠鈽逋醭晡瓿鈈"
     "擦礤才采菜財材彩裁猜蔡踩睬參餐殘慘燦慚蠶璨驂黲粲藏蒼倉滄艙草操曹糙嘈槽螬艚漕策測側廁冊惻參岑涔曾層蹭倘焯膪此次詞刺辭慈磁賜瓷茲茨雌祠疵呲鶿糍茈從匆聰叢蔥囪琮淙樅蓯驄璁湊楱輳腠促粗簇醋卒猝蹴蹙徂殂蔟酢攢竄篡躥攛鑹汆爨脆粹催摧崔萃翠瘁悴璀隹淬毳榱啐存村寸忖皴錯措搓挫撮磋蹉矬嵯脞痤鹺厝銼"
@@ -56,13 +58,13 @@
     "雜砸咂匝拶在再載災仔宰哉栽崽甾咱贊暫攢簪糌瓚拶昝趲鏨藏臟葬臧駔早造遭糟澡竈躁噪鑿棗皂燥蚤藻繰唣則責澤擇嘖仄迮笮簀舴幘賾昃賊怎譖增贈憎繒罾甑鋥子自字資咨紫滋仔姿茲孜梓漬籽姊恣滓諮齜秭呲輜錙眥笫髭淄茈觜訾緇耔鯔嵫貲孳粢趑總宗縱蹤綜棕粽鬃傯腙樅走奏鄒揍鯫諏陬鄹組足族祖租阻卒詛俎鏃菹鉆攥纂躦纘最罪嘴醉咀觜蕞尊遵樽鱒撙作做坐座左昨佐鑿撮怍胙笮阼祚酢")
   "ASCII char in simplifed Chinese characters based on xiaohe double pinyin schema.")
 
-(defcustom ale/pinyin-simplified-char-table 'ale/pinyin-xiaohe-char-table-simp
+(defcustom ale-pinyin-simplified-char-table 'ale-pinyin-xiaohe-char-table-simp
   "ASCII char to simplifed Chinese characters.")
 
-(defcustom ale/pinyin-traditional-char-table 'ale/pinyin-xiaohe-char-table-trad
+(defcustom ale-pinyin-traditional-char-table 'ale-pinyin-xiaohe-char-table-trad
   "ASCII char to tranditional Chinese characters.")
 
-(defvar ale/pinyin--punctuation-alist
+(defvar ale-pinyin--punctuation-alist
   '((?. . "[。.]")
     (?, . "[，,]")
     (?? . "[？?]")
@@ -80,7 +82,7 @@
     (?* . "[×*]")
     (?$ . "[￥$]")))
 
-(defun ale/pinyin-build-regexp-char
+(defun ale-pinyin-build-regexp-char
     (char &optional no-punc-p tranditional-p only-chinese-p mixed-p)
   (let ((diff (- char ?a))
         regexp)
@@ -88,16 +90,16 @@
         (or (and (not no-punc-p)
                  (assoc-default
                   char
-                  ale/pinyin--punctuation-alist))
+                  ale-pinyin--punctuation-alist))
             (regexp-quote (string char)))
       (setq regexp
             (if mixed-p
-                (concat (nth diff (eval ale/pinyin-traditional-char-table))
-                        (nth diff (eval ale/pinyin-simplified-char-table)))
+                (concat (nth diff (eval ale-pinyin-traditional-char-table))
+                        (nth diff (eval ale-pinyin-simplified-char-table)))
               (nth diff
                    (if tranditional-p
-                       (eval ale/pinyin-traditional-char-table)
-                     (eval ale/pinyin-simplified-char-table)))))
+                       (eval ale-pinyin-traditional-char-table)
+                     (eval ale-pinyin-simplified-char-table)))))
       (if only-chinese-p
           (if (string= regexp "")
               regexp
@@ -105,11 +107,10 @@
         (format "[%c%s]" char
                 regexp)))))
 
-(defun ale/pinyin-build-regexp-string
+;;;###autoload
+(defun ale-pinyin-build-regexp-string
     (str &optional no-punc-p tranditional-p only-chinese-p mixed-p)
-  (mapconcat (lambda (c) (ale/pinyin-build-regexp-char
+  (mapconcat (lambda (c) (ale-pinyin-build-regexp-char
                           c no-punc-p tranditional-p only-chinese-p mixed-p))
              str
              ""))
-
-(provide 'ale-pinyin)

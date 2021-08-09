@@ -12,6 +12,7 @@
   "Recover `lsp-deferred' after quit minibuffer."
   (advice-remove 'lsp-deferred #'ignore))
 
+;;;###autoload
 (define-minor-mode ale/lsp-mode
   "Inhibit lsp in minibuffer."
   :init-value nil

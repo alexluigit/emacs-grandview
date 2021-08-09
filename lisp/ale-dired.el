@@ -1,5 +1,6 @@
-;;; ale-dired.el --- -*- lexical-binding: t -*-
+;;; ale-lsp.el --- -*- lexical-binding: t -*-
 
+;;;###autoload
 (defun ale/dired-rename-space-to-underscore ()
   "Rename current or marked files by replacing space to underscore."
   (interactive)
@@ -16,6 +17,7 @@
           (revert-buffer)))
     (user-error "Not in dired/danger")))
 
+;;;###autoload
 (defun ale/dired-file-rename-eol ()
   "Rename current file from end of line."
   (interactive)
