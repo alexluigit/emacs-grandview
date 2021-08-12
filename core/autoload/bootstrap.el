@@ -33,10 +33,13 @@
 
 ;;;###autoload
 (defun ale-bootstrap-profiler ()
-  (let ((time (float-time
-               (time-subtract after-init-time before-init-time)))
-        (docstr "Emacs ready in %.3fs with %d garbage collections."))
-    (run-with-timer 1 nil 'ale-log docstr time gcs-done)))
+  "Init info with packages loaded and init time."
+  (let ((package-count 0)
+        (time (emacs-init-time "%.3f"))
+        (docstr "%d packages loaded in %ss"))
+    (when (boundp 'straight--profile-cache)
+      (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
+    (run-with-timer 1 nil 'ale-log docstr package-count time)))
 
 ;;;###autoload
 (defun ale-bootstrap-build ()
