@@ -854,6 +854,10 @@ this style as the default.  Other options are =string= and =rx=.
 ** Ripgrep (rg.el)
 
 #+begin_src emacs-lisp
+(defun ale/rg-config ()
+  (rg-define-toggle "--context 3" (kbd "C"))
+  (rg-define-toggle "-A 5" (kbd "A")))
+
 (use-package rg
   :config
   ;;; XXX nasty hack for lazy loading
