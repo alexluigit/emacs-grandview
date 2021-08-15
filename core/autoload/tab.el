@@ -39,16 +39,15 @@ questions.  Else use completion to select the tab to switch to."
          (global-set-key (kbd (format "M-%s" i)) 'awesome-tab-select-visible-tab))
 
 (defvar ale-tab-hide-regexp
-  "\\*\\(message\\|straight\\|ibuffer\\|epc\\|async-native\\|compile-Log\\|danger\\|eshell\\|ediff\\|help\\)")
+  '("^\\*\\(message\\|straight\\|ibuffer\\|epc\\|async-native\\)"
+    "^\\*\\(compile-Log\\|danger\\|eshell\\|ediff\\|help\\)"
+    "^ \\*" "^magit.*"))
 
 ;;;###autoload
 (defun ale-tab-hide-tab (x)
-  (let ((name (format "%s" x)))
-    (or
-     (string-prefix-p " *" name)
-     (string-match ale-tab-hide-regexp name)
-     (and (string-prefix-p "magit" name)
-          (not (file-name-extension name))))))
+  (let ((name (format "%s" x))
+        (hide-regex (mapconcat 'concat ale-tab-hide-regexp "\\|")))
+    (string-match hide-regex name)))
 
 ;;;###autoload
 (defun ale-tab-buffer-groups ()
