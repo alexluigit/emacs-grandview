@@ -197,6 +197,506 @@ made for this package and built-in help buffer:
    ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
 #+end_src
 
+* Interface
+** Window position (transpose-frame.el)
+
+The =transpose-frame= library defines a set of commands for shifting the
+layout of Emacs windows.  Rather than me describing how these work, I
+strongly encourage you to read the "Commentary" section in the source
+code.  Do it with =M-x find-library transpose-frame=.
+
+#+begin_src emacs-lisp
+(use-package transpose-frame)
+#+end_src
+
+** Fill column (visual-fill-column.el)
+
+#+begin_src emacs-lisp
+(use-package visual-fill-column)
+#+end_src
+
+** Key bindings hint (which-key.el)
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :init
+  (which-key-mode 1 ))
+#+end_src
+
+** COMMENT Workspaces (tab-bar.el)
+
+The =tab-bar= library, is best understood as the equivalent of "virtual
+desktops", as these are used in most desktop environments or window
+managers. You can, for example, have your current project on tab
+(workspace) 1, your email and news reader on 2, music on 3, and so on.
+Of course, this can also be achieved by using separate frames for each
+of these, though I generally prefer working in a single frame (plus
+you can define a window configuration or frameset in a register).
+
+For me tabs are useful as groups of buffers in a given window
+configuration.  I do not want a persistent bar with buttons that
+introduces extra visual clutter.  Switching to tabs is done through
+completion, specifically =ale/tab-select-tab-dwim=.
+
+All settings I configure here are meant to work in accordance with
+this abstract conception of "tabs are work spaces".  Here are the main
+key chords for =tab-bar= (they will all work properly if you keep the
+mode active):
+
+| Key     | Description                    |
+|---------+--------------------------------|
+| C-x t b | Open a buffer in a new tab     |
+| C-x t d | Open a directory in a new tab  |
+| C-x t f | Open a file in a new tab       |
+| C-x t 0 | Close current tab              |
+| C-x t 1 | Close all other tabs           |
+| C-x t 2 | Open current buffer in new tab |
+
+To keeps the overall aesthetics minimalist, I explicitly disable the
+presentation of the tab bar, even though I still use its functionality.  The
+problem with such a configuration is that we lose context: it is no longer
+possible to determine the number of open tabs nor understand the position of the
+current one in the list.
+
+#+begin_src emacs-lisp
+(use-package tab-bar
+  :config
+  (setq tab-bar-tab-choice "NewTab")
+  (setq tab-bar-new-button-show nil)
+  (setq tab-bar-close-button-show nil)
+  (setq tab-bar-close-last-tab-choice 'tab-bar-mode-disable)
+  (setq tab-bar-close-tab-select 'recent)
+  (setq tab-bar-new-tab-choice t)
+  (setq tab-bar-new-tab-to 'right)
+  (setq tab-bar-position nil)
+  (setq tab-bar-show nil)
+  (setq tab-bar-tab-hints nil)
+  (setq tab-bar-tab-name-function 'tab-bar-tab-name-all)
+  (tab-bar-mode -1)
+  (tab-bar-history-mode -1)
+  :bind
+  ("C-x t h" . ale/tab-tab-bar-toggle)
+  ("C-x t t" . ale/tab-select-tab-dwim))
+#+end_src
+
+* File management
+** Find files (files.el)
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+(setq ale-files-dot-repo "~/Code/alex.files/")
+
+(setq ale-files-dir-alist
+  '(((title . "  Shows")        (path . "/media/HDD/Share/"))
+    ((title . "  Coding")       (path . "/media/HDD/Dev/"))
+    ((title . "  Books")        (path . "/media/HDD/Book/"))
+    ((title . "輸  Videos")       (path . "/media/HDD/Video/"))
+    ((title . "  Movies")       (path . "/media/Cloud/共享/Movies/"))
+    ((title . "  Notes")        (path . "~/Documents/notes/"))
+    ((title . "  Photos")       (path . "~/Pictures/"))
+    ((title . "  Downloads")    (path . "~/Downloads/"))))
+#+end_src
+
+** Dired (dired.el)
+
+=Dired= is a built-in tool that performs file management operations
+inside of an Emacs buffer.  It is simply superb!
+
+#+begin_src emacs-lisp
+(use-package dired
+  :straight (:type built-in)
+  :custom
+  (ale/dired-routes '(("o" "Home"        "~")
+                      ("u" "Emacs cache" "~/.cache/emacs")
+                      ("p" "Code"        "~/Code")
+                      ("n" "Downloads"   "~/Downloads")
+                      ("w" "Wallpaper"   "~/Pictures/wallpaper")
+                      ("m" "Drives"      "/media")
+                      ("t" "Trash"       "~/.local/share/Trash")))
+  :bind
+  (:map dired-mode-map
+        ("/" . dired-goto-file)
+        ("a" . dired-create-empty-file)
+        ("r" . ale/dired-go-routes)
+        ("I" . dired-insert-subdir)
+        ("?" . dired-create-directory)
+        ("^" . dired-find-file-other-window)
+        ("i" . ale/dired-file-rename-eol)
+        ("d" . dired-kill-subdir)
+        ("<" . beginning-of-buffer)
+        (">" . end-of-buffer)
+        ("[" . dired-prev-dirline)
+        ("]" . dired-next-dirline)
+        ("o" . dired-up-directory)
+        ("x" . dired-do-delete)
+        ("." . dired-omit-mode)
+        ("% SPC" . ale/dired-rename-space-to-underscore))
+  :config
+  (setq large-file-warning-threshold 50000000)
+  (setq dired-recursive-copies 'always)
+  (setq dired-recursive-deletes 'always)
+  (setq delete-by-moving-to-trash t)
+  (setq dired-dwim-target t)
+  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
+#+end_src
+
+** Writable dired (wdired.el)
+
+#+begin_src emacs-lisp
+(use-package wdired
+  :config
+  (setq wdired-allow-to-change-permissions t)
+  (setq wdired-create-parent-directories t))
+#+end_src
+
+** Project management (project.el)
+
+#+begin_src emacs-lisp
+(use-package project
+  :straight (:type built-in)
+  :config
+  (setq project-switch-commands
+        '((project-find-file "File" ?\r)
+          (ale-project-find-subdir "Subdir" ?s)
+          (project-find-regexp "Grep" ?g)
+          (project-dired "Dired" ?d)
+          (ale-project-retrieve-tag "Tag switch" ?t)
+          (ale-project-magit-status "Magit" ?m)
+          (ale-project-commit-log "Log VC" ?l)))
+  (setq ale-project-commit-log-limit 25)
+  :bind
+  (:map project-prefix-map
+        ("l" . ale-project-commit-log)
+        ("m" . ale-project-magit-status)
+        ("s" . ale-project-find-subdir)
+        ("t" . ale-project-retrieve-tag)))
+#+end_src
+
+** A better dired interface (danger.el)
+
+This package is inspired the popular file manager =ranger=, I created it
+on the basis of =ranger.el=. Compare to =ranger.el=, this package only
+keeps features I wanted, and some sensible functionalities were added
+as well. See details at: https://github.com/alexluigit/danger.el
+
+#+begin_src emacs-lisp
+(use-package danger
+  :if (daemonp)
+  :after-call pre-command-hook
+  :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
+  :hook
+  (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+  :config
+  (danger-override-dired-mode)
+  (danger-minibuf-preview-mode)
+  (setq danger-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
+                                 ("/media/Cloud/" . ".Trash/files"))))
+#+end_src
+
+** Dired mode highlighting (diredfl.el)
+
+Additional syntax highlighting in dired buffer.
+
+#+begin_src emacs-lisp
+(use-package diredfl
+  :hook (dired-mode . diredfl-mode))
+#+end_src
+
+** Trash (trashed.el)
+
+=trashed= applies the principles of =dired= to the management of the user's
+filesystem trash.  Use =C-h m= to see the docs and keybindings for its
+major mode.
+
+Basically, its interaction model is as follows:
+
+- =m= to mark for some deferred action, such as =D= to delete, =R= to restore.
+- =t= to toggle the status of all items as marked.  Use this without marks
+  to =m= (mark) all items, then call a deferred action to operate on them.
+- =d= to mark for permanent deletion.
+- =r= to mark for restoration.
+- =x= to execute these special marks.
+
+#+begin_src emacs-lisp
+(use-package trashed
+  :config
+  (setq trashed-action-confirmer 'y-or-n-p)
+  (setq trashed-use-header-line t)
+  (setq trashed-sort-key '("Date deleted" . t))
+  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+#+end_src
+
+* Text Editing
+** Parentheses (paren.el / rainbow-delimiters.el)
+
+Configure the mode that highlights matching delimiters or parentheses.
+I consider this of utmost importance when working with languages such as
+elisp.
+
+Summary of what these do:
+
+- Activate the mode upon startup.
+- Show the matching delimiter/parenthesis if on screen, else show
+  nothing.  It is possible to highlight the expression enclosed by the
+  delimiters, by using either =mixed= or =expression=.  The latter always
+  highlights the entire balanced expression, while the former will only
+  do so if the matching delimiter is off screen.
+- =show-paren-when-point-in-periphery= lets you highlight parentheses even
+  if the point is in their vicinity.  This means the beginning or end of
+  the line, with space in between.  I used that for a long while and it
+  server me well.  Now that I have a better understanding of Elisp, I
+  disable it.
+- Do not highlight a match when the point is on the inside of the
+  parenthesis.
+- Use rainbow color for delimiters
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+(use-package paren
+  :config
+  (setq show-paren-style 'parenthesis)
+  (setq show-paren-when-point-in-periphery nil)
+  (setq show-paren-when-point-inside-paren nil)
+  :hook
+  (after-init . show-paren-mode))
+
+(use-package rainbow-delimiters
+  :hook
+  (prog-mode . rainbow-delimiters-mode))
+#+end_src
+
+** Prettify symbols (prog-mode.el)
+
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :straight nil
+  :hook (prog-mode . prettify-symbols-mode)
+  :config
+  (setq-default prettify-symbols-alist
+                '(("lambda" . ?λ)
+                  ("<-" . ?←)
+                  ("->" . ?→)
+                  ("->>" . ?↠)
+                  ("=>" . ?⇒)
+                  ("/=" . ?≠)
+                  ("!=" . ?≠)
+                  ("==" . ?≡)
+                  ("<=" . ?≤)
+                  (">=" . ?≥)
+                  ("=<<" . (?= (Br . Bl) ?≪))
+                  (">>=" . (?≫ (Br . Bl) ?=))
+                  ("<=<" . ?↢)
+                  (">=>" . ?↣)))
+  (setq prettify-symbols-unprettify-at-point 'right-edge))
+#+end_src
+
+** Regular expressions (re-builder.el)
+
+To learn more about regular expressions, read the relevant pages in
+the official manual.  Assuming you have this installed properly on
+your system, run =C-h r i regexp= to get to the starting chapter.
+
+Emacs offers a built-in package for practising regular expressions.
+By default, =re-builder= uses Emacs-style escape notation, in the form
+of double backslashes.  You can switch between the various styles by
+using =C-c TAB= inside of the regexp builder's buffer.  I choose to keep
+this style as the default.  Other options are =string= and =rx=.
+
+#+begin_src emacs-lisp
+(use-package re-builder
+  :config
+  (setq reb-re-syntax 'read))
+#+end_src
+
+** Ripgrep (rg.el)
+
+#+begin_src emacs-lisp
+(defun ale/rg-config ()
+  (rg-define-toggle "--context 3" (kbd "C"))
+  (rg-define-toggle "-A 5" (kbd "A")))
+
+(use-package rg
+  :config
+  ;;; XXX nasty hack for lazy loading
+  (ale/rg-config)
+  :bind
+  (:map ale-files-map
+        ("r" . rg)))
+#+end_src
+
+* Languages
+** .rs
+
+#+begin_src emacs-lisp
+(use-package rust-mode
+  :hook
+  (rust-mode . (lambda () (setq indent-tabs-mode nil))))
+#+end_src
+
+** .lua
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+(use-package lua-mode
+  :config
+  (setq lua-indent-level 2))
+#+end_src
+
+** .yaml
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+(use-package yaml-mode)
+#+end_src
+
+** .vue
+
+#+begin_src emacs-lisp
+(use-package web-mode
+  :config
+  (define-derived-mode ale/vue-mode web-mode "ale/vue"
+    "A major mode derived from web-mode, for editing .vue files with LSP support.")
+  :hook
+  (web-mode . (lambda ()
+                (setq web-mode-markup-indent-offset 2)
+                (setq web-mode-code-indent-offset 2)
+                (setq web-mode-script-padding 0)))
+  :mode ("\\.vue\\'" . ale/vue-mode))
+#+end_src
+
+** .js
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+(use-package js
+  :straight (:type built-in)
+  :config
+  (setq js-indent-level 2))
+#+end_src
+
+** .(sh|zsh)
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+(use-package sh-script
+  :straight (:type built-in)
+  :config
+  (setq sh-basic-offset 2))
+#+end_src
+
+* Language server
+** LSP (lsp-mode.el)
+
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :after-call pre-command-hook
+  :config
+  (ale/lsp-mode)
+  (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
+  (add-to-list 'warning-suppress-types '(lsp-mode))
+  (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
+#+end_src
+
+** Extensions
+
+#+begin_src emacs-lisp
+(use-package lsp-tailwindcss
+  :after (lsp-mode web-mode)
+  :init
+  (setq lsp-tailwindcss-add-on-mode t))
+#+end_src
+
+** UI integrations (lsp-ui.el)
+
+#+begin_src emacs-lisp
+(use-package lsp-ui
+  :after-call lsp-deferred
+  :config
+  (setq lsp-ui-sideline-show-code-actions nil)
+  (setq lsp-ui-doc-position 'bottom)
+  :hook
+  (lsp-mode . lsp-ui-mode))
+#+end_src
+
+* DevTools
+** Colorizer (rainbow-mode.el)
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :hook
+  (prog-mode . rainbow-mode))
+#+end_src
+
+** Formatter (format-all.el)
+
+#+begin_src emacs-lisp
+(use-package format-all
+  :bind ("C-c C-M-f" . format-all-buffer))
+#+end_src
+
+** Syntax checker (flymake.el)
+
+#+begin_src emacs-lisp
+(use-package flymake
+  :straight (:type built-in)
+  :config
+  (setq elisp-flymake-byte-compile-load-path
+        (append elisp-flymake-byte-compile-load-path load-path))
+  (setq flymake-fringe-indicator-position 'left-fringe)
+  (setq flymake-suppress-zero-counters t)
+  (setq flymake-start-on-flymake-mode t)
+  (setq flymake-no-changes-timeout nil)
+  (setq flymake-start-on-save-buffer t)
+  (setq flymake-proc-compilation-prevents-syntax-check t)
+  (setq flymake-wrap-around nil)
+  :bind
+  (:map flymake-mode-map
+  ("C-c ! s" . flymake-start)
+  ("C-c ! d" . flymake-show-diagnostics-buffer)
+  ("C-c ! n" . flymake-goto-next-error)
+  ("C-c ! p" . flymake-goto-prev-error)))
+#+end_src
+
+** Snippet (yasnippet.el)
+
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :after-call self-insert-command
+  :config
+  (yas-global-mode))
+#+end_src
+
+** COMMENT Scratch buffers (scratch.el)
+This package will produce a buffer that matches the major mode of the
+one you are currently in.  Use it with =M-x scratch=.  Doing that with a
+prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
+super effective!
+
+The =ale/scratch-buffer-setup= simply adds some text in the buffer and
+renames it appropriately for the sake of easier discovery.  I got the
+idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
+
+#+begin_src emacs-lisp
+(use-package scratch
+  :config
+  (defun ale/scratch-buffer-setup ()
+    "Add contents to `scratch' buffer and name it accordingly.
+If region is active, add its contents to the new buffer."
+    (let* ((mode major-mode)
+           (string (format "Scratch buffer for: %s\n\n" mode))
+           (region (with-current-buffer (current-buffer)
+                     (if (region-active-p)
+                         (buffer-substring-no-properties
+                          (region-beginning)
+                          (region-end)))
+                     ""))
+           (text (concat string region)))
+      (when scratch-buffer
+        (save-excursion
+          (insert text)
+          (goto-char (point-min))
+          (comment-region (point-at-bol) (point-at-eol)))
+        (forward-line 2))
+      (rename-buffer (format "*Scratch for %s*" mode) t)))
+  (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
+  (define-key global-map (kbd "C-c s") #'scratch))
+#+end_src
+
 * Eshell
 ** Multi-eshell
 
@@ -393,181 +893,6 @@ sure this is a good approach."
 (use-package forge)
 #+end_src
 
-* Languages
-** .rs
-
-#+begin_src emacs-lisp
-(use-package rust-mode
-  :hook
-  (rust-mode . (lambda () (setq indent-tabs-mode nil))))
-#+end_src
-
-** .lua
-
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
-(use-package lua-mode
-  :config
-  (setq lua-indent-level 2))
-#+end_src
-
-** .yaml
-
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
-(use-package yaml-mode)
-#+end_src
-
-** .vue
-
-#+begin_src emacs-lisp
-(use-package web-mode
-  :config
-  (define-derived-mode ale/vue-mode web-mode "ale/vue"
-    "A major mode derived from web-mode, for editing .vue files with LSP support.")
-  :hook
-  (web-mode . (lambda ()
-                (setq web-mode-markup-indent-offset 2)
-                (setq web-mode-code-indent-offset 2)
-                (setq web-mode-script-padding 0)))
-  :mode ("\\.vue\\'" . ale/vue-mode))
-#+end_src
-
-** .js
-
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
-(use-package js
-  :straight (:type built-in)
-  :config
-  (setq js-indent-level 2))
-#+end_src
-
-** .(sh|zsh)
-
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
-(use-package sh-script
-  :straight (:type built-in)
-  :config
-  (setq sh-basic-offset 2))
-#+end_src
-
-* Language server
-** LSP (lsp-mode.el)
-
-#+begin_src emacs-lisp
-(use-package lsp-mode
-  :after-call pre-command-hook
-  :config
-  (ale/lsp-mode)
-  (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
-  (add-to-list 'warning-suppress-types '(lsp-mode))
-  (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
-#+end_src
-
-** Extensions
-
-#+begin_src emacs-lisp
-(use-package lsp-tailwindcss
-  :after (lsp-mode web-mode)
-  :init
-  (setq lsp-tailwindcss-add-on-mode t))
-#+end_src
-
-** UI integrations (lsp-ui.el)
-
-#+begin_src emacs-lisp
-(use-package lsp-ui
-  :after-call lsp-deferred
-  :config
-  (setq lsp-ui-sideline-show-code-actions nil)
-  (setq lsp-ui-doc-position 'bottom)
-  :hook
-  (lsp-mode . lsp-ui-mode))
-#+end_src
-
-* DevTools
-** Colorizer (rainbow-mode.el)
-
-#+begin_src emacs-lisp
-(use-package rainbow-mode
-  :hook
-  (prog-mode . rainbow-mode))
-#+end_src
-
-** Formatter (format-all.el)
-
-#+begin_src emacs-lisp
-(use-package format-all
-  :bind ("C-c C-M-f" . format-all-buffer))
-#+end_src
-
-** Syntax checker (flymake.el)
-
-#+begin_src emacs-lisp
-(use-package flymake
-  :straight (:type built-in)
-  :config
-  (setq elisp-flymake-byte-compile-load-path
-        (append elisp-flymake-byte-compile-load-path load-path))
-  (setq flymake-fringe-indicator-position 'left-fringe)
-  (setq flymake-suppress-zero-counters t)
-  (setq flymake-start-on-flymake-mode t)
-  (setq flymake-no-changes-timeout nil)
-  (setq flymake-start-on-save-buffer t)
-  (setq flymake-proc-compilation-prevents-syntax-check t)
-  (setq flymake-wrap-around nil)
-  :bind
-  (:map flymake-mode-map
-  ("C-c ! s" . flymake-start)
-  ("C-c ! d" . flymake-show-diagnostics-buffer)
-  ("C-c ! n" . flymake-goto-next-error)
-  ("C-c ! p" . flymake-goto-prev-error)))
-#+end_src
-
-** Snippet (yasnippet.el)
-
-#+begin_src emacs-lisp
-(use-package yasnippet
-  :after-call self-insert-command
-  :config
-  (yas-global-mode))
-#+end_src
-
-** COMMENT Scratch buffers (scratch.el)
-This package will produce a buffer that matches the major mode of the
-one you are currently in.  Use it with =M-x scratch=.  Doing that with a
-prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
-super effective!
-
-The =ale/scratch-buffer-setup= simply adds some text in the buffer and
-renames it appropriately for the sake of easier discovery.  I got the
-idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
-
-#+begin_src emacs-lisp
-(use-package scratch
-  :config
-  (defun ale/scratch-buffer-setup ()
-    "Add contents to `scratch' buffer and name it accordingly.
-If region is active, add its contents to the new buffer."
-    (let* ((mode major-mode)
-           (string (format "Scratch buffer for: %s\n\n" mode))
-           (region (with-current-buffer (current-buffer)
-                     (if (region-active-p)
-                         (buffer-substring-no-properties
-                          (region-beginning)
-                          (region-end)))
-                     ""))
-           (text (concat string region)))
-      (when scratch-buffer
-        (save-excursion
-          (insert text)
-          (goto-char (point-min))
-          (comment-region (point-at-bol) (point-at-eol)))
-        (forward-line 2))
-      (rename-buffer (format "*Scratch for %s*" mode) t)))
-  (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
-  (define-key global-map (kbd "C-c s") #'scratch))
-#+end_src
-
 * Org mode
 ** Org (org.el)
 
@@ -690,321 +1015,6 @@ contains several subsections as follows:
   (org-roam-setup))
 #+end_src
 
-* Interface
-** Window position (transpose-frame.el)
-
-The =transpose-frame= library defines a set of commands for shifting the
-layout of Emacs windows.  Rather than me describing how these work, I
-strongly encourage you to read the "Commentary" section in the source
-code.  Do it with =M-x find-library transpose-frame=.
-
-#+begin_src emacs-lisp
-(use-package transpose-frame)
-#+end_src
-
-** Fill column (visual-fill-column.el)
-
-#+begin_src emacs-lisp
-(use-package visual-fill-column)
-#+end_src
-
-** Key bindings hint (which-key.el)
-
-#+begin_src emacs-lisp
-(use-package which-key
-  :init
-  (which-key-mode 1 ))
-#+end_src
-
-** COMMENT Workspaces (tab-bar.el)
-
-The =tab-bar= library, is best understood as the equivalent of "virtual
-desktops", as these are used in most desktop environments or window
-managers. You can, for example, have your current project on tab
-(workspace) 1, your email and news reader on 2, music on 3, and so on.
-Of course, this can also be achieved by using separate frames for each
-of these, though I generally prefer working in a single frame (plus
-you can define a window configuration or frameset in a register).
-
-For me tabs are useful as groups of buffers in a given window
-configuration.  I do not want a persistent bar with buttons that
-introduces extra visual clutter.  Switching to tabs is done through
-completion, specifically =ale/tab-select-tab-dwim=.
-
-All settings I configure here are meant to work in accordance with
-this abstract conception of "tabs are work spaces".  Here are the main
-key chords for =tab-bar= (they will all work properly if you keep the
-mode active):
-
-| Key     | Description                    |
-|---------+--------------------------------|
-| C-x t b | Open a buffer in a new tab     |
-| C-x t d | Open a directory in a new tab  |
-| C-x t f | Open a file in a new tab       |
-| C-x t 0 | Close current tab              |
-| C-x t 1 | Close all other tabs           |
-| C-x t 2 | Open current buffer in new tab |
-
-To keeps the overall aesthetics minimalist, I explicitly disable the
-presentation of the tab bar, even though I still use its functionality.  The
-problem with such a configuration is that we lose context: it is no longer
-possible to determine the number of open tabs nor understand the position of the
-current one in the list.
-
-#+begin_src emacs-lisp
-(use-package tab-bar
-  :config
-  (setq tab-bar-tab-choice "NewTab")
-  (setq tab-bar-new-button-show nil)
-  (setq tab-bar-close-button-show nil)
-  (setq tab-bar-close-last-tab-choice 'tab-bar-mode-disable)
-  (setq tab-bar-close-tab-select 'recent)
-  (setq tab-bar-new-tab-choice t)
-  (setq tab-bar-new-tab-to 'right)
-  (setq tab-bar-position nil)
-  (setq tab-bar-show nil)
-  (setq tab-bar-tab-hints nil)
-  (setq tab-bar-tab-name-function 'tab-bar-tab-name-all)
-  (tab-bar-mode -1)
-  (tab-bar-history-mode -1)
-  :bind
-  ("C-x t h" . ale/tab-tab-bar-toggle)
-  ("C-x t t" . ale/tab-select-tab-dwim))
-#+end_src
-
-* Text Editing
-** Parentheses (paren.el / rainbow-delimiters.el)
-
-Configure the mode that highlights matching delimiters or parentheses.
-I consider this of utmost importance when working with languages such as
-elisp.
-
-Summary of what these do:
-
-- Activate the mode upon startup.
-- Show the matching delimiter/parenthesis if on screen, else show
-  nothing.  It is possible to highlight the expression enclosed by the
-  delimiters, by using either =mixed= or =expression=.  The latter always
-  highlights the entire balanced expression, while the former will only
-  do so if the matching delimiter is off screen.
-- =show-paren-when-point-in-periphery= lets you highlight parentheses even
-  if the point is in their vicinity.  This means the beginning or end of
-  the line, with space in between.  I used that for a long while and it
-  server me well.  Now that I have a better understanding of Elisp, I
-  disable it.
-- Do not highlight a match when the point is on the inside of the
-  parenthesis.
-- Use rainbow color for delimiters
-
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
-(use-package paren
-  :config
-  (setq show-paren-style 'parenthesis)
-  (setq show-paren-when-point-in-periphery nil)
-  (setq show-paren-when-point-inside-paren nil)
-  :hook
-  (after-init . show-paren-mode))
-
-(use-package rainbow-delimiters
-  :hook
-  (prog-mode . rainbow-delimiters-mode))
-#+end_src
-
-** Prettify symbols (prog-mode.el)
-
-#+begin_src emacs-lisp
-(use-package prog-mode
-  :straight nil
-  :hook (prog-mode . prettify-symbols-mode)
-  :config
-  (setq-default prettify-symbols-alist
-                '(("lambda" . ?λ)
-                  ("<-" . ?←)
-                  ("->" . ?→)
-                  ("->>" . ?↠)
-                  ("=>" . ?⇒)
-                  ("/=" . ?≠)
-                  ("!=" . ?≠)
-                  ("==" . ?≡)
-                  ("<=" . ?≤)
-                  (">=" . ?≥)
-                  ("=<<" . (?= (Br . Bl) ?≪))
-                  (">>=" . (?≫ (Br . Bl) ?=))
-                  ("<=<" . ?↢)
-                  (">=>" . ?↣)))
-  (setq prettify-symbols-unprettify-at-point 'right-edge))
-#+end_src
-
-** Regular expressions (re-builder.el)
-
-To learn more about regular expressions, read the relevant pages in
-the official manual.  Assuming you have this installed properly on
-your system, run =C-h r i regexp= to get to the starting chapter.
-
-Emacs offers a built-in package for practising regular expressions.
-By default, =re-builder= uses Emacs-style escape notation, in the form
-of double backslashes.  You can switch between the various styles by
-using =C-c TAB= inside of the regexp builder's buffer.  I choose to keep
-this style as the default.  Other options are =string= and =rx=.
-
-#+begin_src emacs-lisp
-(use-package re-builder
-  :config
-  (setq reb-re-syntax 'read))
-#+end_src
-
-** Ripgrep (rg.el)
-
-#+begin_src emacs-lisp
-(defun ale/rg-config ()
-  (rg-define-toggle "--context 3" (kbd "C"))
-  (rg-define-toggle "-A 5" (kbd "A")))
-
-(use-package rg
-  :config
-  ;;; XXX nasty hack for lazy loading
-  (ale/rg-config)
-  :bind
-  (:map ale-files-map
-        ("r" . rg)))
-#+end_src
-
-* File management
-** Dired (dired.el)
-
-=Dired= is a built-in tool that performs file management operations
-inside of an Emacs buffer.  It is simply superb!
-
-#+begin_src emacs-lisp
-(use-package dired
-  :straight (:type built-in)
-  :bind
-  (:map dired-mode-map
-        ("/" . dired-goto-file)
-        ("a" . dired-create-empty-file)
-        ("I" . dired-insert-subdir)
-        ("?" . dired-create-directory)
-        ("^" . dired-find-file-other-window)
-        ("i" . ale/dired-file-rename-eol)
-        ("d" . dired-kill-subdir)
-        ("<" . beginning-of-buffer)
-        (">" . end-of-buffer)
-        ("[" . dired-prev-dirline)
-        ("]" . dired-next-dirline)
-        ("o" . dired-up-directory)
-        ("x" . dired-do-delete)
-        ("." . dired-omit-mode)
-        ("% SPC" . ale/dired-rename-space-to-underscore))
-  :config
-  (setq large-file-warning-threshold 50000000)
-  (setq dired-recursive-copies 'always)
-  (setq dired-recursive-deletes 'always)
-  (setq delete-by-moving-to-trash t)
-  (setq dired-dwim-target t)
-  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
-#+end_src
-
-** Writable dired (wdired.el)
-
-#+begin_src emacs-lisp
-(use-package wdired
-  :config
-  (setq wdired-allow-to-change-permissions t)
-  (setq wdired-create-parent-directories t))
-#+end_src
-
-** Project management (project.el)
-
-#+begin_src emacs-lisp
-(use-package project
-  :straight (:type built-in)
-  :config
-  (setq project-switch-commands
-        '((project-find-file "File" ?\r)
-          (ale-project-find-subdir "Subdir" ?s)
-          (project-find-regexp "Grep" ?g)
-          (project-dired "Dired" ?d)
-          (ale-project-retrieve-tag "Tag switch" ?t)
-          (ale-project-magit-status "Magit" ?m)
-          (ale-project-commit-log "Log VC" ?l)))
-  (setq ale-project-commit-log-limit 25)
-  :bind
-  (:map project-prefix-map
-        ("l" . ale-project-commit-log)
-        ("m" . ale-project-magit-status)
-        ("s" . ale-project-find-subdir)
-        ("t" . ale-project-retrieve-tag)))
-#+end_src
-
-** A better dired interface (danger.el)
-
-This package is inspired the popular file manager =ranger=, I created it
-on the basis of =ranger.el=. Compare to =ranger.el=, this package only
-keeps features I wanted, and some sensible functionalities were added
-as well. See details at: https://github.com/alexluigit/danger.el
-
-#+begin_src emacs-lisp
-(use-package danger
-  :if (daemonp)
-  :after-call pre-command-hook
-  :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
-  :hook
-  (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
-  :custom
-  (danger-routes '(("o" "Home"        "~")
-                   ("u" "Emacs cache" "~/.cache/emacs")
-                   ("p" "Code"        "~/Code")
-                   ("n" "Downloads"   "~/Downloads")
-                   ("w" "Wallpaper"   "~/Pictures/wallpaper")
-                   ("m" "Drives"      "/media")
-                   ("t" "Trash"       "~/.local/share/Trash")))
-  :config
-  (danger-override-dired-mode)
-  (danger-minibuf-preview-mode)
-  (setq danger-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
-                                 ("/media/Cloud/" . ".Trash/files"))))
-#+end_src
-
-** Dired mode highlighting (diredfl.el)
-
-Additional syntax highlighting in dired buffer.
-
-#+begin_src emacs-lisp
-(use-package diredfl
-  :hook (dired-mode . diredfl-mode))
-#+end_src
-
-** Trash (trashed.el)
-
-=trashed= applies the principles of =dired= to the management of the user's
-filesystem trash.  Use =C-h m= to see the docs and keybindings for its
-major mode.
-
-Basically, its interaction model is as follows:
-
-- =m= to mark for some deferred action, such as =D= to delete, =R= to restore.
-- =t= to toggle the status of all items as marked.  Use this without marks
-  to =m= (mark) all items, then call a deferred action to operate on them.
-- =d= to mark for permanent deletion.
-- =r= to mark for restoration.
-- =x= to execute these special marks.
-
-#+begin_src emacs-lisp
-(use-package trashed
-  :config
-  (setq trashed-action-confirmer 'y-or-n-p)
-  (setq trashed-use-header-line t)
-  (setq trashed-sort-key '("Date deleted" . t))
-  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
-#+end_src
-
-
-#+begin_src emacs-lisp
-(use-package man
-  :straight (:type built-in)
-  :config
-  (setq Man-notify-method 'newframe))
-#+end_src
 * Media
 ** Video url (ale-murl.el)
 
