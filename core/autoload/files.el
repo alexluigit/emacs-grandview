@@ -6,16 +6,13 @@
 (defcustom ale-files-additional-mime '((".ape" . "audio/ape") (".rmvb" . "video/rm") (".f4v" . "video/f4v"))
   "doc")
 
+(defvar ale-files-dot-repo nil
+  "doc")
+
 (defcustom ale-files-dir-alist
-  '(((title . "  System Files") (path . "/home/alex/Code/alex.files/"))
-    ((title . "  Shows")        (path . "/media/HDD/Share/"))
-    ((title . "  Coding")       (path . "/media/HDD/Dev/"))
-    ((title . "  Books")        (path . "/media/HDD/Book/"))
-    ((title . "  Notes")        (path . "/home/alex/Documents/notes/"))
-    ((title . "  Photos")       (path . "/home/alex/Pictures/"))
-    ((title . "  Videos")       (path . "/home/alex/Video/"))
-    ((title . "  Movies")       (path . "/media/Cloud/共享/Movies/"))
-    ((title . "  Downloads")    (path . "/home/alex/Downloads/")))
+  '(((title . "  Photos")       (path . "~/Pictures/"))
+    ((title . "  Videos")       (path . "~/Video/"))
+    ((title . "  Downloads")    (path . "~/Downloads/")))
   "doc")
 
 (defcustom ale-files-cmd-alist
@@ -61,17 +58,16 @@
 (advice-add #'find-file-other-window :around #'ale-files-find-file-advisor)
 
 ;;;###autoload
-(defun ale-files-in-user-dirs (&optional skip-menu)
+(defun ale-files-in-user-dirs ()
   "Open files in directories defined in `ale-files-dir-alist'."
-  (interactive (list (if current-prefix-arg "  System Files" nil)))
-  (when skip-menu (setq skip-menu "  System Files"))
+  (interactive)
   (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ale-files-dir-alist))
          (get-item (lambda (s field) (cl-dolist (i ale-files-dir-alist)
                                  (when (string= s (cdr (assq 'title i)))
                                    (cl-return (cdr (assq field i)))))))
          (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
          (cands (ale-minibuffer-append-metadata annotation cands-raw))
-         (title (or skip-menu (completing-read "Open: " cands)))
+         (title (completing-read "Open: " cands))
          (path (funcall get-item title 'path)))
     (ale-minibuffer--files-in-directory path (concat title ": "))))
 
@@ -79,7 +75,9 @@
 (defun ale-files-dotfiles ()
   "Open files in dotfiles repo."
   (interactive)
-  (ale-files-in-user-dirs t))
+  (unless ale-files-dot-repo
+    (user-error "`ale-files-dot-repo' is undefined"))
+  (ale-minibuffer--files-in-directory ale-files-dot-repo " Dotfiles: "))
 
 ;;;###autoload
 (defun ale-files-edit-emacs-config ()
