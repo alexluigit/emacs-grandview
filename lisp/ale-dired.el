@@ -1,4 +1,18 @@
-;;; ale-lsp.el --- -*- lexical-binding: t -*-
+;;; ale-dired.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale/dired-jump () nil)
+
+(defcustom ale/dired-routes '()
+  "doc"
+  :group 'files :type 'list
+  :set
+  (lambda (k v)
+    `(setq ,k v)
+    (eval `(transient-define-prefix ale/dired-jump ()
+             ["Go to Directory: "
+              ,@(cl-loop for (key desc path) in v
+                         collect (list key desc `(lambda () (interactive) (find-file ,path))))]))))
 
 ;;;###autoload
 (defun ale/dired-rename-space-to-underscore ()

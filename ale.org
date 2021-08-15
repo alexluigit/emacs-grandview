@@ -283,17 +283,22 @@ current one in the list.
 ** Find files (files.el)
 
 #+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
-(setq ale-files-dot-repo "~/Code/alex.files/")
-
-(setq ale-files-dir-alist
-  '(((title . "  Shows")        (path . "/media/HDD/Share/"))
-    ((title . "  Coding")       (path . "/media/HDD/Dev/"))
-    ((title . "  Books")        (path . "/media/HDD/Book/"))
-    ((title . "輸  Videos")       (path . "/media/HDD/Video/"))
-    ((title . "  Movies")       (path . "/media/Cloud/共享/Movies/"))
-    ((title . "  Notes")        (path . "~/Documents/notes/"))
-    ((title . "  Photos")       (path . "~/Pictures/"))
-    ((title . "  Downloads")    (path . "~/Downloads/"))))
+(use-package files
+  :straight (:type built-in)
+  :bind
+  (:map ale-files-map
+        ("r" . ale/dired-jump))
+  :config
+  (setq ale-files-dot-repo "~/Code/alex.files/")
+  (setq ale-files-dir-alist
+        '(((title . "  Shows")        (path . "/media/HDD/Share/"))
+          ((title . "  Coding")       (path . "/media/HDD/Dev/"))
+          ((title . "  Books")        (path . "/media/HDD/Book/"))
+          ((title . "輸  Videos")       (path . "/media/HDD/Video/"))
+          ((title . "  Movies")       (path . "/media/Cloud/共享/Movies/"))
+          ((title . "  Notes")        (path . "~/Documents/notes/"))
+          ((title . "  Photos")       (path . "~/Pictures/"))
+          ((title . "  Downloads")    (path . "~/Downloads/")))))
 #+end_src
 
 ** Dired (dired.el)
@@ -316,7 +321,7 @@ inside of an Emacs buffer.  It is simply superb!
   (:map dired-mode-map
         ("/" . dired-goto-file)
         ("a" . dired-create-empty-file)
-        ("r" . ale/dired-go-routes)
+        ("r" . ale/dired-jump)
         ("I" . dired-insert-subdir)
         ("?" . dired-create-directory)
         ("^" . dired-find-file-other-window)
@@ -518,7 +523,7 @@ this style as the default.  Other options are =string= and =rx=.
   ;;; XXX nasty hack for lazy loading
   (ale/rg-config)
   :bind
-  (:map ale-files-map
+  (:map ale-utils-map
         ("r" . rg)))
 #+end_src
 
