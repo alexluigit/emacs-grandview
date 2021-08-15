@@ -38,7 +38,10 @@
 (use-package vertico
   :after-call pre-command-hook
   :config
-  (set-face-background 'vertico-current (face-attribute 'lazy-highlight :background nil t))
+  (set-face-attribute 'vertico-current nil
+                      :background
+                      (face-attribute 'lazy-highlight :background nil t)
+                      :weight 'semi-bold)
   (vertico-mode 1))
 
 ;; This package provides an `orderless' completion style that divides
