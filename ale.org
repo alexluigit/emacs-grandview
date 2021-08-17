@@ -973,6 +973,29 @@ contains several subsections as follows:
  ("m" . ale/murl-open))
 #+end_src
 
+** Pdf tools
+
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :after-call find-file-hook
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-page)
+  ;; automatically annotate highlights
+  (setq pdf-annot-activate-created-annotations t)
+  ;; turn off cua so copy works
+  (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0)))
+  ;; more fine-grained zooming
+  (setq pdf-view-resize-factor 1.1)
+  ;; keyboard shortcuts
+  :bind
+  (:map pdf-view-mode-map
+  ("C-s" . isearch-forward)
+  ("h" . pdf-annot-add-highlight-markup-annotation)
+  ("t" . 'pdf-annot-add-text-annotation)
+  ("D" . 'pdf-annot-delete)))
+#+end_src
+
 ** COMMENT Music Player (netease-cloud-music.el)
 
 #+begin_src emacs-lisp
