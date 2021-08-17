@@ -384,7 +384,6 @@ as well. See details at: https://github.com/alexluigit/danger.el
 
 #+begin_src emacs-lisp
 (use-package danger
-  :if (daemonp)
   :after-call pre-command-hook
   :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
   :hook
