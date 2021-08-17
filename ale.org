@@ -1125,12 +1125,18 @@ control over the buffer list and is more powerful overall.
 
 #+begin_src emacs-lisp
 (use-package eaf
+  :after-call pre-command-hook
   :straight
-  (:host github :repo "manateelazycat/emacs-application-framework" :files ("*")
-         :pre-build (("sed" "-i" "s/sudo/doas/g" "./install-eaf.sh") ("./install-eaf.sh") ("git" "checkout" ".")))
+  (eaf :host github :repo "emacs-eaf/emacs-application-framework" :files ("*")
+       :pre-build (("sed" "-i" "s/sudo/doas/g" "./install-eaf.py")
+                   ("sed" "-i" "s/yay/paru/g" "./install-eaf.py")
+                   ("alacritty" "-e" "./install-eaf.py")
+                   ("git" "checkout" ".")))
   :init
-  (use-package epc)
-  (use-package ctable)
-  (use-package deferred)
-  (use-package s))
+  (setq ale/browser-load-path (concat (straight--build-dir) "eaf/app/browser")))
+
+(use-package eaf-browser
+  :after-call pre-command-hook
+  :straight nil
+  :load-path ale/browser-load-path)
 #+end_src
