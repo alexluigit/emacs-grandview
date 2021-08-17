@@ -78,6 +78,52 @@
   :custom
   (awesome-tab-ace-keys '(?a ?r ?s ?t ?n ?e ?i ?o ?m)))
 
+;; The `tab-bar' library, is best understood as the equivalent of "virtual
+;; desktops", as these are used in most desktop environments or window
+;; managers. You can, for example, have your current project on tab
+;; (workspace) 1, your email and news reader on 2, music on 3, and so on.
+;; Of course, this can also be achieved by using separate frames for each
+;; of these, though I generally prefer working in a single frame (plus
+;; you can define a window configuration or frameset in a register).
+
+;; For me tabs are useful as groups of buffers in a given window
+;; configuration.  I do not want a persistent bar with buttons that
+;; introduces extra visual clutter.  Switching to tabs is done through
+;; completion, specifically `ale/tab-select-tab-dwim'.
+
+;; All settings I configure here are meant to work in accordance with
+;; this abstract conception of "tabs are work spaces".  Here are the main
+;; key chords for tab-bar (they will all work properly if you keep the
+;; mode active):
+
+;; | Key     | Description                    |
+;; |---------+--------------------------------|
+;; | C-x t b | Open a buffer in a new tab     |
+;; | C-x t d | Open a directory in a new tab  |
+;; | C-x t f | Open a file in a new tab       |
+;; | C-x t 0 | Close current tab              |
+;; | C-x t 1 | Close all other tabs           |
+;; | C-x t 2 | Open current buffer in new tab |
+(use-package tab-bar
+  :config
+  (setq tab-bar-tab-choice "NewTab")
+  (setq tab-bar-new-button-show nil)
+  (setq tab-bar-close-button-show nil)
+  (setq tab-bar-close-last-tab-choice 'tab-bar-mode-disable)
+  (setq tab-bar-close-tab-select 'recent)
+  (setq tab-bar-new-tab-choice t)
+  (setq tab-bar-new-tab-to 'right)
+  (setq tab-bar-position nil)
+  (setq tab-bar-show nil)
+  (setq tab-bar-tab-hints nil)
+  (setq tab-bar-tab-name-function 'tab-bar-tab-name-all)
+  (tab-bar-mode -1)
+  (tab-bar-history-mode -1)
+  :bind
+  (:map tab-prefix-map
+        ("h" . ale-tab-tab-bar-toggle)
+        ("s" . ale-tab-select-tab-dwim)))
+
 (unless (or (daemonp) window-system)
   (advice-add 'meow--update-cursor :after #'ale-set-cursor))
 
