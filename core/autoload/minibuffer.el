@@ -39,6 +39,7 @@ the _value_ of the choice, not the selected choice."
          (files (ale-minibuffer-append-metadata 'file files-raw))
          (file (completing-read (or prompt "Open file: ") files)))
     (find-file (concat dir file))))
+
 (autoload 'consult-grep "consult")
 (autoload 'consult-line "consult")
 (autoload 'consult-imenu "consult-imenu")

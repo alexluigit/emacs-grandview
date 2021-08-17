@@ -15,9 +15,9 @@ If no other tab exists, create one and switch to it.  If there is
 one other tab (so two in total) switch to it without further
 questions.  Else use completion to select the tab to switch to."
     (interactive)
-    (let ((tabs (ale/tab--tab-bar-tabs)))
+    (let ((tabs (ale-tab--tab-bar-tabs)))
       (cond ((null tabs)
-             (setq tab-bar-show t) (tab-new))
+             (tab-new))
             ((eq (length tabs) 1)
              (tab-next))
             (t

@@ -221,7 +221,7 @@ code.  Do it with =M-x find-library transpose-frame=.
   (which-key-mode 1 ))
 #+end_src
 
-** COMMENT Workspaces (tab-bar.el)
+** Workspaces (tab-bar.el)
 
 The =tab-bar= library, is best understood as the equivalent of "virtual
 desktops", as these are used in most desktop environments or window
@@ -273,8 +273,9 @@ current one in the list.
   (tab-bar-mode -1)
   (tab-bar-history-mode -1)
   :bind
-  ("C-x t h" . ale/tab-tab-bar-toggle)
-  ("C-x t t" . ale/tab-select-tab-dwim))
+  (:map tab-prefix-map
+        ("h" . ale/tab-tab-bar-toggle)
+        ("t" . ale/tab-select-tab-dwim)))
 #+end_src
 
 * File management
