@@ -665,6 +665,12 @@ this style as the default.  Other options are =string= and =rx=.
   (yas-global-mode))
 #+end_src
 
+** COMMENT REST client (restclient.el)
+
+#+begin_src emacs-lisp
+(use-package restclient)
+#+end_src
+
 ** COMMENT Scratch buffers (scratch.el)
 This package will produce a buffer that matches the major mode of the
 one you are currently in.  Use it with =M-x scratch=.  Doing that with a
