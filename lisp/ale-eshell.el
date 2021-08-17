@@ -172,20 +172,4 @@ Create new one if no eshell buffer exists."
     (erase-buffer)
     (eshell-send-input nil nil t)))
 
-(defun ale/eshell-pacman-install ()
-  "Choose a package to install using paru."
-  (interactive)
-  (let* ((p-list-raw (ale/f-read "/home/alex/.local/share/paru/pkglist"))
-         (p-list (split-string p-list-raw "\n" t))
-         (res (completing-read "Install: " p-list))
-         (emacs-p (if (string= res "emacs-git") "; esrc" "")))
-    (insert (concat "paru " res emacs-p))))
-
-(defun ale/eshell-pacman-uninstall ()
-  "Choose a package to uninstall using paru."
-  (let* ((p-list-raw (shell-command-to-string "pacman -Qeq"))
-         (p-list (split-string p-list-raw "\n" t))
-         (res (completing-read "Uninstall: " p-list)))
-    (insert (concat "paru -Rns " res))))
-
 (provide 'ale-eshell)
