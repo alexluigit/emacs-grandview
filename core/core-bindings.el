@@ -8,18 +8,22 @@
 (defalias 'project-map project-prefix-map)
 (defalias 'tab-map tab-prefix-map)
 (defalias 'register-map ctl-x-r-map)
+(autoload 'awesome-tab-ace-jump "awesome-tab")
 
 (use-package meow
   :after-call emacs-startup-hook
   :hook (emacs-startup . meow-global-mode)
   :bind
-  (
+  (("/" . consult-line)
    ("<escape>" . ale-escape)
-   ("M-SPC" . ale-monocle) ; replaced `just-one-space'
-   ("M-%" . anzu-isearch-query-replace)
+   ("C-;" . exchange-point-and-mark)
    ("<C-i>" . better-jumper-jump-forward)
    ("C-o" . better-jumper-jump-backward)
    ("C-x C-d" . ale-ispell-word)
+   ("M-i" . awesome-tab-ace-jump)
+   ("M-o" . ace-select-window)
+   ("M-SPC" . ale-monocle) ; replaced `just-one-space'
+   ("M-%" . anzu-isearch-query-replace)
    :map minibuffer-local-map
    ("S-<return>" . ale-files-other-window)
    ("/" . (lambda () (interactive) (self-insert-command 1)))
@@ -42,13 +46,12 @@
    ("m" . ale-show-messages)
    ("<backspace>" . ale-erase-messages)
    :map ale-utils-map
-   ;; ("d" . ale-insert-date)
+   ("d" . ale-insert-date)
    ("t" . ale-frame-adjust-transparency)
    ("=" . count-words)
    :map meow-insert-state-keymap
    ("/" . (lambda () (interactive) (self-insert-command 1)))
    ("C-u" . ale-kill-whole-line)
-   ("C-;" . meow-reverse)
    ("<C-i>" . forward-char)
    ("C-o" . backward-char)
    :map meow-motion-state-keymap
@@ -64,6 +67,8 @@
    ("7" . project-map)
    ("8" . insert-char)
    ("9" . tab-map)
+   ("[" . awesome-tab-backward-tab)
+   ("]" . awesome-tab-forward-tab)
    ("SPC" . switch-to-buffer)
    ("?" . describe-keymap)
    ("/" . describe-symbol)
@@ -92,7 +97,7 @@
    ("9" . meow-digit-argument)
    ("%" . ale-match-paren)
    ("`" . negative-argument)
-   (";" . meow-reverse)
+   (";" . exchange-point-and-mark)
    ("," . meow-inner-of-thing)
    ("." . meow-bounds-of-thing)
    ("<" . beginning-of-buffer)
@@ -107,19 +112,20 @@
    ("\\" . meow-pop-search)
    ("^" . meow-last-buffer)
    ("<backspace>" . meow-beginning-of-thing)
-   ("a" . backward-char)
+   ("a" . ale-insert)
    ("A" . ale-insert-at-first-non-whitespace)
    ("b" . meow-back-word)
    ("B" . meow-back-symbol)
    ("c" . meow-change)
    ("C" . meow-change-save)
    ("d" . meow-delete)
-   ("e" . forward-char)
+   ("e" . meow-line)
+   ("E" . ale-inner-line)
    ("f" . meow-next-word)
    ("F" . meow-next-symbol)
    ("g" . ale-files-update)
    ("h" . embrace-commander)
-   ("i" . ale-insert)
+   ("i" . forward-char)
    ("j" . ale-top-join-line)
    ("J" . meow-join)
    ("k" . meow-kill)
@@ -129,17 +135,16 @@
    ("M" . meow-mark-symbol)
    ("n" . meow-next)
    ("N" . meow-next-expand)
-   ("o" . meow-open-below)
-   ("O" . meow-open-above)
+   ("o" . backward-char)
    ("p" . meow-prev)
    ("P" . meow-prev-expand)
    ("q" . meow-quit)
    ("r" . meow-search)
-   ("s" . meow-line)
-   ("S" . ale-inner-line)
+   ("s" . meow-open-below)
+   ("S" . meow-open-above)
    ("t" . avy-goto-char-timer)
    ("T" . avy-resume)
-   ("u" . meow-undo)
+   ("u" . undo)
    ("U" . undo-redo)
    ("v" . meow-visit)
    ("w" . meow-block)
@@ -189,7 +194,6 @@
 
 (with-eval-after-load 'consult
   (bind-keys
-   ("/" . consult-line)
    :map ale-consult-map
    ("/" . consult-line-multi)
    ("e" . consult-compile-error)

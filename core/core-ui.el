@@ -57,13 +57,14 @@
   :config
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
-  (define-key transient-map (kbd "<escape>") #'transient-quit-all)
-  (define-key transient-sticky-map (kbd "ESC") #'transient-quit-all))
+  :bind
+  ((:map transient-map
+         ("<escape>" . transient-quit-all))
+   (:map transient-sticky-map
+         ("ESC" . transient-quit-all))))
 
 ;; Index based window motions
 (use-package ace-window
-  :bind
-  ("M-o" . ace-select-window)
   :config
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 
@@ -75,12 +76,7 @@
   (setq awesome-tab-hide-tab-function 'ale-tab-hide-tab)
   (setq awesome-tab-buffer-groups-function 'ale-tab-buffer-groups)
   :custom
-  (awesome-tab-ace-keys '(?a ?r ?s ?t ?n ?e ?i ?o ?m))
-  :bind
-  (("M-i" . awesome-tab-ace-jump)
-   :map meow-leader-keymap
-   ("[" . awesome-tab-backward-tab)
-   ("]" . awesome-tab-forward-tab)))
+  (awesome-tab-ace-keys '(?a ?r ?s ?t ?n ?e ?i ?o ?m)))
 
 (unless (or (daemonp) window-system)
   (advice-add 'meow--update-cursor :after #'ale-set-cursor))
