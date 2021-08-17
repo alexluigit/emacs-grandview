@@ -23,7 +23,9 @@
 
 (cl-defun ale-files-match-mime (file)
   "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
-  (let ((meta (with-temp-buffer (call-process "file" nil t nil "-bi" file) (buffer-string))))
+  (setq file (expand-file-name file))
+  (let ((meta (with-temp-buffer
+                (call-process "file" nil t nil "-bi" file) (buffer-string))))
     (when (or (not (string-match "charset=binary" meta))
               (string-match "inode/x-empty" meta))
       (cl-return-from ale-files-match-mime))
@@ -38,7 +40,7 @@
 (defun ale-files-find-file-external (entry &optional cmd args)
   "Open file using external shell command."
   (let ((process-connection-type nil)
-        (entry (shell-quote-argument entry)))
+        (entry (shell-quote-argument (expand-file-name entry))))
     (unless (executable-find cmd)
       (user-error (format "Install `%s' to preview %s" cmd entry)))
     (setq args (cl-substitute entry "%f" args :test 'string=))
@@ -67,7 +69,7 @@
                                    (cl-return (cdr (assq field i)))))))
          (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
          (cands (ale-minibuffer-append-metadata annotation cands-raw))
-         (title (completing-read "Open: " cands))
+         (title (completing-read "Open: " cands nil t))
          (path (funcall get-item title 'path)))
     (ale-minibuffer--files-in-directory path (concat title ": "))))
 
