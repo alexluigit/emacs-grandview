@@ -193,20 +193,6 @@ Do not try to make a new directory or anything fancy."
         (setq iend (search-backward "<"))
         (cons ibeg iend)))))
 
-(defvar ale-helpful-initialized nil)
-
-;;;###autoload
-(defun ale-helpful-mode-hook ()
-  ;; FIXME: A better way?
-  (setq ale/helpful-initialized nil)
-  (advice-add 'find-file :before
-              (lambda (&rest _)
-                (when (and (not ale/helpful-initialized) (derived-mode-p 'helpful-mode))
-                  (switch-to-buffer "*scratch*")
-                  (switch-to-prev-buffer)
-                  (setq ale/helpful-initialized t))))
-  (visual-line-mode))
-
 ;;;###autoload
 (defun ale-electric-inhibit-< ()
   (setq-local electric-pair-inhibit-predicate

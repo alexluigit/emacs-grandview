@@ -43,6 +43,7 @@
            (side . right))
           ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
            (display-buffer-at-bottom))))
+  (setq help-window-select t)
   (setq window-combination-resize t)
   (setq even-window-sizes 'height-only)
   (setq window-sides-vertical nil)

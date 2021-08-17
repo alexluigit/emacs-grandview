@@ -184,9 +184,7 @@ made for this package and built-in help buffer:
 
 #+begin_src emacs-lisp
 (use-package helpful
-  :init
-  (setq help-window-select t)
-  :hook (helpful-mode . ale-helpful-mode-hook)
+  :hook (helpful-mode . ale/helpful-mode-hook)
   :bind
   (("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
    ([remap describe-function] . #'helpful-callable)
