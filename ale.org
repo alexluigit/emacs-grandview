@@ -223,6 +223,47 @@ code.  Do it with =M-x find-library transpose-frame=.
   (which-key-mode 1 ))
 #+end_src
 
+** Buffer list (ibuffer.el)
+
+=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
+=list-buffers=.  Compared to its counterpart, it allows for granular
+control over the buffer list and is more powerful overall.
+
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :init
+  (advice-add 'list-buffers :override 'ibuffer)
+  :bind
+  (:map ibuffer-mode-map
+        ("M-o" . nil)
+        ("* f" . ibuffer-mark-by-file-name-regexp)
+        ("* g" . ibuffer-mark-by-content-regexp)
+        ("* n" . ibuffer-mark-by-name-regexp)
+        ("s n" . ibuffer-do-sort-by-alphabetic)
+        ("/ g" . ibuffer-filter-by-content))
+  :config
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-never-show-predicates '("^ \\*.*"))
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+#+end_src
 * File management
 ** Find files (files.el)
 
@@ -1059,47 +1100,50 @@ contains several subsections as follows:
 #+end_src
 
 * Applications
-** Buffer list (ibuffer.el)
-
-=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
-=list-buffers=.  Compared to its counterpart, it allows for granular
-control over the buffer list and is more powerful overall.
+** COMMENT Emacs application framework (eaf.el)
 
 #+begin_src emacs-lisp
-(use-package ibuffer
+(use-package eaf
+  :demand t
+  :straight
+  (eaf :host github
+       :repo "emacs-eaf/emacs-application-framework"
+       :files ("*")
+       :pre-build (("sed" "-i" "s/yay/paru/g" "./install-eaf.py") ; use paru rather that yay
+                   ("alacritty" "-e" "./install-eaf.py") ; open terminal for interactive deps installation
+                   ("git" "checkout" ".") ; revert all the changes we made
+                   ("rm" "-rf" "~/.npm")))
   :init
-  (advice-add 'list-buffers :override 'ibuffer)
-  :bind
-  (:map ibuffer-mode-map
-        ("M-o" . nil)
-        ("* f" . ibuffer-mark-by-file-name-regexp)
-        ("* g" . ibuffer-mark-by-content-regexp)
-        ("* n" . ibuffer-mark-by-name-regexp)
-        ("s n" . ibuffer-do-sort-by-alphabetic)
-        ("/ g" . ibuffer-filter-by-content))
+  (let ((default-directory (concat (straight--build-dir) "eaf/app/")))
+    (normal-top-level-add-subdirs-to-load-path))
   :config
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-movement-cycle nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-never-show-predicates '("^ \\*" ""))
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups nil)
-  (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+  (setq eaf-proxy-type "http")
+  (setq eaf-proxy-host "127.0.0.1")
+  (setq eaf-proxy-port "1088")
+  (define-key key-translation-map (kbd "SPC")
+    (lambda (prompt)
+      (if (derived-mode-p 'eaf-mode)
+          (pcase eaf--buffer-app-name
+            ("browser" (if (string= (eaf-call-sync "call_function" eaf--buffer-id "is_focus") "True")
+                           (kbd "SPC")
+                         (kbd ale-local-leader-key)))
+            (_  (kbd ale-local-leader-key)))
+        (kbd "SPC")))))
+
+(use-package eaf-browser
+  :straight nil
+  :after-call pre-command-hook
+  :config
+  (setq eaf-browser-default-zoom 1.5)
+  (eaf-bind-key nil "M-o" eaf-browser-keybinding)
+  (eaf-bind-key insert_or_scroll_up "n" eaf-browser-keybinding)
+  (eaf-bind-key insert_or_scroll_down "p" eaf-browser-keybinding))
+
+(use-package eaf-image-viewer
+  :straight nil
+  :after-call find-file-hook)
 #+end_src
+
 ** COMMENT Dictionary (youdao-dictionary.el)
 
 #+begin_src emacs-lisp
@@ -1111,22 +1155,3 @@ control over the buffer list and is more powerful overall.
   (setq youdao-dictionary-use-chinese-word-segmentation t))
 #+end_src
 
-** COMMENT Emacs application framework (eaf.el)
-
-#+begin_src emacs-lisp
-(use-package eaf
-  :after-call pre-command-hook
-  :straight
-  (eaf :host github :repo "emacs-eaf/emacs-application-framework" :files ("*")
-       :pre-build (("sed" "-i" "s/sudo/doas/g" "./install-eaf.py")
-                   ("sed" "-i" "s/yay/paru/g" "./install-eaf.py")
-                   ("alacritty" "-e" "./install-eaf.py")
-                   ("git" "checkout" ".")))
-  :init
-  (setq ale/browser-load-path (concat (straight--build-dir) "eaf/app/browser")))
-
-(use-package eaf-browser
-  :after-call pre-command-hook
-  :straight nil
-  :load-path ale/browser-load-path)
-#+end_src
