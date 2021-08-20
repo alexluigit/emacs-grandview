@@ -21,6 +21,13 @@
   "doc"
   :group 'files :type '(alist :value-type ((choice list string) list)))
 
+;;;###autoload
+(defalias 'ale-files-find-dir 'find-file)
+
+;;;###autoload
+(with-eval-after-load 'danger
+  (defalias 'ale-files-find-dir 'danger-find-file))
+
 (cl-defun ale-files-match-mime (file)
   "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
   (setq file (expand-file-name file))
@@ -96,7 +103,7 @@
          (files-raw (split-string output "\0" t))
          (files (ale-minibuffer-append-metadata 'file files-raw))
          (file (completing-read "Goto: " files)))
-    (find-file file)))
+    (ale-files-find-dir file)))
 
 ;;;###autoload
 (defun ale-files-other-window ()
@@ -151,7 +158,6 @@ Do not try to make a new directory or anything fancy."
   (find-file (if (file-writable-p file)
                  file
                (concat "/sudo::" file)))))
-               ;; (concat "/sudo:root@localhost:" file))))
 
 (mailcap-parse-mimetypes)
 (cl-dolist (mm ale-files-additional-mime)

@@ -12,7 +12,7 @@
     (eval `(transient-define-prefix ale/dired-jump ()
              ["Go to Directory: "
               ,@(cl-loop for (key desc path) in v
-                         collect (list key desc `(lambda () (interactive) (find-file ,path))))]))))
+                         collect (list key desc `(lambda () (interactive) (ale-files-find-dir ,path))))]))))
 
 ;;;###autoload
 (defun ale/dired-rename-space-to-underscore ()
