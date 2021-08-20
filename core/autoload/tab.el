@@ -40,7 +40,7 @@ questions.  Else use completion to select the tab to switch to."
 
 (defvar ale-tab-hide-regexp
   '("^\\*\\(message\\|straight\\|ibuffer\\|epc\\|async-native\\)"
-    "^\\*\\(compile-Log\\|danger\\|eshell\\|ediff\\|help\\)"
+    "^\\*\\(compile-Log\\|danger\\|eshell\\|vterm\\|ediff\\|help\\)"
     "^ \\*" "^magit.*"))
 
 ;;;###autoload
@@ -64,8 +64,6 @@ questions.  Else use completion to select the tab to switch to."
                         magit-blob-mode
                         magit-blame-mode))
      "Magit")
-    ((derived-mode-p 'eshell-mode)
-     "EShell")
     ((derived-mode-p 'emacs-lisp-mode)
      "Elisp")
     ((memq major-mode '(org-mode org-agenda-mode diary-mode))

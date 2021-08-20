@@ -133,6 +133,8 @@ restart () {
 
 file () { floatwin -g 2000x2080+10+10 -n danger-emacs emacsclient -e '\(danger-new-frame\)'; }
 
+open () { [[ -n $INSIDE_EMACS ]] && emacsclient -n ${@:2} || emacs -nw ${@:2}; }
+
 [[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { restart ${@:1}; exit 0; }
 $1 ${@:1}
 #+end_src
@@ -649,8 +651,31 @@ If region is active, add its contents to the new buffer."
   (define-key global-map (kbd "C-c s") #'scratch))
 #+end_src
 
-* Eshell
-** Multi-eshell
+* Terminal
+** Vterm (vterm.el)
+
+#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+(use-package vterm
+  :config
+  (setq vterm-max-scrollback 5000)
+  (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
+  :bind
+  (("<delete>" . ale/vterm-toggle)
+   ("<deletechar>" . ale/vterm-toggle)
+   :map vterm-mode-map
+   ("<delete>" . ale/vterm-toggle)
+   ("M-<delete>" . ale/vterm-new)
+   ("M-<return>" . vterm-send-M-return)
+   ("s-n" . vterm-next-prompt)
+   ("s-p" . vterm-previous-prompt)
+   ("M-." . ale/vterm-next)
+   ("M-," . ale/vterm-prev)
+   ("C-<delete>" . vterm-send-C-delete)
+   ("C-<return>" . vterm-send-F5)))
+#+end_src
+
+** COMMENT Eshell
+*** Multi-eshell
 
 A poor man's multi-eshell.
 
@@ -674,7 +699,7 @@ A poor man's multi-eshell.
    ("M-," . ale/eshell-prev)))
 #+end_src
 
-** Aliases
+*** Aliases
 
 This section will be tangled to `eshell-aliases-file'.
 
@@ -695,7 +720,7 @@ alias rs rsync $*
 alias rsa rsync -avz $*
 #+end_src
 
-** Colors (xterm-color.el)
+*** Colors (xterm-color.el)
 
 We want to use xterm-256color when running interactive commands in eshell but
 not during other times when we might be launching a shell command to gather its
@@ -712,27 +737,27 @@ output.
   (delq 'eshell-handle-ansi-color eshell-output-filter-functions))
 #+end_src
 
-** Fish like Completion (fish-completion.el)
+*** Fish like Completion (fish-completion.el)
 
 This enhances eshell's completions with those that Fish is capable of and also
 falls back to any additional completions that are configured for Bash on the
 system.  The primary benefit here (for me) is getting completion for commits and
 branches in =git= commands.
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+#+begin_src emacs-lisp
 (use-package fish-completion
   :hook (eshell-mode . fish-completion-mode))
 #+end_src
 
-** Z navigation (eshell-z.el)
+*** Z navigation (eshell-z.el)
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+#+begin_src emacs-lisp
 (use-package eshell-z
   :hook ((eshell-first-time-mode . (lambda () (require 'eshell-z)))
          (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
 #+end_src
 
-** Highlighting (eshell-syntax-highlighting.el)
+*** Highlighting (eshell-syntax-highlighting.el)
 
 #+begin_src emacs-lisp
 (use-package eshell-syntax-highlighting
@@ -741,7 +766,7 @@ branches in =git= commands.
   (eshell-syntax-highlighting-global-mode +1))
 #+end_src
 
-** History completion (esh-autosuggest.el)
+*** History completion (esh-autosuggest.el)
 
 #+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
 (use-package esh-autosuggest

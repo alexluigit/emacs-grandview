@@ -19,7 +19,7 @@
   (interactive)
   (let ((package-json-file (concat (eshell/pwd) "/package.json")))
     (when (file-exists-p package-json-file)
-      (let* ((package-json-contents (ale/f-read package-json-file))
+      (let* ((package-json-contents (ale-f-read package-json-file))
              (package-json (ignore-errors (json-parse-string package-json-contents))))
         (when package-json
           (ignore-errors (gethash "version" package-json)))))))
