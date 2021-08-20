@@ -49,6 +49,7 @@
    ("t" . ale-frame-adjust-transparency)
    ("=" . count-words)
    :map meow-insert-state-keymap
+   ("<escape>" . ale-escape)
    ("C-u" . ale-kill-whole-line)
    ("<C-i>" . ale-insert-ctrl-i)
    ("C-o" . ale-insert-ctrl-o)

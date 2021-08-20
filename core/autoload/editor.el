@@ -219,9 +219,15 @@ Do not try to make a new directory or anything fancy."
 ;;;###autoload
 (defun ale-escape ()
   (interactive)
-  (if (region-active-p)
-      (meow-cancel)
-    (call-interactively 'execute-extended-command)))
+  (cond
+   ((derived-mode-p 'vterm-mode) (vterm-send-escape))
+   ((region-active-p) (meow-cancel))
+   ((meow-keypad-mode-p)
+    (meow--exit-keypad-state))
+   ((meow-insert-mode-p)
+    (when overwrite-mode (overwrite-mode -1))
+    (meow--switch-state 'normal))
+   (t (call-interactively 'execute-extended-command))))
 
 ;;;###autoload
 (defun ale--bounds-of-tag ()
