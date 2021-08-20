@@ -35,23 +35,68 @@ Used by `ale-insert-date'."
               (end-with-newline (string-suffix-p "\n" clip)))
     (goto-char (line-beginning-position))))
 
-(defun ale--char-readonly ()
-  (get-text-property (1- (point)) 'read-only))
+;;;###autoload
+(defadvice delete-backward-char (around no-read-only activate)
+  "Do not try to delete char when last char is read-only."
+  (unless (get-text-property (1- (point)) 'read-only) ad-do-it))
+
+;;;###autoload
+(defun ale-next-line (&optional arg)
+  "Move to the next line.
+
+Will cancel all other selection, except char selection.  Use with
+numeric argument to move multiple lines at once."
+  (interactive "p")
+  (unless (equal (meow--selection-type) '(expand . char))
+    (meow--cancel-selection))
+  (call-interactively 'next-line))
+
+;;;###autoload
+(defun ale-prev-line (&optional arg)
+  "See `ale-next-line'."
+  (interactive "p")
+  (unless (equal (meow--selection-type) '(expand . char))
+    (meow--cancel-selection))
+  (call-interactively 'previous-line))
+
+;;;###autoload
+(defun ale-save ()
+  (interactive)
+  (save-excursion
+    (meow--with-selection-fallback
+     (meow--prepare-region-for-kill)
+     (call-interactively 'kill-ring-save))))
 
 ;;;###autoload
 (defun ale-backward-delete-char ()
   (interactive)
   (when (and (not (ale--char-readonly))
              (> (point) (point-at-bol)))
-    (backward-delete-char 1)))
+    (delete-backward-char 1)))
+
+;;;###autoload
+(defun ale-insert-ctrl-i ()
+  (interactive)
+  (cond ((derived-mode-p 'vterm-mode)
+         (vterm-send-C-i))
+        (t
+         (call-interactively 'forward-char))))
+
+;;;###autoload
+(defun ale-insert-ctrl-o ()
+  (interactive)
+  (cond ((derived-mode-p 'vterm-mode)
+         (vterm-send-C-o))
+        (t
+         (call-interactively 'backward-char))))
 
 ;;;###autoload
 (defun ale-kill-whole-line ()
   (interactive)
   (cond ((derived-mode-p 'eshell-mode)
          (eshell-kill-input))
-        ((ale--char-readonly)
-         nil)
+        ((derived-mode-p 'vterm-mode)
+         (vterm-send-C-u))
         (t
          (call-interactively 'kill-whole-line))))
 

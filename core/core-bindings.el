@@ -9,13 +9,14 @@
 (defalias 'tab-map tab-prefix-map)
 (defalias 'register-map ctl-x-r-map)
 (autoload 'awesome-tab-ace-jump "awesome-tab")
+(defcustom ale-local-leader-key "C-x x SPC"
+  "Another Leader key trigger")
 
 (use-package meow
   :after-call emacs-startup-hook
   :hook (emacs-startup . meow-global-mode)
   :bind
-  (("/" . consult-line)
-   ("<escape>" . ale-escape)
+  (("<escape>" . ale-escape)
    ("C-;" . exchange-point-and-mark)
    ("<C-i>" . better-jumper-jump-forward)
    ("C-o" . better-jumper-jump-backward)
@@ -26,8 +27,6 @@
    ("M-%" . anzu-isearch-query-replace)
    :map minibuffer-local-map
    ("S-<return>" . ale-files-other-window)
-   ("/" . (lambda () (interactive) (self-insert-command 1)))
-   ("DEL" . ale-backward-delete-char)
    ("C-u" . ale-kill-whole-line)
    ("<C-i>" . forward-char)
    ("C-o" . backward-char)
@@ -50,11 +49,11 @@
    ("t" . ale-frame-adjust-transparency)
    ("=" . count-words)
    :map meow-insert-state-keymap
-   ("/" . (lambda () (interactive) (self-insert-command 1)))
    ("C-u" . ale-kill-whole-line)
-   ("<C-i>" . forward-char)
-   ("C-o" . backward-char)
+   ("<C-i>" . ale-insert-ctrl-i)
+   ("C-o" . ale-insert-ctrl-o)
    :map meow-motion-state-keymap
+   ("/" . consult-line)
    ("<escape>" . ale-escape)
    :map meow-leader-keymap
    ("0" . delete-window)
@@ -95,9 +94,10 @@
    ("7" . meow-digit-argument)
    ("8" . meow-digit-argument)
    ("9" . meow-digit-argument)
+   ("/" . consult-line)
    ("%" . ale-match-paren)
    ("`" . negative-argument)
-   (";" . exchange-point-and-mark)
+   (";" . meow-reverse)
    ("," . meow-inner-of-thing)
    ("." . meow-bounds-of-thing)
    ("<" . beginning-of-buffer)
@@ -133,10 +133,10 @@
    ("l" . meow-kmacro-lines)
    ("m" . meow-mark-word)
    ("M" . meow-mark-symbol)
-   ("n" . meow-next)
+   ("n" . ale-next-line)
    ("N" . meow-next-expand)
    ("o" . backward-char)
-   ("p" . meow-prev)
+   ("p" . ale-prev-line)
    ("P" . meow-prev-expand)
    ("q" . meow-quit)
    ("r" . meow-search)
@@ -149,7 +149,7 @@
    ("v" . meow-visit)
    ("w" . meow-block)
    ("W" . meow-block-expand)
-   ("x" . meow-save)
+   ("x" . ale-save)
    ("y" . meow-replace)
    ("Y" . meow-yank-pop)
    ("z" . meow-grab)
@@ -158,6 +158,9 @@
   (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
   (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
   (meow-setup-line-number)
+  (define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
+  (define-key meow-motion-state-keymap
+    (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'switch-to-buffer)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -170,7 +173,7 @@
         '((meow-replace . meow-yank)
           (meow-reverse . back-to-indentation)
           (meow-change . meow-change-char)
-          (meow-save . ale-pulse-save-line)
+          (ale-save . ale-pulse-save-line)
           (meow-kill . ale-kill-whole-line)
           (meow-cancel . keyboard-quit)
           (meow-pop . meow-pop-grab)
