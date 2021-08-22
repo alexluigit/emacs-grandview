@@ -16,7 +16,10 @@
                   (valid (string-prefix-p "{" json))
                   (obj (json-read-from-string json)))
         (cl-pushnew obj playlist :test 'equal)
-        (f-write-text (json-encode (vconcat playlist)) 'utf-8 list-file)))
+        (with-temp-buffer
+          (insert (json-encode (vconcat playlist)))
+          (json-pretty-print-buffer)
+          (write-region (point-min) (point-max) list-file))))
     (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) playlist))
            (get-url (lambda (s) (cl-dolist (i playlist)
                                    (when (string= s (cdr (assq 'title i)))
