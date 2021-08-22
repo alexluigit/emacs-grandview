@@ -700,6 +700,7 @@ If region is active, add its contents to the new buffer."
   :config
   (setq vterm-max-scrollback 5000)
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
+  (set-face-attribute 'vterm-color-black nil :foreground "#111111")
   :bind
   (("<delete>" . ale/vterm-toggle)
    ("<deletechar>" . ale/vterm-toggle)
