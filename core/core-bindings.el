@@ -77,7 +77,6 @@
    ("f" . ale-files-map)
    ("i" . list-buffers)
    ("k" . kill-this-buffer)
-   ("n" . dired-jump)
    ("o" . ale-org-map)
    ("p" . ale-project-find-file)
    ("t" . ale-consult-map)

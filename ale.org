@@ -372,6 +372,8 @@ as well. See details at: https://github.com/alexluigit/danger.el
 (use-package danger
   :after-call pre-command-hook
   :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
+  :bind
+  (:map meow-leader-keymap ("n" . danger))
   :hook
   (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
   :config
