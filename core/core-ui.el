@@ -1,7 +1,10 @@
 ;;; core-ui.el --- -*- lexical-binding: t -*-
 
 ;; icons-library
-(use-package all-the-icons)
+(use-package all-the-icons
+  :init
+  (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
+    (all-the-icons-install-fonts)))
 
 ;; pixelwise (linear or bezier) scrolling in emacs.
 (use-package good-scroll
