@@ -704,16 +704,16 @@ If region is active, add its contents to the new buffer."
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
   (set-face-attribute 'vterm-color-black nil :foreground "#111111")
   :bind
-  (("<delete>" . ale/vterm-toggle)
-   ("<deletechar>" . ale/vterm-toggle)
+  (("<f12>" . ale/vterm-toggle)
    :map vterm-mode-map
-   ("<delete>" . ale/vterm-toggle)
+   ("<f12>" . ale/vterm-toggle)
    ("M-<delete>" . ale/vterm-new)
    ("M-RET" . vterm-send-M-return)
    ("s-n" . vterm-next-prompt)
    ("s-p" . vterm-previous-prompt)
    ("M-." . ale/vterm-next)
    ("M-," . ale/vterm-prev)
+   ("C-SPC" . meow-normal-mode)
    ("C-<delete>" . vterm-send-C-delete)
    ("C-<return>" . vterm-send-F5)))
 #+end_src
