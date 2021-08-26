@@ -1,6 +1,7 @@
 #+TITLE: Emacs Configuration
 #+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
+#+PROPERTY: header-args :mkdirp yes
 
 * Overview
 ** About
@@ -184,6 +185,30 @@ made for this package and built-in help buffer:
 - open new window when invoking =helpful-visit-references=.  auto
 - focus newly opened help buffer (same behaviour as helpful.el)
 
+*** Autoload
+
+#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-helpful.el")
+;;; ale-helpful.el --- -*- lexical-binding: t -*-
+
+(defvar ale/helpful-initialized nil)
+
+;;;###autoload
+(defun ale/helpful-mode-hook ()
+  ;; FIXME: A better way?
+  (setq ale/helpful-initialized nil)
+  (advice-add 'find-file :before
+              (lambda (&rest _)
+                (when (and (not ale/helpful-initialized) (derived-mode-p 'helpful-mode))
+                  (switch-to-buffer "*scratch*")
+                  (switch-to-prev-buffer)
+                  (setq ale/helpful-initialized t))))
+  (visual-line-mode))
+
+(provide 'ale-helpful)
+#+end_src
+
+*** Config
+
 #+begin_src emacs-lisp
 (use-package helpful
   :hook (helpful-mode . ale/helpful-mode-hook)
@@ -290,6 +315,55 @@ control over the buffer list and is more powerful overall.
 
 =Dired= is a built-in tool that performs file management operations
 inside of an Emacs buffer.  It is simply superb!
+
+*** Autoload
+
+#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-dired.el")
+;;; ale-dired.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale/dired-jump () nil)
+
+(defcustom ale/dired-routes '()
+  "doc"
+  :group 'files :type 'list
+  :set
+  (lambda (k v)
+    `(setq ,k v)
+    (eval `(transient-define-prefix ale/dired-jump ()
+             ["Go to Directory: "
+              ,@(cl-loop for (key desc path) in v
+                         collect (list key desc `(lambda () (interactive) (ale-files-find-dir ,path))))]))))
+
+;;;###autoload
+(defun ale/dired-rename-space-to-underscore ()
+  "Rename current or marked files by replacing space to underscore."
+  (interactive)
+  (require 'dired-aux)
+  (if (or (eq major-mode 'dired-mode)
+          (eq major-mode 'danger-mode))
+      (let ((markedFiles (dired-get-marked-files )))
+        (mapc (lambda (x)
+                (when (string-match " " x )
+                  (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
+              markedFiles)
+        (if (eq major-mode 'danger-mode)
+            (danger-refresh)
+          (revert-buffer)))
+    (user-error "Not in dired/danger")))
+
+;;;###autoload
+(defun ale/dired-file-rename-eol ()
+  "Rename current file from end of line."
+  (interactive)
+  (end-of-line)
+  (wdired-change-to-wdired-mode)
+  (when (featurep 'meow) (meow-append)))
+
+(provide 'ale-dired)
+#+end_src
+
+*** Config
 
 #+begin_src emacs-lisp
 (use-package dired
@@ -571,7 +645,44 @@ this style as the default.  Other options are =string= and =rx=.
 
 * Language server
 ** LSP (lsp-mode.el)
+*** Autoload
 
+#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-lsp.el")
+;;; ale-lsp.el --- -*- lexical-binding: t -*-
+
+(defvar ale/lsp-enable-languages
+  '(sh lua haskell ale/vue typescript rust)
+  "doc")
+
+(defun ale/lsp--inhibit ()
+  "Disable `lsp-deferred' in minibuffer."
+  (advice-add 'lsp-deferred :override #'ignore))
+
+(defun ale/lsp--recover ()
+  "Recover `lsp-deferred' after quit minibuffer."
+  (advice-remove 'lsp-deferred #'ignore))
+
+;;;###autoload
+(define-minor-mode ale/lsp-mode
+  "Inhibit lsp in minibuffer."
+  :init-value nil
+  :global t
+  (if ale/lsp-mode
+      (progn
+      (add-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
+      (add-hook 'minibuffer-exit-hook 'ale/lsp--recover)
+      (dolist (lang ale/lsp-enable-languages)
+        (add-hook (intern (format "%s-mode-hook" lang)) #'lsp-deferred)))
+    (progn
+      (remove-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
+      (remove-hook 'minibuffer-exit-hook 'ale/lsp--recover)
+      (dolist (lang ale/lsp-enable-languages)
+        (remove-hook (intern (format "%s-mode-hook" lang)) #'lsp-deferred)))))
+
+(provide 'ale-lsp)
+#+end_src
+
+*** Config
 #+begin_src emacs-lisp
 (use-package lsp-mode
   :after-call pre-command-hook
@@ -696,6 +807,127 @@ If region is active, add its contents to the new buffer."
 
 * Terminal
 ** Vterm (vterm.el)
+*** Autoload
+
+#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-vterm.el")
+;;; ale-vterm.el --- -*- lexical-binding: t -*-
+
+(defcustom ale/vterm-position
+  '((danger-mode . ((window-height . 0.4) (side . bottom)))
+    (default . ((window-width . 0.4) (side . right))))
+  "doc")
+
+(defvar ale/vterm-buffers nil
+  "The list of non-dedicated vterm buffers.")
+
+(defvar ale/vterm-index 0
+  "The index of current vterm buffer.")
+
+(add-hook 'kill-buffer-hook
+          (lambda ()
+            (let* ((buf (current-buffer))
+                   (name (buffer-name buf)))
+              (when (string-prefix-p "*vterm" name)
+                (delq! buf ale/vterm-buffers)))))
+
+;;;###autoload
+(defun ale/vterm--disable-side-window (fn &rest args)
+  "Prevent vterm size adjust break selection."
+  (unless (and (region-active-p)
+               (derived-mode-p 'vterm-mode))
+    (apply fn args)))
+
+;;;###autoload
+(advice-add 'display-buffer-in-side-window :around 'ale/vterm--disable-side-window)
+
+;;;###autoload
+(defun vterm-send-C-delete ()
+  (interactive)
+  (vterm-send-key "<delete>" nil nil 0))
+
+;;;###autoload
+(defun vterm-send-M-return ()
+  (interactive)
+  (vterm-send-escape)
+  (vterm-send-return))
+
+;;;###autoload
+(defun vterm-send-F5 ()
+  (interactive)
+  (vterm-send-key "<f5>" nil nil nil))
+
+(defun ale/vterm--get-win-params ()
+  "Parse `ale/vterm-position' to get vterm display parameters."
+  (let (pos)
+    (cl-dolist (setting ale/vterm-position)
+        (when (derived-mode-p (car setting))
+          (setq pos (cdr setting)) (cl-return))
+        (when (eq (car setting) 'default)
+          (setq pos (cdr setting))))
+    `(("^\\*vterm.*"
+       (display-buffer-in-side-window)
+       (window-parameters . ((mode-line-format . none)))
+       ,@pos))))
+
+;;;###autoload
+(defun ale/vterm-toggle (&optional force-new)
+  "Toggle vterm.
+If called with prefix argument, create a new vterm buffer if
+current one have different `default-directory'."
+  (interactive "P")
+  (if (eq major-mode 'vterm-mode)
+      (delete-window)
+    (let* ((display-buffer-alist (ale/vterm--get-win-params))
+           (buf (nth ale/vterm-index ale/vterm-buffers))
+           (dir (expand-file-name default-directory))
+           (index (if buf (ale/vterm--get-index buf) 0)))
+      (add-to-list 'ale/vterm-buffers (vterm index))
+      (when force-new
+        (unless (string= dir (expand-file-name default-directory))
+          (let ((default-directory dir))
+            (ale/vterm-new))))
+      (ale/vterm--insert))))
+
+(defun ale/vterm--get-index (buf)
+  (let* ((name (buffer-name buf)))
+    (string-match "\\*vterm\\*\<\\([0-9]+\\)\>" name)
+    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
+
+(defun ale/vterm--insert ()
+  (when (featurep 'evil) (evil-insert-state))
+  (when (featurep 'meow) (meow-insert)))
+
+;;;###autoload
+(defun ale/vterm-new ()
+  "Create new vterm buffer."
+  (interactive)
+  (let ((new-index (1+ (ale/vterm--get-index (car ale/vterm-buffers))))
+        (display-buffer-alist (ale/vterm--get-win-params)))
+    (add-to-list 'ale/vterm-buffers (vterm new-index))
+    (ale/vterm--insert)))
+
+;;;###autoload
+(defun ale/vterm-next (&optional arg)
+  "Select next vterm buffer.
+Create new one if no vterm buffer exists."
+  (interactive "P")
+  (let* ((curr-index (cl-position (current-buffer) ale/vterm-buffers))
+         (new-index (+ curr-index (or arg -1)))
+         (buf (nth new-index ale/vterm-buffers)))
+    (when buf
+      (switch-to-buffer buf)
+      (setq ale/vterm-index new-index))))
+
+;;;###autoload
+(defun ale/vterm-prev (&optional arg)
+  "Select previous vterm buffer."
+  (interactive "p")
+  (ale/vterm-next arg))
+
+(provide 'ale-vterm)
+#+end_src
+
+*** Config
 
 #+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
 (use-package vterm
@@ -719,6 +951,186 @@ If region is active, add its contents to the new buffer."
 #+end_src
 
 ** COMMENT Eshell
+*** Autoload
+
+#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-eshell.el")
+;;; ale-eshell.el --- -*- lexical-binding: t -*-
+
+(require 'em-hist)
+(eval-when-compile (require 'subr-x))
+(require 'cl-seq)
+
+(defcustom ale/eshell-position
+  '((danger-mode . ((window-height . 0.4) (side . bottom)))
+    (default . ((window-width . 0.4) (side . right))))
+  "doc")
+
+(defvar ale/eshell-buffers nil
+  "The list of non-dedicated eshell buffers.")
+
+(defvar ale/eshell-index 0
+  "The index of current eshell buffer.")
+
+(defun ale/get-current-package-version ()
+  (interactive)
+  (let ((package-json-file (concat (eshell/pwd) "/package.json")))
+    (when (file-exists-p package-json-file)
+      (let* ((package-json-contents (ale-f-read package-json-file))
+             (package-json (ignore-errors (json-parse-string package-json-contents))))
+        (when package-json
+          (ignore-errors (gethash "version" package-json)))))))
+
+(defun ale/map-line-to-status-char (line)
+  (cond ((string-match "^?\\? " line) "?")))
+
+(defun ale/get-git-status-prompt ()
+  (let ((status-lines (cdr (process-lines "git" "status" "--porcelain" "-b"))))
+    (seq-uniq (seq-filter 'identity (mapcar 'ale/map-line-to-status-char status-lines)))))
+
+(defun ale/get-prompt-path ()
+  (let* ((current-path (eshell/pwd))
+         (git-output (shell-command-to-string "git rev-parse --show-toplevel"))
+         (has-path (not (string-match "^fatal" git-output))))
+    (if (not has-path)
+        (abbreviate-file-name current-path)
+      (string-remove-prefix (file-name-directory git-output) current-path))))
+
+;; This prompt function mostly replicates my custom zsh prompt setup
+(defun ale/eshell-prompt ()
+  (let* ((br-cmd "git symbolic-ref HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null")
+         (br-raw (shell-command-to-string br-cmd))
+         (current-branch (replace-regexp-in-string "\\(refs/heads/\\)\\|\\(\n\\)$" "" br-raw))
+         (shell-index (number-to-string (ale/eshell-get--index (current-buffer))))
+         (package-version (ale/get-current-package-version)))
+    (concat
+     (if (= (user-uid) 0)
+         (propertize (concat "S-" shell-index) 'face `(:foreground "red2"))
+       (propertize (concat "S-" shell-index) 'face `(:foreground "#62aeed")))
+     (propertize " • " 'face `(:foreground "white"))
+     (propertize "  " 'face `(:foreground "#82cfd3"))
+     (propertize (ale/get-prompt-path) 'face `(:foreground "#82cfd3"))
+     (when (not (string= current-branch ""))
+       (concat
+        (propertize " • " 'face `(:foreground "white"))
+        (propertize (concat " " current-branch) 'face `(:foreground "#ab98b5"))))
+     (when package-version
+       (concat
+        (propertize " @ " 'face `(:foreground "white"))
+        (propertize package-version 'face `(:foreground "#e8a206"))))
+     (propertize " • " 'face `(:foreground "white"))
+     (propertize (format-time-string "%I:%M:%S %p") 'face `(:foreground "#5a5b7f"))
+     (if (= eshell-last-command-status 0)
+         (propertize "\nλ" 'face `(:foreground "#ADCF44"))
+       (propertize "\nλ" 'face `(:foreground "#EC6261")))
+     (propertize " " 'face `(:foreground "white")))))
+
+;;;###autoload
+(defun ale/eshell-init ()
+  (push 'eshell-tramp eshell-modules-list)
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+  (define-key eshell-hist-mode-map (kbd "M-r") 'consult-history)
+  ;; Initialize the shell history
+  (eshell-hist-initialize)
+  (setenv "PAGER" "cat")
+  (setq eshell-prompt-function      'ale/eshell-prompt)
+  (setq eshell-prompt-regexp        "^λ ")
+  (setq eshell-history-size         10000)
+  (setq eshell-buffer-maximum-lines 10000)
+  (setq eshell-hist-ignoredups t)
+  (setq eshell-highlight-prompt t)
+  (setq eshell-scroll-to-bottom-on-input t)
+  (setq eshell-prefer-lisp-functions nil))
+
+(add-hook 'eshell-exit-hook
+          (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
+
+;;;###autoload
+(defun ale/eshell-updir ()
+  "Up a directory in eshell."
+  (interactive)
+  (eshell/cd "..")
+  (eshell-emit-prompt))
+
+(defun ale/eshell--get-win-params ()
+  "Parse `ale/eshell-position' to get eshell display parameters."
+  (let (pos)
+    (cl-dolist (setting ale/eshell-position)
+        (when (derived-mode-p (car setting))
+          (setq pos (cdr setting)) (cl-return))
+        (when (eq (car setting) 'default)
+          (setq pos (cdr setting))))
+    `(("^\\*[e]shell.*"
+       (display-buffer-in-side-window)
+       (window-parameters . ((mode-line-format . none)))
+       ,@pos))))
+
+;;;###autoload
+(defun ale/eshell-toggle (&optional force-new)
+  "Toggle eshell.
+If called with prefix argument, create a new eshell buffer if
+current one have different `default-directory'."
+  (interactive "P")
+  (if (eq major-mode 'eshell-mode)
+      (delete-window)
+    (let* ((display-buffer-alist (ale/eshell--get-win-params))
+           (buf (nth ale/eshell-index ale/eshell-buffers))
+           (dir (expand-file-name default-directory))
+           (index (if buf (ale/eshell-get--index buf) 0)))
+      (add-to-list 'ale/eshell-buffers (eshell index))
+      (when force-new
+        (unless (string= dir (expand-file-name default-directory))
+          (let ((default-directory dir))
+            (ale/eshell-new))))
+      (when (featurep 'evil) (evil-insert-state))
+      (when (featurep 'meow) (meow-insert)))))
+
+(defun ale/eshell-get--index (buf)
+  (let* ((name (buffer-name buf)))
+    (string-match "\\*eshell\\*\<\\([0-9]+\\)\>" name)
+    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
+
+;;;###autoload
+(defun ale/eshell-new ()
+  "Create new eshell buffer."
+  (interactive)
+  (let ((new-index (1+ (ale/eshell-get--index (car ale/eshell-buffers))))
+        (display-buffer-alist (ale/eshell--get-win-params)))
+    (add-to-list 'ale/eshell-buffers (eshell new-index))
+    (when (featurep 'evil) (evil-insert-state))
+    (when (featurep 'meow) (meow-insert))))
+
+;;;###autoload
+(defun ale/eshell-next (&optional arg)
+  "Select next eshell buffer.
+Create new one if no eshell buffer exists."
+  (interactive "P")
+  (let* ((curr-index (cl-position (current-buffer) ale/eshell-buffers))
+         (new-index (+ curr-index (or arg -1)))
+         (buf (nth new-index ale/eshell-buffers)))
+    (when buf
+      (switch-to-buffer buf)
+      (setq ale/eshell-index new-index))))
+
+;;;###autoload
+(defun ale/eshell-prev (&optional arg)
+  "Select previous eshell buffer."
+  (interactive "p")
+  (ale/eshell-next arg))
+
+;;;###autoload
+(defun ale/eshell-clear-buffer ()
+  "Clear eshell buffer."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (eshell-send-input nil nil t)))
+
+(provide 'ale-eshell)
+#+end_src
+
 *** Multi-eshell
 
 A poor man's multi-eshell.
@@ -1035,6 +1447,44 @@ contains several subsections as follows:
 
 * Media
 ** Video url (ale-murl.el)
+*** Autoload
+
+#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-murl.el")
+;;; ale-murl.el -*- lexical-binding: t; -*-
+
+(require 'json)
+
+;;;###autoload
+(defun ale/murl-open (&optional no-hist)
+  "Select video or stream to play in mpv."
+  (interactive "P")
+  (let* ((list-file "/home/alex/.cache/murl/main_list.json")
+         (playlist (append (json-read-file list-file) nil))
+         (clip (condition-case nil (current-kill 0 t) (error ""))))
+    (unless no-hist
+      (set-text-properties 0 (length clip) nil clip)
+      (when-let* ((is-url (string-prefix-p "http" clip))
+                  (json (shell-command-to-string (concat "murl -P 1088 json '" clip "'")))
+                  (valid (string-prefix-p "{" json))
+                  (obj (json-read-from-string json)))
+        (cl-pushnew obj playlist :test 'equal)
+        (with-temp-buffer
+          (insert (json-encode (vconcat playlist)))
+          (json-pretty-print-buffer)
+          (write-region (point-min) (point-max) list-file))))
+    (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) playlist))
+           (get-url (lambda (s) (cl-dolist (i playlist)
+                                   (when (string= s (cdr (assq 'title i)))
+                                     (cl-return (cdr (assq 'url i)))))))
+           (annotation (lambda (s) (marginalia--documentation (funcall get-url s))))
+           (cands (ale-minibuffer-append-metadata annotation cands-raw))
+           (title (completing-read "murls: " cands)))
+      (call-process "murl" nil 0 nil "-r" "-P" "1088" "-d" "40%x40%+2300+10" (funcall get-url title)))))
+
+(provide 'ale-murl)
+#+end_src
+
+*** Config
 
 #+begin_src emacs-lisp
 (bind-keys

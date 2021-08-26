@@ -21,11 +21,11 @@
   "Generate core autoload files."
   (require 'cl-lib)
   (require 'autoload)
-  (with-temp-file ale-extension-autoloads-file
+  (with-temp-file ale-autoload-file
     (cl-loop with generated-autoload-file = nil
              with inhibit-message = t
              for file in (cl-loop
-                          for dir in ale-extension-directory
+                          for dir in ale-autoload-directories
                           append (directory-files-recursively dir "\\.el$") into files
                           append files)
              for generated-autoload-load-name = (file-name-sans-extension file)
