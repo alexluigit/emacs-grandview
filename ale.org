@@ -276,11 +276,11 @@ control over the buffer list and is more powerful overall.
   :config
   (setq ale-files-dot-repo "~/Code/alex.files/")
   (setq ale-files-dir-alist
-        '(((title . "  Shows")        (path . "/media/HDD/Share/"))
-          ((title . "  Coding")       (path . "/media/HDD/Dev/"))
-          ((title . "  Books")        (path . "/media/HDD/Book/"))
-          ((title . "輸  Videos")       (path . "/media/HDD/Video/"))
-          ((title . "  Movies")       (path . "/media/Cloud/共享/Movies/"))
+        '(((title . "  Shows")        (path . "/mnt/HDD/Share/"))
+          ((title . "  Coding")       (path . "/mnt/HDD/Dev/"))
+          ((title . "  Books")        (path . "/mnt/HDD/Book/"))
+          ((title . "輸  Videos")       (path . "/mnt/HDD/Video/"))
+          ((title . "  Movies")       (path . "/mnt/Cloud/共享/Movies/"))
           ((title . "  Notes")        (path . "~/Documents/notes/"))
           ((title . "  Photos")       (path . "~/Pictures/"))
           ((title . "  Downloads")    (path . "~/Downloads/")))))
@@ -300,7 +300,7 @@ inside of an Emacs buffer.  It is simply superb!
                       ("p" "Code"        "~/Code")
                       ("n" "Downloads"   "~/Downloads")
                       ("w" "Wallpaper"   "~/Pictures/wallpaper")
-                      ("m" "Drives"      "/media")
+                      ("m" "Drives"      "/mnt")
                       ("t" "Trash"       "~/.local/share/Trash")))
   :bind
   (:map dired-mode-map
@@ -379,8 +379,8 @@ as well. See details at: https://github.com/alexluigit/danger.el
   :config
   (danger-override-dired-mode)
   (danger-minibuf-preview-mode)
-  (setq danger-trash-dir-alist '(("/media/HDD/" . ".Trash/files")
-                                 ("/media/Cloud/" . ".Trash/files"))))
+  (setq danger-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files")
+                                 ("/mnt/Cloud/" . ".Trash/files"))))
 #+end_src
 
 ** Dired mode highlighting (diredfl.el)
