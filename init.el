@@ -6,6 +6,8 @@
 (defvar ale-autoload-file (concat user-emacs-directory "ale-autoload.el"))
 (defvar ale-autoload-directories `(,(concat ale-init-directory "autoload/")
                                    ,ale-extension-autoload-dir))
+(defvar ale-proxy '(("https" . "127.0.0.1:1088")))
+
 (load (concat ale-init-directory "init-package.el") nil t)
 
 (let ((target-minimal (concat user-emacs-directory "ale-minimal.el"))

@@ -6,7 +6,8 @@
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory)))
   (unless (file-exists-p bootstrap-file)
-    (let ((url-proxy-services '(("https" . "127.0.0.1:1088"))))
+    (require 'url-vars)
+    (let ((url-proxy-services ale-proxy))
       (with-current-buffer
           (url-retrieve-synchronously
            "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"

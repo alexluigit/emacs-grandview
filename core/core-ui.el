@@ -4,7 +4,9 @@
 (use-package all-the-icons
   :init
   (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
-    (all-the-icons-install-fonts)))
+    (require 'url-vars)
+    (let ((url-proxy-services ale-proxy))
+      (all-the-icons-install-fonts))))
 
 ;; pixelwise (linear or bezier) scrolling in emacs.
 (use-package good-scroll
@@ -167,7 +169,8 @@
             (lambda (f) (with-selected-frame f
                      (ale-window-recenter-mode)
                      (ale-pulse-advice-commands-mode 1)
-                     (ale-font-setup)))))
+                     (ale-font-setup)
+                     (ale-frame-adjust-transparency 8)))))
 
 (add-hook 'after-init-hook 'ale-modeline-mode)
 
