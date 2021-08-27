@@ -1553,6 +1553,15 @@ contains several subsections as follows:
 #+end_src
 
 * Applications
+** Dictionary (fanyi.el)
+
+#+begin_src emacs-lisp
+(use-package fanyi
+  :bind
+  (:map ale-utils-map
+        ("t" . fanyi-dwim)))
+#+end_src
+
 ** COMMENT Emacs application framework (eaf.el)
 
 #+begin_src emacs-lisp
@@ -1596,15 +1605,3 @@ contains several subsections as follows:
   :straight nil
   :after-call find-file-hook)
 #+end_src
-
-** COMMENT Dictionary (youdao-dictionary.el)
-
-#+begin_src emacs-lisp
-(use-package youdao-dictionary
-  :bind
-  ("C-x y" . youdao-dictionary-search-at-point-posframe)
-  :init
-  (setq url-automatic-caching t)
-  (setq youdao-dictionary-use-chinese-word-segmentation t))
-#+end_src
-
