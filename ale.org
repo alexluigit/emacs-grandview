@@ -186,8 +186,11 @@ made for this package and built-in help buffer:
 - focus newly opened help buffer (same behaviour as helpful.el)
 
 *** Autoload
+:PROPERTIES:
+:ID:       71d218ce-ec5a-4c50-9b62-f2f351856b3e
+:END:
 
-#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-helpful.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
 ;;; ale-helpful.el --- -*- lexical-binding: t -*-
 
 (defvar ale/helpful-initialized nil)
@@ -317,8 +320,11 @@ control over the buffer list and is more powerful overall.
 inside of an Emacs buffer.  It is simply superb!
 
 *** Autoload
+:PROPERTIES:
+:ID:       2a18e2a0-5b16-4706-b006-884bd4094c4e
+:END:
 
-#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-dired.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
 ;;; ale-dired.el --- -*- lexical-binding: t -*-
 
 ;;;###autoload
@@ -643,11 +649,14 @@ this style as the default.  Other options are =string= and =rx=.
   (setq sh-basic-offset 2))
 #+end_src
 
-* Language server
-** LSP (lsp-mode.el)
+* DevTools
+** LSP (lsp.el)
 *** Autoload
+:PROPERTIES:
+:ID:       956309f4-61ce-4489-922d-a8343f281101
+:END:
 
-#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-lsp.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
 ;;; ale-lsp.el --- -*- lexical-binding: t -*-
 
 (defvar ale/lsp-enable-languages
@@ -694,18 +703,14 @@ this style as the default.  Other options are =string= and =rx=.
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 #+end_src
 
-** Extensions
+*** Extensions
 
 #+begin_src emacs-lisp
 (use-package lsp-tailwindcss
   :after (lsp-mode web-mode)
   :init
   (setq lsp-tailwindcss-add-on-mode t))
-#+end_src
 
-** UI integrations (lsp-ui.el)
-
-#+begin_src emacs-lisp
 (use-package lsp-ui
   :after-call lsp-deferred
   :config
@@ -715,7 +720,6 @@ this style as the default.  Other options are =string= and =rx=.
   (lsp-mode . lsp-ui-mode))
 #+end_src
 
-* DevTools
 ** Colorizer (rainbow-mode.el)
 
 #+begin_src emacs-lisp
@@ -808,8 +812,11 @@ If region is active, add its contents to the new buffer."
 * Terminal
 ** Vterm (vterm.el)
 *** Autoload
+:PROPERTIES:
+:ID:       76cafb17-37ee-40c4-bf9f-6721d5f825bf
+:END:
 
-#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-vterm.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
 ;;; ale-vterm.el --- -*- lexical-binding: t -*-
 
 (defcustom ale/vterm-position
@@ -950,10 +957,13 @@ Create new one if no vterm buffer exists."
    ("C-<return>" . vterm-send-F5)))
 #+end_src
 
-** COMMENT Eshell
+** COMMENT Eshell (eshell.el)
 *** Autoload
+:PROPERTIES:
+:ID:       05d50f67-511f-483d-ba45-50d374f3f5cb
+:END:
 
-#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-eshell.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
 ;;; ale-eshell.el --- -*- lexical-binding: t -*-
 
 (require 'em-hist)
@@ -1448,8 +1458,11 @@ contains several subsections as follows:
 * Media
 ** Video url (ale-murl.el)
 *** Autoload
+:PROPERTIES:
+:ID:       48f13168-7c74-4676-881a-b6f666eec120
+:END:
 
-#+begin_src emacs-lisp :tangle (concat ale-extension-autoload-dir "ale-murl.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
 ;;; ale-murl.el -*- lexical-binding: t; -*-
 
 (require 'json)
@@ -1492,7 +1505,7 @@ contains several subsections as follows:
  ("m" . ale/murl-open))
 #+end_src
 
-** Pdf tools
+** Pdf reader (pdf-tools.el)
 
 #+begin_src emacs-lisp
 (use-package pdf-tools
@@ -1559,7 +1572,10 @@ contains several subsections as follows:
 (use-package fanyi
   :bind
   (:map ale-utils-map
-        ("t" . fanyi-dwim)))
+        ("t" . fanyi-dwim))
+  :custom
+  (fanyi-providers '(fanyi-etymon-provider
+                     fanyi-longman-provider)))
 #+end_src
 
 ** COMMENT Emacs application framework (eaf.el)

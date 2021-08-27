@@ -10,7 +10,6 @@
 (setq package-quickstart nil)
 (setq package-enable-at-startup nil)  ; Prevent package.el loading packages prior to their init-file
 
-(push (concat user-emacs-directory "lisp") load-path)
 (push (concat user-emacs-directory "core") load-path)
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
 (defvar ale-init-directory (file-name-directory user-init-file))
