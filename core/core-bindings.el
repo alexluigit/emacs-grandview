@@ -46,7 +46,7 @@
    ("<backspace>" . ale-erase-messages)
    :map ale-utils-map
    ("d" . ale-insert-date)
-   ("t" . ale-frame-adjust-transparency)
+   ("o" . ale-frame-adjust-transparency)
    ("=" . count-words)
    :map meow-insert-state-keymap
    ("<escape>" . ale-escape)

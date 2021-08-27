@@ -34,6 +34,20 @@
   (minibuffer-depth-indicate-mode 1)
   (minibuffer-electric-default-mode 1))
 
+;; Keeps a record of actions involving the minibuffer.  This is of
+;; paramount importance to a fast and efficient workflow involving any
+;; completion framework that leverages the built-in mechanisms.  Emacs
+;; will remember your input and choices and will surface the desired
+;; results towards the top as the most likely candidates.
+(use-package savehist
+  :straight (:type built-in)
+  :config
+  (setq savehist-file (locate-user-emacs-file "savehist"))
+  (setq history-length 10000)
+  (setq history-delete-duplicates t)
+  (setq savehist-save-minibuffer-history t)
+  :hook (emacs-startup . savehist-mode))
+
 ;; A minimalistic completion UI
 (use-package vertico
   :after-call pre-command-hook
