@@ -38,16 +38,9 @@ questions.  Else use completion to select the tab to switch to."
 (cl-loop for i in '(1 2 3 4 5 6 7 8 9) do
          (global-set-key (kbd (format "M-%s" i)) 'awesome-tab-select-visible-tab))
 
-(defvar ale-tab-hide-regexp
-  '("^\\*\\(message\\|straight\\|ibuffer\\|epc\\|async-native\\)"
-    "^\\*\\(compile-Log\\|danger\\|eshell\\|vterm\\|ediff\\|help\\)"
-    "^ \\*" "^magit.*"))
-
 ;;;###autoload
 (defun ale-tab-hide-tab (x)
-  (let ((name (format "%s" x))
-        (hide-regex (mapconcat 'concat ale-tab-hide-regexp "\\|")))
-    (string-match hide-regex name)))
+  (string-match "^\\( \\)?\\*\\|^magit" (format "%s" x)))
 
 ;;;###autoload
 (defun ale-tab-buffer-groups ()
