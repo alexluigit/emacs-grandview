@@ -1,4 +1,4 @@
-;;; ale-tab.el -*- lexical-binding: t; -*-
+;;; tab.el -*- lexical-binding: t; -*-
 
 (require 'tab-bar)
 

@@ -1,4 +1,4 @@
-;;; core/autoload/minibuffer.el --- -*- lexical-binding: t -*-
+;;; autoload/minibuffer.el --- -*- lexical-binding: t -*-
 
 (defgroup ale-minibuffer ()
   "Extensions for the minibuffer."

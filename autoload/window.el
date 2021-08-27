@@ -1,4 +1,4 @@
-;;; core/autoload/window.el --- extensions for window.el -*- lexical-binding: t; -*-
+;;; autoload/window.el --- extensions for window.el -*- lexical-binding: t; -*-
 
 (defgroup ale-window ()
   "Tweaks for windows."

@@ -1,4 +1,4 @@
-;;; core-package.el -*- lexical-binding: t; -*-
+;;; init-packages.el -*- lexical-binding: t; -*-
 
 (setq straight-use-package-by-default t)
 (setq straight-vc-git-default-clone-depth 1)
@@ -21,12 +21,12 @@
 (defvar ale--deferred-packages-alist '(t))
 
 (with-eval-after-load 'use-package-core
-  ;; Adds keyword `:after-call' to `use-package' to expand its lazy-loading capabilities:
   (push :after-call use-package-deferring-keywords)
   (setq use-package-keywords
         (use-package-list-insert :after-call use-package-keywords :after))
   (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
   (defun use-package-handler/:after-call (name _keyword hooks rest state)
+    "Adds keyword `:after-call' to `use-package' to expand its lazy-loading capabilities."
     (if (plist-get state :demand)
         (use-package-process-keywords name rest state)
       (let ((fn (make-symbol (format "ale--after-call-%s-h" name))))
@@ -58,4 +58,4 @@
                   '(,@hooks)))
          (use-package-process-keywords name rest state))))))
 
-(provide 'core-package)
+(provide 'init-package)

@@ -1,4 +1,4 @@
-;;; core/autoload/org.el -*- lexical-binding: t; -*-
+;;; autoload/org.el -*- lexical-binding: t; -*-
 
 ;;;###autoload
 (defun ale-org-font-setup ()

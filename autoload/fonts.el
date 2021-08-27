@@ -1,4 +1,4 @@
-;;; core/autoload/fonts.el --- -*- lexical-binding: t -*-
+;;; autoload/fonts.el --- -*- lexical-binding: t -*-
 
 (require 'cl-lib)
 

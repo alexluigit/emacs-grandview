@@ -1,4 +1,4 @@
-;;; core/autoload/project.el --- -*- lexical-binding: t -*-
+;;; autoload/project.el --- -*- lexical-binding: t -*-
 
 (require 'cl-lib)
 (require 'project)

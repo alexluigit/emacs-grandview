@@ -1,4 +1,4 @@
-;;; core/autoload/pulse.el --- -*- lexical-binding: t -*-
+;;; autoload/pulse.el --- -*- lexical-binding: t -*-
 
 (require 'pulse)
 

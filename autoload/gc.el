@@ -1,4 +1,4 @@
-;;; core/autoload/gc.el --- -*- lexical-binding: t -*-
+;;; autoload/gc.el --- -*- lexical-binding: t -*-
 
 (defvar ale-gc-cons-threshold 134217728 ; 128mb
   "The default value to use for `gc-cons-threshold'.

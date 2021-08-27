@@ -1,4 +1,4 @@
-;;; core/autoload/elisp.el --- -*- lexical-binding: t -*-
+;;; autoload/elisp.el --- -*- lexical-binding: t -*-
 
 (eval-when-compile (require 'subr-x))
 

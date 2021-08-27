@@ -1,4 +1,4 @@
-;;; core/autoload/modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
+;;; autoload/modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
 
 (use-package mlscroll
   :hook (server-after-make-frame . mlscroll-mode)

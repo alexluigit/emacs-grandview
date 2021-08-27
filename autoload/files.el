@@ -1,4 +1,4 @@
-;;; core/autoload/files.el --- -*- lexical-binding: t -*-
+;;; autoload/files.el --- -*- lexical-binding: t -*-
 
 (require 'mailcap)
 (eval-when-compile (require 'cl-lib))

@@ -1,4 +1,4 @@
-;;; core/autoload/fill.el --- -*- lexical-binding: t -*-
+;;; autoload/fill.el --- -*- lexical-binding: t -*-
 
 ;;; Comment
 

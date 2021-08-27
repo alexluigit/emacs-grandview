@@ -5,7 +5,8 @@
 (defvar ale-extension-autoload-dir (concat user-emacs-directory "ale-autoload/"))
 (defvar ale-autoload-file (concat user-emacs-directory "ale-autoload.el"))
 (defvar ale-autoload-directories `(,(concat ale-init-directory "autoload/")
-                                  ,ale-extension-autoload-dir))
+                                   ,ale-extension-autoload-dir))
+(load (concat ale-init-directory "init-package.el") nil t)
 
 (let ((target-minimal (concat user-emacs-directory "ale-minimal.el"))
       (target-full (concat user-emacs-directory "ale-full.el")))
@@ -16,7 +17,6 @@
     (autoload 'ale-bootstrap-gen-autoloads (concat ale-init-directory "core/autoload/bootstrap"))
     (ale-bootstrap-gen-autoloads))
   (load ale-autoload-file nil t)
-  (require 'core-package)
   (require 'core-editor)
   (require 'core-completion)
   (require 'core-ui)

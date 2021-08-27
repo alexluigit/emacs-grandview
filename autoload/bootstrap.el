@@ -1,4 +1,4 @@
-;;; core/autoload/bootstrap.el --- -*- lexical-binding: t -*-
+;;; autoload/bootstrap.el --- -*- lexical-binding: t -*-
 
 (defun ale-bootstrap-tangle (&optional force)
   "doc"

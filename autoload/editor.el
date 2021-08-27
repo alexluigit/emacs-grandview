@@ -1,4 +1,4 @@
-;;; core/autoload/editor.el --- -*- lexical-binding: t -*-
+;;; autoload/editor.el --- -*- lexical-binding: t -*-
 
 (defcustom ale-date-specifier "%F"
   "Date specifier for `format-time-string'.

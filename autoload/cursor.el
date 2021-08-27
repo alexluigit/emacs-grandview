@@ -1,4 +1,4 @@
-;;; core/autoload/cursor.el --- -*- lexical-binding: t -*-
+;;; autoload/cursor.el --- -*- lexical-binding: t -*-
 
 (defvar ale-term-cursor-seq
   '((prefix     . "\e[")

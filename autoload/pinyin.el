@@ -1,4 +1,4 @@
-;;; core/autoload/pinyin.el -*- lexical-binding: t; -*-
+;;; autoload/pinyin.el -*- lexical-binding: t; -*-
 
 (defconst ale-pinyin-xiaohe-char-table-simp
   '("阿啊呵腌嗄锕吖爱哀挨碍埃癌艾唉矮哎皑蔼隘暧霭捱嗳瑷嫒锿嗌砹安案按暗岸俺谙黯鞍氨庵桉鹌胺铵揞犴埯昂肮盎奥澳傲熬敖凹袄懊坳嗷拗鏖骜鳌翱岙廒遨獒聱媪螯鏊"
