@@ -1584,15 +1584,16 @@ contains several subsections as follows:
 (use-package eaf
   :demand t
   :straight
-  (eaf :host github
-       :repo "emacs-eaf/emacs-application-framework"
-       :files ("*")
-       :pre-build (("sed" "-i" "s/yay/paru/g" "./install-eaf.py") ; use paru rather that yay
-                   ("alacritty" "-e" "./install-eaf.py") ; open terminal for interactive deps installation
-                   ("git" "checkout" ".") ; revert all the changes we made
-                   ("rm" "-rf" "~/.npm")))
+  (emacs-application-framework
+   :host github
+   :repo "emacs-eaf/emacs-application-framework"
+   :files ("*")
+   :pre-build (("sed" "-i" "s/yay/paru/g" "./install-eaf.py") ; use paru rather that yay
+               ("alacritty" "-e" "./install-eaf.py" "--install" "browser" "image-viewer") ; open terminal for interactive deps installation
+               ("git" "checkout" ".") ; revert all the changes we made
+               ("rm" "-rf" "~/.npm")))
   :init
-  (let ((default-directory (concat (straight--build-dir) "eaf/app/")))
+  (let ((default-directory (concat (straight--build-dir) "emacs-application-framework/app/")))
     (normal-top-level-add-subdirs-to-load-path))
   :config
   (setq eaf-proxy-type "http")
