@@ -2,16 +2,19 @@
 
 (defvar ale-debug-p t)
 (defvar ale-init-directory (file-name-directory user-init-file))
-(defvar ale-extensions-dir (concat user-emacs-directory "ale-exts/"))
-(defvar ale-autoload-file (concat user-emacs-directory "ale-autoload.el"))
+(defvar ale-cache-dir (concat user-emacs-directory "ale/"))
+(defvar ale-extensions-dir (concat ale-cache-dir "extensions/"))
+(defvar ale-autoload-file (concat ale-cache-dir "ale-autoload.el"))
 (defvar ale-autoload-directories `(,(concat ale-init-directory "autoload/")
                                    ,ale-extensions-dir))
 (defvar ale-proxy '(("https" . "127.0.0.1:1088")))
 
 (load (concat ale-init-directory "init-package.el") nil t)
 
-(let ((target-minimal (concat user-emacs-directory "ale-minimal.el"))
-      (target-full (concat user-emacs-directory "ale-full.el")))
+(unless (file-exists-p ale-cache-dir) (make-directory ale-cache-dir))
+
+(let ((target-minimal (concat ale-cache-dir "ale-minimal.el"))
+      (target-full (concat ale-cache-dir "ale-full.el")))
   (unless (file-exists-p target-full)
     (autoload 'ale-bootstrap-tangle (concat ale-init-directory "autoload/bootstrap"))
     (ale-bootstrap-tangle t))

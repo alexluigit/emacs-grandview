@@ -16,8 +16,8 @@
   (autoload 'ale-f-read (concat ale-init-directory "autoload/elisp"))
   (autoload 'ale-bootstrap-ext-tangle-target (concat ale-init-directory "autoload/bootstrap"))
   (let* ((bootstrap-org (concat ale-init-directory "ale.org"))
-         (bootstrap-el (concat user-emacs-directory "ale-full.el"))
-         (bootstrap-md5 (concat user-emacs-directory "bootstrap.md5"))
+         (bootstrap-el (concat ale-cache-dir "ale-full.el"))
+         (bootstrap-md5 (concat ale-cache-dir "bootstrap.md5"))
          (old-md5 (when (file-exists-p bootstrap-md5)
                     (ale-f-read bootstrap-md5)))
          (new-md5 (secure-hash 'md5 (ale-f-read bootstrap-org))))
@@ -33,7 +33,7 @@
   "Generate core autoload files."
   (require 'autoload)
   (autoload 'ale-f-read (concat ale-init-directory "autoload/elisp"))
-  (let* ((autoload-md5 (concat user-emacs-directory "autoload.md5"))
+  (let* ((autoload-md5 (concat ale-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
                     (ale-f-read autoload-md5)))
          (files-as-str (with-temp-buffer
