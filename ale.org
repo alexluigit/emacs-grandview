@@ -64,7 +64,7 @@ This section contails instructions on how to use this config.
 cp -r ~/.emacs.d ~/.emacs.d.bak
 #+end_src
 
-- Clone the repo and tangle the config. 
+- Clone the repo and tangle the config.
 
 #+begin_src shell :tangle no
 git clone https://www.github.com/alexluigit/emacs-grandview
@@ -295,7 +295,7 @@ control over the buffer list and is more powerful overall.
 * File management
 ** Find files (files.el)
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package files
   :straight (:type built-in)
   :bind
@@ -520,7 +520,7 @@ Summary of what these do:
   parenthesis.
 - Use rainbow color for delimiters
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package paren
   :config
   (setq show-paren-style 'parenthesis)
@@ -604,7 +604,7 @@ this style as the default.  Other options are =string= and =rx=.
 
 ** .lua
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+#+begin_src emacs-lisp
 (use-package lua-mode
   :config
   (setq lua-indent-level 2))
@@ -612,7 +612,7 @@ this style as the default.  Other options are =string= and =rx=.
 
 ** .yaml
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package yaml-mode)
 #+end_src
 
@@ -633,7 +633,7 @@ this style as the default.  Other options are =string= and =rx=.
 
 ** .js
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+#+begin_src emacs-lisp
 (use-package js
   :straight (:type built-in)
   :config
@@ -642,7 +642,7 @@ this style as the default.  Other options are =string= and =rx=.
 
 ** .(sh|zsh)
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package sh-script
   :straight (:type built-in)
   :config
@@ -718,6 +718,8 @@ this style as the default.  Other options are =string= and =rx=.
   (setq lsp-ui-doc-position 'bottom)
   :hook
   (lsp-mode . lsp-ui-mode))
+
+(use-package lsp-treemacs)
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
@@ -936,7 +938,7 @@ Create new one if no vterm buffer exists."
 
 *** Config
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package vterm
   :config
   (setq vterm-max-scrollback 5000)
@@ -1234,7 +1236,7 @@ branches in =git= commands.
 
 *** History completion (esh-autosuggest.el)
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el")
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode)
   :bind
@@ -1249,7 +1251,7 @@ branches in =git= commands.
 * Version control
 ** Built-in vc config
 
-#+begin_src emacs-lisp :tangle (concat user-emacs-directory "ale-minimal.el") 
+#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
 (use-package vc-hooks
   :straight (:type built-in)
   :config
