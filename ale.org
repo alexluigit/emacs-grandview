@@ -879,7 +879,7 @@ If region is active, add its contents to the new buffer."
        ,@pos))))
 
 ;;;###autoload
-(defun ale/vterm-toggle (&optional force-new)
+(defun ale/vterm-toggle (&optional force)
   "Toggle vterm.
 If called with prefix argument, create a new vterm buffer if
 current one have different `default-directory'."
@@ -891,7 +891,7 @@ current one have different `default-directory'."
            (dir (expand-file-name default-directory))
            (index (if buf (ale/vterm--get-index buf) 0)))
       (add-to-list 'ale/vterm-buffers (vterm index))
-      (when force-new
+      (when force
         (unless (string= dir (expand-file-name default-directory))
           (let ((default-directory dir))
             (ale/vterm-new))))
