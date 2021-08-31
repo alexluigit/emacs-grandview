@@ -144,6 +144,8 @@ You can also restart emacs by invoking =restart-emacs= command inside
 emacs (again, comfirm your $PATH environment variable).
 
 #+begin_src emacs-lisp
+;;; full.el --- -*- lexical-binding: t -*-
+
 (defun restart-emacs ()
   "A elisp wrapper to `em' command."
   (interactive)
@@ -295,7 +297,7 @@ control over the buffer list and is more powerful overall.
 * File management
 ** Find files (files.el)
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package files
   :straight (:type built-in)
   :bind
@@ -520,7 +522,7 @@ Summary of what these do:
   parenthesis.
 - Use rainbow color for delimiters
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package paren
   :config
   (setq show-paren-style 'parenthesis)
@@ -612,7 +614,7 @@ this style as the default.  Other options are =string= and =rx=.
 
 ** .yaml
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package yaml-mode)
 #+end_src
 
@@ -642,7 +644,7 @@ this style as the default.  Other options are =string= and =rx=.
 
 ** .(sh|zsh)
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package sh-script
   :straight (:type built-in)
   :config
@@ -938,7 +940,7 @@ Create new one if no vterm buffer exists."
 
 *** Config
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package vterm
   :config
   (setq vterm-max-scrollback 5000)
@@ -1236,7 +1238,7 @@ branches in =git= commands.
 
 *** History completion (esh-autosuggest.el)
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package esh-autosuggest
   :hook (eshell-mode . esh-autosuggest-mode)
   :bind
@@ -1251,7 +1253,7 @@ branches in =git= commands.
 * Version control
 ** Built-in vc config
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-minimal-config)
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package vc-hooks
   :straight (:type built-in)
   :config
@@ -1590,8 +1592,8 @@ contains several subsections as follows:
    :host github
    :repo "emacs-eaf/emacs-application-framework"
    :files ("*")
-   :pre-build (("sed" "-i" "s/yay/paru/g" "./install-eaf.py") ; use paru rather that yay
-               ("alacritty" "-e" "./install-eaf.py" "--install" "browser" "image-viewer") ; open terminal for interactive deps installation
+   :pre-build (("sed" "-i" "s/yay/paru/g" "./install-eaf.py") ; use paru rather than yay
+               ("./install-eaf.py" "--install" "browser" "image-viewer")
                ("git" "checkout" ".") ; revert all the changes we made
                ("rm" "-rf" "~/.npm")))
   :init

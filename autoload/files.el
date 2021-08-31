@@ -92,7 +92,7 @@
 (defun ale-files-edit-emacs-config ()
   "Editing emacs init file."
   (interactive)
-  (find-file (concat ale-init-directory "ale.org")))
+  (find-file ale-full-config-org))
 
 ;;;###autoload
 (defun ale-files-browse-all-directories ()

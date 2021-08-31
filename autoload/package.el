@@ -1,4 +1,4 @@
-;;; init-packages.el -*- lexical-binding: t; -*-
+;;; autoload/packages.el -*- lexical-binding: t; -*-
 
 (setq straight-use-package-by-default t)
 (setq straight-vc-git-default-clone-depth 1)
@@ -59,5 +59,3 @@
            (nconc (assq ',name ale--deferred-packages-alist)
                   '(,@hooks)))
          (use-package-process-keywords name rest state))))))
-
-(provide 'init-package)

@@ -2,32 +2,26 @@
 
 (require 'cl-lib)
 
-(defun ale-bootstrap-autoload-files ()
-  (cl-loop for dir in ale-autoload-directories
-           append (directory-files-recursively dir "\\.el$") into files
-           append files))
-
-;;;###autoload
-(defun ale-bootstrap-ext-tangle-target ()
-  (concat ale-extensions-dir (format "%s" (org-id-get)) ".el"))
-
 (defun ale-bootstrap-tangle (&optional force)
   "doc"
   (autoload 'ale-f-read (concat ale-init-directory "autoload/elisp"))
   (autoload 'ale-bootstrap-ext-tangle-target (concat ale-init-directory "autoload/bootstrap"))
-  (let* ((bootstrap-org (concat ale-init-directory "ale.org"))
-         (bootstrap-el (concat ale-cache-dir "ale-full.el"))
-         (bootstrap-md5 (concat ale-cache-dir "bootstrap.md5"))
+  (let* ((bootstrap-md5 (concat ale-cache-dir "bootstrap.md5"))
          (old-md5 (when (file-exists-p bootstrap-md5)
                     (ale-f-read bootstrap-md5)))
-         (new-md5 (secure-hash 'md5 (ale-f-read bootstrap-org))))
+         (new-md5 (secure-hash 'md5 (ale-f-read ale-full-config-org))))
     (when (or force (not (string= old-md5 new-md5)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
         (write-region (point-min) (point-max) bootstrap-md5))
       (require 'ob-tangle)
-      (org-babel-tangle-file bootstrap-org bootstrap-el))))
+      (org-babel-tangle-file ale-full-config-org ale-full-config))))
+
+(defun ale-bootstrap-autoload-files ()
+  (cl-loop for dir in ale-autoload-directories
+           append (directory-files-recursively dir "\\.el$") into files
+           append files))
 
 (defun ale-bootstrap-gen-autoloads (&optional force)
   "Generate core autoload files."
@@ -54,6 +48,14 @@
         (write-region (point-min) (point-max) autoload-md5)))))
 
 ;;;###autoload
+(defun ale-minimal-config ()
+  ale-minimal-config)
+
+;;;###autoload
+(defun ale-bootstrap-ext-tangle-target ()
+  (concat ale-extensions-dir (format "%s" (org-id-get)) ".el"))
+
+;;;###autoload
 (defun ale-bootstrap-profiler ()
   "Init info with packages loaded and init time."
   (let ((package-count 0)
@@ -64,9 +66,9 @@
     (run-with-timer 1 nil 'ale-log docstr package-count time)))
 
 ;;;###autoload
-(defun ale-bootstrap-build ()
-  (ale-bootstrap-tangle)
-  (ale-bootstrap-gen-autoloads))
+(defun ale-bootstrap-build (&optional force)
+  (ale-bootstrap-tangle force)
+  (ale-bootstrap-gen-autoloads force))
 
 ;;;###autoload
 (add-hook 'kill-emacs-hook #'ale-bootstrap-build)

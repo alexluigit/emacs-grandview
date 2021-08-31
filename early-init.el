@@ -1,6 +1,7 @@
 ;;; early-init.el --- -*- lexical-binding: t -*-
 
-(setq gc-cons-threshold most-positive-fixnum) ; Defer GC (see `core/autoload/gc.el')
+;; Defer GC (see `autoload/gc.el')
+(setq gc-cons-threshold most-positive-fixnum)
 
 ;; Setup native compilation
 (when (boundp 'native-comp-eln-load-path)
@@ -10,9 +11,8 @@
 (setq package-quickstart nil)
 (setq package-enable-at-startup nil)  ; Prevent package.el loading packages prior to their init-file
 
-(push (concat user-emacs-directory "core") load-path)
+;; No littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
-(defvar ale-init-directory (file-name-directory user-init-file))
 
 ;; Disable warnings from legacy advice system. They aren't useful, and what can
 ;; we do about them, besides changing packages upstream?
