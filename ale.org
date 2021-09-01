@@ -863,9 +863,24 @@ If region is active, add its contents to the new buffer."
   (vterm-send-return))
 
 ;;;###autoload
+(defun vterm-send-M-/ ()
+  (interactive)
+  (vterm-send-key "/" nil 0 nil))
+
+;;;###autoload
 (defun vterm-send-F5 ()
   (interactive)
   (vterm-send-key "<f5>" nil nil nil))
+
+;;;###autoload
+(defun vterm-send-M-apostrophe ()
+  (interactive)
+  (vterm-send-key "'" nil 0 nil))
+
+;;;###autoload
+(defun vterm-send-M-quote ()
+  (interactive)
+  (vterm-send-key "\"" nil 0 nil))
 
 (defun ale/vterm--get-win-params ()
   "Parse `ale/vterm-position' to get vterm display parameters."
@@ -940,7 +955,7 @@ Create new one if no vterm buffer exists."
 
 *** Config
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package vterm
   :config
   (setq vterm-max-scrollback 5000)
@@ -950,13 +965,16 @@ Create new one if no vterm buffer exists."
   (("<f12>" . ale/vterm-toggle)
    :map vterm-mode-map
    ("<f12>" . ale/vterm-toggle)
-   ("M-<delete>" . ale/vterm-new)
+   ("M-'" . vterm-send-M-apostrophe)
+   ("M-\"" . vterm-send-M-quote)
+   ("M-/" . vterm-send-M-/)
+   ("M-<XF86Eject>" . ale/vterm-new)
    ("M-RET" . vterm-send-M-return)
    ("s-n" . vterm-next-prompt)
    ("s-p" . vterm-previous-prompt)
    ("M-." . ale/vterm-next)
    ("M-," . ale/vterm-prev)
-   ("C-SPC" . meow-normal-mode)
+   ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
    ("C-<delete>" . vterm-send-C-delete)
    ("C-<return>" . vterm-send-F5)))
 #+end_src
