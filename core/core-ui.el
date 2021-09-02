@@ -4,9 +4,7 @@
 (use-package all-the-icons
   :init
   (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
-    (require 'url-vars)
-    (let ((url-proxy-services ale-proxy))
-      (all-the-icons-install-fonts))))
+    (all-the-icons-install-fonts)))
 
 ;; pixelwise (linear or bezier) scrolling in emacs.
 (use-package good-scroll

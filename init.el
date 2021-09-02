@@ -10,7 +10,6 @@
 (defvar ale-autoload-file (concat ale-cache-dir "autoload.el"))
 (defvar ale-autoload-directories `(,(concat ale-init-directory "autoload/")
                                    ,ale-extensions-dir))
-(defvar ale-proxy '(("https" . "127.0.0.1:1088")))
 
 (unless (file-exists-p ale-cache-dir)
   (make-directory ale-cache-dir)
