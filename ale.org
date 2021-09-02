@@ -1521,7 +1521,7 @@ contains several subsections as follows:
          (cands (ale-minibuffer-append-metadata annotation cands-raw))
          (title (completing-read "murls: " cands))
          (sub (ale/murl--get-attr title 'sub)))
-    (call-process "murl" nil 0 nil "-r" "-P" "1088" "-d" "40%x40%+2300+10" "-s" sub (ale/murl--get-attr title 'url))))
+    (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (ale/murl--get-attr title 'url))))
 
 (provide 'ale-murl)
 #+end_src
