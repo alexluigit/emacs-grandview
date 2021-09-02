@@ -1284,6 +1284,7 @@ branches in =git= commands.
 #+begin_src emacs-lisp
 (use-package magit
   :config
+  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 50)
   (setq git-commit-known-pseudo-headers

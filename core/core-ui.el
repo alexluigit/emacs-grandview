@@ -42,7 +42,7 @@
            (display-buffer-in-side-window)
            (window-height . 0.2)
            (side . top))
-          ("^\\*?\\(magit: \\|Help\\|helpful\\).*"
+          ("^\\*\\(Help\\|helpful\\).*"
            (display-buffer-in-side-window)
            (window-width . 0.4)
            (side . right))
