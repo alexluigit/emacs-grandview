@@ -156,6 +156,7 @@
    ("Z" . meow-swap-grab))
   :config
   (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
+  (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
   (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
   (meow-setup-line-number)
   (define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
