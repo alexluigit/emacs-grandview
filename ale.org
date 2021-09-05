@@ -107,7 +107,7 @@ Script for starting up emacs.
 
   You don't need to install this script if you have followed
   =Installation= section. This script will be tangled to
-  ~~/.local/bin/em~, so if you want to get access to =em= command from
+  ~~/.local/bin/em~, so if you want to get access to =em restart= command from
   terminal, make sure ~~/.local/bin~ is in your ~$PATH~ environment
   variable.
 
@@ -132,11 +132,9 @@ restart () {
   emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
 }
 
-file () { floatwin -g 2000x2080+10+10 -n danger-emacs emacsclient -e '\(danger-new-frame\)'; }
+open () { emacs -nw ${@}; }
 
-open () { [[ -n $INSIDE_EMACS ]] && emacsclient -n ${@:2} || emacs -nw ${@:2}; }
-
-[[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { restart ${@:1}; exit 0; }
+[[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { open ${@:1}; exit 0; }
 $1 ${@:1}
 #+end_src
 
@@ -150,7 +148,7 @@ emacs (again, comfirm your $PATH environment variable).
   "A elisp wrapper to `em' command."
   (interactive)
   (let ((default-directory "~"))
-    (start-process "" nil "nohup" "em")))
+    (start-process "" nil "nohup" "em" "restart")))
 #+end_src
 
 * Introspection
