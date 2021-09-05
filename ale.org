@@ -961,13 +961,13 @@ Create new one if no vterm buffer exists."
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
   (set-face-attribute 'vterm-color-black nil :foreground "#111111")
   :bind
-  (("<f12>" . ale/vterm-toggle)
+  (("M-v" . ale/vterm-toggle)
    :map vterm-mode-map
-   ("<f12>" . ale/vterm-toggle)
+   ("M-v" . ale/vterm-toggle)
+   ("<f12>" . ale/vterm-new)
    ("M-'" . vterm-send-M-apostrophe)
    ("M-\"" . vterm-send-M-quote)
    ("M-/" . vterm-send-M-/)
-   ("M-<XF86Eject>" . ale/vterm-new)
    ("M-RET" . vterm-send-M-return)
    ("s-n" . vterm-next-prompt)
    ("s-p" . vterm-previous-prompt)
