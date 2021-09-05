@@ -302,6 +302,7 @@ control over the buffer list and is more powerful overall.
   (:map ale-files-map
         ("r" . ale/dired-jump))
   :config
+  (setq confirm-kill-processes nil)
   (setq ale-files-dot-repo "~/Code/alex.files/")
   (setq ale-files-dir-alist
         '(((title . "  Shows")        (path . "/mnt/HDD/Share/"))
@@ -1605,7 +1606,7 @@ contains several subsections as follows:
                      fanyi-longman-provider)))
 #+end_src
 
-** COMMENT Emacs application framework (eaf.el)
+** Emacs application framework (eaf.el)
 
 #+begin_src emacs-lisp
 (use-package eaf
@@ -1616,7 +1617,7 @@ contains several subsections as follows:
    :repo "emacs-eaf/emacs-application-framework"
    :files ("*")
    :pre-build (("sed" "-i" "s/yay/paru/g" "./install-eaf.py") ; use paru rather than yay
-               ("./install-eaf.py" "--install" "browser" "image-viewer")
+               ("./install-eaf.py" "--install-core-deps" "--install" "browser" "image-viewer")
                ("git" "checkout" ".") ; revert all the changes we made
                ("rm" "-rf" "~/.npm")))
   :init
