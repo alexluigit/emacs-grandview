@@ -1,4 +1,4 @@
-;;; core-editor.el --- -*- lexical-binding: t -*-
+;;; core/editor.el --- -*- lexical-binding: t -*-
 
 ;; Keep a record of all recently opened files.
 (use-package recentf

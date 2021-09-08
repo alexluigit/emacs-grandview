@@ -1,4 +1,4 @@
-;;; core-ui.el --- -*- lexical-binding: t -*-
+;;; core/ui.el --- -*- lexical-binding: t -*-
 
 ;; icons-library
 (use-package all-the-icons
@@ -168,7 +168,7 @@
                      (ale-window-recenter-mode)
                      (ale-pulse-advice-commands-mode 1)
                      (ale-font-setup)
-                     (ale-frame-auto-opacity-mode)))))
+                     (ale-opacity-auto-mode)))))
 
 (add-hook 'after-init-hook 'ale-modeline-mode)
 

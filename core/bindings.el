@@ -1,16 +1,6 @@
-;;; core-bindings.el --- -*- lexical-binding: t -*-
+;;; core/bindings.el --- -*- lexical-binding: t -*-
 
-(define-prefix-command 'ale-files-map)
-(define-prefix-command 'ale-elisp-map)
-(define-prefix-command 'ale-consult-map)
-(define-prefix-command 'ale-utils-map)
-(define-prefix-command 'ale-org-map)
-(defalias 'project-map project-prefix-map)
-(defalias 'tab-map tab-prefix-map)
-(defalias 'register-map ctl-x-r-map)
 (autoload 'awesome-tab-ace-jump "awesome-tab")
-(defcustom ale-local-leader-key "C-x x SPC"
-  "Another Leader key trigger")
 
 (use-package meow
   :after-call emacs-startup-hook
@@ -46,7 +36,7 @@
    ("<backspace>" . ale-erase-messages)
    :map ale-utils-map
    ("d" . ale-insert-date)
-   ("o" . ale-frame-adjust-transparency)
+   ("o" . ale-opacity-set)
    ("=" . count-words)
    :map meow-insert-state-keymap
    ("<escape>" . ale-escape)

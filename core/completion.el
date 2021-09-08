@@ -1,4 +1,4 @@
-;;; core-completino.el --- -*- lexical-binding: t -*-
+;;; core/completino.el --- -*- lexical-binding: t -*-
 
 ;;; Commentary
 

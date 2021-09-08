@@ -18,6 +18,14 @@ This project is my emacs configuration.
 
 doc
 
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+;;; minimal.el --- -*- lexical-binding: t -*-
+#+end_src
+
+#+begin_src emacs-lisp
+;;; full.el --- -*- lexical-binding: t -*-
+#+end_src
+
 *** COPYING
 
 Copyright (c) 2020-2021  Alex Lu <alexluigit@gmail.com>
@@ -142,8 +150,6 @@ You can also restart emacs by invoking =restart-emacs= command inside
 emacs (again, comfirm your $PATH environment variable).
 
 #+begin_src emacs-lisp
-;;; full.el --- -*- lexical-binding: t -*-
-
 (defun restart-emacs ()
   "A elisp wrapper to `em' command."
   (interactive)
@@ -190,7 +196,7 @@ made for this package and built-in help buffer:
 :ID:       71d218ce-ec5a-4c50-9b62-f2f351856b3e
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
 ;;; ale-helpful.el --- -*- lexical-binding: t -*-
 
 (defvar ale/helpful-initialized nil)
@@ -325,7 +331,7 @@ inside of an Emacs buffer.  It is simply superb!
 :ID:       2a18e2a0-5b16-4706-b006-884bd4094c4e
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
 ;;; ale-dired.el --- -*- lexical-binding: t -*-
 
 ;;;###autoload
@@ -657,12 +663,8 @@ this style as the default.  Other options are =string= and =rx=.
 :ID:       956309f4-61ce-4489-922d-a8343f281101
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
 ;;; ale-lsp.el --- -*- lexical-binding: t -*-
-
-(defvar ale/lsp-enable-languages
-  '(sh lua haskell ale/vue typescript rust)
-  "doc")
 
 (defun ale/lsp--inhibit ()
   "Disable `lsp-deferred' in minibuffer."
@@ -680,24 +682,28 @@ this style as the default.  Other options are =string= and =rx=.
   (if ale/lsp-mode
       (progn
       (add-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
-      (add-hook 'minibuffer-exit-hook 'ale/lsp--recover)
-      (dolist (lang ale/lsp-enable-languages)
-        (add-hook (intern (format "%s-mode-hook" lang)) #'lsp-deferred)))
+      (add-hook 'minibuffer-exit-hook 'ale/lsp--recover))
     (progn
       (remove-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
-      (remove-hook 'minibuffer-exit-hook 'ale/lsp--recover)
-      (dolist (lang ale/lsp-enable-languages)
-        (remove-hook (intern (format "%s-mode-hook" lang)) #'lsp-deferred)))))
+      (remove-hook 'minibuffer-exit-hook 'ale/lsp--recover))))
 
 (provide 'ale-lsp)
 #+end_src
 
 *** Config
+
 #+begin_src emacs-lisp
 (use-package lsp-mode
   :after-call pre-command-hook
+  :hook ((sh-mode
+          lua-mode
+          ale/vue-mode
+          typescript-mode
+          rust-mode)
+         . lsp-deferred)
   :config
   (ale/lsp-mode)
+  (setq lsp-eldoc-hook nil)
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (add-to-list 'warning-suppress-types '(lsp-mode))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
@@ -819,7 +825,7 @@ If region is active, add its contents to the new buffer."
 :ID:       76cafb17-37ee-40c4-bf9f-6721d5f825bf
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
 ;;; ale-vterm.el --- -*- lexical-binding: t -*-
 
 (defcustom ale/vterm-position
@@ -984,7 +990,7 @@ Create new one if no vterm buffer exists."
 :ID:       05d50f67-511f-483d-ba45-50d374f3f5cb
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
 ;;; ale-eshell.el --- -*- lexical-binding: t -*-
 
 (require 'em-hist)
@@ -1191,7 +1197,6 @@ A poor man's multi-eshell.
 This section will be tangled to `eshell-aliases-file'.
 
 #+begin_src conf :tangle (concat user-emacs-directory "eshell/alias")
-alias dh ~/Code/alex.files/local/bin/system/dothelper
 alias e find-file-other-window $1
 alias ls exa -a --color=always --group-directories-first $*
 alias la exa -al --color=always --group-directories-first $*
@@ -1484,7 +1489,7 @@ contains several subsections as follows:
 :ID:       48f13168-7c74-4676-881a-b6f666eec120
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-bootstrap-ext-tangle-target)
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
 ;;; ale-murl.el -*- lexical-binding: t; -*-
 
 (require 'json)
