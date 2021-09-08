@@ -157,6 +157,17 @@ emacs (again, comfirm your $PATH environment variable).
     (start-process "" nil "nohup" "em" "restart")))
 #+end_src
 
+* Core
+
+Load core of emacs-grandview. It is *NOT* recommend to delete this section.
+
+#+begin_src emacs-lisp
+(load (concat ale-init-dir "core/editor.el") nil t)
+(load (concat ale-init-dir "core/completion.el") nil t)
+(load (concat ale-init-dir "core/ui.el") nil t)
+(load (concat ale-init-dir "core/bindings.el") nil t)
+#+end_src
+
 * Introspection
 ** Man page (man.el)
 
@@ -298,6 +309,7 @@ control over the buffer list and is more powerful overall.
   (setq ibuffer-old-time 48)
   (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
 #+end_src
+
 * File management
 ** Find files (files.el)
 

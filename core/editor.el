@@ -220,6 +220,6 @@
 ;; configuration.
 (put 'list-timers 'disabled nil)
 (put 'erase-buffer 'disabled nil)
-(setq custom-file (concat user-emacs-directory "ale-custom.el"))
+(setq custom-file (concat ale-cache-dir "custom.el"))
 
 (provide 'core-editor)
