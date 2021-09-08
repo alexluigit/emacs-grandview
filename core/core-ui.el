@@ -168,7 +168,7 @@
                      (ale-window-recenter-mode)
                      (ale-pulse-advice-commands-mode 1)
                      (ale-font-setup)
-                     (ale-frame-adjust-transparency 8)))))
+                     (ale-frame-auto-opacity-mode)))))
 
 (add-hook 'after-init-hook 'ale-modeline-mode)
 
