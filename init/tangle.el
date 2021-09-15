@@ -77,7 +77,8 @@
 
 (add-hook 'kill-emacs-hook #'ale-init-build)
 
-(add-hook 'emacs-startup-hook #'ale-init-profiler)
+(when ale-debug-p
+  (add-hook 'emacs-startup-hook #'ale-init-profiler))
 
 (unless (file-exists-p ale-cache-dir)
   (make-directory ale-cache-dir)
@@ -85,6 +86,5 @@
 
 (load ale-autoload-file nil t)
 (load (ale-minimal-config) nil t)
-(when (daemonp)
+(when (or (daemonp) window-system)
   (load ale-full-config nil t))
-
