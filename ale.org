@@ -1363,8 +1363,6 @@ Summary of what these do:
   (setq lsp-ui-doc-position 'bottom)
   :hook
   (lsp-mode . lsp-ui-mode))
-
-(use-package lsp-treemacs)
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
