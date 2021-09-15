@@ -127,7 +127,7 @@
                              (propertize "✖ " 'face face))
                             (t
                              (setq face 'ale-modeline-status-neutral)
-                             (propertize "✔ " 'face face)))
+                             (propertize "✓ " 'face face)))
                       (propertize (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
                                   'face face
                                   'mouse-face face)
@@ -147,7 +147,7 @@
                                          'face (if .error
                                                    'ale-modeline-status-error
                                                  'ale-modeline-status-warning))))
-                       (propertize "✔ Good  " 'face 'ale-modeline-status-success)))
+                       (propertize "✓ Good  " 'face 'ale-modeline-status-success)))
           ('running (propertize "Δ Checking  " 'face 'ale-modeline-status-info))
           ('errored (propertize "✖ Error  " 'face 'ale-modeline-status-error))
           ('interrupted (propertize "⏸ Paused  " 'face 'ale-modeline-status-neutral))
