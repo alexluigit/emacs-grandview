@@ -82,6 +82,19 @@ Return the decoded text as multibyte string."
      ,@body))
 
 ;;; Mutation
+
+;;;###autoload
+(defmacro setq! (&rest settings)
+  "A stripped-down `customize-set-variable' with the syntax of `setq'.
+
+This can be used as a drop-in replacement for `setq'. Particularly when you know
+a variable has a custom setter (a :set property in its `defcustom' declaration).
+This triggers setters. `setq' does not."
+  (macroexp-progn
+   (cl-loop for (var val) on settings by 'cddr
+            collect `(funcall (or (get ',var 'custom-set) #'set)
+                              ',var ,val))))
+
 ;;;###autoload
 (defmacro appendq! (sym &rest lists)
   "Append LISTS to SYM in place."
