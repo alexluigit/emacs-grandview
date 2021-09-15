@@ -943,63 +943,11 @@ control over the buffer list and is more powerful overall.
 =Dired= is a built-in tool that performs file management operations
 inside of an Emacs buffer.  It is simply superb!
 
-*** Autoload
-:PROPERTIES:
-:ID:       2a18e2a0-5b16-4706-b006-884bd4094c4e
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
-;;; ale-dired.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defun ale/dired-jump () nil)
-
-(defcustom ale/dired-routes '()
-  "doc"
-  :group 'files :type 'list
-  :set
-  (lambda (k v)
-    `(setq ,k v)
-    (eval `(transient-define-prefix ale/dired-jump ()
-             ["Go to Directory: "
-              ,@(cl-loop for (key desc path) in v
-                         collect (list key desc `(lambda () (interactive) (ale-files-find-dir ,path))))]))))
-
-;;;###autoload
-(defun ale/dired-rename-space-to-underscore ()
-  "Rename current or marked files by replacing space to underscore."
-  (interactive)
-  (require 'dired-aux)
-  (if (or (eq major-mode 'dired-mode)
-          (eq major-mode 'danger-mode))
-      (let ((markedFiles (dired-get-marked-files )))
-        (mapc (lambda (x)
-                (when (string-match " " x )
-                  (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
-              markedFiles)
-        (if (eq major-mode 'danger-mode)
-            (danger-refresh)
-          (revert-buffer)))
-    (user-error "Not in dired/danger")))
-
-;;;###autoload
-(defun ale/dired-file-rename-eol ()
-  "Rename current file from end of line."
-  (interactive)
-  (end-of-line)
-  (wdired-change-to-wdired-mode)
-  (when (featurep 'meow) (meow-append)))
-
-(provide 'ale-dired)
-#+end_src
-
-*** Config
-
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp (ale-minimal-config)
 (use-package dired
   :straight (:type built-in)
   :custom
-  (ale/dired-routes '(("o" "Home"        "~")
+  (ale-dired-routes '(("o" "Home"        "~")
                       ("u" "Emacs cache" "~/.cache/emacs")
                       ("p" "Code"        "~/Code")
                       ("n" "Downloads"   "~/Downloads")
@@ -1010,11 +958,11 @@ inside of an Emacs buffer.  It is simply superb!
   (:map dired-mode-map
         ("/" . dired-goto-file)
         ("a" . dired-create-empty-file)
-        ("r" . ale/dired-jump)
+        ("r" . ale-dired-jump)
         ("I" . dired-insert-subdir)
         ("?" . dired-create-directory)
         ("^" . dired-find-file-other-window)
-        ("i" . ale/dired-file-rename-eol)
+        ("i" . ale-dired-file-rename-eol)
         ("d" . dired-kill-subdir)
         ("<" . beginning-of-buffer)
         (">" . end-of-buffer)
@@ -1023,7 +971,7 @@ inside of an Emacs buffer.  It is simply superb!
         ("o" . dired-up-directory)
         ("x" . dired-do-delete)
         ("." . dired-omit-mode)
-        ("% SPC" . ale/dired-rename-space-to-underscore))
+        ("% SPC" . ale-dired-rename-space-to-underscore))
   :config
   (setq large-file-warning-threshold 50000000)
   (setq dired-recursive-copies 'always)
@@ -1076,8 +1024,6 @@ as well. See details at: https://github.com/alexluigit/danger.el
 (use-package danger
   :after-call pre-command-hook
   :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
-  :bind
-  (:map meow-leader-keymap ("n" . danger))
   :hook
   (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
   :config
