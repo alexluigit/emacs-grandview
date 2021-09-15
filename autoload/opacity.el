@@ -2,7 +2,7 @@
 
 (defvar ale-opacity 80)
 (defcustom ale-opacity-disabled-modes
-  '(dired-mode eaf-mode)
+  '(dired-mode image-mode)
   "A list of modes in which the global better-jumper minor mode will not be turned on."
   :group 'ale
   :type '(list symbol))
