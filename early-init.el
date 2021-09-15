@@ -11,9 +11,6 @@
 (setq package-quickstart nil)
 (setq package-enable-at-startup nil)  ; Prevent package.el loading packages prior to their init-file
 
-;; No littering
-(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
-
 ;; Disable warnings from legacy advice system. They aren't useful, and what can
 ;; we do about them, besides changing packages upstream?
 (setq ad-redefinition-action 'accept)
@@ -80,14 +77,12 @@
 ;; slightly less to process at startup.
 (setq command-line-x-option-alist nil)
 
-;; Disable backup files
-(setq auto-save-list-file-prefix nil
-      auto-save-default nil
-      make-backup-files nil
-      create-lockfiles nil)
+;; Emacs hangs when large selections contain mixed line endings.
+;; This problem is described in etc/PROBLEMS
+;; See also: <https://gnu.emacs.bug.narkive.com/Kbl5Gryo/bug-16737-timed-out-waiting-for-reply-from-selection-owner>
+(setq select-active-regions 'only)
 
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar
 (scroll-bar-mode -1)                  ; Disable scroll bar
-(fset 'yes-or-no-p 'y-or-n-p)         ; y,n for yes,no
