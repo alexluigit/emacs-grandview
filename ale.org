@@ -100,23 +100,23 @@ Script for starting up emacs.
 
 + *What does this script do?*
 
-  If this org file get modified, =ale-bootstrap-build= function will tangle
+  If this org file get modified, =ale-init-build= function will tangle
   this file.  After the build function finishes, it kill current emacs
   and open emacs with new init file.
 
-  Since =ale-bootstrap-build= function is added to =kill-emacs-hook=, emacs
+  Since =ale-init-build= function is added to =kill-emacs-hook=, emacs
   main process only get killed after the tangle function finishes
   (unless we use '-9' flag in kill command).  In my case, it usually
   takes emacs less than 1s to tangle this org file, so if emacs main
-  process keep alive for over 3s after ~killall emacs~ command, it
-  probably means emacs get frozen, so we just kill it with ~kill -9~.
+  process keep alive for over 3s after *killall emacs* command, it
+  probably means emacs get frozen, so we just kill it with *kill -9*.
 
 + *How to use this script?*
 
   You don't need to install this script if you have followed
   =Installation= section. This script will be tangled to
-  ~~/.local/bin/em~, so if you want to get access to =em restart= command from
-  terminal, make sure ~~/.local/bin~ is in your ~$PATH~ environment
+  *~/.local/share/em*, so if you want to get access to =em restart= command from
+  terminal, make sure *~/.local/bin/em* is in your *$PATH* environment
   variable.
 
 Here is the content of the script.
@@ -157,15 +157,573 @@ emacs (again, comfirm your $PATH environment variable).
     (start-process "" nil "nohup" "em" "restart")))
 #+end_src
 
-* Core
+* *CORE CONFIGURATION*
 
-Load core of emacs-grandview. It is *NOT* recommend to delete this section.
+Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this section.
 
-#+begin_src emacs-lisp
-(load (concat ale-init-dir "core/editor.el") nil t)
-(load (concat ale-init-dir "core/completion.el") nil t)
-(load (concat ale-init-dir "core/ui.el") nil t)
-(load (concat ale-init-dir "core/bindings.el") nil t)
+** Text editing
+
++ *Symbol pairs*
+
+  =embrace.el= is a package for symbol pairs insert/change/delete which resembles
+  to =surround.vim= in vim.
+  I've forked this package to extract =embrace-default-pairs= out, so we can use
+  keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
+  has been bound to =meow-inner-of-thing=.)
+
++ *Paragraghs*
+
+  The =ale-fill.el= library is a tiny wrapper around some Emacs settings and modes
+  that are scrattered around several files, which control (i) how paragraphs or
+  comments in programming modes should be wrapped to a given column count, and
+  (ii) what constitutes a sentence. I put them all together here to make things
+  easier to track.  Use M-n and M-p for navigating between paragraphs.
+
+  =ale-fill-fill-mode= sets my desired default column width for all buffers, while
+  it applies another value for programming modes (in case there is a need to
+  control the two cases separately). Those values are stored in the variables
+  =ale-fill-default-column= and =ale-fill-prog-mode-column= respectively. My minor
+  mode also enables =auto-fill-mode= in text-mode and prog-mode buffers through
+  the appropriate hooks. Disabling =ale-fill-fill-mode= will remove all those
+  customisations.
+
++ *Text files with long lines*
+
+  Consistent performance is the reason to enable =global-so-long-mode=, built
+  into Emacs versions >= 27, which allows the active major mode to gracefully
+  adapt to buffers with very long lines. What “very long” means is, of course,
+  configurable: M-x find-library so-long covers several customisation options,
+  though I find that the defaults require no further intervention from my part.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package embrace
+  :straight
+  (embrace :type git :depth full :host github
+           :repo "cute-jumper/embrace.el"
+           :fork (:host github :repo "alexluigit/embrace.el"))
+  :after-call pre-command-hook
+  :init
+  (setq embrace-default-pairs
+        '((?r . ("(" . ")"))
+          (?R . ("( " . " )"))
+          (?c . ("{" . "}"))
+          (?C . ("{ " . " }"))
+          (?\[ . ("[" . "]"))
+          (?\] . ("[ " . " ]"))
+          (?a . ("<" . ">"))
+          (?A . ("< " . " >"))
+          (?s . ("\"" . "\""))
+          (?\' . ("\'" . "\'"))
+          (?` . ("`" . "`")))))
+
+(use-package paragraphs
+  :straight (:type built-in)
+  :bind
+  ("M-n" . forward-paragraph)
+  ("M-p" . backward-paragraph)
+  :init
+  (setq-default truncate-lines t)
+  (ale-fill-fill-mode 1)
+  :config
+  (setq ale-fill-default-column 80)
+  (setq ale-fill-prog-mode-column 80)
+  (setq sentence-end-double-space t)
+  (setq sentence-end-without-period nil)
+  (setq colon-double-space nil)
+  (setq use-hard-newlines nil)
+  (setq adaptive-fill-mode t))
+
+(use-package so-long
+  :after-call find-file-hook
+  :straight (:type built-in)
+  :config
+  (global-so-long-mode))
+#+end_src
+
+** Navigation
+
+Settings for text/code/file navigation in emacs.
+The relevent packages are:
+
++ *display-line-numbers*: Display line numbers when programming.
++ *better-jumper*: create a jump list (same concept in vim) in emacs.
++ *avy*: Jump to visible text.
++ *xref*: provides helpful commands for code navigation and discovery.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package display-line-numbers
+  :straight (:type built-in)
+  :hook
+  (prog-mode . display-line-numbers-mode))
+
+(use-package better-jumper
+  :after-call pre-command-hook
+  :config
+  (better-jumper-mode +1)
+  (ale-jumper-sensible-jump-mode))
+
+(use-package avy
+  :config
+  (setq avy-timeout-seconds 0.3)
+  (setq avy-all-windows nil)
+  (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
+
+(use-package xref
+  :straight (:type built-in)
+  :config
+  (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
+  (setq xref-show-xrefs-function #'xref-show-definitions-completing-read)
+  (setq xref-file-name-display 'project-relative)
+  (setq xref-search-program 'ripgrep))
+#+end_src
+
+** Minibuffer
+
++ *minibuffer*: Basic minibuffer config.
++ *isearch-mb*: An alternative isearch UI.
++ *savehist*: Keeps a record of actions involving the minibuffer.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package minibuffer
+  :straight (:type built-in)
+  :config
+  (setq completion-category-defaults nil)
+  (setq completion-cycle-threshold 3)
+  (setq completion-flex-nospace nil)
+  (setq completion-pcm-complete-word-inserts-delimiters t)
+  (setq completion-pcm-word-delimiters "-_./:| ")
+  (setq completion-show-help nil)
+  (setq completion-auto-help nil)
+  (setq completion-ignore-case t)
+  (setq-default case-fold-search t)   ; For general regexp
+  (setq read-buffer-completion-ignore-case t)
+  (setq read-file-name-completion-ignore-case t)
+  (setq enable-recursive-minibuffers t)
+  (setq resize-mini-windows 'grow-only)
+  (setq minibuffer-eldef-shorten-default t)
+  (setq! minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+  (minibuffer-depth-indicate-mode 1))
+
+(use-package isearch-mb
+  :init
+  (isearch-mb-mode)
+  :config
+  (add-to-list 'isearch-mb--with-buffer #'consult-isearch)
+  (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
+  :bind
+  (:map isearch-mb-minibuffer-map
+        ([remap previous-matching-history-element] . consult-isearch)))
+
+(use-package savehist
+  :after-call minibuffer-setup-hook
+  :straight (:type built-in)
+  :config
+  (setq savehist-file (locate-user-emacs-file "savehist"))
+  (setq history-length 10000)
+  (setq history-delete-duplicates t)
+  (setq savehist-save-minibuffer-history t)
+  (savehist-mode))
+#+end_src
+
+** Completion framework
+
+The optimal way of using Emacs is through searching and narrowing
+selection candidates.  Spend less time worrying about where things are
+on the screen and more on how fast you can bring them into focus.
+This is, of course, a matter of realigning priorities, as we still
+wish to control every aspect of the interface.
+
++ *vertico*
+
+  A minimalistic completion UI.
+
++ *orderless*
+
+  This package provides an `orderless' completion style that divides the pattern
+  into components (space-separated by default), and matches candidates that
+  match all of the components in any order.
+
++ *marginalia*
+  This is a utility jointly developed by Daniel Mendler and Omar
+  Antolín Camarena that provides annotations to completion
+  candidates.  It is meant to be framework-agnostic, so it works with
+  Selectrum, Icomplete, vertico, and Embark.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package vertico
+  :after-call pre-command-hook
+  :config
+  (set-face-attribute 'vertico-current nil :background
+                      (face-attribute 'lazy-highlight :background nil t)
+                      :weight 'semi-bold)
+  (vertico-mode 1))
+
+(use-package orderless
+  :after-call minibuffer-setup-hook
+  :config
+  (setq completion-styles '(orderless))
+  (setq orderless-component-separator " +")
+  (setq orderless-matching-styles
+        '(ale-pinyin-build-regexp-string
+          orderless-initialism
+          orderless-prefixes
+          orderless-regexp))
+  (setq orderless-style-dispatchers
+        '(ale-orderless-literal-dispatcher
+          ale-orderless-initialism-dispatcher
+          ale-orderless-without-literal-dispatcher
+          ale-orderless-pinyin-dispatcher)))
+
+(use-package consult
+  :after-call minibuffer-setup-hook
+  :init
+  (setq completion-in-region-function #'consult-completion-in-region)
+  (setq register-preview-delay 0.2)
+  (setq register-preview-function #'consult-register-format)
+  (advice-add #'register-preview :override #'consult-register-window)
+  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  (advice-add #'switch-to-buffer :around #'ale-consult-switch-buffer-advisor)
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+  :config
+  (advice-add #'consult-line :around #'ale-consult-line-advisor)
+  (setq consult-project-root-function #'ale-consult-project-root)
+  (setq consult-line-numbers-widen t)
+  (setq consult-async-min-input 3)
+  (setq consult-async-input-debounce 0.5)
+  (setq consult-async-input-throttle 0.8)
+  (setq consult-narrow-key ">"))
+
+(use-package embark
+  :after-call (find-file-hook minibuffer-setup-hook)
+  :bind
+  (("C-." . embark-act)
+   :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
+   :map embark-collect-mode-map ("C-." . embark-act))
+  :config
+  (use-package embark-consult
+    :after-call (minibuffer-setup-hook embark-act))
+  (ale-embark-keymaps 1)
+  (setq embark-quit-after-action t)
+  (setq embark-action-indicator
+        (let ((act (propertize "Act" 'face 'success)))
+          (cons act (concat act " on '%s'"))))
+  (setq embark-become-indicator (propertize "Become" 'face 'warning)))
+
+(use-package marginalia
+  :after-call minibuffer-setup-hook
+  :config
+  (setq marginalia-annotators
+        '(marginalia-annotators-heavy
+          marginalia-annotators-light))
+  (marginalia-mode))
+#+end_src
+
+** Viewport
+
+The =display-buffer-alist= is intended as a rule-set for controlling
+the display of windows.  The objective is to create a more intuitive
+workflow where targeted buffer groups or types are always shown in a
+given location, on the premise that predictability improves usability.
+
+For each buffer action in it we can define several functions for selecting the
+appropriate window.  These are executed in sequence, but my usage thus far
+suggests that a simpler method is just as effective for my case.
+
+Additionally, I've set =split-height-threshold= to nil and =split-width-threshold=
+to 0 to ensure every new window will open in horizontal split.
+
+=ale-modeline-mode= is defined in *autoload/modeline.el*
+=ale-frame-settings= is defined in *autoload/frame.el*
+
++ *ace-window*: Index based window motions
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package window
+  :straight (:type built-in)
+  :config
+  (setq display-buffer-alist
+        `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+           (display-buffer-in-side-window)
+           (window-height . 0.2)
+           (side . top))
+          ("^\\*\\(Help\\|helpful\\).*"
+           (display-buffer-in-side-window)
+           (window-width . 0.4)
+           (side . right))
+          ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
+           (display-buffer-at-bottom))))
+  (setq help-window-select t)
+  (setq window-combination-resize t)
+  (setq even-window-sizes 'height-only)
+  (setq window-sides-vertical nil)
+  (setq switch-to-buffer-in-dedicated-window 'pop)
+  (setq split-height-threshold nil)
+  (setq split-width-threshold 0))
+
+(use-package ace-window
+  :config
+  (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
+
+(ale-frame-add-hook 'ale-frame-settings)
+(ale-modeline-mode)
+#+end_src
+
+** User interface
+
+Basic user interface settings.
+
+The relevent packages are:
+
++ *all-the-icons*: icons library.
++ *anzu*: interactive query replace.
++ *transient*: a built-in package in emacs 28 for "transient" commands.
+
+=modus-vivendi= is a built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package all-the-icons
+  :init
+  (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
+    (all-the-icons-install-fonts)))
+
+(use-package transient
+  :after-call pre-command-hook
+  :straight (:type built-in)
+  :config
+  (setq transient-show-popup -0.5)
+  (transient-bind-q-to-quit)
+  :bind
+  ((:map transient-map
+         ("<escape>" . transient-quit-all))
+   (:map transient-sticky-map
+         ("ESC" . transient-quit-all))))
+
+(use-package anzu
+  :after-call isearch-mode
+  :config
+  (global-anzu-mode +1))
+
+(use-package custom
+  :straight (:type built-in)
+  :init
+  (setq modus-themes-links 'no-underline)
+  :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi))))
+#+end_src
+
+** Keybindings
+
+This section contains (almost) all core keybindings of emacs-grandview. See the
+docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package meow
+  :demand t
+  :init (meow-global-mode)
+  :bind
+  (("<escape>" . ale-escape)
+   ("C-;" . exchange-point-and-mark)
+   ("<C-i>" . better-jumper-jump-forward)
+   ("C-o" . better-jumper-jump-backward)
+   ("C-x C-d" . ale-ispell-word)
+   ("M-o" . ace-select-window)
+   ("M-SPC" . ale-monocle) ; replaced `just-one-space'
+   ("M-%" . anzu-isearch-query-replace)
+   :map minibuffer-local-map
+   ("S-<return>" . ale-files-other-window)
+   ("C-u" . ale-kill-whole-line)
+   ("<C-i>" . forward-char)
+   ("C-o" . backward-char)
+   :map ale-files-map
+   ("." . ale-files-dotfiles)
+   ("e" . ale-files-edit-emacs-config)
+   ("u" . ale-files-in-user-dirs)
+   ("o" . ale-files-browse-all-directories)
+   ("r" . ale-files-rename-file-and-buffer)
+   ("l" . find-library)
+   :map ale-elisp-map
+   ("e" . eval-last-sexp)
+   ("x" . eval-expression)
+   ("f" . eval-defun)
+   ("u" . ale-unadvice)
+   ("m" . ale-show-messages)
+   ("<backspace>" . ale-erase-messages)
+   :map ale-utils-map
+   ("d" . ale-insert-date)
+   ("o" . ale-opacity-set)
+   ("=" . count-words)
+   :map meow-insert-state-keymap
+   ("<escape>" . ale-escape)
+   ("C-u" . ale-kill-whole-line)
+   ("<C-i>" . ale-insert-ctrl-i)
+   ("C-o" . ale-insert-ctrl-o)
+   :map meow-motion-state-keymap
+   ("/" . consult-line)
+   ("<escape>" . ale-escape)
+   :map meow-leader-keymap
+   ("0" . delete-window)
+   ("1" . delete-other-windows)
+   ("2" . ale-split-window-below)
+   ("3" . ale-split-window-right)
+   ("4" . ctl-x-4-prefix)
+   ("5" . ctl-x-5-prefix)
+   ("6" . register-map)
+   ("7" . project-map)
+   ("8" . insert-char)
+   ("9" . tab-map)
+   ("[" . awesome-tab-backward-tab)
+   ("]" . awesome-tab-forward-tab)
+   ("SPC" . switch-to-buffer)
+   ("?" . describe-keymap)
+   ("/" . describe-symbol)
+   (";" . ale-comment-or-uncomment-region)
+   ("e" . ale-elisp-map)
+   ("f" . ale-files-map)
+   ("i" . list-buffers)
+   ("k" . kill-this-buffer)
+   ("n" . dired-jump)
+   ("o" . ale-org-map)
+   ("p" . ale-project-find-file)
+   ("t" . ale-consult-map)
+   ("u" . ale-utils-map)
+   ("w" . save-buffer)
+   ("z" . window-toggle-side-windows)
+   :map meow-normal-state-keymap
+   ("0" . meow-digit-argument)
+   ("1" . meow-digit-argument)
+   ("2" . meow-digit-argument)
+   ("3" . meow-digit-argument)
+   ("4" . meow-digit-argument)
+   ("5" . meow-digit-argument)
+   ("6" . meow-digit-argument)
+   ("7" . meow-digit-argument)
+   ("8" . meow-digit-argument)
+   ("9" . meow-digit-argument)
+   ("/" . consult-line)
+   ("%" . ale-match-paren)
+   ("`" . negative-argument)
+   (";" . meow-reverse)
+   ("," . meow-inner-of-thing)
+   ("." . meow-bounds-of-thing)
+   ("<" . beginning-of-buffer)
+   (">" . end-of-buffer)
+   ;; ("[" . good-scroll-down-full-screen)
+   ;; ("]" . good-scroll-up-full-screen)
+   ("[" . scroll-down)
+   ("]" . scroll-up)
+   ("-" . meow-pop)
+   ("_" . meow-pop-all-selection)
+   ("=" . ale-query-replace)
+   ("+" . anzu-query-replace-regexp)
+   ("'" . meow-end-of-thing)
+   ("\\" . meow-pop-search)
+   ("^" . meow-last-buffer)
+   ("<backspace>" . meow-beginning-of-thing)
+   ("a" . ale-insert)
+   ("A" . ale-insert-at-first-non-whitespace)
+   ("b" . meow-back-word)
+   ("B" . meow-back-symbol)
+   ("c" . meow-change)
+   ("C" . meow-change-save)
+   ("d" . meow-delete)
+   ("e" . meow-line)
+   ("E" . ale-inner-line)
+   ("f" . meow-next-word)
+   ("F" . meow-next-symbol)
+   ("g" . ale-files-update)
+   ("h" . embrace-commander)
+   ("i" . forward-char)
+   ("j" . ale-top-join-line)
+   ("J" . meow-join)
+   ("k" . meow-kill)
+   ("K" . meow-kmacro-matches)
+   ("l" . meow-kmacro-lines)
+   ("m" . meow-mark-word)
+   ("M" . meow-mark-symbol)
+   ("n" . ale-next-line)
+   ("N" . meow-next-expand)
+   ("o" . backward-char)
+   ("p" . ale-prev-line)
+   ("P" . meow-prev-expand)
+   ("q" . meow-quit)
+   ("r" . meow-search)
+   ("s" . meow-open-below)
+   ("S" . meow-open-above)
+   ("t" . avy-goto-char-timer)
+   ("T" . avy-resume)
+   ("u" . undo)
+   ("U" . undo-redo)
+   ("v" . meow-visit)
+   ("w" . meow-block)
+   ("W" . meow-block-expand)
+   ("x" . ale-save)
+   ("y" . meow-replace)
+   ("Y" . meow-yank-pop)
+   ("z" . meow-grab)
+   ("Z" . meow-swap-grab))
+  :config
+  (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
+  (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
+  ;; Terminal cursor shape
+  (unless (or (daemonp) window-system)
+    (advice-add 'meow--update-cursor :after #'ale-set-cursor))
+  (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
+  (meow-setup-line-number)
+  (define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
+  (define-key meow-motion-state-keymap
+    (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'switch-to-buffer)
+  (setq meow-visit-sanitize-completion nil)
+  (setq meow-use-clipboard t)
+  (setq meow-esc-delay 0.001)
+  (setq meow-keypad-describe-delay 0.5)
+  (setq meow-select-on-change t)
+  (setq meow-cursor-type-normal 'box)
+  (setq meow-cursor-type-insert '(bar . 4))
+  (setq meow-cursor-type-default 'hbar)
+  (setq meow-selection-command-fallback
+        '((meow-replace . meow-yank)
+          (meow-reverse . back-to-indentation)
+          (meow-change . meow-change-char)
+          (ale-save . ale-pulse-save-line)
+          (meow-kill . ale-kill-whole-line)
+          (meow-cancel . keyboard-quit)
+          (meow-pop . meow-pop-grab)
+          (meow-delete . meow-C-d)))
+  (setq meow-char-thing-table
+        '((?r . round)
+          (?\[ . square)
+          (?c . curly)
+          (?s . string)
+          (?e . symbol)
+          (?w . window)
+          (?b . buffer)
+          (?p . paragraph)
+          (?\^? . line)
+          (?' . line)
+          (?d . defun)
+          (?i . indent)
+          (?t . tag)
+          (?x . extend)))
+  (add-to-list 'meow-mode-state-list '(helpful-mode . normal)))
+
+(with-eval-after-load 'consult
+  (bind-keys
+   :map ale-consult-map
+   ("/" . consult-line-multi)
+   ("e" . consult-compile-error)
+   ("r" . consult-ripgrep)
+   ("k" . consult-keep-lines)
+   ("i" . consult-imenu-multi)
+   ("f" . consult-focus-lines)
+   ("n" . consult-outline)
+   ("o" . consult-org-heading)
+   ("R" . consult-register)
+   ("y" . consult-yank-from-kill-ring)
+   ("m" . consult-minor-mode-menu)
+   ("c" . consult-complex-command)
+   ("C" . consult-mode-command)))
+
+(ale-frame-add-hook 'ale-kbd-C-i-fix)
 #+end_src
 
 * Introspection
@@ -242,7 +800,54 @@ made for this package and built-in help buffer:
    ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
 #+end_src
 
-* Interface
+* History
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+;; Keep a record of all recently opened files.
+(use-package recentf
+  :straight (:type built-in)
+  :after-call find-file-hook danger
+  :config
+  (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
+  (recentf-mode 1))
+
+;; Just remember where the point is in any given file.  This can often
+;; be a subtle reminder of what you were doing the last time you
+;; visited that file, allowing you to pick up from there.
+(use-package saveplace
+  :straight (:type built-in)
+  :after-call find-file-hook
+  :config
+  (setq save-place-file (locate-user-emacs-file "saveplace"))
+  (setq save-place-forget-unreadable-files t)
+  (save-place-mode 1))
+
+;; This mode ensures that the buffer is updated whenever the file
+;; changes.  A change can happen externally or by some other tool
+;; inside of Emacs (e.g. kill a Magit diff).
+(use-package autorevert
+  :straight (:type built-in)
+  :after-call self-insert-command
+  :config
+  (setq auto-revert-verbose t)
+  (global-auto-revert-mode))
+#+end_src
+
+* UI extras
+
+** Smooth scrolling (good-scroll.el)
+
+pixelwise (linear or bezier) scrolling in emacs.
+
+#+begin_src emacs-lisp
+(use-package good-scroll
+  :after-call scroll-up scroll-down
+  :config
+  (good-scroll-mode 1)
+  (advice-add 'scroll-up :override 'good-scroll-up-full-screen)
+  (advice-add 'scroll-down :override 'good-scroll-down-full-screen))
+#+end_src
+
 ** Window position (transpose-frame.el)
 
 The =transpose-frame= library defines a set of commands for shifting the
@@ -318,7 +923,7 @@ control over the buffer list and is more powerful overall.
   :straight (:type built-in)
   :bind
   (:map ale-files-map
-        ("r" . ale/dired-jump))
+        ("r" . ale-dired-jump))
   :config
   (setq confirm-kill-processes nil)
   (setq ale-files-dot-repo "~/Code/alex.files/")
@@ -515,7 +1120,98 @@ Basically, its interaction model is as follows:
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 #+end_src
 
-* Text Editing
+* Text editing extras
+** Writable grep (wgrep.el)
+
+With =wgrep= we can directly edit the results of a grep and save the changes to
+all affected buffers.  In principle, this is the same as what the built-in occur
+offers.  We can use it to operate on a list of matches by leveraging the full
+power of Emacs' editing capabilities (e.g. keyboard macros, query and replace a
+regexp .etc).
+
+#+begin_src emacs-lisp
+(use-package wgrep
+  :config
+  (setq wgrep-auto-save-buffer t)
+  (setq wgrep-change-readonly-file t)
+  :bind
+  (:map wgrep-mode-map
+        ("M-n" . next-error-no-select)
+        ("M-p" . previous-error-no-select)))
+#+end_src
+
+** Auto completion (company.el)
+
+  =tng= means tab and go, in this mode tab key will complete and
+  move to the next candidate meanwhile keep company window open.
+
+#+begin_src emacs-lisp
+(use-package company
+  :after-call self-insert-command
+  :config
+  (global-company-mode)
+  (company-tng-mode)
+  (setq company-idle-delay 0.0))
+#+end_src
+
+** Pair insertion
+
+Emacs labels as `electric' any behaviour that involves contextual auto-insertion
+of characters.
+
+- Indent automatically.
+
+- If =electric-pair-mode= is enabled (which I might do manually),
+  insert quotes and brackets in pairs.  Only do so if there is no
+  alphabetic character after the cursor.
+
+- To get those numbers, evaluate =(string-to-char CHAR)= where CHAR
+  is the one you are interested in.  For example, get the literal
+  tab's character with `(string-to-char "\t")'.
+
+- While inputting a pair, inserting the closing character will just
+  skip over the existing one, rather than add a new one.
+
+- Do not skip over whitespace when operating on pairs.  Combined
+  with the above point, this means that a new character will be
+  inserted, rather than be skipped over.  I find this better,
+  because it prevents the point from jumping forward, plus it
+  allows for more natural editing.
+
+- The rest concern the conditions for transforming quotes into
+  their curly equivalents.  I keep this disabled, because curly
+  quotes are distinct characters.  It is difficult to search for
+  them.  Just note that on GNU/Linux you can type them directly by
+  hitting the "compose" key and then an angled bracket (=<= or =>=)
+  followed by a quote mark.
+
+#+begin_src emacs-lisp
+(use-package electric
+  :config
+  (advice-add 'electric-pair-post-self-insert-function :around
+              (lambda (fn &rest args) (let ((mark-active nil)) (apply fn args))))
+  (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
+  (setq electric-pair-preserve-balance t)
+  (setq electric-pair-pairs
+        '((8216 . 8217)
+          (8220 . 8221)
+          (171 . 187)))
+  (setq electric-pair-skip-self 'electric-pair-default-skip-self)
+  (setq electric-pair-skip-whitespace nil)
+  (setq electric-pair-skip-whitespace-chars '(9 10 32))
+  (setq electric-quote-context-sensitive t)
+  (setq electric-quote-paragraph t)
+  (setq electric-quote-string nil)
+  (setq electric-quote-replace-double t)
+  (electric-indent-mode 1)
+  (electric-pair-mode 1)
+  (electric-quote-mode -1)
+  :hook
+  (org-mode . ale-electric-inhibit-<)
+  (minibuffer-setup . (lambda () (unless (eq this-command 'eval-expression) (electric-pair-mode 0))))
+  (minibuffer-exit . (lambda () (electric-pair-mode 1))))
+#+end_src
+
 ** Parentheses (paren.el / rainbow-delimiters.el)
 
 Configure the mode that highlights matching delimiters or parentheses.
