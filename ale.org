@@ -2171,13 +2171,6 @@ contains several subsections as follows:
     (require 'shrface)
     (shrface-mode)))
 #+end_src
-** COMMENT Music Player (netease-cloud-music.el)
-
-#+begin_src emacs-lisp
-(use-package netease-cloud-music
-  :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
-#+end_src
-
 * Applications
 ** Murl (ale-murl.el)
 *** Autoload
