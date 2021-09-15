@@ -1342,8 +1342,9 @@ Summary of what these do:
   (ale/lsp-mode)
   (setq lsp-eldoc-hook nil)
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
-  (add-to-list 'warning-suppress-types '(lsp-mode))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
+  (with-eval-after-load 'warnings
+    (add-to-list 'warning-suppress-types '(lsp-mode)))
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 #+end_src
 
