@@ -1183,12 +1183,13 @@ Summary of what these do:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package paren
+  :straight (:type built-in)
+  :after-call meow-block meow-line self-insert-command
   :config
   (setq show-paren-style 'parenthesis)
   (setq show-paren-when-point-in-periphery nil)
   (setq show-paren-when-point-inside-paren nil)
-  :hook
-  (after-init . show-paren-mode))
+  (show-paren-mode))
 
 (use-package rainbow-delimiters
   :hook
