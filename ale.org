@@ -433,8 +433,14 @@ suggests that a simpler method is just as effective for my case.
 Additionally, I've set =split-height-threshold= to nil and =split-width-threshold=
 to 0 to ensure every new window will open in horizontal split.
 
-=ale-modeline-mode= is defined in *autoload/modeline.el*
-=ale-frame-settings= is defined in *autoload/frame.el*
+=ale-modeline-mode= provides following infos in modeline:
+- Meow current state (INSERT/NORMAL...)
+- Filename
+- Current line / column
+- Total lines
+- Git branch
+- Progress bar of current document
+Its source code lies in *autoload/modeline.el*
 
 + *ace-window*: Index based window motions
 
@@ -465,7 +471,11 @@ to 0 to ensure every new window will open in horizontal split.
   :config
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 
-(ale-frame-add-hook 'ale-frame-settings)
+(ale-frame-enable 'fringe-mode)
+(ale-frame-enable 'ale-window-recenter-mode)
+(ale-frame-enable 'ale-pulse-advice-commands-mode)
+(ale-frame-enable 'ale-font-setup)
+(ale-frame-enable 'ale-opacity-auto-mode)
 (ale-modeline-mode)
 #+end_src
 
@@ -607,8 +617,6 @@ docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
    ("." . meow-bounds-of-thing)
    ("<" . beginning-of-buffer)
    (">" . end-of-buffer)
-   ;; ("[" . good-scroll-down-full-screen)
-   ;; ("]" . good-scroll-up-full-screen)
    ("[" . scroll-down)
    ("]" . scroll-up)
    ("-" . meow-pop)
@@ -723,7 +731,7 @@ docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
    ("c" . consult-complex-command)
    ("C" . consult-mode-command)))
 
-(ale-frame-add-hook 'ale-kbd-C-i-fix)
+(ale-kbd-C-i-fix)
 #+end_src
 
 * Introspection
@@ -2171,6 +2179,7 @@ contains several subsections as follows:
     (require 'shrface)
     (shrface-mode)))
 #+end_src
+
 * Applications
 ** Murl (ale-murl.el)
 *** Autoload
