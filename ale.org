@@ -203,7 +203,7 @@ Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this
   (embrace :type git :depth full :host github
            :repo "cute-jumper/embrace.el"
            :fork (:host github :repo "alexluigit/embrace.el"))
-  :after-call pre-command-hook
+  :after-call meow--selection-type
   :init
   (setq embrace-default-pairs
         '((?r . ("(" . ")"))
@@ -307,9 +307,9 @@ The relevent packages are:
   (minibuffer-depth-indicate-mode 1))
 
 (use-package isearch-mb
-  :init
-  (isearch-mb-mode)
+  :after-call isearch-mode
   :config
+  (isearch-mb-mode)
   (add-to-list 'isearch-mb--with-buffer #'consult-isearch)
   (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
   :bind
@@ -397,14 +397,13 @@ wish to control every aspect of the interface.
   (setq consult-narrow-key ">"))
 
 (use-package embark
-  :after-call (find-file-hook minibuffer-setup-hook)
+  :after-call dired-after-readin-hook minibuffer-setup-hook
   :bind
   (("C-." . embark-act)
    :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
    :map embark-collect-mode-map ("C-." . embark-act))
   :config
-  (use-package embark-consult
-    :after-call (minibuffer-setup-hook embark-act))
+  (use-package embark-consult :demand t)
   (ale-embark-keymaps 1)
   (setq embark-quit-after-action t)
   (setq embark-action-indicator
@@ -2132,7 +2131,7 @@ contains several subsections as follows:
 
 #+begin_src emacs-lisp
 (use-package pdf-tools
-  :after-call find-file-hook
+  :after-call dired-after-readin-hook minibuffer-setup-hook
   :config
   (pdf-tools-install)
   (setq-default pdf-view-display-size 'fit-page)
