@@ -71,5 +71,5 @@
 ;; Show current key strokes in echo area after 0.25s
 (setq echo-keystrokes 0.25)
 
-(fset 'yes-or-no-p 'y-or-n-p)         ; y,n for yes,no
+;; y,n for yes,no
 (setq use-short-answers t)
