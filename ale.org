@@ -228,7 +228,7 @@ Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this
   (ale-fill-fill-mode 1)
   :config
   (setq ale-fill-default-column 80)
-  (setq ale-fill-prog-mode-column 80)
+  (setq ale-fill-prog-mode-column 100)
   (setq sentence-end-double-space t)
   (setq sentence-end-without-period nil)
   (setq colon-double-space nil)
