@@ -164,32 +164,70 @@ emacs (again, comfirm your $PATH environment variable).
 Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this section.
 
 ** Text editing
+*** Modal editing
 
-+ *Symbol pairs*
+Unlike =evil-mode=, which tries to create a whole vim emulation in emacs, =meow=
+only focus on bringing the goodness of modal editing to vanilla emacs.
+See the docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
 
-  =embrace.el= is a package for symbol pairs insert/change/delete which resembles
-  to =surround.vim= in vim.
-  I've forked this package to extract =embrace-default-pairs= out, so we can use
-  keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
-  has been bound to =meow-inner-of-thing=.)
+#+begin_src emacs-lisp
+(use-package meow
+  :demand t
+  :init (meow-global-mode)
+  :config
+  (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
+  (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
+  (unless IS-GUI ; Terminal cursor shape
+    (advice-add 'meow--update-cursor :after #'ale-set-cursor))
+  (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
+  (meow-setup-line-number)
+  (define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
+  (define-key meow-motion-state-keymap
+    (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'switch-to-buffer)
+  (setq meow-visit-sanitize-completion nil)
+  (setq meow-use-clipboard t)
+  (setq meow-esc-delay 0.001)
+  (setq meow-keypad-describe-delay 0.5)
+  (setq meow-select-on-change t)
+  (setq meow-cursor-type-normal 'box)
+  (setq meow-cursor-type-insert '(bar . 4))
+  (setq meow-cursor-type-default 'hbar)
+  (setq meow-selection-command-fallback
+        '((meow-replace . meow-yank)
+          (meow-reverse . back-to-indentation)
+          (meow-change . meow-change-char)
+          (ale-save . ale-pulse-save-line)
+          (meow-kill . ale-kill-whole-line)
+          (meow-cancel . keyboard-quit)
+          (meow-pop . meow-pop-grab)
+          (meow-delete . meow-C-d)))
+  (setq meow-char-thing-table
+        '((?r . round)
+          (?\[ . square)
+          (?c . curly)
+          (?s . string)
+          (?e . symbol)
+          (?w . window)
+          (?b . buffer)
+          (?p . paragraph)
+          (?\^? . line)
+          (?' . line)
+          (?d . defun)
+          (?i . indent)
+          (?t . tag)
+          (?x . extend)))
+  (add-to-list 'meow-mode-state-list '(helpful-mode . normal)))
+#+end_src
 
-+ *Paragraghs*
+*** Symbol pairs
 
-  The =ale-fill.el= library is a tiny wrapper around some Emacs settings and modes
-  that are scrattered around several files, which control (i) how paragraphs or
-  comments in programming modes should be wrapped to a given column count, and
-  (ii) what constitutes a sentence. I put them all together here to make things
-  easier to track.  Use M-n and M-p for navigating between paragraphs.
+=embrace.el= is a package for symbol pairs insert/change/delete which resembles
+to =surround.vim= in vim.
+I've forked this package to extract =embrace-default-pairs= out, so we can use
+keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
+has been bound to =meow-inner-of-thing=.)
 
-  =ale-fill-fill-mode= sets my desired default column width for all buffers, while
-  it applies another value for programming modes (in case there is a need to
-  control the two cases separately). Those values are stored in the variables
-  =ale-fill-default-column= and =ale-fill-prog-mode-column= respectively. My minor
-  mode also enables =auto-fill-mode= in text-mode and prog-mode buffers through
-  the appropriate hooks. Disabling =ale-fill-fill-mode= will remove all those
-  customisations.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package embrace
   :straight
   (embrace :type git :depth full :host github
@@ -209,7 +247,25 @@ Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this
           (?s . ("\"" . "\""))
           (?\' . ("\'" . "\'"))
           (?` . ("`" . "`")))))
+#+end_src
 
+*** Paragraphs
+
+The =ale-fill.el= library is a tiny wrapper around some Emacs settings and modes
+that are scrattered around several files, which control (i) how paragraphs or
+comments in programming modes should be wrapped to a given column count, and
+(ii) what constitutes a sentence. I put them all together here to make things
+easier to track.  Use M-n and M-p for navigating between paragraphs.
+
+=ale-fill-fill-mode= sets my desired default column width for all buffers, while
+it applies another value for programming modes (in case there is a need to
+control the two cases separately). Those values are stored in the variables
+=ale-fill-default-column= and =ale-fill-prog-mode-column= respectively. My minor
+mode also enables =auto-fill-mode= in text-mode and prog-mode buffers through
+the appropriate hooks. Disabling =ale-fill-fill-mode= will remove all those
+customisations.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package paragraphs
   :straight (:type built-in)
   :bind
@@ -373,6 +429,21 @@ wish to control every aspect of the interface.
   (advice-add #'switch-to-buffer :around #'ale-consult-switch-buffer-advisor)
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
+  :bind
+  (:map ale-consult-map
+        ("/" . consult-line-multi)
+        ("e" . consult-compile-error)
+        ("r" . consult-ripgrep)
+        ("k" . consult-keep-lines)
+        ("i" . consult-imenu-multi)
+        ("f" . consult-focus-lines)
+        ("n" . consult-outline)
+        ("o" . consult-org-heading)
+        ("R" . consult-register)
+        ("y" . consult-yank-from-kill-ring)
+        ("m" . consult-minor-mode-menu)
+        ("c" . consult-complex-command)
+        ("C" . consult-mode-command))
   :config
   (advice-add #'consult-line :around #'ale-consult-line-advisor)
   (setq consult-project-root-function #'ale-consult-project-root)
@@ -510,213 +581,168 @@ The relevent packages are:
 
 ** Keybindings
 
-This section contains (almost) all core keybindings of emacs-grandview. See the
-docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
+This section contains all core keybindings of emacs-grandview.
+
+*** INSERT
+
+#+begin_src emacs-lisp
+(bind-keys
+ :map meow-insert-state-keymap
+ ("<escape>" . ale-escape)
+ ("C-u" . ale-kill-whole-line)
+ ("<C-i>" . ale-insert-ctrl-i)
+ ("C-o" . ale-insert-ctrl-o))
+#+end_src
+
+*** NORMAL
+
+#+begin_src emacs-lisp
+(meow-normal-define-key
+ '("0" . meow-digit-argument)
+ '("1" . meow-digit-argument)
+ '("2" . meow-digit-argument)
+ '("3" . meow-digit-argument)
+ '("4" . meow-digit-argument)
+ '("5" . meow-digit-argument)
+ '("6" . meow-digit-argument)
+ '("7" . meow-digit-argument)
+ '("8" . meow-digit-argument)
+ '("9" . meow-digit-argument)
+ '("/" . consult-line)
+ '("%" . ale-match-paren)
+ '("`" . negative-argument)
+ '(";" . meow-reverse)
+ '("," . meow-inner-of-thing)
+ '("." . meow-bounds-of-thing)
+ '("<" . beginning-of-buffer)
+ '(">" . end-of-buffer)
+ '("[" . scroll-down)
+ '("]" . scroll-up)
+ '("-" . meow-pop)
+ '("_" . meow-pop-all-selection)
+ '("=" . ale-query-replace)
+ '("+" . anzu-query-replace-regexp)
+ '("'" . meow-end-of-thing)
+ '("\\" . meow-pop-search)
+ '("^" . meow-last-buffer)
+ '("<backspace>" . meow-beginning-of-thing)
+ '("a" . ale-insert)
+ '("A" . ale-insert-at-first-non-whitespace)
+ '("b" . meow-back-word)
+ '("B" . meow-back-symbol)
+ '("c" . meow-change)
+ '("C" . meow-change-save)
+ '("d" . meow-delete)
+ '("e" . meow-line)
+ '("E" . ale-inner-line)
+ '("f" . meow-next-word)
+ '("F" . meow-next-symbol)
+ '("g" . ale-files-update)
+ '("h" . embrace-commander)
+ '("i" . forward-char)
+ '("j" . ale-top-join-line)
+ '("J" . meow-join)
+ '("k" . meow-kill)
+ '("K" . meow-kmacro-matches)
+ '("l" . meow-kmacro-lines)
+ '("m" . meow-mark-word)
+ '("M" . meow-mark-symbol)
+ '("n" . ale-next-line)
+ '("N" . meow-next-expand)
+ '("o" . backward-char)
+ '("p" . ale-prev-line)
+ '("P" . meow-prev-expand)
+ '("q" . meow-quit)
+ '("r" . meow-search)
+ '("s" . meow-open-below)
+ '("S" . meow-open-above)
+ '("t" . avy-goto-char-timer)
+ '("T" . avy-resume)
+ '("u" . undo)
+ '("U" . undo-redo)
+ '("v" . meow-visit)
+ '("w" . meow-block)
+ '("W" . meow-block-expand)
+ '("x" . ale-save)
+ '("y" . meow-replace)
+ '("Y" . meow-yank-pop)
+ '("z" . meow-grab)
+ '("Z" . meow-swap-grab))
+#+end_src
+
+*** LEADER
+
+#+begin_src emacs-lisp
+(meow-leader-define-key
+ '("0" . delete-window)
+ '("1" . delete-other-windows)
+ '("2" . ale-split-window-below)
+ '("3" . ale-split-window-right)
+ '("4" . ctl-x-4-prefix)
+ '("5" . ctl-x-5-prefix)
+ '("6" . register-map)
+ '("7" . project-map)
+ '("8" . insert-char)
+ '("9" . tab-map)
+ '("[" . awesome-tab-backward-tab)
+ '("]" . awesome-tab-forward-tab)
+ '("SPC" . switch-to-buffer)
+ '("?" . describe-keymap)
+ '("/" . describe-symbol)
+ '(";" . ale-comment-or-uncomment-region)
+ '("e" . ale-elisp-map)
+ '("f" . ale-files-map)
+ '("i" . list-buffers)
+ '("k" . kill-this-buffer)
+ '("n" . dired-jump)
+ '("o" . ale-org-map)
+ '("p" . ale-project-find-file)
+ '("t" . ale-consult-map)
+ '("u" . ale-utils-map)
+ '("w" . save-buffer)
+ '("z" . window-toggle-side-windows))
+
+(meow-motion-overwrite-define-key
+'("/" . consult-line)
+'("<escape>" . ale-escape))
+#+end_src
+
+*** GLOBAL
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package meow
-  :demand t
-  :init (meow-global-mode)
-  :bind
-  (("<escape>" . ale-escape)
-   ("C-;" . exchange-point-and-mark)
-   ("<C-i>" . better-jumper-jump-forward)
-   ("C-o" . better-jumper-jump-backward)
-   ("C-x C-d" . ale-ispell-word)
-   ("M-o" . ace-select-window)
-   ("M-SPC" . ale-monocle) ; replaced `just-one-space'
-   ("M-%" . anzu-isearch-query-replace)
-   :map minibuffer-local-map
-   ("S-<return>" . ale-files-other-window)
-   ("C-u" . ale-kill-whole-line)
-   ("<C-i>" . forward-char)
-   ("C-o" . backward-char)
-   :map ale-files-map
-   ("." . ale-files-dotfiles)
-   ("e" . ale-files-edit-emacs-config)
-   ("u" . ale-files-in-user-dirs)
-   ("o" . ale-files-browse-all-directories)
-   ("r" . ale-files-rename-file-and-buffer)
-   ("l" . find-library)
-   :map ale-elisp-map
-   ("e" . eval-last-sexp)
-   ("x" . eval-expression)
-   ("f" . eval-defun)
-   ("u" . ale-unadvice)
-   ("m" . ale-show-messages)
-   ("<backspace>" . ale-erase-messages)
-   :map ale-utils-map
-   ("d" . ale-insert-date)
-   ("o" . ale-opacity-set)
-   ("=" . count-words)
-   :map meow-insert-state-keymap
-   ("<escape>" . ale-escape)
-   ("C-u" . ale-kill-whole-line)
-   ("<C-i>" . ale-insert-ctrl-i)
-   ("C-o" . ale-insert-ctrl-o)
-   :map meow-motion-state-keymap
-   ("/" . consult-line)
-   ("<escape>" . ale-escape)
-   :map meow-leader-keymap
-   ("0" . delete-window)
-   ("1" . delete-other-windows)
-   ("2" . ale-split-window-below)
-   ("3" . ale-split-window-right)
-   ("4" . ctl-x-4-prefix)
-   ("5" . ctl-x-5-prefix)
-   ("6" . register-map)
-   ("7" . project-map)
-   ("8" . insert-char)
-   ("9" . tab-map)
-   ("[" . awesome-tab-backward-tab)
-   ("]" . awesome-tab-forward-tab)
-   ("SPC" . switch-to-buffer)
-   ("?" . describe-keymap)
-   ("/" . describe-symbol)
-   (";" . ale-comment-or-uncomment-region)
-   ("e" . ale-elisp-map)
-   ("f" . ale-files-map)
-   ("i" . list-buffers)
-   ("k" . kill-this-buffer)
-   ("n" . dired-jump)
-   ("o" . ale-org-map)
-   ("p" . ale-project-find-file)
-   ("t" . ale-consult-map)
-   ("u" . ale-utils-map)
-   ("w" . save-buffer)
-   ("z" . window-toggle-side-windows)
-   :map meow-normal-state-keymap
-   ("0" . meow-digit-argument)
-   ("1" . meow-digit-argument)
-   ("2" . meow-digit-argument)
-   ("3" . meow-digit-argument)
-   ("4" . meow-digit-argument)
-   ("5" . meow-digit-argument)
-   ("6" . meow-digit-argument)
-   ("7" . meow-digit-argument)
-   ("8" . meow-digit-argument)
-   ("9" . meow-digit-argument)
-   ("/" . consult-line)
-   ("%" . ale-match-paren)
-   ("`" . negative-argument)
-   (";" . meow-reverse)
-   ("," . meow-inner-of-thing)
-   ("." . meow-bounds-of-thing)
-   ("<" . beginning-of-buffer)
-   (">" . end-of-buffer)
-   ("[" . scroll-down)
-   ("]" . scroll-up)
-   ("-" . meow-pop)
-   ("_" . meow-pop-all-selection)
-   ("=" . ale-query-replace)
-   ("+" . anzu-query-replace-regexp)
-   ("'" . meow-end-of-thing)
-   ("\\" . meow-pop-search)
-   ("^" . meow-last-buffer)
-   ("<backspace>" . meow-beginning-of-thing)
-   ("a" . ale-insert)
-   ("A" . ale-insert-at-first-non-whitespace)
-   ("b" . meow-back-word)
-   ("B" . meow-back-symbol)
-   ("c" . meow-change)
-   ("C" . meow-change-save)
-   ("d" . meow-delete)
-   ("e" . meow-line)
-   ("E" . ale-inner-line)
-   ("f" . meow-next-word)
-   ("F" . meow-next-symbol)
-   ("g" . ale-files-update)
-   ("h" . embrace-commander)
-   ("i" . forward-char)
-   ("j" . ale-top-join-line)
-   ("J" . meow-join)
-   ("k" . meow-kill)
-   ("K" . meow-kmacro-matches)
-   ("l" . meow-kmacro-lines)
-   ("m" . meow-mark-word)
-   ("M" . meow-mark-symbol)
-   ("n" . ale-next-line)
-   ("N" . meow-next-expand)
-   ("o" . backward-char)
-   ("p" . ale-prev-line)
-   ("P" . meow-prev-expand)
-   ("q" . meow-quit)
-   ("r" . meow-search)
-   ("s" . meow-open-below)
-   ("S" . meow-open-above)
-   ("t" . avy-goto-char-timer)
-   ("T" . avy-resume)
-   ("u" . undo)
-   ("U" . undo-redo)
-   ("v" . meow-visit)
-   ("w" . meow-block)
-   ("W" . meow-block-expand)
-   ("x" . ale-save)
-   ("y" . meow-replace)
-   ("Y" . meow-yank-pop)
-   ("z" . meow-grab)
-   ("Z" . meow-swap-grab))
-  :config
-  (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
-  (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
-  ;; Terminal cursor shape
-  (unless IS-GUI
-    (advice-add 'meow--update-cursor :after #'ale-set-cursor))
-  (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
-  (meow-setup-line-number)
-  (define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
-  (define-key meow-motion-state-keymap
-    (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'switch-to-buffer)
-  (setq meow-visit-sanitize-completion nil)
-  (setq meow-use-clipboard t)
-  (setq meow-esc-delay 0.001)
-  (setq meow-keypad-describe-delay 0.5)
-  (setq meow-select-on-change t)
-  (setq meow-cursor-type-normal 'box)
-  (setq meow-cursor-type-insert '(bar . 4))
-  (setq meow-cursor-type-default 'hbar)
-  (setq meow-selection-command-fallback
-        '((meow-replace . meow-yank)
-          (meow-reverse . back-to-indentation)
-          (meow-change . meow-change-char)
-          (ale-save . ale-pulse-save-line)
-          (meow-kill . ale-kill-whole-line)
-          (meow-cancel . keyboard-quit)
-          (meow-pop . meow-pop-grab)
-          (meow-delete . meow-C-d)))
-  (setq meow-char-thing-table
-        '((?r . round)
-          (?\[ . square)
-          (?c . curly)
-          (?s . string)
-          (?e . symbol)
-          (?w . window)
-          (?b . buffer)
-          (?p . paragraph)
-          (?\^? . line)
-          (?' . line)
-          (?d . defun)
-          (?i . indent)
-          (?t . tag)
-          (?x . extend)))
-  (add-to-list 'meow-mode-state-list '(helpful-mode . normal)))
-
-(with-eval-after-load 'consult
-  (bind-keys
-   :map ale-consult-map
-   ("/" . consult-line-multi)
-   ("e" . consult-compile-error)
-   ("r" . consult-ripgrep)
-   ("k" . consult-keep-lines)
-   ("i" . consult-imenu-multi)
-   ("f" . consult-focus-lines)
-   ("n" . consult-outline)
-   ("o" . consult-org-heading)
-   ("R" . consult-register)
-   ("y" . consult-yank-from-kill-ring)
-   ("m" . consult-minor-mode-menu)
-   ("c" . consult-complex-command)
-   ("C" . consult-mode-command)))
+(bind-keys
+ :map global-map
+ ("<escape>" . ale-escape)
+ ("C-;" . exchange-point-and-mark)
+ ("<C-i>" . better-jumper-jump-forward)
+ ("C-o" . better-jumper-jump-backward)
+ ("C-x C-d" . ale-ispell-word)
+ ("M-o" . ace-select-window)
+ ("M-SPC" . ale-monocle) ; replaced `just-one-space'
+ ("M-%" . anzu-isearch-query-replace)
+ :map minibuffer-local-map
+ ("S-<return>" . ale-files-other-window)
+ ("C-u" . ale-kill-whole-line)
+ ("<C-i>" . forward-char)
+ ("C-o" . backward-char)
+ :map ale-files-map
+ ("." . ale-files-dotfiles)
+ ("e" . ale-files-edit-emacs-config)
+ ("u" . ale-files-in-user-dirs)
+ ("o" . ale-files-browse-all-directories)
+ ("r" . ale-files-rename-file-and-buffer)
+ ("l" . find-library)
+ :map ale-elisp-map
+ ("e" . eval-last-sexp)
+ ("x" . eval-expression)
+ ("f" . eval-defun)
+ ("u" . ale-unadvice)
+ ("m" . ale-show-messages)
+ ("<backspace>" . ale-erase-messages)
+ :map ale-utils-map
+ ("d" . ale-insert-date)
+ ("o" . ale-opacity-set)
+ ("=" . count-words))
 
 (ale-kbd-C-i-fix)
 #+end_src
