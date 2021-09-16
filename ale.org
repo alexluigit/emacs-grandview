@@ -189,14 +189,6 @@ Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this
   the appropriate hooks. Disabling =ale-fill-fill-mode= will remove all those
   customisations.
 
-+ *Text files with long lines*
-
-  Consistent performance is the reason to enable =global-so-long-mode=, built
-  into Emacs versions >= 27, which allows the active major mode to gracefully
-  adapt to buffers with very long lines. What “very long” means is, of course,
-  configurable: M-x find-library so-long covers several customisation options,
-  though I find that the defaults require no further intervention from my part.
-
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package embrace
   :straight
@@ -234,12 +226,6 @@ Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this
   (setq colon-double-space nil)
   (setq use-hard-newlines nil)
   (setq adaptive-fill-mode t))
-
-(use-package so-long
-  :after-call find-file-hook
-  :straight (:type built-in)
-  :config
-  (global-so-long-mode))
 #+end_src
 
 ** Navigation
@@ -1075,6 +1061,22 @@ Basically, its interaction model is as follows:
 #+end_src
 
 * Text editing extras
+** Long line text (so-long.el)
+
+Consistent performance is the reason to enable =global-so-long-mode=, built
+into Emacs versions >= 27, which allows the active major mode to gracefully
+adapt to buffers with very long lines. What “very long” means is, of course,
+configurable: M-x find-library so-long covers several customisation options,
+though I find that the defaults require no further intervention from my part.
+
+#+begin_src emacs-lisp
+(use-package so-long
+  :after-call find-file-hook
+  :straight (:type built-in)
+  :config
+  (global-so-long-mode))
+#+end_src
+
 ** Writable grep (wgrep.el)
 
 With =wgrep= we can directly edit the results of a grep and save the changes to
