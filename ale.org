@@ -1426,7 +1426,8 @@ Summary of what these do:
 (use-package restclient)
 #+end_src
 
-** COMMENT Scratch buffers (scratch.el)
+** Scratch buffers (scratch.el)
+
 This package will produce a buffer that matches the major mode of the
 one you are currently in.  Use it with =M-x scratch=.  Doing that with a
 prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
@@ -1436,30 +1437,44 @@ The =ale/scratch-buffer-setup= simply adds some text in the buffer and
 renames it appropriately for the sake of easier discovery.  I got the
 idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
 
+*** Autoload
+:PROPERTIES:
+:ID:       a9d94700-bb3d-4e7a-a2f6-21a21be382c8
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
+;;; ale-scratch.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale/scratch-buffer-setup ()
+  "Add contents to `scratch' buffer and name it accordingly.
+If region is active, add its contents to the new buffer."
+  (let* ((mode major-mode)
+         (string (format "Scratch buffer for: %s\n\n" mode))
+         (region (with-current-buffer (current-buffer)
+                   (if (region-active-p)
+                       (buffer-substring-no-properties
+                        (region-beginning)
+                        (region-end)))
+                   ""))
+         (text (concat string region)))
+    (when scratch-buffer
+      (save-excursion
+        (insert text)
+        (goto-char (point-min))
+        (comment-region (point-at-bol) (point-at-eol)))
+      (forward-line 2))
+    (rename-buffer (format "*Scratch for %s*" mode) t)))
+#+end_src
+
+*** Config
+
 #+begin_src emacs-lisp
 (use-package scratch
-  :config
-  (defun ale/scratch-buffer-setup ()
-    "Add contents to `scratch' buffer and name it accordingly.
-If region is active, add its contents to the new buffer."
-    (let* ((mode major-mode)
-           (string (format "Scratch buffer for: %s\n\n" mode))
-           (region (with-current-buffer (current-buffer)
-                     (if (region-active-p)
-                         (buffer-substring-no-properties
-                          (region-beginning)
-                          (region-end)))
-                     ""))
-           (text (concat string region)))
-      (when scratch-buffer
-        (save-excursion
-          (insert text)
-          (goto-char (point-min))
-          (comment-region (point-at-bol) (point-at-eol)))
-        (forward-line 2))
-      (rename-buffer (format "*Scratch for %s*" mode) t)))
-  (add-hook 'scratch-create-buffer-hook #'ale/scratch-buffer-setup)
-  (define-key global-map (kbd "C-c s") #'scratch))
+  :hook (scratch-create-buffer . ale/scratch-buffer-setup)
+  :bind (("C-c s" . scratch)
+         :map ale-files-map
+         ("s" . scratch)))
 #+end_src
 
 * Terminal
