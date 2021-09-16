@@ -191,11 +191,11 @@ emacs (again, comfirm your $PATH environment variable).
 
 Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this section.
 
-** Text editing
+** Text display / editing
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-137675b5
+:CUSTOM_ID: *CORE_CONFIGURATION*-Text_display__editing-c99db480
 :END:
-*** Modal editing
+*** Modal editing (meow.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-Modal_editing-fa54405a
 :END:
@@ -209,7 +209,7 @@ because it can be very lengthy and should be configured separately, see
 
 If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package meow
   :demand t
   :init (meow-global-mode)
@@ -258,7 +258,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
   (add-to-list 'meow-mode-state-list '(helpful-mode . normal)))
 #+end_src
 
-*** Symbol pairs
+*** Symbol pairs (embrace.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-Symbol_pairs-9a7ea7b5
 :END:
@@ -269,7 +269,7 @@ I've forked this package to extract =embrace-default-pairs= out, so we can use
 keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
 has been bound to =meow-inner-of-thing=.)
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package embrace
   :straight
   (embrace :type git :depth full :host github
@@ -289,6 +289,25 @@ has been bound to =meow-inner-of-thing=.)
           (?s . ("\"" . "\""))
           (?\' . ("\'" . "\'"))
           (?` . ("`" . "`")))))
+#+end_src
+
+*** Long line text (so-long.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-Long_line_text_(so-long.el)-895a4a19
+:END:
+
+Consistent performance is the reason to enable =global-so-long-mode=, built
+into Emacs versions >= 27, which allows the active major mode to gracefully
+adapt to buffers with very long lines. What “very long” means is, of course,
+configurable: M-x find-library so-long covers several customisation options,
+though I find that the defaults require no further intervention from my part.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package so-long
+  :after-call find-file-hook
+  :straight (:type built-in)
+  :config
+  (global-so-long-mode))
 #+end_src
 
 *** Paragraphs
@@ -651,7 +670,7 @@ This section contains all core keybindings of emacs-grandview.
 :CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-INSERT-0190d698
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (bind-keys
  :map meow-insert-state-keymap
  ("<escape>" . ale-escape)
@@ -665,7 +684,7 @@ This section contains all core keybindings of emacs-grandview.
 :CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-NORMAL-00dd6416
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (meow-normal-define-key
  '("0" . meow-digit-argument)
  '("1" . meow-digit-argument)
@@ -744,7 +763,7 @@ This section contains all core keybindings of emacs-grandview.
 :CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-LEADER-0a9580f7
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
 (meow-leader-define-key
  '("0" . delete-window)
  '("1" . delete-other-windows)
@@ -1225,25 +1244,6 @@ Basically, its interaction model is as follows:
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-f1492905
 :END:
-** Long line text (so-long.el)
-:PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Long_line_text_(so-long.el)-22aa03c8
-:END:
-
-Consistent performance is the reason to enable =global-so-long-mode=, built
-into Emacs versions >= 27, which allows the active major mode to gracefully
-adapt to buffers with very long lines. What “very long” means is, of course,
-configurable: M-x find-library so-long covers several customisation options,
-though I find that the defaults require no further intervention from my part.
-
-#+begin_src emacs-lisp
-(use-package so-long
-  :after-call find-file-hook
-  :straight (:type built-in)
-  :config
-  (global-so-long-mode))
-#+end_src
-
 ** Writable grep (wgrep.el)
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-Writable_grep_(wgrep.el)-7dd75e82
