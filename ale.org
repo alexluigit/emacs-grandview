@@ -1611,7 +1611,12 @@ Summary of what these do:
 
 #+begin_src emacs-lisp
 (use-package format-all
-  :bind ("C-c C-M-f" . format-all-buffer))
+  :hook
+  (prog-mode . format-all-mode)
+  (prog-mode . format-all-ensure-formatter)
+  :bind
+  (:map ale-files-map
+  ("f" . format-all-buffer)))
 #+end_src
 
 ** Syntax checker (flymake.el)
