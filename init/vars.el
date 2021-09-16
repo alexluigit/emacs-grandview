@@ -1,5 +1,6 @@
 ;;; init/vars.el -*- lexical-binding: t; -*-
 
+(defconst IS-GUI (or (daemonp) (display-graphic-p)))
 (defvar ale-debug-p t)
 (defvar ale-init-dir (file-name-directory user-init-file))
 (defvar ale-cache-dir (concat user-emacs-directory "ale/"))

@@ -6,4 +6,7 @@
   (load (concat init-dir "init/vars.el") nil t)
   (load (concat init-dir "init/package.el") nil t)
   (load (concat init-dir "init/tangle.el") nil t)
+  (load ale-autoload-file nil t)
+  (load (ale-minimal-config) nil t)
+  (when IS-GUI (load ale-full-config nil t))
   (load (concat init-dir "init/gc.el") nil t))

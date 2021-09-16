@@ -83,8 +83,3 @@
 (unless (file-exists-p ale-cache-dir)
   (make-directory ale-cache-dir)
   (ale-init-build t))
-
-(load ale-autoload-file nil t)
-(load (ale-minimal-config) nil t)
-(when (or (daemonp) window-system)
-  (load ale-full-config nil t))

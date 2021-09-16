@@ -675,7 +675,7 @@ docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
   (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
   (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
   ;; Terminal cursor shape
-  (unless (or (daemonp) window-system)
+  (unless IS-GUI
     (advice-add 'meow--update-cursor :after #'ale-set-cursor))
   (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
   (meow-setup-line-number)

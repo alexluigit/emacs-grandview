@@ -9,7 +9,7 @@ some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
 etc. By default, emacs follow this convention, but it doesn't mean
 emacs are not able to tell the difference. To change this behaviour,
 we can use `input-decode-map' to give `C-i' different meaning."
-  (if (or (daemonp) (display-graphic-p))
+  (if IS-GUI
       (add-hook 'after-make-frame-functions
                 (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
     (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
