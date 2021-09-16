@@ -2,13 +2,23 @@
 #+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
+#+OPTIONS: auto-id:t
 
 * Overview
+:PROPERTIES:
+:CUSTOM_ID: Overview-e0bb5308
+:END:
 ** About
+:PROPERTIES:
+:CUSTOM_ID: Overview-About-69b700f5
+:END:
 
 This project is my emacs configuration.
 
 *** Structure
+:PROPERTIES:
+:CUSTOM_ID: Overview-About-Structure-72aebf03
+:END:
 
 + Init file (init.el / early-init.el)
 + Optimization options (early-optimize.el)
@@ -27,6 +37,9 @@ doc
 #+end_src
 
 *** COPYING
+:PROPERTIES:
+:CUSTOM_ID: Overview-About-COPYING-f36578ea
+:END:
 
 Copyright (c) 2020-2021  Alex Lu <alexluigit@gmail.com>
 
@@ -44,7 +57,13 @@ You should have received a copy of the GNU General Public License
 along with this file.  If not, see <http://www.gnu.org/licenses/>.
 
 ** Quickstart
+:PROPERTIES:
+:CUSTOM_ID: Overview-Quickstart-5f7409ee
+:END:
 *** Dependencies
+:PROPERTIES:
+:CUSTOM_ID: Overview-Quickstart-Dependencies-fd1eaa61
+:END:
 
 required:
 fd
@@ -63,6 +82,9 @@ victor-mono-nerd-font
 xdotool
 
 *** Install
+:PROPERTIES:
+:CUSTOM_ID: Overview-Quickstart-Install-d1b7b6a4
+:END:
 
 This section contails instructions on how to use this config.
 
@@ -90,6 +112,9 @@ emacsclient -e '(kill-emacs)'
 #+end_src
 
 ** Restart script
+:PROPERTIES:
+:CUSTOM_ID: Overview-Restart_script-15fa833f
+:END:
 
 Script for starting up emacs.
 
@@ -160,15 +185,29 @@ emacs (again, comfirm your $PATH environment variable).
 #+end_src
 
 * *CORE CONFIGURATION*
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-f16a0fb4
+:END:
 
 Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this section.
 
 ** Text editing
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-137675b5
+:END:
 *** Modal editing
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-Modal_editing-fa54405a
+:END:
 
 Unlike =evil-mode=, which tries to create a whole vim emulation in emacs, =meow=
 only focus on bringing the goodness of modal editing to vanilla emacs.
-See the docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more information.
+
+You may noticed that I didn't include any keybindings of meow here, that's
+because it can be very lengthy and should be configured separately, see
+[[#*CORE_CONFIGURATION*-Keybindings-3cbb54be][Keybindings]] for details.
+
+If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
 #+begin_src emacs-lisp
 (use-package meow
@@ -220,6 +259,9 @@ See the docs of [[https://www.github.com/DoglooksGood/meow][meow]] for more info
 #+end_src
 
 *** Symbol pairs
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-Symbol_pairs-9a7ea7b5
+:END:
 
 =embrace.el= is a package for symbol pairs insert/change/delete which resembles
 to =surround.vim= in vim.
@@ -250,6 +292,9 @@ has been bound to =meow-inner-of-thing=.)
 #+end_src
 
 *** Paragraphs
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editing-Paragraphs-ffa7838c
+:END:
 
 The =ale-fill.el= library is a tiny wrapper around some Emacs settings and modes
 that are scrattered around several files, which control (i) how paragraphs or
@@ -285,6 +330,9 @@ customisations.
 #+end_src
 
 ** Navigation
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Navigation-cd0d21c1
+:END:
 
 Settings for text/code/file navigation in emacs.
 The relevent packages are:
@@ -322,6 +370,9 @@ The relevent packages are:
 #+end_src
 
 ** Minibuffer
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Minibuffer-c81be95a
+:END:
 
 + *minibuffer*: Basic minibuffer config.
 + *isearch-mb*: An alternative isearch UI.
@@ -370,6 +421,9 @@ The relevent packages are:
 #+end_src
 
 ** Completion framework
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-af83619f
+:END:
 
 The optimal way of using Emacs is through searching and narrowing
 selection candidates.  Spend less time worrying about where things are
@@ -478,6 +532,9 @@ wish to control every aspect of the interface.
 #+end_src
 
 ** Viewport
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Viewport-e557b1b8
+:END:
 
 The =display-buffer-alist= is intended as a rule-set for controlling
 the display of windows.  The objective is to create a more intuitive
@@ -538,6 +595,9 @@ Its source code lies in *autoload/modeline.el*
 #+end_src
 
 ** User interface
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-479a9238
+:END:
 
 Basic user interface settings.
 
@@ -580,10 +640,16 @@ The relevent packages are:
 #+end_src
 
 ** Keybindings
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-3cbb54be
+:END:
 
 This section contains all core keybindings of emacs-grandview.
 
 *** INSERT
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-INSERT-0190d698
+:END:
 
 #+begin_src emacs-lisp
 (bind-keys
@@ -595,6 +661,9 @@ This section contains all core keybindings of emacs-grandview.
 #+end_src
 
 *** NORMAL
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-NORMAL-00dd6416
+:END:
 
 #+begin_src emacs-lisp
 (meow-normal-define-key
@@ -671,6 +740,9 @@ This section contains all core keybindings of emacs-grandview.
 #+end_src
 
 *** LEADER
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-LEADER-0a9580f7
+:END:
 
 #+begin_src emacs-lisp
 (meow-leader-define-key
@@ -708,6 +780,9 @@ This section contains all core keybindings of emacs-grandview.
 #+end_src
 
 *** GLOBAL
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-GLOBAL-93442e92
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (bind-keys
@@ -748,7 +823,13 @@ This section contains all core keybindings of emacs-grandview.
 #+end_src
 
 * Introspection
+:PROPERTIES:
+:CUSTOM_ID: Introspection-2eb9ae27
+:END:
 ** Man page (man.el)
+:PROPERTIES:
+:CUSTOM_ID: Introspection-Man_page_(man.el)-5c13db67
+:END:
 
 #+begin_src emacs-lisp
 (use-package man
@@ -758,6 +839,9 @@ This section contains all core keybindings of emacs-grandview.
 #+end_src
 
 ** Emacs Manual (info.el)
+:PROPERTIES:
+:CUSTOM_ID: Introspection-Emacs_Manual_(info.el)-6d9c1f6f
+:END:
 
 #+begin_src emacs-lisp
 (use-package info
@@ -773,6 +857,9 @@ This section contains all core keybindings of emacs-grandview.
 #+end_src
 
 ** Helpful (helpful.el)
+:PROPERTIES:
+:CUSTOM_ID: Introspection-Helpful_(helpful.el)-9bea94cb
+:END:
 
 Helpful.el provides a better help buffer. Here are some tweaks I
 made for this package and built-in help buffer:
@@ -783,7 +870,7 @@ made for this package and built-in help buffer:
 
 *** Autoload
 :PROPERTIES:
-:ID:       71d218ce-ec5a-4c50-9b62-f2f351856b3e
+:CUSTOM_ID: Introspection-Helpful_(helpful.el)-Autoload-29b34fed
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -807,6 +894,9 @@ made for this package and built-in help buffer:
 #+end_src
 
 *** Config
+:PROPERTIES:
+:CUSTOM_ID: Introspection-Helpful_(helpful.el)-Config-88136d61
+:END:
 
 #+begin_src emacs-lisp
 (use-package helpful
@@ -822,6 +912,9 @@ made for this package and built-in help buffer:
 #+end_src
 
 * History
+:PROPERTIES:
+:CUSTOM_ID: History-b0e9427a
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 ;; Keep a record of all recently opened files.
@@ -855,8 +948,14 @@ made for this package and built-in help buffer:
 #+end_src
 
 * UI extras
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-7d2965b2
+:END:
 
 ** Smooth scrolling (good-scroll.el)
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Smooth_scrolling_(good-scroll.el)-7cf7742a
+:END:
 
 pixelwise (linear or bezier) scrolling in emacs.
 
@@ -870,6 +969,9 @@ pixelwise (linear or bezier) scrolling in emacs.
 #+end_src
 
 ** Window position (transpose-frame.el)
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Window_position_(transpose-frame.el)-52932c1a
+:END:
 
 The =transpose-frame= library defines a set of commands for shifting the
 layout of Emacs windows.  Rather than me describing how these work, I
@@ -881,12 +983,18 @@ code.  Do it with =M-x find-library transpose-frame=.
 #+end_src
 
 ** Fill column (visual-fill-column.el)
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Fill_column_(visual-fill-column.el)-0231844f
+:END:
 
 #+begin_src emacs-lisp
 (use-package visual-fill-column)
 #+end_src
 
 ** Key bindings hint (which-key.el)
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Key_bindings_hint_(which-key.el)-91c2c249
+:END:
 
 #+begin_src emacs-lisp
 (use-package which-key
@@ -895,6 +1003,9 @@ code.  Do it with =M-x find-library transpose-frame=.
 #+end_src
 
 ** Buffer list (ibuffer.el)
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Buffer_list_(ibuffer.el)-42746374
+:END:
 
 =ibuffer.el= ships with Emacs and it provides a drop-in replacement for
 =list-buffers=.  Compared to its counterpart, it allows for granular
@@ -937,7 +1048,13 @@ control over the buffer list and is more powerful overall.
 #+end_src
 
 * File management
+:PROPERTIES:
+:CUSTOM_ID: File_management-be510e01
+:END:
 ** Find files (files.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Find_files_(files.el)-e6cb7095
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package files
@@ -959,6 +1076,9 @@ control over the buffer list and is more powerful overall.
 #+end_src
 
 ** Dired (dired.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Dired_(dired.el)-aaf2ff97
+:END:
 
 =Dired= is a built-in tool that performs file management operations
 inside of an Emacs buffer.  It is simply superb!
@@ -1002,6 +1122,9 @@ inside of an Emacs buffer.  It is simply superb!
 #+end_src
 
 ** Writable dired (wdired.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Writable_dired_(wdired.el)-5880191e
+:END:
 
 #+begin_src emacs-lisp
 (use-package wdired
@@ -1011,6 +1134,9 @@ inside of an Emacs buffer.  It is simply superb!
 #+end_src
 
 ** Project management (project.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Project_management_(project.el)-af77825b
+:END:
 
 #+begin_src emacs-lisp
 (use-package project
@@ -1034,6 +1160,9 @@ inside of an Emacs buffer.  It is simply superb!
 #+end_src
 
 ** A better dired interface (danger.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-A_better_dired_interface_(danger.el)-d6097293
+:END:
 
 This package is inspired the popular file manager =ranger=, I created it
 on the basis of =ranger.el=. Compare to =ranger.el=, this package only
@@ -1054,6 +1183,9 @@ as well. See details at: https://github.com/alexluigit/danger.el
 #+end_src
 
 ** Dired mode highlighting (diredfl.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Dired_mode_highlighting_(diredfl.el)-638b0aa2
+:END:
 
 Additional syntax highlighting in dired buffer.
 
@@ -1063,6 +1195,9 @@ Additional syntax highlighting in dired buffer.
 #+end_src
 
 ** Trash (trashed.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Trash_(trashed.el)-ed792e53
+:END:
 
 =trashed= applies the principles of =dired= to the management of the user's
 filesystem trash.  Use =C-h m= to see the docs and keybindings for its
@@ -1087,7 +1222,13 @@ Basically, its interaction model is as follows:
 #+end_src
 
 * Text editing extras
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-f1492905
+:END:
 ** Long line text (so-long.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Long_line_text_(so-long.el)-22aa03c8
+:END:
 
 Consistent performance is the reason to enable =global-so-long-mode=, built
 into Emacs versions >= 27, which allows the active major mode to gracefully
@@ -1104,6 +1245,9 @@ though I find that the defaults require no further intervention from my part.
 #+end_src
 
 ** Writable grep (wgrep.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Writable_grep_(wgrep.el)-7dd75e82
+:END:
 
 With =wgrep= we can directly edit the results of a grep and save the changes to
 all affected buffers.  In principle, this is the same as what the built-in occur
@@ -1123,6 +1267,9 @@ regexp .etc).
 #+end_src
 
 ** Auto completion (company.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Auto_completion_(company.el)-e267ab38
+:END:
 
   =tng= means tab and go, in this mode tab key will complete and
   move to the next candidate meanwhile keep company window open.
@@ -1137,6 +1284,9 @@ regexp .etc).
 #+end_src
 
 ** Pair insertion
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Pair_insertion-6dedc71d
+:END:
 
 Emacs labels as `electric' any behaviour that involves contextual auto-insertion
 of characters.
@@ -1195,6 +1345,9 @@ of characters.
 #+end_src
 
 ** Parentheses (paren.el / rainbow-delimiters.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Parentheses_(paren.el__rainbow-delimiters.el)-fd6e149d
+:END:
 
 Configure the mode that highlights matching delimiters or parentheses.
 I consider this of utmost importance when working with languages such as
@@ -1233,6 +1386,9 @@ Summary of what these do:
 #+end_src
 
 ** Prettify symbols (prog-mode.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Prettify_symbols_(prog-mode.el)-1e9c6d6a
+:END:
 
 #+begin_src emacs-lisp
 (use-package prog-mode
@@ -1258,6 +1414,9 @@ Summary of what these do:
 #+end_src
 
 ** Ripgrep (rg.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Ripgrep_(rg.el)-80b9a72d
+:END:
 
 #+begin_src emacs-lisp
 (defun ale/rg-config ()
@@ -1274,7 +1433,13 @@ Summary of what these do:
 #+end_src
 
 * Languages
+:PROPERTIES:
+:CUSTOM_ID: Languages-fc24530b
+:END:
 ** .rs
+:PROPERTIES:
+:CUSTOM_ID: Languages-.rs-30487163
+:END:
 
 #+begin_src emacs-lisp
 (use-package rust-mode
@@ -1283,6 +1448,9 @@ Summary of what these do:
 #+end_src
 
 ** .lua
+:PROPERTIES:
+:CUSTOM_ID: Languages-.lua-5a72c6cb
+:END:
 
 #+begin_src emacs-lisp
 (use-package lua-mode
@@ -1291,12 +1459,18 @@ Summary of what these do:
 #+end_src
 
 ** .yaml
+:PROPERTIES:
+:CUSTOM_ID: Languages-.yaml-f1b33707
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package yaml-mode)
 #+end_src
 
 ** .vue
+:PROPERTIES:
+:CUSTOM_ID: Languages-.vue-cf7c3bbb
+:END:
 
 #+begin_src emacs-lisp
 (use-package web-mode
@@ -1312,6 +1486,9 @@ Summary of what these do:
 #+end_src
 
 ** .js
+:PROPERTIES:
+:CUSTOM_ID: Languages-.js-a8b50c48
+:END:
 
 #+begin_src emacs-lisp
 (use-package js
@@ -1321,6 +1498,9 @@ Summary of what these do:
 #+end_src
 
 ** .(sh|zsh)
+:PROPERTIES:
+:CUSTOM_ID: Languages-.(sh|zsh)-accbc402
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package sh-script
@@ -1330,10 +1510,16 @@ Summary of what these do:
 #+end_src
 
 * DevTools
+:PROPERTIES:
+:CUSTOM_ID: DevTools-b43b796a
+:END:
 ** LSP (lsp.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-LSP_(lsp.el)-8174ab3f
+:END:
 *** Autoload
 :PROPERTIES:
-:ID:       956309f4-61ce-4489-922d-a8343f281101
+:CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-50e36585
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -1364,6 +1550,9 @@ Summary of what these do:
 #+end_src
 
 *** Config
+:PROPERTIES:
+:CUSTOM_ID: DevTools-LSP_(lsp.el)-Config-090e755b
+:END:
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
@@ -1385,6 +1574,9 @@ Summary of what these do:
 #+end_src
 
 *** Extensions
+:PROPERTIES:
+:CUSTOM_ID: DevTools-LSP_(lsp.el)-Extensions-1f239010
+:END:
 
 #+begin_src emacs-lisp
 (use-package lsp-tailwindcss
@@ -1402,6 +1594,9 @@ Summary of what these do:
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Colorizer_(rainbow-mode.el)-682426c1
+:END:
 
 #+begin_src emacs-lisp
 (use-package rainbow-mode
@@ -1410,6 +1605,9 @@ Summary of what these do:
 #+end_src
 
 ** Formatter (format-all.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Formatter_(format-all.el)-8dd1b7d6
+:END:
 
 #+begin_src emacs-lisp
 (use-package format-all
@@ -1417,6 +1615,9 @@ Summary of what these do:
 #+end_src
 
 ** Syntax checker (flymake.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Syntax_checker_(flymake.el)-4a7acf9b
+:END:
 
 #+begin_src emacs-lisp
 (use-package flymake
@@ -1440,6 +1641,9 @@ Summary of what these do:
 #+end_src
 
 ** Snippet (yasnippet.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Snippet_(yasnippet.el)-640404f6
+:END:
 
 #+begin_src emacs-lisp
 (use-package yasnippet
@@ -1449,12 +1653,18 @@ Summary of what these do:
 #+end_src
 
 ** REST client (restclient.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-REST_client_(restclient.el)-40c2f65f
+:END:
 
 #+begin_src emacs-lisp
 (use-package restclient)
 #+end_src
 
 ** Scratch buffers (scratch.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-13244292
+:END:
 
 This package will produce a buffer that matches the major mode of the
 one you are currently in.  Use it with =M-x scratch=.  Doing that with a
@@ -1467,7 +1677,7 @@ idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aef
 
 *** Autoload
 :PROPERTIES:
-:ID:       a9d94700-bb3d-4e7a-a2f6-21a21be382c8
+:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Autoload-0d1b6a79
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -1496,6 +1706,9 @@ If region is active, add its contents to the new buffer."
 #+end_src
 
 *** Config
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Config-c1c518ba
+:END:
 
 #+begin_src emacs-lisp
 (use-package scratch
@@ -1506,10 +1719,16 @@ If region is active, add its contents to the new buffer."
 #+end_src
 
 * Terminal
+:PROPERTIES:
+:CUSTOM_ID: Terminal-8abe3efe
+:END:
 ** Vterm (vterm.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-Vterm_(vterm.el)-adf87065
+:END:
 *** Autoload
 :PROPERTIES:
-:ID:       76cafb17-37ee-40c4-bf9f-6721d5f825bf
+:CUSTOM_ID: Terminal-Vterm_(vterm.el)-Autoload-0d3e43e5
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -1646,6 +1865,9 @@ Create new one if no vterm buffer exists."
 #+end_src
 
 *** Config
+:PROPERTIES:
+:CUSTOM_ID: Terminal-Vterm_(vterm.el)-Config-4023f865
+:END:
 
 #+begin_src emacs-lisp
 (use-package vterm
@@ -1672,9 +1894,12 @@ Create new one if no vterm buffer exists."
 #+end_src
 
 ** COMMENT Eshell (eshell.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-Eshell_(eshell.el)-4bd8a590
+:END:
 *** Autoload
 :PROPERTIES:
-:ID:       05d50f67-511f-483d-ba45-50d374f3f5cb
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Autoload-b2c03498
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -1856,6 +2081,9 @@ Create new one if no eshell buffer exists."
 #+end_src
 
 *** Multi-eshell
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Multi-eshell-3754f282
+:END:
 
 A poor man's multi-eshell.
 
@@ -1880,6 +2108,9 @@ A poor man's multi-eshell.
 #+end_src
 
 *** Aliases
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Aliases-d72008e1
+:END:
 
 This section will be tangled to `eshell-aliases-file'.
 
@@ -1900,6 +2131,9 @@ alias rsa rsync -avz $*
 #+end_src
 
 *** Colors (xterm-color.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Colors_(xterm-color.el)-b5a5a91b
+:END:
 
 We want to use xterm-256color when running interactive commands in eshell but
 not during other times when we might be launching a shell command to gather its
@@ -1917,6 +2151,9 @@ output.
 #+end_src
 
 *** Fish like Completion (fish-completion.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Fish_like_Completion_(fish-completion.el)-64f8d46e
+:END:
 
 This enhances eshell's completions with those that Fish is capable of and also
 falls back to any additional completions that are configured for Bash on the
@@ -1929,6 +2166,9 @@ branches in =git= commands.
 #+end_src
 
 *** Z navigation (eshell-z.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Z_navigation_(eshell-z.el)-cdf7e228
+:END:
 
 #+begin_src emacs-lisp
 (use-package eshell-z
@@ -1937,6 +2177,9 @@ branches in =git= commands.
 #+end_src
 
 *** Highlighting (eshell-syntax-highlighting.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Highlighting_(eshell-syntax-highlighting.el)-9ddab42c
+:END:
 
 #+begin_src emacs-lisp
 (use-package eshell-syntax-highlighting
@@ -1946,6 +2189,9 @@ branches in =git= commands.
 #+end_src
 
 *** History completion (esh-autosuggest.el)
+:PROPERTIES:
+:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-History_completion_(esh-autosuggest.el)-e0aa9d43
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package esh-autosuggest
@@ -1960,7 +2206,13 @@ branches in =git= commands.
 #+end_src
 
 * Version control
+:PROPERTIES:
+:CUSTOM_ID: Version_control-51879fa8
+:END:
 ** Built-in vc config
+:PROPERTIES:
+:CUSTOM_ID: Version_control-Built-in_vc_config-f2e7f46f
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package vc-hooks
@@ -1971,6 +2223,9 @@ branches in =git= commands.
 #+end_src
 
 ** Git porcelain (magit.el)
+:PROPERTIES:
+:CUSTOM_ID: Version_control-Git_porcelain_(magit.el)-457f1080
+:END:
 
 #+begin_src emacs-lisp
 (use-package magit
@@ -2004,6 +2259,9 @@ branches in =git= commands.
 #+end_src
 
 ** Hunk indicator (git-gutter.el)
+:PROPERTIES:
+:CUSTOM_ID: Version_control-Hunk_indicator_(git-gutter.el)-c36b82d9
+:END:
 
 #+begin_src emacs-lisp
 (use-package git-gutter
@@ -2015,6 +2273,9 @@ branches in =git= commands.
 #+end_src
 
 ** Resolve conflict (ediff.el)
+:PROPERTIES:
+:CUSTOM_ID: Version_control-Resolve_conflict_(ediff.el)-5f53c33a
+:END:
 
 #+begin_src emacs-lisp
 (use-package ediff
@@ -2042,13 +2303,22 @@ sure this is a good approach."
 #+end_src
 
 ** COMMENT Forges (forge.el)
+:PROPERTIES:
+:CUSTOM_ID: Version_control-Forges_(forge.el)-042d4e94
+:END:
 
 #+begin_src emacs-lisp
 (use-package forge)
 #+end_src
 
 * Org mode
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-c2c13c1a
+:END:
 ** Org (org.el)
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Org_(org.el)-cc3994c0
+:END:
 
 In its purest form, Org is a markup language that is similar to
 Markdown: symbols are used to denote the meaning of a construct in its
@@ -2094,6 +2364,9 @@ contains several subsections as follows:
 #+end_src
 
 ** Source block
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Source_block-3615b5bc
+:END:
 
 #+begin_src emacs-lisp
 (use-package org-src
@@ -2126,6 +2399,9 @@ contains several subsections as follows:
 #+end_src
 
 ** Bullet (org-superstar.el)
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Bullet_(org-superstar.el)-23c7998b
+:END:
 
 #+begin_src emacs-lisp
 (use-package org-superstar
@@ -2138,6 +2414,9 @@ contains several subsections as follows:
 #+end_src
 
 ** Habit (org-habit.el)
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Habit_(org-habit.el)-d3bdb30e
+:END:
 
 #+begin_src emacs-lisp
 (use-package org-habit
@@ -2148,6 +2427,9 @@ contains several subsections as follows:
 #+end_src
 
 ** Wiki (org-roam.el)
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Wiki_(org-roam.el)-0b82aa73
+:END:
 
 #+begin_src emacs-lisp
 (use-package org-roam
@@ -2170,7 +2452,13 @@ contains several subsections as follows:
 #+end_src
 
 * Media
+:PROPERTIES:
+:CUSTOM_ID: Media-6cb9bd27
+:END:
 ** Pdf reader (pdf-tools.el)
+:PROPERTIES:
+:CUSTOM_ID: Media-Pdf_reader_(pdf-tools.el)-0a9ca601
+:END:
 
 #+begin_src emacs-lisp
 (use-package pdf-tools
@@ -2194,6 +2482,9 @@ contains several subsections as follows:
 #+end_src
 
 ** Epub reader (nov.el)
+:PROPERTIES:
+:CUSTOM_ID: Media-Epub_reader_(nov.el)-6cfd5b69
+:END:
 
 #+begin_src emacs-lisp
 (use-package shrface
@@ -2224,10 +2515,16 @@ contains several subsections as follows:
 #+end_src
 
 * Applications
+:PROPERTIES:
+:CUSTOM_ID: Applications-ae0adc57
+:END:
 ** Murl (ale-murl.el)
+:PROPERTIES:
+:CUSTOM_ID: Applications-Murl_(ale-murl.el)-b7d23092
+:END:
 *** Autoload
 :PROPERTIES:
-:ID:       48f13168-7c74-4676-881a-b6f666eec120
+:CUSTOM_ID: Applications-Murl_(ale-murl.el)-Autoload-98ba7ff2
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -2273,6 +2570,9 @@ contains several subsections as follows:
 #+end_src
 
 *** Config
+:PROPERTIES:
+:CUSTOM_ID: Applications-Murl_(ale-murl.el)-Config-af9c48a3
+:END:
 
 #+begin_src emacs-lisp
 (bind-keys
@@ -2281,6 +2581,9 @@ contains several subsections as follows:
 #+end_src
 
 ** Dictionary (fanyi.el)
+:PROPERTIES:
+:CUSTOM_ID: Applications-Dictionary_(fanyi.el)-81b26b48
+:END:
 
 #+begin_src emacs-lisp
 (use-package fanyi

@@ -60,7 +60,7 @@
   (concat ale-cache-dir "minimal.el"))
 
 (defun ale-init-ext-tangle ()
-  (concat ale-exts-dir (format "%s" (org-id-get)) ".el"))
+  (concat ale-exts-dir (ale-org-custom-id-get) ".el"))
 
 (defun ale-init-profiler ()
   "Init info with packages loaded and init time."
@@ -81,5 +81,6 @@
   (add-hook 'emacs-startup-hook #'ale-init-profiler))
 
 (unless (file-exists-p ale-cache-dir)
+  (autoload 'ale-org-custom-id-get (concat ale-init-dir "autoload/org-id.el"))
   (make-directory ale-cache-dir)
   (ale-init-build t))
