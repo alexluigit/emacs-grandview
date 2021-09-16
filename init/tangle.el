@@ -64,12 +64,13 @@
 
 (defun ale-init-profiler ()
   "Init info with packages loaded and init time."
-  (let ((package-count 0)
-        (time (emacs-init-time "%.3f"))
-        (docstr "%d packages loaded in %ss"))
-    (when (boundp 'straight--profile-cache)
-      (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
-    (run-with-timer 1 nil 'ale-log docstr package-count time)))
+  (when ale-debug-p
+    (let ((package-count 0)
+          (time (emacs-init-time "%.3f"))
+          (docstr "%d packages loaded in %ss"))
+      (when (boundp 'straight--profile-cache)
+        (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
+      (run-with-timer 1 nil 'ale-log docstr package-count time))))
 
 (defun ale-init-build (&optional force)
   (ale-init-tangle force)
@@ -77,8 +78,7 @@
 
 (add-hook 'kill-emacs-hook #'ale-init-build)
 
-(when ale-debug-p
-  (add-hook 'emacs-startup-hook #'ale-init-profiler))
+(add-hook 'emacs-startup-hook #'ale-init-profiler)
 
 (unless (file-exists-p ale-cache-dir)
   (autoload 'ale-org-custom-id-get (concat ale-init-dir "autoload/org-id.el"))
