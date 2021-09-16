@@ -936,16 +936,15 @@ control over the buffer list and is more powerful overall.
         ("r" . ale-dired-jump))
   :config
   (setq confirm-kill-processes nil)
-  (setq ale-files-dot-repo "~/Code/alex.files/")
   (setq ale-files-dir-alist
-        '(((title . "  Shows")        (path . "/mnt/HDD/Share/"))
-          ((title . "  Coding")       (path . "/mnt/HDD/Dev/"))
-          ((title . "  Books")        (path . "/mnt/HDD/Book/"))
-          ((title . "輸  Videos")       (path . "/mnt/HDD/Video/"))
-          ((title . "  Movies")       (path . "/mnt/Cloud/共享/Movies/"))
-          ((title . "  Notes")        (path . "~/Documents/notes/"))
-          ((title . "  Photos")       (path . "~/Pictures/"))
-          ((title . "  Downloads")    (path . "~/Downloads/")))))
+        '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
+          ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
+          ((title . "  Books")        (path . "/mnt/HDD/Book"))
+          ((title . "輸  Videos")       (path . "/mnt/HDD/Video"))
+          ((title . "  Movies")       (path . "/mnt/Cloud/共享/Movies"))
+          ((title . "  Notes")        (path . "~/Documents/notes"))
+          ((title . "  Photos")       (path . "~/Pictures"))
+          ((title . "  Downloads")    (path . "~/Downloads")))))
 #+end_src
 
 ** Dired (dired.el)
@@ -2250,3 +2249,4 @@ contains several subsections as follows:
   (fanyi-providers '(fanyi-etymon-provider
                      fanyi-longman-provider)))
 #+end_src
+

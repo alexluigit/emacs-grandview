@@ -6,7 +6,7 @@
 (defcustom ale-files-additional-mime '((".ape" . "audio/ape") (".rmvb" . "video/rm") (".f4v" . "video/f4v"))
   "doc")
 
-(defvar ale-files-dot-repo nil
+(defvar ale-files-dot-repo (getenv "DOTPATH")
   "doc")
 
 (defcustom ale-files-dir-alist
