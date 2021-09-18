@@ -10,11 +10,12 @@
   '(ale-window-recentre-centre
     recenter-top-bottom
     reposition-window
+    consult--jump-nomark
     other-window
     ace-select-window)
   "Commands that should automatically `ale-pulse-pulse-line'.
-You must restart function `ale-pulse-advice-commands-mode' for
-changes to take effect."
+You must restart function `ale-pulse-line-mode' for changes to
+take effect."
   :type 'list
   :group 'ale-pulse)
 
@@ -46,11 +47,11 @@ changes to take effect."
   (ale-pulse-pulse-line nil t))
 
 ;;;###autoload
-(define-minor-mode ale-pulse-advice-commands-mode
+(define-minor-mode ale-pulse-line-mode
   "Set up for `ale-pulse-pulse-command-list'."
   :init-value nil
   :global t
-  (if ale-pulse-advice-commands-mode
+  (if ale-pulse-line-mode
       (progn
         (dolist (fn ale-pulse-pulse-command-list)
           (advice-add fn :after (lambda (&rest _) (interactive) (ale-pulse-pulse-line)))))
