@@ -48,7 +48,9 @@
     (org-toggle-comment)))
 
 ;;;###autoload
-(with-eval-after-load 'org
-  (define-key org-mode-map [remap org-toggle-comment] 'ale-org-comment-entry-in-region))
+(use-package org
+  :defer 1
+  :straight (:type built-in)
+  :bind ([remap org-toggle-comment] . ale-org-comment-entry-in-region))
 
 (provide 'ale-org)
