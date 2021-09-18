@@ -1,15 +1,15 @@
 ;;; init/tangle.el --- -*- lexical-binding: t -*-
 
 (defvar ale-exts-dir (concat ale-cache-dir "extensions/"))
-(defvar ale-full-config-org (concat ale-init-dir "ale.org"))
+(defvar ale-full-config-org (concat INIT-DIR "ale.org"))
 (defvar ale-full-config (concat ale-cache-dir "full.el"))
 (defvar ale-autoload-file (concat ale-cache-dir "autoload.el"))
-(defvar ale-autoload-dirs `(,(concat ale-init-dir "autoload/") ,ale-exts-dir))
+(defvar ale-autoload-dirs `(,(concat INIT-DIR "autoload/") ,ale-exts-dir))
 
 (defun ale-init-tangle (&optional force)
   "doc"
-  (autoload 'ale-f-read (concat ale-init-dir "autoload/elisp"))
-  (autoload 'ale-init-ext-tangle-target (concat ale-init-dir "autoload/init"))
+  (autoload 'ale-f-read (concat INIT-DIR "autoload/elisp"))
+  (autoload 'ale-init-ext-tangle-target (concat INIT-DIR "autoload/init"))
   (let* ((init-md5 (concat ale-cache-dir "init.md5"))
          (old-md5 (when (file-exists-p init-md5)
                     (ale-f-read init-md5)))
@@ -35,7 +35,7 @@
 (defun ale-init-gen-autoloads (&optional force)
   "Generate core autoload files."
   (require 'autoload)
-  (autoload 'ale-f-read (concat ale-init-dir "autoload/elisp"))
+  (autoload 'ale-f-read (concat INIT-DIR "autoload/elisp"))
   (let* ((autoload-md5 (concat ale-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
                     (ale-f-read autoload-md5)))
@@ -81,6 +81,6 @@
 (add-hook 'emacs-startup-hook #'ale-init-profiler)
 
 (unless (file-exists-p ale-cache-dir)
-  (autoload 'ale-org-custom-id-get (concat ale-init-dir "autoload/org-id.el"))
+  (autoload 'ale-org-custom-id-get (concat INIT-DIR "autoload/org-id.el"))
   (make-directory ale-cache-dir)
   (ale-init-build t))
