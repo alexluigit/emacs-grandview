@@ -29,9 +29,6 @@
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
 
-;; Default frame parameters
-(add-to-list 'default-frame-alist '(internal-border-width . 20))
-
 ;; When you install a package or use the various customisation
 ;; interfaces to tweak things to your liking, Emacs will append a
 ;; piece of Elisp to your init file. In my experience, this is a

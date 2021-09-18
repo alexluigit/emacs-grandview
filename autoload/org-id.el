@@ -56,9 +56,8 @@ CUSTOM_ID of the entry is returned."
                                            (concat orgpath "-" (org-get-heading t t t t))))))
            (id (org-entry-get nil "CUSTOM_ID")))
       (cond
-       ((and id
-             (stringp id)
-             (string-match "\\S-" id)) id)
+       ((and id (stringp id) (string-match "\\S-" id))
+        id)
        (create (setq id (ale-org-id-new (concat prefix heading)))
                (org-entry-put pom "CUSTOM_ID" id)
                (org-id-add-location id
@@ -66,17 +65,19 @@ CUSTOM_ID of the entry is returned."
                id)))))
 
 ;;;###autoload
-(defun ale-org-add-ids-to-headlines-in-file ()
+(defun ale-org-add-ids-to-headlines-in-file (&optional force)
   "Add CUSTOM_ID properties to all headlines in the current file
 which do not already have one.
 
 Only adds ids if the `auto-id' option is set to `t' in the file
 somewhere. ie, #+OPTIONS: auto-id:t"
-  (interactive)
+  (interactive "P")
   (save-excursion
     (widen)
     (goto-char (point-min))
     (when (re-search-forward "^#\\+OPTIONS:.*auto-id:t" (point-max) t)
+      (when force
+        (org-map-entries (lambda () (org-entry-delete nil "CUSTOM_ID"))))
       (org-map-entries (lambda () (ale-org-custom-id-get (point) 'create))))))
 
 ;;;###autoload
