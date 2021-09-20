@@ -189,7 +189,7 @@ emacs (again, comfirm your $PATH environment variable).
 :CUSTOM_ID: *CORE_CONFIGURATION*-b92b026d
 :END:
 
-Load core of emacs-grandview. It is *NOT* recommend to delete / comment out this section.
+Load core of emacs-grandview. It is *NOT* recommended to delete / comment out this section.
 
 ** Text editor
 :PROPERTIES:
@@ -774,23 +774,6 @@ for your search query.
   (global-anzu-mode +1))
 #+end_src
 
-*** Icons (all-the-icons.el)
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Icons_(all-the-icons.el)-9ee42f64
-:END:
-
-This package is a utility for using and formatting various Icon fonts within
-Emacs.  Icon Fonts allow you to propertize and format icons the same way you
-would normal text.  This enables things such as better scaling of and anti
-aliasing of the icons.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package all-the-icons
-  :init
-  (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
-    (all-the-icons-install-fonts)))
-#+end_src
-
 *** Pulse line (pulse.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Pulse_line_(pulse.el)-8af06e9a
@@ -818,19 +801,6 @@ aliasing of the icons.
          ("<escape>" . transient-quit-all))
    (:map transient-sticky-map
          ("ESC" . transient-quit-all))))
-#+end_src
-
-*** Theme
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Theme-fef487e8
-:END:
-
-=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
-Protesilaos Stavrou.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(setq modus-themes-links 'no-underline)
-(add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
 #+end_src
 
 ** Keybindings
@@ -1109,6 +1079,35 @@ made for this package and built-in help buffer:
 :PROPERTIES:
 :CUSTOM_ID: UI_extras-a8dd75db
 :END:
+** Theme
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Theme-3ff9c257
+:END:
+
+=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
+Protesilaos Stavrou.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(setq modus-themes-links 'no-underline)
+(add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
+#+end_src
+
+** Icons (all-the-icons.el)
+:PROPERTIES:
+:CUSTOM_ID: UI_extras-Icons_(all-the-icons.el)-b088b3b1
+:END:
+
+This package is a utility for using and formatting various Icon fonts within
+Emacs.  Icon Fonts allow you to propertize and format icons the same way you
+would normal text.  This enables things such as better scaling of and anti
+aliasing of the icons.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package all-the-icons
+  :init
+  (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
+    (all-the-icons-install-fonts)))
+#+end_src
 
 ** Smooth scrolling (good-scroll.el)
 :PROPERTIES:
