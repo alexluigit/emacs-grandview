@@ -147,6 +147,8 @@ Script for starting up emacs.
 Here is the content of the script.
 
 #+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash"
+_is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
+
 restart () {
   notify-send "Restarting emacs..." 2>/dev/null
   emacs_pid=$(pidof emacs)
@@ -162,7 +164,7 @@ restart () {
   [[ $1 == "-p" ]] && rm -rf ~/.cache/emacs/{straight/build,eln} 2>/dev/null
   [[ $1 == "-r" ]] && rm -rf ~/.cache/emacs/ale 2>/dev/null
   [[ $1 == "-R" ]] && rm -rf ~/.cache/emacs/{ale,straight,eln} 2>/dev/null
-  emacs --daemon
+  _is_ime_rime && GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs --daemon || emacs --daemon
   command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
   emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
 }
@@ -1439,6 +1441,41 @@ Basically, its interaction model is as follows:
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-616fef09
 :END:
+** Input method (rime.el)
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-fd97687f
+:END:
+
+#+begin_src emacs-lisp
+(use-package rime
+  :after-call self-insert-command
+  :bind
+  (("S-SPC" . toggle-input-method)
+   :map rime-active-mode-map
+   ("Return" . rime-send-keybinding)
+   ("C-k" . rime-send-keybinding)
+   ("C-a" . rime-send-keybinding)
+   ("C-e" . rime-send-keybinding)
+   ([tab] . rime-send-keybinding))
+  :config
+  (setq default-input-method "rime")
+  (setq rime-disable-predicates '(meow-normal-mode-p
+                                  meow-motion-mode-p
+                                  meow-keypad-mode-p
+                                  rime-predicate-after-alphabet-char-p))
+  (setq rime-inline-predicates '(rime-predicate-space-after-cc-p
+                                 rime-predicate-current-uppercase-letter-p))
+  (set-face-attribute 'rime-preedit-face nil
+                      :foreground "#80c0e0" :background "#404040"
+                      :inverse-video nil :weight 'bold)
+  (setq rime-show-candidate 'posframe)
+  (setq rime-posframe-style 'vertical)
+  (setq rime-posframe-properties
+        (list :font "Sarasa Mono SC"
+              :internal-border-width 10))
+  (setq rime-title " ㄓ"))
+#+end_src
+
 ** Writable grep (wgrep.el)
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-Writable_grep_(wgrep.el)-208ea57a
@@ -2096,6 +2133,7 @@ Create new one if no vterm buffer exists."
    ("s-p" . vterm-previous-prompt)
    ("M-." . ale/vterm-next)
    ("M-," . ale/vterm-prev)
+   ("S-SPC" . nil)
    ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
    ("C-<delete>" . vterm-send-C-delete)
    ("C-<return>" . vterm-send-F5)))
