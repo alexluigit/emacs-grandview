@@ -1320,6 +1320,7 @@ Additional syntax highlighting in dired buffer.
         ("r" . ale-dired-jump))
   :config
   (setq confirm-kill-processes nil)
+  (setq permanently-enabled-local-variables '(lexical-binding encoding))
   (setq ale-files-dir-alist
         '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
           ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
