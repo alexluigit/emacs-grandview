@@ -117,9 +117,13 @@ numeric argument to move multiple lines at once."
 
 ;;;###autoload
 (defun ale-comment-or-uncomment-region ()
+  "Toggle comment in active-region (when available) or current line."
   (interactive)
-  (unless (region-active-p) (meow-line 1))
-  (call-interactively 'comment-or-uncomment-region))
+  (let ((comment-func (if (eq major-mode 'org-mode)
+                          'org-comment-dwim
+                        'comment-or-uncomment-region)))
+    (unless (region-active-p) (meow-line 1))
+    (call-interactively comment-func)))
 
 ;;;###autoload
 (defun ale-query-replace (&optional arg)
