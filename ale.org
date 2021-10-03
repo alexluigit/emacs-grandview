@@ -932,6 +932,7 @@ This section contains all core keybindings of emacs-grandview.
  '("f" . ale-files-map)
  '("i" . list-buffers)
  '("k" . kill-this-buffer)
+ '("m" . nil)
  '("n" . dired-jump)
  '("o" . ale-org-map)
  '("p" . ale-project-find-file)
@@ -1367,7 +1368,7 @@ visited that file, allowing you to pick up from there.
   (save-place-mode 1))
 #+end_src
 
-** Auto refresh file content (saveplace.el)
+** Auto refresh file content (autorevert.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Auto_refresh_file_content_(saveplace.el)-667e008c
 :END:
@@ -2043,10 +2044,10 @@ If region is active, add its contents to the new buffer."
   "Parse `ale/vterm-position' to get vterm display parameters."
   (let (pos)
     (cl-dolist (setting ale/vterm-position)
-        (when (derived-mode-p (car setting))
-          (setq pos (cdr setting)) (cl-return))
-        (when (eq (car setting) 'default)
-          (setq pos (cdr setting))))
+      (when (derived-mode-p (car setting))
+        (setq pos (cdr setting)) (cl-return))
+      (when (eq (car setting) 'default)
+        (setq pos (cdr setting))))
     `(("^\\*vterm.*"
        (display-buffer-in-side-window)
        (window-parameters . ((mode-line-format . none)))
@@ -2122,9 +2123,9 @@ Create new one if no vterm buffer exists."
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
   (set-face-attribute 'vterm-color-black nil :foreground "#111111")
   :bind
-  (("M-v" . ale/vterm-toggle)
+  (("M-t" . ale/vterm-toggle)
    :map vterm-mode-map
-   ("M-v" . ale/vterm-toggle)
+   ("M-t" . ale/vterm-toggle)
    ("<f12>" . ale/vterm-new)
    ("M-'" . vterm-send-M-apostrophe)
    ("M-\"" . vterm-send-M-quote)
