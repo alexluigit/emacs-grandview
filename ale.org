@@ -435,7 +435,7 @@ What my minibuffer config does:
   The =minibuffer-depth-indicate-mode= will show a recursion indicator,
   represented as a number, next to the minibuffer prompt, if a recursive
   edit is in progress.
-  
+
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package minibuffer
   :straight (:type built-in)
@@ -1454,7 +1454,6 @@ Basically, its interaction model is as follows:
   :bind
   (("S-SPC" . toggle-input-method)
    :map rime-active-mode-map
-   ("Return" . rime-send-keybinding)
    ("C-k" . rime-send-keybinding)
    ("C-a" . rime-send-keybinding)
    ("C-e" . rime-send-keybinding)
@@ -1475,7 +1474,19 @@ Basically, its interaction model is as follows:
   (setq rime-posframe-properties
         (list :font "Sarasa Mono SC"
               :internal-border-width 10))
-  (setq rime-title " ㄓ"))
+  (setq rime-title " ㄓ")
+  (defun ale/rime-return-advice (fn &rest args)
+    (interactive)
+    (if (eq major-mode 'vterm-mode)
+        (progn
+          (let ((input (rime-lib-get-input)))
+            (execute-kbd-macro (kbd "<escape>"))
+            (toggle-input-method)
+            (dotimes (i (length input))
+              (execute-kbd-macro (kbd (substring input i (+ i 1)))))
+            (toggle-input-method)))
+      (apply fn args)))
+  (advice-add 'rime--return :around 'ale/rime-return-advice))
 #+end_src
 
 ** Writable grep (wgrep.el)
