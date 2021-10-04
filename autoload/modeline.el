@@ -3,7 +3,7 @@
 (use-package mlscroll
   :hook (server-after-make-frame . mlscroll-mode)
   :config
-  (setq mlscroll-in-color (face-attribute 'tool-bar :background)))
+  (setq mlscroll-in-color "#6c6c6c"))
 
 (defvar flycheck-current-errors)
 (defvar flymake-mode-line-format)
@@ -37,12 +37,17 @@
 
 (defface ale-modeline-buffer-name
   '((t (:inherit (mode-line-buffer-id))))
-  "Face used for major mode indicator in the mode-line."
+  "Face used for buffer name in the mode-line."
   :group 'ale-modeline)
 
 (defface ale-modeline-major-mode
   '((t (:inherit (bold))))
   "Face used for major mode indicator in the mode-line."
+  :group 'ale-modeline)
+
+(defface ale-modeline-input-method
+  '((t (:inherit (bold))))
+  "Face used for input method indicator in the mode-line."
   :group 'ale-modeline)
 
 (defface ale-modeline-status-neutral
@@ -131,7 +136,7 @@
                       (propertize (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
                                   'face face
                                   'mouse-face face)
-                      "  "))))))
+                      " "))))))
 
 (defvar-local ale-modeline--flycheck-text nil)
 (defun ale-modeline--update-flycheck-segment (&optional status)
@@ -230,6 +235,10 @@
   "Displays the current major mode in the mode-line."
   (concat (format-mode-line mode-name 'ale-modeline-major-mode) "  "))
 
+(defun ale-modeline-segment-input-method ()
+  "Displays the current major mode in the mode-line."
+  (rime-lighter))
+
 (defun ale-modeline-segment-misc-info ()
   "Displays the current value of `mode-line-misc-info' in the mode-line."
   (let ((misc-info (format-mode-line mode-line-misc-info 'ale-modeline-unimportant)))
@@ -286,7 +295,7 @@
                            '((:eval (ale-modeline-segment-eol))
                              (:eval (ale-modeline-segment-encoding))
                              (:eval (ale-modeline-segment-vc))
-                             (:eval (ale-modeline-segment-major-mode))
+                             (:eval (ale-modeline-segment-input-method))
                              (:eval (ale-modeline-segment-misc-info))
                              (:eval (ale-modeline-segment-flycheck))
                              (:eval (ale-modeline-segment-flymake))
