@@ -1447,6 +1447,40 @@ Basically, its interaction model is as follows:
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-fd97687f
 :END:
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-Autoload-1e674139
+:END:
+
+#+begin_src emacs-lisp
+;;; ale-rime.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale/rime-return-advice (fn &rest args)
+  "Make return key (commit script text) compatible with vterm."
+  (interactive)
+  (if (eq major-mode 'vterm-mode)
+      (progn
+        (let ((input (rime-lib-get-input)))
+          (execute-kbd-macro (kbd "<escape>"))
+          (toggle-input-method)
+          (dotimes (i (length input))
+            (execute-kbd-macro (kbd (substring input i (+ i 1)))))
+          (toggle-input-method)))
+    (apply fn args)))
+
+;;;###autoload
+(defun ale/rime--candidate-num-format (num select-labels)
+  "Format for the number before each candidate."
+  (if select-labels
+      (format "%s " (nth (1- num) select-labels))
+    (format "%d. " num)))
+#+end_src
+
+*** Config
+:PROPERTIES:
+:CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-Config-6526b158
+:END:
 
 #+begin_src emacs-lisp
 (use-package rime
@@ -1454,7 +1488,10 @@ Basically, its interaction model is as follows:
   :bind
   (("S-SPC" . toggle-input-method)
    :map rime-active-mode-map
+   ("C-`" . rime-send-keybinding)
    ("C-k" . rime-send-keybinding)
+   ("<C-i>" . rime-send-keybinding)
+   ("C-o" . rime-send-keybinding)
    ("C-a" . rime-send-keybinding)
    ("C-e" . rime-send-keybinding)
    ([tab] . rime-send-keybinding))
@@ -1475,17 +1512,7 @@ Basically, its interaction model is as follows:
         (list :font "Sarasa Mono SC"
               :internal-border-width 10))
   (setq rime-title " ㄓ")
-  (defun ale/rime-return-advice (fn &rest args)
-    (interactive)
-    (if (eq major-mode 'vterm-mode)
-        (progn
-          (let ((input (rime-lib-get-input)))
-            (execute-kbd-macro (kbd "<escape>"))
-            (toggle-input-method)
-            (dotimes (i (length input))
-              (execute-kbd-macro (kbd (substring input i (+ i 1)))))
-            (toggle-input-method)))
-      (apply fn args)))
+  (setq rime-candidate-num-format-function 'ale/rime--candidate-num-format)
   (advice-add 'rime--return :around 'ale/rime-return-advice))
 #+end_src
 
