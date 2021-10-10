@@ -56,7 +56,7 @@
   :group 'ale-modeline)
 
 (defface ale-modeline-status-info
-  '((t (:inherit (font-lock-keyword-face))))
+  '((t (:inherit (font-lock-constant-face))))
   "Face used for generic status indicators in the mode-line."
   :group 'ale-modeline)
 
@@ -123,7 +123,7 @@
                              (propertize "+ " 'face face))
                             ((eq state 'needs-merge)
                              (setq face 'ale-modeline-status-warning)
-                             (propertize "⟷ " 'face face))
+                             (propertize "<> " 'face face))
                             ((eq state 'needs-update)
                              (setq face 'ale-modeline-status-warning)
                              (propertize "↑ " 'face face))
@@ -132,7 +132,7 @@
                              (propertize "✖ " 'face face))
                             (t
                              (setq face 'ale-modeline-status-neutral)
-                             (propertize "✓ " 'face face)))
+                             (propertize "· " 'face face)))
                       (propertize (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
                                   'face face
                                   'mouse-face face)

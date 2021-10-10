@@ -370,7 +370,6 @@ customisations.
 :END:
 
 Create a jump list (same concept in vim) in emacs.
-+ *xref*: provides helpful commands for code navigation and discovery.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package better-jumper
@@ -400,7 +399,7 @@ Jump to any visible text.
 :CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Cross_reference_(xref.el)-42059d3d
 :END:
 
-+ *xref*: provides helpful commands for code navigation and discovery.
+*xref* provides helpful commands for code navigation and discovery.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package xref
@@ -1092,6 +1091,7 @@ Protesilaos Stavrou.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (setq modus-themes-links 'no-underline)
+(setq modus-themes-mode-line 'borderless)
 (add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
 #+end_src
 
