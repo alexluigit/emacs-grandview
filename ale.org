@@ -1892,7 +1892,6 @@ Summary of what these do:
 #+begin_src emacs-lisp
 (use-package format-all
   :hook
-  (prog-mode . format-all-mode)
   (prog-mode . format-all-ensure-formatter)
   :bind
   (:map ale-files-map
