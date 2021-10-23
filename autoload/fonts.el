@@ -6,10 +6,10 @@
 (defvar ale-default-fonts '("Victor Mono" "Iosevka SS04" "Sarasa Mono SC" "Fira Code Retina"))
 (defvar ale-fixed-fonts '("Victor Mono" "Fira Code Retina"))
 (defvar ale-variable-fonts '("Sarasa Mono SC" "Victor Mono" "Fira Code Retina"))
-(defvar ale-zh-fonts '("Smartisan Compact CNS" "Sarasa Mono SC" "Source Han Sans CN" "PingFang SC" "青鸟华光简报宋二"))
+(defvar ale-zh-fonts '("FZSuXinShiLiuKaiS-R-GB" "Smartisan Compact CNS" "Sarasa Mono SC" "青鸟华光简报宋二"))
 (defvar ale-org-fonts '("Sarasa Mono SC" "ETBembo" "Fira Code Retina"))
 (defvar ale-emoji-font (font-spec :family "Noto Color Emoji" :width 'normal :slant 'normal))
-(defvar ale-zh-font-scale 1)
+(defvar ale-zh-font-scale 1.2)
 
 ;;;###autoload
 (defun ale-font-chooser (fonts)
@@ -30,8 +30,21 @@
     (custom-set-faces '(font-lock-variable-name-face ((t (:weight demibold)))))
     (custom-set-faces '(font-lock-function-name-face ((t (:weight demibold)))))
     (set-fontset-font t 'symbol ale-emoji-font)
-    (setq face-font-rescale-alist
-          (cl-loop for x in ale-zh-fonts
-                   collect (cons x ale-zh-font-scale)))
-    (dolist (charset '(kana han symbol cjk-misc bopomofo))
+    (unless (member zh-font ale-variable-fonts)
+      (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
+    (dolist (charset '(kana han cjk-misc bopomofo))
       (set-fontset-font (frame-parameter nil 'font) charset zh-font))))
+
+;;;###autoload
+(defun ale-font-cn-set-title (beg end)
+  (interactive "r")
+  (remove-overlays beg end)
+  (let ((ov (make-overlay beg end)))
+    (overlay-put ov 'display '(height 1.5))))
+
+;;;###autoload
+(defun ale-font-cn-set-quote (beg end)
+  (interactive "r")
+  (remove-overlays beg end)
+  (let ((ov (make-overlay beg end)))
+    (overlay-put ov 'face 'font-lock-comment-face)))
