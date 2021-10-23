@@ -1,8 +1,8 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
-(let ((init-dir (file-name-directory user-init-file))
-      (user-conf "~/.config/ale/config.el")
-      (file-name-handler-alist nil))
+(let* ((init-dir (file-name-directory user-init-file))
+       (user-conf (concat init-dir "user.el"))
+       (file-name-handler-alist nil))
   (load (concat init-dir "init/options.el") nil t)
   (load (concat init-dir "init/vars.el") nil t)
   (load (concat init-dir "init/package.el") nil t)
