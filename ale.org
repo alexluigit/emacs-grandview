@@ -1345,6 +1345,7 @@ Keep a record of all recently opened files.
   :straight (:type built-in)
   :after-call find-file-hook danger
   :config
+  (setq recentf-max-saved-items 100)
   (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
   (recentf-mode 1))
 #+end_src
