@@ -1839,7 +1839,8 @@ Summary of what these do:
   (ale/lsp-mode)
   (setq lsp-eldoc-hook nil)
   (setq lsp-signature-auto-activate t)
-  (setq lsp-signature-doc-lines 1)
+  (setq lsp-signature-function 'lsp-signature-posframe)
+  (setq lsp-signature-doc-lines 20)
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
   (with-eval-after-load 'warnings
