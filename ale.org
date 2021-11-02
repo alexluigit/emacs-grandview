@@ -1495,6 +1495,7 @@ Basically, its interaction model is as follows:
    ("C-o" . rime-send-keybinding)
    ("C-a" . rime-send-keybinding)
    ("C-e" . rime-send-keybinding)
+   ("<escape>" . (lambda () (interactive) (execute-kbd-macro (kbd "C-g"))))
    ([tab] . rime-send-keybinding))
   :config
   (setq default-input-method "rime")
