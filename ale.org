@@ -710,6 +710,17 @@ Index based window motions.
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 #+end_src
 
+*** Tab (tab.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Tab_(tab.el)-e59030f3
+:END:
+
+Tabs for frequently used buffers.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(ale-tab-mode)
+#+end_src
+
 *** Modeline (modeline.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Modeline_(modeline.el)-c37d2771

@@ -184,10 +184,6 @@
           "  "))
     "  "))
 
-(defun ale-modeline-segment-buffer-name ()
-  "Displays the name of the current buffer in the mode-line."
-  (propertize "%b  " 'face 'ale-modeline-buffer-name))
-
 (defun ale-modeline-segment-anzu ()
   "Displays color-coded anzu status information in the mode-line (if available)."
   (when (and (boundp 'anzu--state) anzu--state)
@@ -208,7 +204,7 @@
   "Displays the current cursor position in the mode-line."
   (concat "%l:%c"
           (when ale-modeline-show-cursor-point (propertize (format ":%d" (point)) 'face 'ale-modeline-unimportant))
-          (propertize (concat " " ale-modeline-total-lines) 'face 'ale-modeline-unimportant)))
+          (propertize (concat " " ale-modeline-total-lines " ") 'face 'ale-modeline-unimportant)))
 
 (defun ale-modeline-segment-eol ()
   "Displays the EOL style of the current buffer in the mode-line."
@@ -231,9 +227,11 @@
   "Displays color-coded version control information in the mode-line."
   ale-modeline--vc-text)
 
-(defun ale-modeline-segment-major-mode ()
-  "Displays the current major mode in the mode-line."
-  (concat (format-mode-line mode-name 'ale-modeline-major-mode) "  "))
+(defun ale-modeline-segment-tab ()
+  "Return tabs."
+  (if (bound-and-true-p ale-tab-mode)
+      (concat (ale-tab-string) " ")
+    ""))
 
 (defun ale-modeline-segment-input-method ()
   "Displays the current major mode in the mode-line."
@@ -283,16 +281,15 @@
                       '((:eval
                          (ale-modeline--format
                           (format-mode-line
-                           '(" "
-                             (:eval (ale-modeline-segment-editing-state))
-                             (:eval (ale-modeline-segment-macro-recording))
+                           '((:eval (ale-modeline-segment-editing-state))
+                             (:eval (ale-modeline-segment-tab))))
+                          (format-mode-line
+                           '((:eval (ale-modeline-segment-macro-recording))
                              (:eval (ale-modeline-segment-modified))
-                             (:eval (ale-modeline-segment-buffer-name))
                              (:eval (ale-modeline-segment-anzu))
                              (:eval (ale-modeline-segment-multiple-cursors))
-                             (:eval (ale-modeline-segment-position))))
-                          (format-mode-line
-                           '((:eval (ale-modeline-segment-eol))
+                             (:eval (ale-modeline-segment-position))
+                             (:eval (ale-modeline-segment-eol))
                              (:eval (ale-modeline-segment-encoding))
                              (:eval (ale-modeline-segment-vc))
                              (:eval (ale-modeline-segment-input-method))
@@ -301,7 +298,7 @@
                              (:eval (ale-modeline-segment-flymake))
                              (:eval (ale-modeline-segment-process))
                              mode-line-end-spaces
-                             "          ")))))))
+                             "       ")))))))
     (progn
       (remove-hook 'find-file-hook #'ale-modeline-count-lines)
       (remove-hook 'after-save-hook #'ale-modeline-count-lines)
