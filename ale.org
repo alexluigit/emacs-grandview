@@ -2656,6 +2656,8 @@ contains several subsections as follows:
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
+  (setq org-image-actual-width nil)
+  (setq org-display-remote-inline-images 'download)
   :bind
   (:map org-mode-map
         ("C-c S-l" . org-toggle-link-display)
