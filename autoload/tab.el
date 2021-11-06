@@ -60,17 +60,7 @@ When BUFFER is nil, use current buffer."
     (cond
      ;; These should be hidden.
      ((eq (aref name 0) ?\s) nil)
-     ((cl-some (lambda (common-name-prefix)
-                 (string-prefix-p common-name-prefix name))
-               '("*Backtrace" "*scratch" "*Faces" "*Messages"
-                 "*Customize" "*Warnings" "*lsp-"))
-      "*Common*")
-     ((setq group (or (buffer-local-value 'ale-tab/buffer-group buffer)
-                      (with-current-buffer buffer
-                        (setq ale-tab/buffer-group
-                              (funcall ale-tab-project-root-function)))))
-      group)
-     ((eq (aref name 0) ?*) "*Common*")
+     ((eq (aref name 0) ?*) nil)
      (t "*Others*"))))
 
 (defvar ale-tab/timer nil
