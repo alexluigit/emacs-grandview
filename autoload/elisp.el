@@ -56,6 +56,12 @@ Return the decoded text as multibyte string."
     (with-current-buffer "*Messages*" (erase-buffer))))
 
 ;;;###autoload
+(defun silent! (fn &rest args)
+  "Do not show any messages while executing FN. Used as an
+advisor."
+  (let ((inhibit-message t)) (apply fn args)))
+
+;;;###autoload
 (defun dir! ()
   "Returns the directory of the emacs lisp file this macro is called from."
   (when-let (path (file!))

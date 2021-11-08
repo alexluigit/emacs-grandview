@@ -218,6 +218,8 @@ If you want to know more about meow or modal editing in general, check out [[htt
   :config
   (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
   (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
+  (advice-add 'meow-start-kmacro-or-insert-counter :around #'silent!)
+  (advice-add 'meow-end-or-call-kmacro :around #'silent!)
   (unless IS-GUI ; Terminal cursor shape
     (advice-add 'meow--update-cursor :after #'ale-set-cursor))
   (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
@@ -969,6 +971,7 @@ This section contains all core keybindings of emacs-grandview.
  ("<C-i>" . better-jumper-jump-forward)
  ("C-o" . better-jumper-jump-backward)
  ("C-x C-d" . ale-ispell-word)
+ ("M-i" . ale-tab-next)
  ("M-o" . ace-select-window)
  ("M-SPC" . ale-monocle) ; replaced `just-one-space'
  ("M-%" . anzu-isearch-query-replace)
