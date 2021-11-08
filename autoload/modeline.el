@@ -35,16 +35,6 @@
   :group 'ale-modeline
   :type 'boolean)
 
-(defface ale-modeline-buffer-name
-  '((t (:inherit (mode-line-buffer-id))))
-  "Face used for buffer name in the mode-line."
-  :group 'ale-modeline)
-
-(defface ale-modeline-major-mode
-  '((t (:inherit (bold))))
-  "Face used for major mode indicator in the mode-line."
-  :group 'ale-modeline)
-
 (defface ale-modeline-input-method
   '((t (:inherit (bold))))
   "Face used for input method indicator in the mode-line."
@@ -110,6 +100,14 @@
                         `((space :align-to (- (+ right right-fringe right-margin) (+ 1 ,reserve)))))
             right)))
 
+(defun ale-modeline--place-segment (segment)
+  "If SEGMENT is non-nil, return its context with a suffix
+whitespace, else return nil."
+  (let* ((seg (intern (format "ale-modeline-segment-%s" segment)))
+         (str (funcall seg)))
+    (when (and str (not (string= str "")))
+      (concat str " "))))
+
 (defvar-local ale-modeline--vc-text nil)
 (defun ale-modeline--update-vc-segment (&rest _)
   "Update `ale-modeline--vc-text' against the current VCS state."
@@ -135,8 +133,7 @@
                              (propertize "· " 'face face)))
                       (propertize (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
                                   'face face
-                                  'mouse-face face)
-                      " "))))))
+                                  'mouse-face face)))))))
 
 (defvar-local ale-modeline--flycheck-text nil)
 (defun ale-modeline--update-flycheck-segment (&optional status)
@@ -164,25 +161,21 @@
 
 (defun ale-modeline-segment-editing-state ()
   "Display current input state."
-  (cond ((bound-and-true-p meow-mode)
-         (meow-indicator))
-        (t
-         "")))
+  (when (bound-and-true-p meow-mode)
+    (meow-indicator)))
 
 (defsubst ale-modeline-segment-macro-recording ()
   "Display current macro being recorded."
   (when (or defining-kbd-macro executing-kbd-macro)
-    (propertize " ▶ " 'face 'mode-line-highlight)))
+    (propertize "K-M" 'face 'warning)))
 
 (defun ale-modeline-segment-modified ()
   "Displays a color-coded buffer modification/read-only indicator in the mode-line."
-  (if (not (string-match-p "\\*.*\\*" (buffer-name)))
-      (if (buffer-modified-p)
-          (propertize "● " 'face 'ale-modeline-modified)
-        (if (and buffer-read-only (buffer-file-name))
-            (propertize "■ " 'face 'ale-modeline-unimportant)
-          "  "))
-    "  "))
+  (when (not (string-match-p "\\*.*\\*" (buffer-name)))
+    (if (buffer-modified-p)
+        (propertize "●" 'face 'ale-modeline-modified)
+      (when (and buffer-read-only (buffer-file-name))
+        (propertize "■" 'face 'ale-modeline-unimportant)))))
 
 (defun ale-modeline-segment-anzu ()
   "Displays color-coded anzu status information in the mode-line (if available)."
@@ -198,30 +191,30 @@
   "Displays the number of active multiple-cursors in the mode-line (if available)."
   (when (and (boundp 'multiple-cursors-mode) multiple-cursors-mode)
     (concat "MC"
-            (format #("×%d  " 0 3 (face ale-modeline-status-warning)) (mc/num-cursors)))))
+            (format #("×%d" 0 3 (face ale-modeline-status-warning)) (mc/num-cursors)))))
 
 (defun ale-modeline-segment-position ()
   "Displays the current cursor position in the mode-line."
   (concat "%l:%c"
           (when ale-modeline-show-cursor-point (propertize (format ":%d" (point)) 'face 'ale-modeline-unimportant))
-          (propertize (concat " " ale-modeline-total-lines " ") 'face 'ale-modeline-unimportant)))
+          " "
+          (propertize ale-modeline-total-lines 'face 'ale-modeline-unimportant)))
 
 (defun ale-modeline-segment-eol ()
   "Displays the EOL style of the current buffer in the mode-line."
   (when ale-modeline-show-eol-style
     (pcase (coding-system-eol-type buffer-file-coding-system)
-      (0 "LF  ")
-      (1 "CRLF  ")
-      (2 "CR  "))))
+      (0 "LF")
+      (1 "CRLF")
+      (2 "CR"))))
 
 (defun ale-modeline-segment-encoding ()
   "Displays the encoding and EOL style of the buffer in the mode-line."
   (when ale-modeline-show-encoding-information
-    (concat (let ((sys (coding-system-plist buffer-file-coding-system)))
-              (cond ((memq (plist-get sys :category) '(coding-category-undecided coding-category-utf-8))
-                     "UTF-8")
-                    (t (upcase (symbol-name (plist-get sys :name))))))
-            "  ")))
+    (let ((sys (coding-system-plist buffer-file-coding-system)))
+      (cond ((memq (plist-get sys :category) '(coding-category-undecided coding-category-utf-8))
+             "UTF-8")
+            (t (upcase (symbol-name (plist-get sys :name))))))))
 
 (defun ale-modeline-segment-vc ()
   "Displays color-coded version control information in the mode-line."
@@ -229,19 +222,17 @@
 
 (defun ale-modeline-segment-tab ()
   "Return tabs."
-  (if (bound-and-true-p ale-tab-mode)
-      (concat (ale-tab-string) " ")
-    ""))
+  (when (bound-and-true-p ale-tab-mode) (ale-tab-string)))
 
 (defun ale-modeline-segment-input-method ()
   "Displays the current major mode in the mode-line."
-  (rime-lighter))
+  (when (bound-and-true-p rime-mode) (ale-modeline--string-trim (rime-lighter))))
 
 (defun ale-modeline-segment-misc-info ()
   "Displays the current value of `mode-line-misc-info' in the mode-line."
   (let ((misc-info (format-mode-line mode-line-misc-info 'ale-modeline-unimportant)))
     (unless (string= (ale-modeline--string-trim misc-info) "")
-      (concat (ale-modeline--string-trim misc-info) "  "))))
+      (ale-modeline--string-trim misc-info))))
 
 (defun ale-modeline-segment-flycheck ()
   "Displays color-coded flycheck information in the mode-line (if available)."
@@ -256,7 +247,7 @@
   "Displays the current value of `mode-line-process' in the mode-line."
   (let ((process-info (format-mode-line mode-line-process)))
     (unless (string= (ale-modeline--string-trim process-info) "")
-      (concat (ale-modeline--string-trim process-info) "  "))))
+      (ale-modeline--string-trim process-info))))
 
 (defvar ale-modeline--default-mode-line mode-line-format
   "Store the default mode-line format")
@@ -282,21 +273,21 @@
                          (ale-modeline--format
                           (format-mode-line
                            '((:eval (ale-modeline-segment-editing-state))
-                             (:eval (ale-modeline-segment-tab))))
+                             (:eval (ale-modeline--place-segment 'macro-recording))
+                             (:eval (ale-modeline--place-segment 'modified))
+                             (:eval (ale-modeline--place-segment 'tab))))
                           (format-mode-line
-                           '((:eval (ale-modeline-segment-macro-recording))
-                             (:eval (ale-modeline-segment-modified))
-                             (:eval (ale-modeline-segment-anzu))
-                             (:eval (ale-modeline-segment-multiple-cursors))
-                             (:eval (ale-modeline-segment-position))
-                             (:eval (ale-modeline-segment-eol))
-                             (:eval (ale-modeline-segment-encoding))
-                             (:eval (ale-modeline-segment-vc))
-                             (:eval (ale-modeline-segment-input-method))
-                             (:eval (ale-modeline-segment-misc-info))
-                             (:eval (ale-modeline-segment-flycheck))
-                             (:eval (ale-modeline-segment-flymake))
-                             (:eval (ale-modeline-segment-process))
+                           '((:eval (ale-modeline--place-segment 'anzu))
+                             (:eval (ale-modeline--place-segment 'multiple-cursors))
+                             (:eval (ale-modeline--place-segment 'position))
+                             (:eval (ale-modeline--place-segment 'eol))
+                             (:eval (ale-modeline--place-segment 'encoding))
+                             (:eval (ale-modeline--place-segment 'vc))
+                             (:eval (ale-modeline--place-segment 'input-method))
+                             (:eval (ale-modeline--place-segment 'misc-info))
+                             (:eval (ale-modeline--place-segment 'flycheck))
+                             (:eval (ale-modeline--place-segment 'flymake))
+                             (:eval (ale-modeline--place-segment 'proces))
                              mode-line-end-spaces
                              "       ")))))))
     (progn

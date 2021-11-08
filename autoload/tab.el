@@ -46,7 +46,7 @@ update the UI.  `ale-tab-string' can be used in the code.")
   "Face for separator.")
 
 (defface ale-tab-rest-face
-  '((t :italic t :bold nil :inherit 'mode-line-active))
+  '((t :bold t :inherit 'font-lock-comment-face))
   "Face for current tab.")
 
 (defvar-local ale-tab/buffer-group nil)
@@ -193,7 +193,7 @@ Current and non-active buffers are distinguished by faces."
          (tab-visible-p (memq current-buf tabs))
          (num (cdr tabs-and-remain))
          (rest (unless (or (eq num 0) (null num))
-                 (propertize (concat "+" (number-to-string num) "..")
+                 (propertize (concat " + " (number-to-string num) "..")
                              'face 'ale-tab-rest-face)))
          (get-string (lambda (buf)
                        (if (eq buf current-buf)
@@ -210,7 +210,6 @@ Current and non-active buffers are distinguished by faces."
     (if tabs
         (string-join (nconc (mapcar get-string tabs) (when rest (list rest)))
                      separator)
-      ;; (propertize (buffer-name current-buf) 'face 'ale-tab-current-tab-face))))
       (propertize (concat " " (buffer-name current-buf) " ") 'face 'ale-tab-current-tab-face))))
 
 (defun ale-tab-previous ()
