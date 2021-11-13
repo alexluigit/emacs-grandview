@@ -1,12 +1,6 @@
 ;;; autoload/modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
 
-(use-package mlscroll
-  :hook (server-after-make-frame . mlscroll-mode)
-  :config
-  (setq mlscroll-in-color "#6c6c6c"))
-
 (defvar flycheck-current-errors)
-(defvar flymake-mode-line-format)
 (defvar anzu--state)
 (defvar anzu--cached-count)
 (defvar anzu--overflow-p)
@@ -14,7 +8,8 @@
 (defvar anzu--total-matched)
 (defvar multiple-cursors-mode)
 (declare-function flycheck-count-errors "flycheck" (errors))
-(declare-function mc/num-cursors "multiple-cursors" ())
+(declare-function meow-indicator "meow")
+(declare-function ale-tab-string "autoload/tab")
 
 (defgroup ale-modeline nil
   "A minimal mode-line configuration inspired by doom-modeline."
@@ -92,7 +87,8 @@
   (ale-modeline--string-trim-left (ale-modeline--string-trim-right string)))
 
 (defun ale-modeline--format (left right)
-  "Return a string of `window-width' length containing LEFT and RIGHT, aligned respectively."
+  "Return a string of `window-width' length containing LEFT and
+RIGHT, aligned respectively."
   (let ((reserve (string-width right)))
     (concat left
             " "
@@ -143,31 +139,33 @@ whitespace, else return nil."
           ('finished (if flycheck-current-errors
                          (let-alist (flycheck-count-errors flycheck-current-errors)
                            (let ((sum (+ (or .error 0) (or .warning 0))))
-                             (propertize (concat "⚑ Issues: "
-                                                 (number-to-string sum)
-                                                 "  ")
+                             (propertize (concat "⚑ Issues: " (number-to-string sum))
                                          'face (if .error
                                                    'ale-modeline-status-error
                                                  'ale-modeline-status-warning))))
-                       (propertize "✓ Good  " 'face 'ale-modeline-status-success)))
-          ('running (propertize "Δ Checking  " 'face 'ale-modeline-status-info))
-          ('errored (propertize "✖ Error  " 'face 'ale-modeline-status-error))
-          ('interrupted (propertize "⏸ Paused  " 'face 'ale-modeline-status-neutral))
+                       (propertize "✓ Good" 'face 'ale-modeline-status-success)))
+          ('running (propertize "Δ Checking" 'face 'ale-modeline-status-info))
+          ('errored (propertize "✖ Error" 'face 'ale-modeline-status-error))
+          ('interrupted (propertize "⏵ Paused" 'face 'ale-modeline-status-neutral))
           ('no-checker ""))))
 
-(defvar-local ale-modeline-total-lines nil)
+(defvar-local ale-modeline-total-lines "")
 (defun ale-modeline-count-lines ()
   (setq ale-modeline-total-lines (int-to-string (count-lines (point-min) (point-max)))))
+
+(defun ale-modeline-segment-total-lines ()
+  "Display total lines of current buffer."
+  (propertize ale-modeline-total-lines 'face 'ale-modeline-unimportant))
 
 (defun ale-modeline-segment-editing-state ()
   "Display current input state."
   (when (bound-and-true-p meow-mode)
-    (meow-indicator)))
+    (ale-modeline--string-trim (meow-indicator))))
 
 (defsubst ale-modeline-segment-macro-recording ()
   "Display current macro being recorded."
   (when (or defining-kbd-macro executing-kbd-macro)
-    (propertize "K-M" 'face 'warning)))
+    (propertize "KM" 'face 'warning)))
 
 (defun ale-modeline-segment-modified ()
   "Displays a color-coded buffer modification/read-only indicator in the mode-line."
@@ -187,18 +185,10 @@ whitespace, else return nil."
           (t
            (format #("%d/%d  " 0 5 (face ale-modeline-status-info)) anzu--current-position anzu--total-matched)))))
 
-(defun ale-modeline-segment-multiple-cursors ()
-  "Displays the number of active multiple-cursors in the mode-line (if available)."
-  (when (and (boundp 'multiple-cursors-mode) multiple-cursors-mode)
-    (concat "MC"
-            (format #("×%d" 0 3 (face ale-modeline-status-warning)) (mc/num-cursors)))))
-
 (defun ale-modeline-segment-position ()
   "Displays the current cursor position in the mode-line."
   (concat "%l:%c"
-          (when ale-modeline-show-cursor-point (propertize (format ":%d" (point)) 'face 'ale-modeline-unimportant))
-          " "
-          (propertize ale-modeline-total-lines 'face 'ale-modeline-unimportant)))
+          (when ale-modeline-show-cursor-point (propertize (format ":%d" (point)) 'face 'ale-modeline-unimportant))))
 
 (defun ale-modeline-segment-eol ()
   "Displays the EOL style of the current buffer in the mode-line."
@@ -228,26 +218,9 @@ whitespace, else return nil."
   "Displays the current major mode in the mode-line."
   (when (bound-and-true-p rime-mode) (ale-modeline--string-trim (rime-lighter))))
 
-(defun ale-modeline-segment-misc-info ()
-  "Displays the current value of `mode-line-misc-info' in the mode-line."
-  (let ((misc-info (format-mode-line mode-line-misc-info 'ale-modeline-unimportant)))
-    (unless (string= (ale-modeline--string-trim misc-info) "")
-      (ale-modeline--string-trim misc-info))))
-
 (defun ale-modeline-segment-flycheck ()
   "Displays color-coded flycheck information in the mode-line (if available)."
   ale-modeline--flycheck-text)
-
-(defun ale-modeline-segment-flymake ()
-  "Displays information about the current status of flymake in the mode-line (if available)."
-  (when (bound-and-true-p flymake-mode)
-    (concat (ale-modeline--string-trim (format-mode-line flymake-mode-line-format)) " ")))
-
-(defun ale-modeline-segment-process ()
-  "Displays the current value of `mode-line-process' in the mode-line."
-  (let ((process-info (format-mode-line mode-line-process)))
-    (unless (string= (ale-modeline--string-trim process-info) "")
-      (ale-modeline--string-trim process-info))))
 
 (defvar ale-modeline--default-mode-line mode-line-format
   "Store the default mode-line format")
@@ -272,24 +245,20 @@ whitespace, else return nil."
                       '((:eval
                          (ale-modeline--format
                           (format-mode-line
-                           '((:eval (ale-modeline-segment-editing-state))
+                           '(" "
+                             (:eval (ale-modeline--place-segment 'editing-state))
                              (:eval (ale-modeline--place-segment 'macro-recording))
                              (:eval (ale-modeline--place-segment 'modified))
                              (:eval (ale-modeline--place-segment 'tab))))
                           (format-mode-line
                            '((:eval (ale-modeline--place-segment 'anzu))
-                             (:eval (ale-modeline--place-segment 'multiple-cursors))
                              (:eval (ale-modeline--place-segment 'position))
+                             (:eval (ale-modeline--place-segment 'total-lines))
                              (:eval (ale-modeline--place-segment 'eol))
                              (:eval (ale-modeline--place-segment 'encoding))
                              (:eval (ale-modeline--place-segment 'vc))
                              (:eval (ale-modeline--place-segment 'input-method))
-                             (:eval (ale-modeline--place-segment 'misc-info))
-                             (:eval (ale-modeline--place-segment 'flycheck))
-                             (:eval (ale-modeline--place-segment 'flymake))
-                             (:eval (ale-modeline--place-segment 'proces))
-                             mode-line-end-spaces
-                             "       ")))))))
+                             (:eval (ale-modeline--place-segment 'flycheck)))))))))
     (progn
       (remove-hook 'find-file-hook #'ale-modeline-count-lines)
       (remove-hook 'after-save-hook #'ale-modeline-count-lines)

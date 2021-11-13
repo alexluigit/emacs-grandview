@@ -734,7 +734,6 @@ Tabs for frequently used buffers.
 - Current line / column
 - Total lines
 - Git branch
-- Progress bar of current document
 Its source code lies in *autoload/modeline.el*
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
