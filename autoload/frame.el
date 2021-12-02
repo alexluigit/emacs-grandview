@@ -7,3 +7,5 @@
                 `(lambda (f) (with-selected-frame f (,setup-func))))
     (when window-system
       (add-hook 'window-setup-hook `,setup-func))))
+
+(provide 'ale-frame)

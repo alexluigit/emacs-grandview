@@ -91,9 +91,8 @@
 RIGHT, aligned respectively."
   (let ((reserve (string-width right)))
     (concat left
-            " "
             (propertize " " 'display
-                        `((space :align-to (- (+ right right-fringe right-margin) (+ 1 ,reserve)))))
+                        `((space :align-to (- (+ right right-fringe right-margin) ,reserve))))
             right)))
 
 (defun ale-modeline--place-segment (segment)
@@ -143,10 +142,10 @@ whitespace, else return nil."
                                          'face (if .error
                                                    'ale-modeline-status-error
                                                  'ale-modeline-status-warning))))
-                       (propertize "✓ Good" 'face 'ale-modeline-status-success)))
-          ('running (propertize "Δ Checking" 'face 'ale-modeline-status-info))
-          ('errored (propertize "✖ Error" 'face 'ale-modeline-status-error))
-          ('interrupted (propertize "⏵ Paused" 'face 'ale-modeline-status-neutral))
+                       (propertize " ✓ Good " 'face 'ale-modeline-status-success)))
+          ('running (propertize " Δ Checking " 'face 'ale-modeline-status-info))
+          ('errored (propertize " ✖ Error " 'face 'ale-modeline-status-error))
+          ('interrupted (propertize " ⏵ Paused " 'face 'ale-modeline-status-neutral))
           ('no-checker ""))))
 
 (defvar-local ale-modeline-total-lines "")
@@ -233,6 +232,7 @@ whitespace, else return nil."
   :lighter nil
   (if ale-modeline-mode
       (progn
+        (set-face-attribute 'mode-line nil :box `(:line-width 8 :color ,(face-attribute 'mode-line :background)))
         (add-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
         (add-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
         (add-hook 'find-file-hook #'ale-modeline--update-vc-segment)

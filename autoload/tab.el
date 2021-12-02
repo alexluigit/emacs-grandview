@@ -22,7 +22,7 @@
 You should customize this hook to run code that's needed to
 update the UI.  `ale-tab-string' can be used in the code.")
 
-(defface ale-tab-current-tab-face
+(defface ale-tab-active-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828"
      :bold t :inherit mode-line-active)
@@ -198,7 +198,7 @@ Current and non-active buffers are distinguished by faces."
          (get-string (lambda (buf)
                        (if (eq buf current-buf)
                            (propertize (concat " " (buffer-name buf) " ")
-                                       'face 'ale-tab-current-tab-face)
+                                       'face 'ale-tab-active-tab-face)
                          (propertize (concat " " (buffer-name buf) " ")
                                      'face 'ale-tab-inactive-tab-face))))
          (separator (propertize ale-tab-separator
@@ -206,11 +206,11 @@ Current and non-active buffers are distinguished by faces."
     (when (and rest (not tab-visible-p))
       (setq rest (concat rest
                          (propertize (buffer-name current-buf)
-                                     'face 'ale-tab-current-tab-face))))
+                                     'face 'ale-tab-active-tab-face))))
     (if tabs
         (string-join (nconc (mapcar get-string tabs) (when rest (list rest)))
                      separator)
-      (propertize (concat " " (buffer-name current-buf) " ") 'face 'ale-tab-current-tab-face))))
+      (propertize (concat " " (buffer-name current-buf) " ") 'face 'ale-tab-active-tab-face))))
 
 (defun ale-tab-previous ()
   "Switch to the previous tab.
