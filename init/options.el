@@ -9,6 +9,9 @@
 ;; No littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
 
+;; Don't ask for whether to follow symlink or not
+(setq vc-follow-symlinks nil)
+
 ;; By default, page scrolling should keep the point at the same visual
 ;; position, rather than force it to the top or bottom of the
 ;; viewport.  This eliminates the friction of guessing where the point
@@ -61,7 +64,7 @@
 
 ;; Note that `tab-always-indent' will first do indentation and then
 ;; try to complete whatever you have typed in.
-(setq-default tab-always-indent 'complete)
+(setq-default tab-always-indent t)
 (setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
 (setq-default tab-width 2)
 (setq-default indent-tabs-mode nil)
@@ -70,4 +73,6 @@
 (setq echo-keystrokes 0.25)
 
 ;; y,n for yes,no
-(setq use-short-answers t)
+(if (version< emacs-version "28")
+    (defalias 'yes-or-no-p 'y-or-n-p)
+  (setq use-short-answers t))

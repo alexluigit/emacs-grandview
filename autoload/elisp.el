@@ -33,15 +33,12 @@ Return the decoded text as multibyte string."
   (decode-coding-string (ale-f--read-bytes path) (or coding 'utf-8)))
 
 ;;;###autoload
-(defun ale-unadvice (sym)
-  "Remove all advices from symbol SYM."
-  (interactive "aFunction symbol: ")
-  (advice-mapc (lambda (advice _props) (advice-remove sym advice)) sym))
-
-;;;###autoload
-(defun ale-show-messages ()
+(defun ale-show-messages (&optional erase)
   "Show *Messages* buffer."
-  (interactive)
+  (interactive "P")
+  (when erase
+    (let ((inhibit-read-only t))
+      (with-current-buffer "*Messages*" (erase-buffer))))
   (if-let ((win (get-buffer-window "*Messages*")))
       (delete-window win)
     (display-buffer-in-side-window
@@ -50,10 +47,13 @@ Return the decoded text as multibyte string."
        (window-width . 0.5)))))
 
 ;;;###autoload
-(defun ale-erase-messages ()
-  (interactive)
-  (let ((inhibit-read-only t))
-    (with-current-buffer "*Messages*" (erase-buffer))))
+(defadvice find-library (around always-follow-link activate)
+  "Always follow symlink when using `find-library'.
+
+Package managers like `straight.el' use symlink to manage
+package/libraries. This advice will enable user always find
+libraries's truename."
+  (let ((vc-follow-symlinks t)) ad-do-it))
 
 ;;;###autoload
 (defun silent! (fn &rest args)
