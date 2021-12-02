@@ -19,22 +19,26 @@
 (defvar ale--windows-current nil
   "Current window configuration.")
 
+(defvar ale-monocle-mode)
+
 ;;;###autoload
 (defun ale--monocle-disable ()
   "Set variable `ale-simple-monocle' to nil, when appropriate.
 To be hooked to `window-configuration-change-hook'."
-  (when (and ale-monocle
-             (not (and (featurep 'transient) (window-live-p transient--window)))
+  (when (and ale-monocle-mode
+             (not (cl-find-if
+                   (lambda (w) (eq (window-parameter w 'window-side) 'bottom))
+                   (window-list)))
              (not (one-window-p)))
     (delete-other-windows)
-    (ale-monocle -1)
+    (ale-monocle-mode -1)
     (set-window-configuration ale--windows-current)))
 
 ;;;###autoload
 (add-hook 'window-configuration-change-hook #'ale--monocle-disable)
 
 ;;;###autoload
-(define-minor-mode ale-monocle
+(define-minor-mode ale-monocle-mode
   "Toggle between multiple windows and single window.
 This is the equivalent of maximising a window.  Tiling window
 managers such as DWM, BSPWM refer to this state as 'monocle'."
