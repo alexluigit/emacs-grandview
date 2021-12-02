@@ -1,8 +1,12 @@
 ;;; autoload/orderless.el --- -*- lexical-binding: t -*-
 
+(require 'pinyinlib)
+
 (defun ale-orderless-pinyin-only-initialism (pattern)
   "Leading pinyin initialism regex generator."
-  (ale-pinyin-build-regexp-string pattern t nil t))
+  (if (< (length pattern) 10)
+      (pinyinlib-build-regexp-string pattern t nil t)
+    pattern))
 
 ;;;###autoload
 (defun ale-orderless-literal-dispatcher (pattern _index _total)
