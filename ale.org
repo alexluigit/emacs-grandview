@@ -3,21 +3,22 @@
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
 #+OPTIONS: auto-id:t
+#+STARTUP: overview
 
 * Overview
 :PROPERTIES:
-:CUSTOM_ID: Overview-40a5cf43
+:CUSTOM_ID: Overview-337ea426
 :END:
 ** About
 :PROPERTIES:
-:CUSTOM_ID: Overview-About-95f5b5fd
+:CUSTOM_ID: Overview-About-1982a697
 :END:
 
 This project is my emacs configuration.
 
 *** Structure
 :PROPERTIES:
-:CUSTOM_ID: Overview-About-Structure-0cf3b95a
+:CUSTOM_ID: Overview-About-Structure-1d5b46a8
 :END:
 
 + Init file (init.el / early-init.el)
@@ -38,7 +39,7 @@ doc
 
 *** COPYING
 :PROPERTIES:
-:CUSTOM_ID: Overview-About-COPYING-412d5cc6
+:CUSTOM_ID: Overview-About-COPYING-602b4726
 :END:
 
 Copyright (c) 2020-2021  Alex Lu <alexluigit@gmail.com>
@@ -58,32 +59,31 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 
 ** Quickstart
 :PROPERTIES:
-:CUSTOM_ID: Overview-Quickstart-0f7719fe
+:CUSTOM_ID: Overview-Quickstart-81baeb33
 :END:
 *** Dependencies
 :PROPERTIES:
-:CUSTOM_ID: Overview-Quickstart-Dependencies-944edaca
+:CUSTOM_ID: Overview-Quickstart-Dependencies-d0d7498c
 :END:
 
-required:
-fd
-rg
-git
-exa
-fish
-mailcap
-words
-noto-fonts-emoji
-z
+Here are the dependency list (it might not be a complete list) that this project
+required or optionally required.
 
-optional:
-sarasa-gothic
-victor-mono-nerd-font
-xdotool
+| Package               | Description                 | Required? |
+|-----------------------+-----------------------------+-----------|
+| =fd=                    | A modern =find=               |           |
+| =rg=                    | A modern =grep=               |           |
+| =exa=                   | A modern =ls=                 |           |
+| =git=                   | Version control             |           |
+| =noto-fonts-emoji=      | Font for emojis             | optional  |
+| =words=                 | English words completion    | optional  |
+| =victor-mono-nerd-font= | Default fixed pitch font    | optional  |
+| =sarasa-gothic= (font)  | Default variable pitch font | optional  |
+| =xdotool=               | Automation tool for X11     | optional  |
 
 *** Install
 :PROPERTIES:
-:CUSTOM_ID: Overview-Quickstart-Install-b14a151d
+:CUSTOM_ID: Overview-Quickstart-Install-09df6cce
 :END:
 
 This section contails instructions on how to use this config.
@@ -113,7 +113,7 @@ emacsclient -e '(kill-emacs)'
 
 ** Restart script
 :PROPERTIES:
-:CUSTOM_ID: Overview-Restart_script-0c6495c8
+:CUSTOM_ID: Overview-Restart_script-3e034509
 :END:
 
 Script for starting up emacs.
@@ -141,8 +141,7 @@ Script for starting up emacs.
   You don't need to install this script if you have followed
   =Installation= section. This script will be tangled to
   *~/.local/share/em*, so if you want to get access to =em restart= command from
-  terminal, make sure *~/.local/bin/em* is in your *$PATH* environment
-  variable.
+  terminal, make sure *~/.local/bin/em* is in your *PATH*.
 
 Here is the content of the script.
 
@@ -186,20 +185,20 @@ emacs (again, comfirm your $PATH environment variable).
     (start-process "" nil "nohup" "em" "restart")))
 #+end_src
 
-* *CORE CONFIGURATION*
+* *CORE*
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-b92b026d
+:CUSTOM_ID: *CORE*-67f1cb7c
 :END:
 
-Load core of emacs-grandview. It is *NOT* recommended to delete / comment out this section.
+Load core of =emacs-grandview=. It is *NOT* recommended to delete / comment out this section.
 
 ** Text editor
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-f6e056c7
+:CUSTOM_ID: *CORE*-Text_editor-a71df8cc
 :END:
 *** Modal editing (meow.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Modal_editing_(meow.el)-cdc62517
+:CUSTOM_ID: *CORE*-Text_editor-Modal_editing_(meow.el)-b1de82b2
 :END:
 
 Unlike =evil-mode=, which tries to create a whole vim emulation in emacs, =meow=
@@ -220,13 +219,9 @@ If you want to know more about meow or modal editing in general, check out [[htt
   (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
   (advice-add 'meow-start-kmacro-or-insert-counter :around #'silent!)
   (advice-add 'meow-end-or-call-kmacro :around #'silent!)
-  (unless IS-GUI ; Terminal cursor shape
-    (advice-add 'meow--update-cursor :after #'ale-set-cursor))
+  (advice-add 'meow-query-replace :around #'ale-meow-query-replace-auto-fill-advisor)
   (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
   (meow-setup-line-number)
-  (define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
-  (define-key meow-motion-state-keymap
-    (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'switch-to-buffer)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -239,22 +234,22 @@ If you want to know more about meow or modal editing in general, check out [[htt
         '((meow-replace . meow-yank)
           (meow-reverse . back-to-indentation)
           (meow-change . meow-change-char)
-          (ale-save . ale-pulse-save-line)
-          (meow-kill . ale-kill-whole-line)
+          (ale-meow-save . ale-pulse-save-line)
+          (meow-kill . meow-kill-whole-line)
+          (meow-pop-selection . meow-pop-grab)
           (meow-cancel . keyboard-quit)
-          (meow-pop . meow-pop-grab)
           (meow-delete . meow-C-d)))
   (setq meow-char-thing-table
         '((?r . round)
-          (?\[ . square)
+          (?b . square) ;; `b' for bracket
           (?c . curly)
           (?s . string)
           (?e . symbol)
           (?w . window)
-          (?b . buffer)
+          (?B . buffer)
           (?p . paragraph)
-          (?\^? . line)
-          (?' . line)
+          (?\[ . line)
+          (?\] . line)
           (?d . defun)
           (?i . indent)
           (?t . tag)
@@ -264,7 +259,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
 *** Line numbers (display-line-numbers.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Line_numbers_(display-line-numbers.el)-f8fc1065
+:CUSTOM_ID: *CORE*-Text_editor-Line_numbers_(display-line-numbers.el)-8c919f4f
 :END:
 
 Display line numbers when programming.
@@ -278,7 +273,7 @@ Display line numbers when programming.
 
 *** Symbol pairs (embrace.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Symbol_pairs_(embrace.el)-35afd2ca
+:CUSTOM_ID: *CORE*-Text_editor-Symbol_pairs_(embrace.el)-fcd89053
 :END:
 
 =embrace.el= is a package for symbol pairs insert/change/delete which resembles
@@ -311,7 +306,7 @@ has been bound to =meow-inner-of-thing=.)
 
 *** Long line text (so-long.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Long_line_text_(so-long.el)-d0b43617
+:CUSTOM_ID: *CORE*-Text_editor-Long_line_text_(so-long.el)-8cbff31f
 :END:
 
 Consistent performance is the reason to enable =global-so-long-mode=, built
@@ -328,9 +323,9 @@ though I find that the defaults require no further intervention from my part.
   (global-so-long-mode))
 #+end_src
 
-*** Paragraphs (ale-fill.el)
+*** Paragraphs (paragraphs.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Paragraphs_(ale-fill.el)-875b766a
+:CUSTOM_ID: *CORE*-Text_editor-Paragraphs_(paragraphs.el)-94234568
 :END:
 
 The =ale-fill.el= library is a tiny wrapper around some Emacs settings and modes
@@ -350,9 +345,6 @@ customisations.
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package paragraphs
   :straight (:type built-in)
-  :bind
-  ("M-n" . forward-paragraph)
-  ("M-p" . backward-paragraph)
   :init
   (setq-default truncate-lines t)
   (ale-fill-fill-mode 1)
@@ -368,7 +360,7 @@ customisations.
 
 *** Jump list (better-jumper.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Jump_list_(better-jumper.el)-6d2f1ab6
+:CUSTOM_ID: *CORE*-Text_editor-Jump_list_(better-jumper.el)-890432c5
 :END:
 
 Create a jump list (same concept in vim) in emacs.
@@ -383,7 +375,7 @@ Create a jump list (same concept in vim) in emacs.
 
 *** Quick goto char (avy.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Quick_goto_char_(avy.el)-f5189b0a
+:CUSTOM_ID: *CORE*-Text_editor-Quick_goto_char_(avy.el)-dda2a3e2
 :END:
 
 Jump to any visible text.
@@ -398,7 +390,7 @@ Jump to any visible text.
 
 *** Cross reference (xref.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Text_editor-Cross_reference_(xref.el)-42059d3d
+:CUSTOM_ID: *CORE*-Text_editor-Cross_reference_(xref.el)-490417b8
 :END:
 
 *xref* provides helpful commands for code navigation and discovery.
@@ -413,9 +405,276 @@ Jump to any visible text.
   (setq xref-search-program 'ripgrep))
 #+end_src
 
-** Minibuffer
+*** Interactive diff, patch, or merge conflict (ediff.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Minibuffer-1b95f396
+:CUSTOM_ID: *CORE*-Text_editor-Interactive_diff,_patch,_or_merge_conflict_(ediff.el)-9c46ac93
+:END:
+
+This package provides a convenient way of simultaneous browsing through the
+differences between a pair (or a triple) of files or buffers.  The files being
+compared, file-A, file-B, and file-C (if applicable) are shown in separate
+windows (side by side, one above the another, or in separate frames), and the
+differences are highlighted as you step through them.  You can also copy
+difference regions from one buffer to another (and recover old differences if
+you change your mind).
+
+#+begin_src emacs-lisp
+(use-package ediff
+  :config
+  (setq ediff-keep-variants nil)
+  (setq ediff-make-buffers-readonly-at-startup nil)
+  (setq ediff-merge-revisions-with-ancestor t)
+  (setq ediff-show-clashes-only t)
+  (setq ediff-split-window-function 'split-window-horizontally)
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  ;; Tweak those for safer identification and removal
+  (setq ediff-combination-pattern
+        '("<<<<<<< ale-ediff-combine Variant A" A
+          ">>>>>>> ale-ediff-combine Variant B" B
+          "####### ale-ediff-combine Ancestor" Ancestor
+          "======= ale-ediff-combine End"))
+  (defun ale/ediff-flush-combination-pattern ()
+    "Remove my custom `ediff-combination-pattern' markers.
+This is a quick-and-dirty way to get rid of the markers that are
+left behind by `smerge-ediff' when combining the output of two
+diffs.  While this could be automated via a hook, I am not yet
+sure this is a good approach."
+    (interactive)
+    (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil)))
+#+end_src
+
+** File management
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-75941d76
+:END:
+*** Dired (dired.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Dired_(dired.el)-081424ff
+:END:
+
+=Dired= is a built-in tool that performs file management operations
+inside of an Emacs buffer.  It is simply superb!
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package dired
+  :straight (:type built-in)
+  :hook
+  (dired-mode . (lambda () (interactive) (setq-local mode-line-format nil)))
+  :bind
+  (:map dired-mode-map
+        ("/" . dired-goto-file)
+        ("a" . dired-create-empty-file)
+        ("f" . ale-dired-toolbox)
+        ("r" . ale-dired-jump)
+        ("I" . dired-insert-subdir)
+        ("?" . dired-create-directory)
+        ("O" . dired-find-file-other-window)
+        ("i" . ale-dired-file-rename-eol)
+        ("d" . dired-kill-subdir)
+        ("<" . beginning-of-buffer)
+        (">" . end-of-buffer)
+        ("[" . dired-prev-dirline)
+        ("]" . dired-next-dirline)
+        ("o" . dired-up-directory)
+        ("^" . mode-line-other-buffer)
+        ("x" . dired-do-delete)
+        ("y" . dired-do-copy)
+        ("." . dired-omit-mode)
+        ("% SPC" . ale-dired-rename-space-to-underscore))
+  :config
+  (setq! ale-dired-tools
+         '(("m" "mark file REGEX" dired-mark-files-regexp)
+           ("n" "copy file NAME" ale-dired-yank-file-name)
+           ("p" "copy file NAME" ale-dired-yank-file-path)
+           ("d" "copy file PATH" ale-dired-yank-file-dir)
+           ("t" "show file TYPE" dired-show-file-type)
+           ("l" "goto file TRUEPATH" ale-dired-file-true-path)))
+  (setq dired-kill-when-opening-new-dired-buffer t) ;; added in emacs 28
+  (setq dired-clean-confirm-killing-deleted-buffers nil)
+  (setq large-file-warning-threshold 50000000)
+  (setq dired-recursive-copies 'always)
+  (setq dired-recursive-deletes 'always)
+  (setq delete-by-moving-to-trash t)
+  (setq dired-dwim-target t)
+  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
+#+end_src
+
+*** A better dired interface (danger.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-A_better_dired_interface_(danger.el)-3d9f5675
+:END:
+
+This package is inspired the popular file manager =ranger=, I created it
+on the basis of =ranger.el=. Compare to =ranger.el=, this package only
+keeps features I wanted, and some sensible functionalities were added
+as well. See details at: https://github.com/alexluigit/danger.el
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package danger
+  :after-call pre-command-hook
+  :init
+  (add-to-list 'load-path (concat straight-base-dir "straight/"
+                                  straight-build-dir "/danger/extensions"))
+  :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el"
+                    :files ("*.el" "extensions"))
+  :hook
+  (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+  :bind
+  (:map danger-mode-map ("SPC" . danger-show-history))
+  :config
+  (advice-add 'ale-dired-find-file :override 'danger-find-file-dwim)
+  (danger-override-dired-mode)
+  (require 'danger-minibuffer)
+  (danger-minibuf-preview-mode)
+  (setq danger-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files")
+                                 ("/mnt/Cloud/" . ".Trash/files"))))
+#+end_src
+
+*** Writable dired (wdired.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Writable_dired_(wdired.el)-3a9a82cd
+:END:
+
+#+begin_src emacs-lisp
+(use-package wdired
+  :config
+  (setq wdired-allow-to-change-permissions t)
+  (setq wdired-create-parent-directories t))
+#+end_src
+
+*** Find files (files.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Find_files_(files.el)-c8ed4da6
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package files
+  :straight (:type built-in)
+  :config
+  (setq confirm-kill-processes nil)
+  (setq permanently-enabled-local-variables '(lexical-binding encoding)))
+#+end_src
+
+*** Recent files (recentf.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Recent_files_(recentf.el)-8183094b
+:END:
+
+Keep a record of all recently opened files.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package recentf
+  :straight (:type built-in)
+  :after-call find-file-hook danger
+  :config
+  (setq recentf-max-saved-items 100)
+  (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
+  (recentf-mode 1))
+#+end_src
+
+*** Restore file place (saveplace.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Restore_file_place_(saveplace.el)-d693e126
+:END:
+
+Just remember where the point is in any given file.  This can often
+be a subtle reminder of what you were doing the last time you
+visited that file, allowing you to pick up from there.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package saveplace
+  :straight (:type built-in)
+  :after-call find-file-hook
+  :config
+  (setq save-place-file (locate-user-emacs-file "saveplace"))
+  (setq save-place-forget-unreadable-files t)
+  (save-place-mode 1))
+#+end_src
+
+*** Auto refresh file content (autorevert.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Auto_refresh_file_content_(autorevert.el)-726d012d
+:END:
+
+This mode ensures that the buffer is updated whenever the file
+changes.  A change can happen externally or by some other tool
+inside of Emacs (e.g. kill a Magit diff).
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package autorevert
+  :straight (:type built-in)
+  :after-call self-insert-command
+  :config
+  (setq auto-revert-verbose t)
+  (global-auto-revert-mode))
+#+end_src
+
+*** Project management (project.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Project_management_(project.el)-2130f546
+:END:
+
+#+begin_src emacs-lisp
+(use-package project
+  :straight (:type built-in)
+  :config
+  (setq project-switch-commands
+        '((project-find-file "File" ?\r)
+          (ale-project-find-subdir "Subdir" ?s)
+          (project-find-regexp "Grep" ?g)
+          (project-dired "Dired" ?d)
+          (ale-project-retrieve-tag "Tag switch" ?t)
+          (ale-project-magit-status "Magit" ?m)
+          (ale-project-commit-log "Log VC" ?l)))
+  (setq ale-project-commit-log-limit 25)
+  :bind
+  (:map project-prefix-map
+        ("l" . ale-project-commit-log)
+        ("m" . ale-project-magit-status)
+        ("s" . ale-project-find-subdir)
+        ("t" . ale-project-retrieve-tag)))
+#+end_src
+
+*** Trash (trashed.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-File_management-Trash_(trashed.el)-b51c0904
+:END:
+
+=trashed= applies the principles of =dired= to the management of the user's
+filesystem trash.  Use =C-h m= to see the docs and keybindings for its
+major mode.
+
+Basically, its interaction model is as follows:
+
+- =m= to mark for some deferred action, such as =D= to delete, =R= to restore.
+- =t= to toggle the status of all items as marked.  Use this without marks to =m=
+  (mark) all items, then call a deferred action to operate on them.
+- =d= to mark for permanent deletion.
+- =r= to mark for restoration.
+- =x= to execute these special marks.
+
+#+begin_src emacs-lisp
+(use-package trashed
+  :config
+  (setq trashed-action-confirmer 'y-or-n-p)
+  (setq trashed-use-header-line t)
+  (setq trashed-sort-key '("Date deleted" . t))
+  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+#+end_src
+** Completion framework
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Completion_framework-69b42cad
+:END:
+
+The optimal way of using Emacs is through searching and narrowing
+selection candidates.  Spend less time worrying about where things are
+on the screen and more on how fast you can bring them into focus.
+This is, of course, a matter of realigning priorities, as we still
+wish to control every aspect of the interface.
+
+*** Minibuffer and completion functions (minibuffer.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Completion_framework-Minibuffer_and_completion_functions_(minibuffer.el)-7aaeb078
 :END:
 
 The minibuffer is the epicentre of extended interactivity with all sorts of
@@ -430,7 +689,7 @@ What my minibuffer config does:
   switch to another window, call the minibuffer again, run some
   commands, and then move back to what you initiated in the original
   minibuffer.  Or simply call an =M-x= command while in the midst of a
-  minibuffer session.  To exit, hit =C-]= (=abort-recursive-edit=), though
+  minibuffer session.  To exit, hit =C-[= (=abort-recursive-edit=), though
   the regular =C-g= should also do the trick.
 
   The =minibuffer-depth-indicate-mode= will show a recursion indicator,
@@ -447,32 +706,9 @@ What my minibuffer config does:
   (minibuffer-depth-indicate-mode 1))
 #+end_src
 
-*** Alternative isearch UI (isearch-mb.el)
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Minibuffer-Alternative_isearch_UI_(isearch-mb.el)-7cb34dd2
-:END:
-
-This package provides an alternative isearch UI based on the minibuffer.  This
-allows editing the search string in arbitrary ways without any special maneuver;
-unlike standard isearch, cursor motion commands do not end the search.
-Moreover, the search status information in the echo area and some keybindings
-are slightly simplified.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package isearch-mb
-  :after-call isearch-mode
-  :config
-  (isearch-mb-mode)
-  (add-to-list 'isearch-mb--with-buffer #'consult-isearch)
-  (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
-  :bind
-  (:map isearch-mb-minibuffer-map
-        ([remap previous-matching-history-element] . consult-isearch)))
-#+end_src
-
 *** Minibuffer history (savehist.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Minibuffer-Minibuffer_history_(savehist.el)-4453fdee
+:CUSTOM_ID: *CORE*-Completion_framework-Minibuffer_history_(savehist.el)-c4fa208a
 :END:
 
 Keeps a record of actions involving the minibuffer.
@@ -489,20 +725,9 @@ Keeps a record of actions involving the minibuffer.
   (savehist-mode))
 #+end_src
 
-** Completion framework
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-fda1ebab
-:END:
-
-The optimal way of using Emacs is through searching and narrowing
-selection candidates.  Spend less time worrying about where things are
-on the screen and more on how fast you can bring them into focus.
-This is, of course, a matter of realigning priorities, as we still
-wish to control every aspect of the interface.
-
 *** Vertical completion candidates (vertico.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-Vertical_completion_candidates_(vertico.el)-54d66c1d
+:CUSTOM_ID: *CORE*-Completion_framework-Vertical_completion_candidates_(vertico.el)-84fd5a77
 :END:
 
 Vertico provides a performant and minimalistic vertical completion UI based on
@@ -526,7 +751,7 @@ window as a constant value.
 
 *** Match candidates made easy (orderless.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-Match_candidates_made_easy_(orderless.el)-ad79f19e
+:CUSTOM_ID: *CORE*-Completion_framework-Match_candidates_made_easy_(orderless.el)-a08036fc
 :END:
 
 This package provides an =orderless= completion style that divides the pattern
@@ -534,13 +759,15 @@ into components (space-separated by default), and matches candidates that match
 all of the components in any order.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package pinyinlib)
+
 (use-package orderless
   :after-call minibuffer-setup-hook
   :config
   (setq completion-styles '(orderless))
   (setq orderless-component-separator " +")
   (setq orderless-matching-styles
-        '(ale-pinyin-build-regexp-string
+        '(ale-orderless-pinyin-only-initialism
           orderless-initialism
           orderless-prefixes
           orderless-regexp))
@@ -553,7 +780,7 @@ all of the components in any order.
 
 *** Useful commands using completion (consult.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-Useful_commands_using_completion_(consult.el)-939bae3e
+:CUSTOM_ID: *CORE*-Completion_framework-Useful_commands_using_completion_(consult.el)-bb496c77
 :END:
 
 Consult implements a set of =consult-<thing>= commands which use
@@ -577,19 +804,18 @@ Selectrum, Vertico and Embark.
   (setq register-preview-function #'consult-register-format)
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
-  (advice-add #'switch-to-buffer :around #'ale-consult-switch-buffer-advisor)
+  (advice-add #'consult-outline :around #'ale-consult-outline-advisor)
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
   :bind
-  (:map ale-consult-map
+  (:map ale-mct-map
         ("/" . consult-line-multi)
         ("e" . consult-compile-error)
         ("r" . consult-ripgrep)
         ("k" . consult-keep-lines)
         ("i" . consult-imenu-multi)
         ("f" . consult-focus-lines)
-        ("n" . consult-outline)
-        ("o" . consult-org-heading)
+        ("o" . consult-outline)
         ("R" . consult-register)
         ("y" . consult-yank-from-kill-ring)
         ("m" . consult-minor-mode-menu)
@@ -607,7 +833,7 @@ Selectrum, Vertico and Embark.
 
 *** Keyboard version right-click (embark.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-Keyboard_version_right-click_(embark.el)-0aa2c16d
+:CUSTOM_ID: *CORE*-Completion_framework-Keyboard_version_right-click_(embark.el)-e1a0f11d
 :END:
 
 This package provides a sort of right-click contextual menu for
@@ -634,7 +860,7 @@ a target determined by the context:
 
 *** Candidate annotation (marginalia.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Completion_framework-Candidate_annotation_(marginalia.el)-bb322b7b
+:CUSTOM_ID: *CORE*-Completion_framework-Candidate_annotation_(marginalia.el)-26cd9370
 :END:
 
 This is a utility jointly developed by Daniel Mendler and Omar Antolín Camarena
@@ -652,14 +878,160 @@ framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
   (marginalia-mode))
 #+end_src
 
+*** Auto completion in buffer (company.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Completion_framework-Auto_completion_in_buffer_(company.el)-eba24f5d
+:END:
+
+=company= is a modular completion framework.  Modules for retrieving completion
+candidates are called backends, modules for displaying them are frontends. It
+comes with many backends, e.g. =company-etags=.  These are distributed in
+separate files and can be used individually.
+
+=tng= in =company-tng-mode= means tab and go, in this mode tab key will complete and
+move to the next candidate meanwhile keep company window open.
+
+#+begin_src emacs-lisp
+(use-package company
+  :after-call self-insert-command
+  :hook
+  (text-mode . ale-company-enable-ispell)
+  :config
+  (global-company-mode)
+  (company-tng-mode)
+  (setq company-idle-delay 0.0))
+#+end_src
+
+** Org mode
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Org_mode-5ab4d9d0
+:END:
+*** Org (org.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Org_mode-Org_(org.el)-570589d1
+:END:
+
+In its purest form, Org is a markup language that is similar to Markdown:
+symbols are used to denote the meaning of a construct in its context, such as
+what may represent a headline element or a phrase that calls for emphasis.
+
+What lends Org its super powers though is everything else built around it: a
+rich corpus of Elisp functions that automate, link, combine, enhance, structure,
+or otherwise enrich the process of using this rather straightforward system of
+plain text notation.
+
+Couched in those terms, Org is at once a distribution of well integrated
+libraries and a vibrant ecosystem that keeps producing new ideas and workflows
+on how to organise one's life with plain text.
+
+This section is all about basic configurations for how does a =.org= file should
+look like which can be described briefly as follows:
+
+- use bigger fonts for different levels of heading
+- show ellipsis marker when a node is folded.
+- center text when make sense
+- indent text according to outline structure
+- display inline images in url automatically
+
+#+begin_src emacs-lisp
+(use-package org
+  :straight (:type built-in)
+  :hook
+  (org-mode . ale-org-font-setup)
+  (org-tab-first . org-end-of-line)
+  :config
+  (setq org-adapt-indentation nil)
+  (setq org-hide-leading-stars t)
+  (setq org-startup-folded t)
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-ellipsis " ▾")
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+  (setq org-image-actual-width nil)
+  (setq org-display-remote-inline-images 'download)
+  :bind
+  (:map org-mode-map
+        ([remap org-toggle-comment] . ale-org-comment-entry-in-region)
+        ("C-c S-l" . org-toggle-link-display)
+        ("C-c C-S-l" . org-insert-last-stored-link)))
+#+end_src
+
+*** Source code block (org-src.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Org_mode-Source_code_block_(org-src.el)-780a38a5
+:END:
+
+#+begin_src emacs-lisp
+(use-package org-src
+  :straight (:type built-in)
+  :after-call org-mode
+  :config
+  (push '("conf-unix" . conf-unix) org-src-lang-modes)
+  (setq org-edit-src-content-indentation 0)
+  (setq org-src-window-setup 'split-window-right))
+#+end_src
+
+*** Template expansion (org-tempo.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Org_mode-Template_expansion_(org-tempo.el)-44d95b15
+:END:
+
+#+begin_src emacs-lisp
+(use-package org-tempo
+  :straight (:type built-in)
+  :after-call org-mode
+  :config
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("hk" . "src haskell"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python")))
+#+end_src
+
+*** Literate programming (ob.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Org_mode-Literate_programming_(ob.el)-fe3bec67
+:END:
+
+#+begin_src emacs-lisp
+(use-package ob
+  :straight (:type built-in)
+  :after-call org-mode
+  :hook (org-babel-after-execute . org-redisplay-inline-images)
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t)
+     (shell . t)
+     (latex . t)
+     (C . t)
+     (makefile . t)))
+  (setq org-babel-default-header-args:sh    '((:results . "output replace"))
+        org-babel-default-header-args:bash  '((:results . "output replace"))
+        org-babel-default-header-args:shell '((:results . "output replace"))))
+#+end_src
+
 ** User interface
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-6bc57f7e
+:CUSTOM_ID: *CORE*-User_interface-7d493ea0
 :END:
+*** Theme
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-User_interface-Theme-3351ce80
+:END:
+
+=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
+Protesilaos Stavrou.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(setq modus-themes-links 'no-underline)
+(setq modus-themes-mode-line 'borderless)
+(add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
+#+end_src
 
 *** Window placement (window.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Window_placement_(window.el)-6b5c14fe
+:CUSTOM_ID: *CORE*-User_interface-Window_placement_(window.el)-3072a5af
 :END:
 
 The =display-buffer-alist= is intended as a rule-set for controlling
@@ -701,7 +1073,7 @@ to 0 to ensure every new window will open in horizontal split.
 
 *** Window focus (ace-window.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Window_focus_(ace-window.el)-219abab3
+:CUSTOM_ID: *CORE*-User_interface-Window_focus_(ace-window.el)-8e904e59
 :END:
 
 Index based window motions.
@@ -712,9 +1084,9 @@ Index based window motions.
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 #+end_src
 
-*** Tab (tab.el)
+*** Tab (ale-tab.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Tab_(tab.el)-e59030f3
+:CUSTOM_ID: *CORE*-User_interface-Tab_(ale-tab.el)-ae1ba85f
 :END:
 
 Tabs for frequently used buffers.
@@ -723,9 +1095,9 @@ Tabs for frequently used buffers.
 (ale-tab-mode)
 #+end_src
 
-*** Modeline (modeline.el)
+*** Modeline (ale-modeline.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Modeline_(modeline.el)-c37d2771
+:CUSTOM_ID: *CORE*-User_interface-Modeline_(ale-modeline.el)-7e8e9935
 :END:
 
 =ale-modeline-mode= provides following infos in modeline:
@@ -737,12 +1109,13 @@ Tabs for frequently used buffers.
 Its source code lies in *autoload/modeline.el*
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(ale-modeline-mode)
+;; (ale-modeline-mode)
+(ale-frame-enable 'ale-modeline-mode)
 #+end_src
 
 *** Frame margin (fringe.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Frame_margin_(fringe.el)-8cdc3eb4
+:CUSTOM_ID: *CORE*-User_interface-Frame_margin_(fringe.el)-0d85a826
 :END:
 
 Create a 20 pixel margin for emacs frame.
@@ -752,44 +1125,47 @@ Create a 20 pixel margin for emacs frame.
 (fringe-mode)
 #+end_src
 
+*** Pixel scrolling (pixel-scroll.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-User_interface-Pixel_scrolling_(pixel-scroll.el)-9ba3db6b
+:END:
+
+Pixelwise scrolling in emacs. This  was added in emacs version > 29, you
+need to add =--with-xinput2= in build flags to enable this feature.
+
+#+begin_src emacs-lisp
+(when (boundp 'pixel-scroll-precision-mode)
+  (pixel-scroll-precision-mode 1))
+#+end_src
+
 *** Fonts (fonts.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Fonts_(fonts.el)-1ef7303f
+:CUSTOM_ID: *CORE*-User_interface-Fonts_(fonts.el)-5fe477d3
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (ale-frame-enable 'ale-font-setup)
+
+;; https://lists.gnu.org/archive/html/emacs-devel/2021-11/msg01636.html
+(defun +modeline-font-temp-fix ()
+  (when-let ((default (ale-font-chooser ale-default-fonts)))
+    (set-face-attribute 'mode-line nil :font (font-spec :family default :size ale-font-size))
+    (set-face-attribute 'mode-line-inactive nil :font (font-spec :family default :size ale-font-size))))
+(ale-frame-enable '+modeline-font-temp-fix)
 #+end_src
 
 *** Automatic opacity adjustment (opacity.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Automatic_opacity_adjustment_(opacity.el)-a4e4ce5b
+:CUSTOM_ID: *CORE*-User_interface-Automatic_opacity_adjustment_(opacity.el)-4f0d489f
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (ale-frame-enable 'ale-opacity-auto-mode)
 #+end_src
 
-*** Interactive query replace (anzu.el)
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Interactive_query_replace_(anzu.el)-d908500f
-:END:
-
-=anzu.el= provides a minor mode which displays 'current match/total
-matches' in the mode-line in various search modes.  This makes it
-easy to understand how many matches there are in the current buffer
-for your search query.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package anzu
-  :after-call isearch-mode
-  :config
-  (global-anzu-mode +1))
-#+end_src
-
 *** Pulse line (pulse.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Pulse_line_(pulse.el)-8af06e9a
+:CUSTOM_ID: *CORE*-User_interface-Pulse_line_(pulse.el)-ac78d83b
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
@@ -798,7 +1174,7 @@ for your search query.
 
 *** Transient commands (transient.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-User_interface-Transient_commands_(transient.el)-7d24bc45
+:CUSTOM_ID: *CORE*-User_interface-Transient_commands_(transient.el)-d8945949
 :END:
 
 =transient.el= built-in package in emacs 28 for "transient" commands.
@@ -816,210 +1192,76 @@ for your search query.
          ("ESC" . transient-quit-all))))
 #+end_src
 
-** Keybindings
+** Utils
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-116d13bf
+:CUSTOM_ID: *CORE*-Utils-df28d9b5
 :END:
-
-This section contains all core keybindings of emacs-grandview.
-
-*** INSERT
+*** Git porcelain (magit.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-INSERT-44ac5345
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(bind-keys
- :map meow-insert-state-keymap
- ("<escape>" . ale-escape)
- ("C-u" . ale-kill-whole-line)
- ("<C-i>" . ale-insert-ctrl-i)
- ("C-o" . ale-insert-ctrl-o))
-#+end_src
-
-*** NORMAL
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-NORMAL-897cec45
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(meow-normal-define-key
- '("0" . meow-digit-argument)
- '("1" . meow-digit-argument)
- '("2" . meow-digit-argument)
- '("3" . meow-digit-argument)
- '("4" . meow-digit-argument)
- '("5" . meow-digit-argument)
- '("6" . meow-digit-argument)
- '("7" . meow-digit-argument)
- '("8" . meow-digit-argument)
- '("9" . meow-digit-argument)
- '("/" . consult-line)
- '("%" . ale-match-paren)
- '("`" . negative-argument)
- '(";" . meow-reverse)
- '("," . meow-inner-of-thing)
- '("." . meow-bounds-of-thing)
- '("<" . beginning-of-buffer)
- '(">" . end-of-buffer)
- '("[" . scroll-down)
- '("]" . scroll-up)
- '("-" . meow-pop)
- '("_" . meow-pop-all-selection)
- '("=" . ale-query-replace)
- '("+" . anzu-query-replace-regexp)
- '("'" . meow-end-of-thing)
- '("\\" . meow-pop-search)
- '("^" . meow-last-buffer)
- '("<backspace>" . meow-beginning-of-thing)
- '("a" . ale-insert)
- '("A" . ale-insert-at-first-non-whitespace)
- '("b" . meow-back-word)
- '("B" . meow-back-symbol)
- '("c" . meow-change)
- '("C" . meow-change-save)
- '("d" . meow-delete)
- '("e" . meow-line)
- '("E" . ale-inner-line)
- '("f" . meow-next-word)
- '("F" . meow-next-symbol)
- '("g" . ale-files-update)
- '("h" . embrace-commander)
- '("i" . forward-char)
- '("j" . ale-top-join-line)
- '("J" . meow-join)
- '("k" . meow-kill)
- '("K" . meow-kmacro-matches)
- '("l" . meow-kmacro-lines)
- '("m" . meow-mark-word)
- '("M" . meow-mark-symbol)
- '("n" . ale-next-line)
- '("N" . meow-next-expand)
- '("o" . backward-char)
- '("p" . ale-prev-line)
- '("P" . meow-prev-expand)
- '("q" . meow-quit)
- '("r" . meow-search)
- '("s" . meow-open-below)
- '("S" . meow-open-above)
- '("t" . avy-goto-char-timer)
- '("T" . avy-resume)
- '("u" . undo)
- '("U" . undo-redo)
- '("v" . meow-visit)
- '("w" . meow-block)
- '("W" . meow-block-expand)
- '("x" . ale-save)
- '("y" . meow-replace)
- '("Y" . meow-yank-pop)
- '("z" . meow-grab)
- '("Z" . meow-swap-grab))
-#+end_src
-
-*** LEADER
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-LEADER-fe9dd95c
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(meow-leader-define-key
- '("0" . delete-window)
- '("1" . delete-other-windows)
- '("2" . ale-split-window-below)
- '("3" . ale-split-window-right)
- '("4" . ctl-x-4-prefix)
- '("5" . ctl-x-5-prefix)
- '("6" . register-map)
- '("7" . project-map)
- '("8" . insert-char)
- '("9" . tab-map)
- '("[" . awesome-tab-backward-tab)
- '("]" . awesome-tab-forward-tab)
- '("SPC" . switch-to-buffer)
- '("?" . describe-keymap)
- '("/" . describe-symbol)
- '(";" . ale-comment-or-uncomment-region)
- '("e" . ale-elisp-map)
- '("f" . ale-files-map)
- '("i" . list-buffers)
- '("k" . kill-this-buffer)
- '("m" . nil)
- '("n" . dired-jump)
- '("o" . ale-org-map)
- '("p" . ale-project-find-file)
- '("t" . ale-consult-map)
- '("u" . ale-utils-map)
- '("w" . save-buffer)
- '("z" . window-toggle-side-windows))
-
-(meow-motion-overwrite-define-key
-'("/" . consult-line)
-'("<escape>" . ale-escape))
-#+end_src
-
-*** GLOBAL
-:PROPERTIES:
-:CUSTOM_ID: *CORE_CONFIGURATION*-Keybindings-GLOBAL-f57fddf7
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(bind-keys
- :map global-map
- ("<escape>" . ale-escape)
- ("C-;" . exchange-point-and-mark)
- ("<C-i>" . better-jumper-jump-forward)
- ("C-o" . better-jumper-jump-backward)
- ("C-x C-d" . ale-ispell-word)
- ("M-i" . ale-tab-next)
- ("M-o" . ace-select-window)
- ("M-SPC" . ale-monocle) ; replaced `just-one-space'
- ("M-%" . anzu-isearch-query-replace)
- :map minibuffer-local-map
- ("S-<return>" . ale-files-other-window)
- ("C-u" . ale-kill-whole-line)
- ("<C-i>" . forward-char)
- ("C-o" . backward-char)
- :map ale-files-map
- ("." . ale-files-dotfiles)
- ("e" . ale-files-edit-emacs-config)
- ("u" . ale-files-in-user-dirs)
- ("o" . ale-files-browse-all-directories)
- ("r" . ale-files-rename-file-and-buffer)
- ("l" . find-library)
- :map ale-elisp-map
- ("e" . eval-last-sexp)
- ("x" . eval-expression)
- ("f" . eval-defun)
- ("u" . ale-unadvice)
- ("m" . ale-show-messages)
- ("<backspace>" . ale-erase-messages)
- :map ale-utils-map
- ("d" . ale-insert-date)
- ("o" . ale-opacity-set)
- ("=" . count-words))
-
-(ale-kbd-C-i-fix)
-#+end_src
-
-* Introspection
-:PROPERTIES:
-:CUSTOM_ID: Introspection-a5566bd6
-:END:
-** Man page (man.el)
-:PROPERTIES:
-:CUSTOM_ID: Introspection-Man_page_(man.el)-87e62a10
+:CUSTOM_ID: *CORE*-Utils-Git_porcelain_(magit.el)-60a3d018
 :END:
 
 #+begin_src emacs-lisp
-(use-package man
-  :straight (:type built-in)
+(use-package magit
   :config
-  (setq Man-notify-method 'newframe))
+  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  (setq magit-define-global-key-bindings nil)
+  (setq git-commit-summary-max-length 50)
+  (setq git-commit-known-pseudo-headers
+        '("Signed-off-by"
+          "Acked-by"
+          "Modified-by"
+          "Cc"
+          "Suggested-by"
+          "Reported-by"
+          "Tested-by"
+          "Reviewed-by"))
+  (setq git-commit-style-convention-checks
+        '(non-empty-second-line
+          overlong-summary-line))
+  (setq magit-diff-refine-hunk t)
+  (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
+  :bind (("C-M-g" . magit-status-here)
+         :map magit-diff-section-base-map
+         ("<C-return>" . magit-diff-visit-file-other-window)))
 #+end_src
 
-** Emacs Manual (info.el)
+*** Vterm (vterm.el)
 :PROPERTIES:
-:CUSTOM_ID: Introspection-Emacs_Manual_(info.el)-f89e2ed9
+:CUSTOM_ID: *CORE*-Utils-Vterm_(vterm.el)-74c1442a
+:END:
+
+#+begin_src emacs-lisp
+(use-package vterm
+  :config
+  (setq vterm-max-scrollback 5000)
+  (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
+  (set-face-attribute 'vterm-color-black nil :foreground "#111111")
+  (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
+  (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
+  :bind
+  (("M-v" . ale-vterm-toggle)
+   :map vterm-mode-map
+   ("M-v" . ale-vterm-toggle)
+   ("M-;" . ale-vterm-new)
+   ("M-'" . vterm-send-M-apostrophe)
+   ("M-\"" . vterm-send-M-quote)
+   ("M-/" . vterm-send-M-/)
+   ("M-." . ale-vterm-next)
+   ("M-," . ale-vterm-prev)
+   ("M-RET" . vterm-send-M-return)
+   ("s-n" . vterm-next-prompt)
+   ("s-p" . vterm-previous-prompt)
+   ("S-SPC" . nil)
+   ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
+   ("<C-i>" . vterm-send-C-i)
+   ("C-<delete>" . vterm-send-C-delete)
+   ("C-<return>" . vterm-send-F5)))
+#+end_src
+
+*** Emacs Manual (info.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Utils-Emacs_Manual_(info.el)-48af98b8
 :END:
 
 #+begin_src emacs-lisp
@@ -1034,10 +1276,9 @@ This section contains all core keybindings of emacs-grandview.
         ("M-n" . forward-paragraph)
         ("M-p" . backward-paragraph)))
 #+end_src
-
-** Helpful (helpful.el)
+*** Helpful (helpful.el)
 :PROPERTIES:
-:CUSTOM_ID: Introspection-Helpful_(helpful.el)-90ae912e
+:CUSTOM_ID: *CORE*-Utils-Helpful_(helpful.el)-9a1ec3de
 :END:
 
 Helpful.el provides a better help buffer. Here are some tweaks I
@@ -1047,39 +1288,9 @@ made for this package and built-in help buffer:
 - open new window when invoking =helpful-visit-references=.  auto
 - focus newly opened help buffer (same behaviour as helpful.el)
 
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Introspection-Helpful_(helpful.el)-Autoload-91f9aa1d
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
-;;; ale-helpful.el --- -*- lexical-binding: t -*-
-
-(defvar ale/helpful-initialized nil)
-
-;;;###autoload
-(defun ale/helpful-mode-hook ()
-  ;; FIXME: A better way?
-  (setq ale/helpful-initialized nil)
-  (advice-add 'find-file :before
-              (lambda (&rest _)
-                (when (and (not ale/helpful-initialized) (derived-mode-p 'helpful-mode))
-                  (switch-to-buffer "*scratch*")
-                  (switch-to-prev-buffer)
-                  (setq ale/helpful-initialized t))))
-  (visual-line-mode))
-
-(provide 'ale-helpful)
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Introspection-Helpful_(helpful.el)-Config-7ba1efed
-:END:
-
 #+begin_src emacs-lisp
 (use-package helpful
-  :hook (helpful-mode . ale/helpful-mode-hook)
+  :hook (helpful-mode . ale-helpful-mode-hook)
   :bind
   (("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
    ([remap describe-function] . #'helpful-callable)
@@ -1087,383 +1298,222 @@ made for this package and built-in help buffer:
    ([remap describe-key] . #'helpful-key)
    :map helpful-mode-map
    ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
-   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
+   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t))))
+  :config
+  (setq find-function-C-source-directory "~/.cache/paru/clone/emacs-git/src/emacs-git/src"))
 #+end_src
 
-* UI extras
+** Keybindings
 :PROPERTIES:
-:CUSTOM_ID: UI_extras-a8dd75db
-:END:
-** Theme
-:PROPERTIES:
-:CUSTOM_ID: UI_extras-Theme-3ff9c257
+:CUSTOM_ID: *CORE*-Keybindings-94cb150a
 :END:
 
-=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
-Protesilaos Stavrou.
+This section contains all core keybindings of =emacs-grandview=.
+
+*** TOPLVL
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Keybindings-TOPLVL-4e855fc2
+:END:
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs
+follow this convention, but it doesn't mean emacs are not able to tell the
+difference. To change this behaviour, we can use =input-decode-map= to give =C-i=
+different meaning. See =ale-kbd--C-i-fix-GUI= and =ale-kbd--C-i-fix-TERM= for more
+details.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(setq modus-themes-links 'no-underline)
-(setq modus-themes-mode-line 'borderless)
-(add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
+(ale-kbd-C-i-fix)
 #+end_src
 
-** Icons (all-the-icons.el)
-:PROPERTIES:
-:CUSTOM_ID: UI_extras-Icons_(all-the-icons.el)-b088b3b1
-:END:
-
-This package is a utility for using and formatting various Icon fonts within
-Emacs.  Icon Fonts allow you to propertize and format icons the same way you
-would normal text.  This enables things such as better scaling of and anti
-aliasing of the icons.
+Here are some keybindings that are always available (except in INSERT mode).
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package all-the-icons
-  :init
-  (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
-    (all-the-icons-install-fonts)))
+(define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
+(define-key meow-motion-state-keymap
+            (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'ale-meow-leader-space)
+
+(meow-motion-overwrite-define-key
+ '("/" . consult-line)
+ '("<escape>" . ale-meow-escape))
 #+end_src
 
-** Smooth scrolling (good-scroll.el)
+*** INSERT
 :PROPERTIES:
-:CUSTOM_ID: UI_extras-Smooth_scrolling_(good-scroll.el)-06e351eb
-:END:
-
-pixelwise (linear or bezier) scrolling in emacs.
-
-#+begin_src emacs-lisp
-(use-package good-scroll
-  :after-call scroll-up scroll-down
-  :config
-  (good-scroll-mode 1)
-  (advice-add 'scroll-up :override 'good-scroll-up-full-screen)
-  (advice-add 'scroll-down :override 'good-scroll-down-full-screen))
-#+end_src
-
-** Window position (transpose-frame.el)
-:PROPERTIES:
-:CUSTOM_ID: UI_extras-Window_position_(transpose-frame.el)-812d68fd
-:END:
-
-The =transpose-frame= library defines a set of commands for shifting the
-layout of Emacs windows.  Rather than me describing how these work, I
-strongly encourage you to read the "Commentary" section in the source
-code.  Do it with =M-x find-library transpose-frame=.
-
-#+begin_src emacs-lisp
-(use-package transpose-frame)
-#+end_src
-
-** Fill column (visual-fill-column.el)
-:PROPERTIES:
-:CUSTOM_ID: UI_extras-Fill_column_(visual-fill-column.el)-cda7b3fd
-:END:
-
-#+begin_src emacs-lisp
-(use-package visual-fill-column)
-#+end_src
-
-** Key bindings hint (which-key.el)
-:PROPERTIES:
-:CUSTOM_ID: UI_extras-Key_bindings_hint_(which-key.el)-fc200dd8
-:END:
-
-#+begin_src emacs-lisp
-(use-package which-key
-  :init
-  (which-key-mode 1 ))
-#+end_src
-
-** Buffer list (ibuffer.el)
-:PROPERTIES:
-:CUSTOM_ID: UI_extras-Buffer_list_(ibuffer.el)-2887dfac
-:END:
-
-=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
-=list-buffers=.  Compared to its counterpart, it allows for granular
-control over the buffer list and is more powerful overall.
-
-#+begin_src emacs-lisp
-(use-package ibuffer
-  :init
-  (advice-add 'list-buffers :override 'ibuffer)
-  :bind
-  (:map ibuffer-mode-map
-        ("M-o" . nil)
-        ("* f" . ibuffer-mark-by-file-name-regexp)
-        ("* g" . ibuffer-mark-by-content-regexp)
-        ("* n" . ibuffer-mark-by-name-regexp)
-        ("s n" . ibuffer-do-sort-by-alphabetic)
-        ("/ g" . ibuffer-filter-by-content))
-  :config
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-movement-cycle nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-never-show-predicates '("^ \\*.*"))
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups nil)
-  (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
-#+end_src
-
-* File browser
-:PROPERTIES:
-:CUSTOM_ID: File_browser-277f4576
-:END:
-** Dired (dired.el)
-:PROPERTIES:
-:CUSTOM_ID: File_browser-Dired_(dired.el)-80cde9c1
-:END:
-
-=Dired= is a built-in tool that performs file management operations
-inside of an Emacs buffer.  It is simply superb!
-
-#+begin_src emacs-lisp (ale-minimal-config)
-(use-package dired
-  :straight (:type built-in)
-  :custom
-  (ale-dired-routes '(("o" "Home"        "~")
-                      ("u" "Emacs cache" "~/.cache/emacs")
-                      ("p" "Code"        "~/Code")
-                      ("n" "Downloads"   "~/Downloads")
-                      ("w" "Wallpaper"   "~/Pictures/wallpaper")
-                      ("m" "Drives"      "/mnt")
-                      ("t" "Trash"       "~/.local/share/Trash")))
-  :bind
-  (:map dired-mode-map
-        ("/" . dired-goto-file)
-        ("a" . dired-create-empty-file)
-        ("r" . ale-dired-jump)
-        ("I" . dired-insert-subdir)
-        ("?" . dired-create-directory)
-        ("^" . dired-find-file-other-window)
-        ("i" . ale-dired-file-rename-eol)
-        ("d" . dired-kill-subdir)
-        ("<" . beginning-of-buffer)
-        (">" . end-of-buffer)
-        ("[" . dired-prev-dirline)
-        ("]" . dired-next-dirline)
-        ("o" . dired-up-directory)
-        ("x" . dired-do-delete)
-        ("." . dired-omit-mode)
-        ("% SPC" . ale-dired-rename-space-to-underscore))
-  :config
-  (setq large-file-warning-threshold 50000000)
-  (setq dired-recursive-copies 'always)
-  (setq dired-recursive-deletes 'always)
-  (setq delete-by-moving-to-trash t)
-  (setq dired-dwim-target t)
-  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
-#+end_src
-
-** Writable dired (wdired.el)
-:PROPERTIES:
-:CUSTOM_ID: File_browser-Writable_dired_(wdired.el)-2320b868
-:END:
-
-#+begin_src emacs-lisp
-(use-package wdired
-  :config
-  (setq wdired-allow-to-change-permissions t)
-  (setq wdired-create-parent-directories t))
-#+end_src
-
-** A better dired interface (danger.el)
-:PROPERTIES:
-:CUSTOM_ID: File_browser-A_better_dired_interface_(danger.el)-184a49ad
-:END:
-
-This package is inspired the popular file manager =ranger=, I created it
-on the basis of =ranger.el=. Compare to =ranger.el=, this package only
-keeps features I wanted, and some sensible functionalities were added
-as well. See details at: https://github.com/alexluigit/danger.el
-
-#+begin_src emacs-lisp
-(use-package danger
-  :after-call pre-command-hook
-  :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el")
-  :hook
-  (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
-  :config
-  (danger-override-dired-mode)
-  (danger-minibuf-preview-mode)
-  (setq danger-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files")
-                                 ("/mnt/Cloud/" . ".Trash/files"))))
-#+end_src
-
-** Dired mode highlighting (diredfl.el)
-:PROPERTIES:
-:CUSTOM_ID: File_browser-Dired_mode_highlighting_(diredfl.el)-f288f9b4
-:END:
-
-Additional syntax highlighting in dired buffer.
-
-#+begin_src emacs-lisp
-(use-package diredfl
-  :hook (dired-mode . diredfl-mode))
-#+end_src
-
-* File management
-:PROPERTIES:
-:CUSTOM_ID: File_management-97114558
-:END:
-** Find files (files.el)
-:PROPERTIES:
-:CUSTOM_ID: File_management-Find_files_(files.el)-c0156666
+:CUSTOM_ID: *CORE*-Keybindings-INSERT-e72706e7
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package files
-  :straight (:type built-in)
-  :bind
-  (:map ale-files-map
-        ("r" . ale-dired-jump))
-  :config
-  (setq confirm-kill-processes nil)
-  (setq permanently-enabled-local-variables '(lexical-binding encoding))
-  (setq ale-files-dir-alist
-        '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
-          ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
-          ((title . "  Books")        (path . "/mnt/HDD/Book"))
-          ((title . "輸  Videos")       (path . "/mnt/HDD/Video"))
-          ((title . "  Movies")       (path . "/mnt/Cloud/共享/Movies"))
-          ((title . "  Notes")        (path . "~/Documents/notes"))
-          ((title . "  Photos")       (path . "~/Pictures"))
-          ((title . "  Downloads")    (path . "~/Downloads")))))
+(bind-keys
+ :map meow-insert-state-keymap
+ ("C-u" . meow-kill-whole-line)
+ ("<C-i>" . meow-right)
+ ("C-o" . meow-left))
 #+end_src
 
-** Recent files (recentf.el)
+*** NORMAL
 :PROPERTIES:
-:CUSTOM_ID: File_management-Recent_files_(recentf.el)-3da1f7a6
+:CUSTOM_ID: *CORE*-Keybindings-NORMAL-199d0f3b
 :END:
-
-Keep a record of all recently opened files.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package recentf
-  :straight (:type built-in)
-  :after-call find-file-hook danger
-  :config
-  (setq recentf-max-saved-items 100)
-  (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
-  (recentf-mode 1))
+(meow-normal-define-key
+ '("0" . meow-digit-argument)
+ '("1" . meow-digit-argument)
+ '("2" . meow-digit-argument)
+ '("3" . meow-digit-argument)
+ '("4" . meow-digit-argument)
+ '("5" . meow-digit-argument)
+ '("6" . meow-digit-argument)
+ '("7" . meow-digit-argument)
+ '("8" . meow-digit-argument)
+ '("9" . meow-digit-argument)
+ '("<escape>" . ale-meow-escape)
+ '("/" . consult-line)
+ '("%" . ale-match-paren)
+ '(";" . meow-reverse)
+ '("," . meow-inner-of-thing)
+ '("." . meow-bounds-of-thing)
+ '("<" . beginning-of-buffer)
+ '(">" . end-of-buffer)
+ '("[" . meow-beginning-of-thing)
+ '("]" . meow-end-of-thing)
+ '("-" . negative-argument)
+ '("=" . meow-query-replace)
+ '("+" . meow-query-replace-regexp)
+ '("\\" . meow-pop-selection)
+ '("|" . meow-pop-all-selection)
+ '("^" . meow-last-buffer)
+ '("a" . ale-meow-insert)
+ '("A" . ale-meow-insert-at-first-non-whitespace)
+ '("b" . meow-back-word)
+ '("B" . meow-back-symbol)
+ '("c" . meow-change)
+ '("C" . meow-change-save)
+ '("d" . meow-delete)
+ '("e" . meow-line)
+ '("E" . ale-inner-line)
+ '("f" . meow-next-word)
+ '("F" . meow-next-symbol)
+ '("g" . meow-grab)
+ '("G" . meow-pop-grab)
+ '("h" . embrace-commander)
+ '("i" . meow-right)
+ '("I" . meow-right-expand)
+ '("j" . ale-top-join-line)
+ '("J" . meow-join)
+ '("k" . meow-kill)
+ '("K" . meow-kmacro-matches)
+ '("l" . meow-kmacro-lines)
+ '("m" . meow-mark-word)
+ '("M" . meow-mark-symbol)
+ '("n" . meow-next)
+ '("N" . meow-open-below)
+ '("o" . meow-left)
+ '("O" . meow-left-expand)
+ '("p" . meow-prev)
+ '("P" . meow-open-above)
+ '("q" . ale-quit)
+ '("r" . meow-search)
+ '("s" . meow-sync-grab)
+ '("S" . meow-swap-grab)
+ '("t" . avy-goto-char-timer)
+ '("T" . avy-resume)
+ '("u" . undo)
+ '("U" . undo-redo)
+ '("v" . meow-visit)
+ '("w" . meow-block)
+ '("W" . meow-block-expand)
+ '("x" . ale-meow-save)
+ '("y" . meow-replace)
+ '("Y" . meow-yank-pop)
+ '("z" . meow-start-kmacro-or-insert-counter)
+ '("Z" . meow-end-or-call-kmacro))
 #+end_src
 
-** Restore file place (saveplace.el)
+*** LEADER
 :PROPERTIES:
-:CUSTOM_ID: File_management-Restore_file_place_(saveplace.el)-9ea56708
+:CUSTOM_ID: *CORE*-Keybindings-LEADER-dd15d509
 :END:
-
-Just remember where the point is in any given file.  This can often
-be a subtle reminder of what you were doing the last time you
-visited that file, allowing you to pick up from there.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package saveplace
-  :straight (:type built-in)
-  :after-call find-file-hook
-  :config
-  (setq save-place-file (locate-user-emacs-file "saveplace"))
-  (setq save-place-forget-unreadable-files t)
-  (save-place-mode 1))
+(meow-leader-define-key
+ '("0" . delete-window)
+ '("1" . delete-other-windows)
+ '("2" . ale-split-window-below)
+ '("3" . ale-split-window-right)
+ '("4" . ctl-x-4-prefix)
+ '("5" . ctl-x-5-prefix)
+ '("8" . insert-char)
+ '("9" . tab-map)
+ '("SPC" . ale-meow-leader-space)
+ '("?" . describe-keymap)
+ '("/" . describe-symbol)
+ '(";" . ale-comment-or-uncomment-region)
+ '("a" . ale-apps-map)
+ '("e" . dired-jump)
+ '("f" . ale-files-map)
+ '("E" . eval-expression)
+ '("i" . list-buffers)
+ '("k" . kill-this-buffer)
+ '("n" . ale-project-find-file)
+ '("o" . ale-org-map)
+ '("p" . project-map)
+ '("r" . register-map)
+ '("t" . ale-mct-map)
+ '("w" . save-buffer)
+ '("z" . window-toggle-side-windows))
 #+end_src
 
-** Auto refresh file content (autorevert.el)
+*** GLOBAL
 :PROPERTIES:
-:CUSTOM_ID: File_management-Auto_refresh_file_content_(saveplace.el)-667e008c
+:CUSTOM_ID: *CORE*-Keybindings-GLOBAL-9b1ddcfc
 :END:
-
-This mode ensures that the buffer is updated whenever the file
-changes.  A change can happen externally or by some other tool
-inside of Emacs (e.g. kill a Magit diff).
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package autorevert
-  :straight (:type built-in)
-  :after-call self-insert-command
-  :config
-  (setq auto-revert-verbose t)
-  (global-auto-revert-mode))
+(bind-keys
+ :map global-map
+ ("C-;" . exchange-point-and-mark)
+ ("<C-i>" . better-jumper-jump-forward)
+ ("C-o" . better-jumper-jump-backward)
+ ("M-n" . ale-tab-next)
+ ("M-p" . ale-tab-previous)
+ ("M-o" . ace-select-window)
+ ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
+ ("C-c C-M-m" . ale-show-messages)
+ :map minibuffer-local-map
+ ("S-<return>" . ale-files-other-window)
+ ("C-u" . meow-kill-whole-line)
+ ("<C-i>" . forward-char)
+ ("C-o" . backward-char)
+ :map ale-files-map
+ ("." . ale-files-dotfiles)
+ ("a" . ale-files-browse-all-directories)
+ ("e" . ale-files-edit-emacs-config)
+ ("l" . find-library)
+ ("n" . danger)
+ ("r" . ale-files-rename-file-and-buffer)
+ ("u" . ale-files-in-user-dirs)
+ :map ale-apps-map
+ ("o" . ale-opacity-set)
+ ("=" . count-words))
 #+end_src
 
-** Project management (project.el)
+* Extras
 :PROPERTIES:
-:CUSTOM_ID: File_management-Project_management_(project.el)-96a260ee
+:CUSTOM_ID: Extras-ee4a17aa
 :END:
-
-#+begin_src emacs-lisp
-(use-package project
-  :straight (:type built-in)
-  :config
-  (setq project-switch-commands
-        '((project-find-file "File" ?\r)
-          (ale-project-find-subdir "Subdir" ?s)
-          (project-find-regexp "Grep" ?g)
-          (project-dired "Dired" ?d)
-          (ale-project-retrieve-tag "Tag switch" ?t)
-          (ale-project-magit-status "Magit" ?m)
-          (ale-project-commit-log "Log VC" ?l)))
-  (setq ale-project-commit-log-limit 25)
-  :bind
-  (:map project-prefix-map
-        ("l" . ale-project-commit-log)
-        ("m" . ale-project-magit-status)
-        ("s" . ale-project-find-subdir)
-        ("t" . ale-project-retrieve-tag)))
-#+end_src
-
-** Trash (trashed.el)
+** Text editor
 :PROPERTIES:
-:CUSTOM_ID: File_management-Trash_(trashed.el)-e18fbd89
+:CUSTOM_ID: Extras-Text_editor-8f02d31d
 :END:
-
-=trashed= applies the principles of =dired= to the management of the user's
-filesystem trash.  Use =C-h m= to see the docs and keybindings for its
-major mode.
-
-Basically, its interaction model is as follows:
-
-- =m= to mark for some deferred action, such as =D= to delete, =R= to restore.
-- =t= to toggle the status of all items as marked.  Use this without marks
-  to =m= (mark) all items, then call a deferred action to operate on them.
-- =d= to mark for permanent deletion.
-- =r= to mark for restoration.
-- =x= to execute these special marks.
-
-#+begin_src emacs-lisp
-(use-package trashed
-  :config
-  (setq trashed-action-confirmer 'y-or-n-p)
-  (setq trashed-use-header-line t)
-  (setq trashed-sort-key '("Date deleted" . t))
-  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
-#+end_src
-
-* Text editing extras
+*** Input method (rime.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-616fef09
+:CUSTOM_ID: Extras-Text_editor-Input_method_(rime.el)-918c383f
 :END:
-** Input method (rime.el)
+**** Autoload
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-fd97687f
-:END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-Autoload-1e674139
+:CUSTOM_ID: Extras-Text_editor-Input_method_(rime.el)-Autoload-004c7e4b
 :END:
 
 #+begin_src emacs-lisp
@@ -1491,9 +1541,9 @@ Basically, its interaction model is as follows:
     (format "%d. " num)))
 #+end_src
 
-*** Config
+**** Config
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-Config-6526b158
+:CUSTOM_ID: Extras-Text_editor-Input_method_(rime.el)-Config-9e6817af
 :END:
 
 #+begin_src emacs-lisp
@@ -1531,48 +1581,22 @@ Basically, its interaction model is as follows:
   (advice-add 'rime--return :around 'ale/rime-return-advice))
 #+end_src
 
-** Writable grep (wgrep.el)
+*** Snippet (yasnippet.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Writable_grep_(wgrep.el)-208ea57a
+:CUSTOM_ID: Extras-Text_editor-Snippet_(yasnippet.el)-f2798e00
 :END:
 
-With =wgrep= we can directly edit the results of a grep and save the changes to
-all affected buffers.  In principle, this is the same as what the built-in occur
-offers.  We can use it to operate on a list of matches by leveraging the full
-power of Emacs' editing capabilities (e.g. keyboard macros, query and replace a
-regexp .etc).
-
 #+begin_src emacs-lisp
-(use-package wgrep
-  :config
-  (setq wgrep-auto-save-buffer t)
-  (setq wgrep-change-readonly-file t)
-  :bind
-  (:map wgrep-mode-map
-        ("M-n" . next-error-no-select)
-        ("M-p" . previous-error-no-select)))
-#+end_src
-
-** Auto completion (company.el)
-:PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Auto_completion_(company.el)-452a77d3
-:END:
-
-  =tng= means tab and go, in this mode tab key will complete and
-  move to the next candidate meanwhile keep company window open.
-
-#+begin_src emacs-lisp
-(use-package company
+(use-package yasnippet
   :after-call self-insert-command
   :config
-  (global-company-mode)
-  (company-tng-mode)
-  (setq company-idle-delay 0.0))
+  (setq! yas-snippet-dirs `(,(expand-file-name "snippets" INIT-DIR)))
+  (yas-global-mode))
 #+end_src
 
-** Pair insertion
+*** Pair insertion (eletric.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Pair_insertion-382af044
+:CUSTOM_ID: Extras-Text_editor-Pair_insertion_(eletric.el)-eee2e40d
 :END:
 
 Emacs labels as `electric' any behaviour that involves contextual auto-insertion
@@ -1631,9 +1655,9 @@ of characters.
   (minibuffer-exit . (lambda () (electric-pair-mode 1))))
 #+end_src
 
-** Parentheses (paren.el / rainbow-delimiters.el)
+*** Parentheses (paren.el / rainbow-delimiters.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Parentheses_(paren.el__rainbow-delimiters.el)-869da790
+:CUSTOM_ID: Extras-Text_editor-Parentheses_(paren.el__rainbow-delimiters.el)-25d97916
 :END:
 
 Configure the mode that highlights matching delimiters or parentheses.
@@ -1672,9 +1696,9 @@ Summary of what these do:
   (prog-mode . rainbow-delimiters-mode))
 #+end_src
 
-** Prettify symbols (prog-mode.el)
+*** Prettify symbols (prog-mode.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Prettify_symbols_(prog-mode.el)-32dc4067
+:CUSTOM_ID: Extras-Text_editor-Prettify_symbols_(prog-mode.el)-01d7befb
 :END:
 
 #+begin_src emacs-lisp
@@ -1700,1010 +1724,13 @@ Summary of what these do:
   (setq prettify-symbols-unprettify-at-point 'right-edge))
 #+end_src
 
-** Ripgrep (rg.el)
+** Org mode
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Ripgrep_(rg.el)-b1239fdc
+:CUSTOM_ID: Extras-Org_mode-acdf7707
 :END:
-
-#+begin_src emacs-lisp
-(defun ale/rg-config ()
-  (rg-define-toggle "--context 3" (kbd "C"))
-  (rg-define-toggle "-A 5" (kbd "A")))
-
-(use-package rg
-  :config
-  ;;; XXX nasty hack for lazy loading
-  (ale/rg-config)
-  :bind
-  (:map ale-utils-map
-        ("r" . rg)))
-#+end_src
-
-* Languages
+*** Bullet (org-superstar.el)
 :PROPERTIES:
-:CUSTOM_ID: Languages-cb6ee56b
-:END:
-** .rs
-:PROPERTIES:
-:CUSTOM_ID: Languages-.rs-1d60294b
-:END:
-
-#+begin_src emacs-lisp
-(use-package rust-mode
-  :hook
-  (rust-mode . (lambda () (setq indent-tabs-mode nil))))
-#+end_src
-
-** .lua
-:PROPERTIES:
-:CUSTOM_ID: Languages-.lua-faeaff86
-:END:
-
-#+begin_src emacs-lisp
-(use-package lua-mode
-  :config
-  (setq lua-indent-level 2))
-#+end_src
-
-** .yaml
-:PROPERTIES:
-:CUSTOM_ID: Languages-.yaml-c1fbe313
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package yaml-mode)
-#+end_src
-
-** .vue
-:PROPERTIES:
-:CUSTOM_ID: Languages-.vue-a8d1eadc
-:END:
-
-#+begin_src emacs-lisp
-(use-package web-mode
-  :config
-  (define-derived-mode ale/vue-mode web-mode "ale/vue"
-    "A major mode derived from web-mode, for editing .vue files with LSP support.")
-  :hook
-  (web-mode . (lambda ()
-                (setq web-mode-markup-indent-offset 2)
-                (setq web-mode-code-indent-offset 2)
-                (setq web-mode-script-padding 0)))
-  :mode ("\\.vue\\'" . ale/vue-mode))
-#+end_src
-
-** .js
-:PROPERTIES:
-:CUSTOM_ID: Languages-.js-1c650b5d
-:END:
-
-#+begin_src emacs-lisp
-(use-package js
-  :straight (:type built-in)
-  :config
-  (setq js-indent-level 2))
-#+end_src
-
-** .(sh|zsh)
-:PROPERTIES:
-:CUSTOM_ID: Languages-.(sh|zsh)-c26c8901
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package sh-script
-  :straight (:type built-in)
-  :config
-  (setq sh-basic-offset 2))
-#+end_src
-
-* DevTools
-:PROPERTIES:
-:CUSTOM_ID: DevTools-3724f55a
-:END:
-** LSP (lsp.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-e638898c
-:END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-bc9a6b7b
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
-;;; ale-lsp.el --- -*- lexical-binding: t -*-
-
-(defun ale/lsp--inhibit ()
-  "Disable `lsp-deferred' in minibuffer."
-  (advice-add 'lsp-deferred :override #'ignore))
-
-(defun ale/lsp--recover ()
-  "Recover `lsp-deferred' after quit minibuffer."
-  (advice-remove 'lsp-deferred #'ignore))
-
-;;;###autoload
-(define-minor-mode ale/lsp-mode
-  "Inhibit lsp in minibuffer."
-  :init-value nil
-  :global t
-  (if ale/lsp-mode
-      (progn
-      (add-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
-      (add-hook 'minibuffer-exit-hook 'ale/lsp--recover))
-    (progn
-      (remove-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
-      (remove-hook 'minibuffer-exit-hook 'ale/lsp--recover))))
-
-(provide 'ale-lsp)
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-Config-f038f50f
-:END:
-
-#+begin_src emacs-lisp
-(use-package lsp-mode
-  :hook ((sh-mode
-          lua-mode
-          python-mode
-          ale/vue-mode
-          typescript-mode
-          rust-mode)
-         . lsp-deferred)
-  :config
-  (ale/lsp-mode)
-  (setq lsp-eldoc-hook nil)
-  (setq lsp-signature-auto-activate t)
-  (setq lsp-signature-function 'lsp-signature-posframe)
-  (setq lsp-signature-doc-lines 20)
-  (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
-  (lsp-register-custom-settings '(("vetur.ignoreProjectWarning" t t)))
-  (with-eval-after-load 'warnings
-    (add-to-list 'warning-suppress-types '(lsp-mode)))
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
-#+end_src
-
-*** Extensions
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-Extensions-38eb3d06
-:END:
-
-#+begin_src emacs-lisp
-(use-package lsp-tailwindcss
-  :after (lsp-mode web-mode)
-  :init
-  (setq lsp-tailwindcss-add-on-mode t))
-
-(use-package lsp-pyright
-  :hook (python-mode . (lambda () (require 'lsp-pyright)))
-  :init
-  (when (executable-find "python3")
-          (setq lsp-pyright-python-executable-cmd "python3")))
-
-(use-package lsp-ui
-  :after-call lsp-deferred
-  :config
-  (setq lsp-ui-sideline-show-code-actions nil)
-  (setq lsp-ui-doc-position 'bottom)
-  :hook
-  (lsp-mode . lsp-ui-mode))
-#+end_src
-
-** Colorizer (rainbow-mode.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Colorizer_(rainbow-mode.el)-3514fb09
-:END:
-
-#+begin_src emacs-lisp
-(use-package rainbow-mode
-  :hook
-  (prog-mode . rainbow-mode))
-#+end_src
-
-** Formatter (format-all.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Formatter_(format-all.el)-46e0c676
-:END:
-
-#+begin_src emacs-lisp
-(use-package format-all
-  :hook
-  (prog-mode . format-all-ensure-formatter)
-  :bind
-  (:map ale-files-map
-  ("f" . format-all-buffer)))
-#+end_src
-
-** Syntax checker (flymake.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Syntax_checker_(flymake.el)-6e4e9378
-:END:
-
-#+begin_src emacs-lisp
-(use-package flymake
-  :straight (:type built-in)
-  :config
-  (setq elisp-flymake-byte-compile-load-path
-        (append elisp-flymake-byte-compile-load-path load-path))
-  (setq flymake-fringe-indicator-position 'left-fringe)
-  (setq flymake-suppress-zero-counters t)
-  (setq flymake-start-on-flymake-mode t)
-  (setq flymake-no-changes-timeout nil)
-  (setq flymake-start-on-save-buffer t)
-  (setq flymake-proc-compilation-prevents-syntax-check t)
-  (setq flymake-wrap-around nil)
-  :bind
-  (:map flymake-mode-map
-  ("C-c ! s" . flymake-start)
-  ("C-c ! d" . flymake-show-diagnostics-buffer)
-  ("C-c ! n" . flymake-goto-next-error)
-  ("C-c ! p" . flymake-goto-prev-error)))
-#+end_src
-
-** Snippet (yasnippet.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Snippet_(yasnippet.el)-d5e1e863
-:END:
-
-#+begin_src emacs-lisp
-(use-package yasnippet
-  :after-call self-insert-command
-  :config
-  (yas-global-mode))
-#+end_src
-
-** REST client (restclient.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-REST_client_(restclient.el)-0adf54af
-:END:
-
-#+begin_src emacs-lisp
-(use-package restclient)
-#+end_src
-
-** Scratch buffers (scratch.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-1899f2a9
-:END:
-
-This package will produce a buffer that matches the major mode of the
-one you are currently in.  Use it with =M-x scratch=.  Doing that with a
-prefix argument (=C-u=) will prompt for a major mode instead.  Simple yet
-super effective!
-
-The =ale/scratch-buffer-setup= simply adds some text in the buffer and
-renames it appropriately for the sake of easier discovery.  I got the
-idea of copying the region from [[https://gist.github.com/eev2/52edbfdb645e26aefec19226c0ca7ad0][a snippet shared by eev2 on GitHub]].
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Autoload-bfcc094b
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
-;;; ale-scratch.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defun ale/scratch-buffer-setup ()
-  "Add contents to `scratch' buffer and name it accordingly.
-If region is active, add its contents to the new buffer."
-  (let* ((mode major-mode)
-         (string (format "Scratch buffer for: %s\n\n" mode))
-         (region (with-current-buffer (current-buffer)
-                   (if (region-active-p)
-                       (buffer-substring-no-properties
-                        (region-beginning)
-                        (region-end)))
-                   ""))
-         (text (concat string region)))
-    (when scratch-buffer
-      (save-excursion
-        (insert text)
-        (goto-char (point-min))
-        (comment-region (point-at-bol) (point-at-eol)))
-      (forward-line 2))
-    (rename-buffer (format "*Scratch for %s*" mode) t)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Config-9d07b451
-:END:
-
-#+begin_src emacs-lisp
-(use-package scratch
-  :hook (scratch-create-buffer . ale/scratch-buffer-setup)
-  :bind (("C-c s" . scratch)
-         :map ale-files-map
-         ("s" . scratch)))
-#+end_src
-
-* Terminal
-:PROPERTIES:
-:CUSTOM_ID: Terminal-a48a2db7
-:END:
-** Vterm (vterm.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-Vterm_(vterm.el)-66f39cbb
-:END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Terminal-Vterm_(vterm.el)-Autoload-c4366eaf
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
-;;; ale-vterm.el --- -*- lexical-binding: t -*-
-
-(defcustom ale/vterm-position
-  '((danger-mode . ((window-height . 0.4) (side . bottom)))
-    (default . ((window-width . 0.4) (side . right))))
-  "doc")
-
-(defvar ale/vterm-buffers nil
-  "The list of non-dedicated vterm buffers.")
-
-(defvar ale/vterm-index 0
-  "The index of current vterm buffer.")
-
-(add-hook 'kill-buffer-hook
-          (lambda ()
-            (let* ((buf (current-buffer))
-                   (name (buffer-name buf)))
-              (when (string-prefix-p "*vterm" name)
-                (delq! buf ale/vterm-buffers)))))
-
-;;;###autoload
-(defun ale/vterm--disable-side-window (fn &rest args)
-  "Prevent vterm size adjust break selection."
-  (unless (and (region-active-p)
-               (derived-mode-p 'vterm-mode))
-    (apply fn args)))
-
-;;;###autoload
-(advice-add 'display-buffer-in-side-window :around 'ale/vterm--disable-side-window)
-
-;;;###autoload
-(defun vterm-send-C-delete ()
-  (interactive)
-  (vterm-send-key "<delete>" nil nil 0))
-
-;;;###autoload
-(defun vterm-send-M-return ()
-  (interactive)
-  (vterm-send-escape)
-  (vterm-send-return))
-
-;;;###autoload
-(defun vterm-send-M-/ ()
-  (interactive)
-  (vterm-send-key "/" nil 0 nil))
-
-;;;###autoload
-(defun vterm-send-F5 ()
-  (interactive)
-  (vterm-send-key "<f5>" nil nil nil))
-
-;;;###autoload
-(defun vterm-send-M-apostrophe ()
-  (interactive)
-  (vterm-send-key "'" nil 0 nil))
-
-;;;###autoload
-(defun vterm-send-M-quote ()
-  (interactive)
-  (vterm-send-key "\"" nil 0 nil))
-
-(defun ale/vterm--get-win-params ()
-  "Parse `ale/vterm-position' to get vterm display parameters."
-  (let (pos)
-    (cl-dolist (setting ale/vterm-position)
-      (when (derived-mode-p (car setting))
-        (setq pos (cdr setting)) (cl-return))
-      (when (eq (car setting) 'default)
-        (setq pos (cdr setting))))
-    `(("^\\*vterm.*"
-       (display-buffer-in-side-window)
-       (window-parameters . ((mode-line-format . none)))
-       ,@pos))))
-
-;;;###autoload
-(defun ale/vterm-toggle (&optional force)
-  "Toggle vterm.
-If called with prefix argument, create a new vterm buffer if
-current one have different `default-directory'."
-  (interactive "P")
-  (if (eq major-mode 'vterm-mode)
-      (delete-window)
-    (let* ((display-buffer-alist (ale/vterm--get-win-params))
-           (buf (nth ale/vterm-index ale/vterm-buffers))
-           (dir (expand-file-name default-directory))
-           (index (if buf (ale/vterm--get-index buf) 0)))
-      (add-to-list 'ale/vterm-buffers (vterm index))
-      (when force
-        (unless (string= dir (expand-file-name default-directory))
-          (let ((default-directory dir))
-            (ale/vterm-new))))
-      (ale/vterm--insert))))
-
-(defun ale/vterm--get-index (buf)
-  (let* ((name (buffer-name buf)))
-    (string-match "\\*vterm\\*\<\\([0-9]+\\)\>" name)
-    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
-
-(defun ale/vterm--insert ()
-  (when (featurep 'evil) (evil-insert-state))
-  (when (featurep 'meow) (meow-insert)))
-
-;;;###autoload
-(defun ale/vterm-new ()
-  "Create new vterm buffer."
-  (interactive)
-  (let ((new-index (1+ (ale/vterm--get-index (car ale/vterm-buffers))))
-        (display-buffer-alist (ale/vterm--get-win-params)))
-    (add-to-list 'ale/vterm-buffers (vterm new-index))
-    (ale/vterm--insert)))
-
-;;;###autoload
-(defun ale/vterm-next (&optional arg)
-  "Select next vterm buffer.
-Create new one if no vterm buffer exists."
-  (interactive "P")
-  (let* ((curr-index (cl-position (current-buffer) ale/vterm-buffers))
-         (new-index (+ curr-index (or arg -1)))
-         (buf (nth new-index ale/vterm-buffers)))
-    (when buf
-      (switch-to-buffer buf)
-      (setq ale/vterm-index new-index))))
-
-;;;###autoload
-(defun ale/vterm-prev (&optional arg)
-  "Select previous vterm buffer."
-  (interactive "p")
-  (ale/vterm-next arg))
-
-(provide 'ale-vterm)
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Terminal-Vterm_(vterm.el)-Config-138dd027
-:END:
-
-#+begin_src emacs-lisp
-(use-package vterm
-  :config
-  (setq vterm-max-scrollback 5000)
-  (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
-  (set-face-attribute 'vterm-color-black nil :foreground "#111111")
-  :bind
-  (("M-t" . ale/vterm-toggle)
-   :map vterm-mode-map
-   ("M-t" . ale/vterm-toggle)
-   ("<f12>" . ale/vterm-new)
-   ("M-'" . vterm-send-M-apostrophe)
-   ("M-\"" . vterm-send-M-quote)
-   ("M-/" . vterm-send-M-/)
-   ("M-RET" . vterm-send-M-return)
-   ("s-n" . vterm-next-prompt)
-   ("s-p" . vterm-previous-prompt)
-   ("M-." . ale/vterm-next)
-   ("M-," . ale/vterm-prev)
-   ("S-SPC" . nil)
-   ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
-   ("C-<delete>" . vterm-send-C-delete)
-   ("C-<return>" . vterm-send-F5)))
-#+end_src
-
-** COMMENT Eshell (eshell.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-Eshell_(eshell.el)-68575649
-:END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Autoload-307ce6b8
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
-;;; ale-eshell.el --- -*- lexical-binding: t -*-
-
-(require 'em-hist)
-(eval-when-compile (require 'subr-x))
-(require 'cl-seq)
-
-(defcustom ale/eshell-position
-  '((danger-mode . ((window-height . 0.4) (side . bottom)))
-    (default . ((window-width . 0.4) (side . right))))
-  "doc")
-
-(defvar ale/eshell-buffers nil
-  "The list of non-dedicated eshell buffers.")
-
-(defvar ale/eshell-index 0
-  "The index of current eshell buffer.")
-
-(defun ale/get-current-package-version ()
-  (interactive)
-  (let ((package-json-file (concat (eshell/pwd) "/package.json")))
-    (when (file-exists-p package-json-file)
-      (let* ((package-json-contents (ale-f-read package-json-file))
-             (package-json (ignore-errors (json-parse-string package-json-contents))))
-        (when package-json
-          (ignore-errors (gethash "version" package-json)))))))
-
-(defun ale/map-line-to-status-char (line)
-  (cond ((string-match "^?\\? " line) "?")))
-
-(defun ale/get-git-status-prompt ()
-  (let ((status-lines (cdr (process-lines "git" "status" "--porcelain" "-b"))))
-    (seq-uniq (seq-filter 'identity (mapcar 'ale/map-line-to-status-char status-lines)))))
-
-(defun ale/get-prompt-path ()
-  (let* ((current-path (eshell/pwd))
-         (git-output (shell-command-to-string "git rev-parse --show-toplevel"))
-         (has-path (not (string-match "^fatal" git-output))))
-    (if (not has-path)
-        (abbreviate-file-name current-path)
-      (string-remove-prefix (file-name-directory git-output) current-path))))
-
-;; This prompt function mostly replicates my custom zsh prompt setup
-(defun ale/eshell-prompt ()
-  (let* ((br-cmd "git symbolic-ref HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null")
-         (br-raw (shell-command-to-string br-cmd))
-         (current-branch (replace-regexp-in-string "\\(refs/heads/\\)\\|\\(\n\\)$" "" br-raw))
-         (shell-index (number-to-string (ale/eshell-get--index (current-buffer))))
-         (package-version (ale/get-current-package-version)))
-    (concat
-     (if (= (user-uid) 0)
-         (propertize (concat "S-" shell-index) 'face `(:foreground "red2"))
-       (propertize (concat "S-" shell-index) 'face `(:foreground "#62aeed")))
-     (propertize " • " 'face `(:foreground "white"))
-     (propertize "  " 'face `(:foreground "#82cfd3"))
-     (propertize (ale/get-prompt-path) 'face `(:foreground "#82cfd3"))
-     (when (not (string= current-branch ""))
-       (concat
-        (propertize " • " 'face `(:foreground "white"))
-        (propertize (concat " " current-branch) 'face `(:foreground "#ab98b5"))))
-     (when package-version
-       (concat
-        (propertize " @ " 'face `(:foreground "white"))
-        (propertize package-version 'face `(:foreground "#e8a206"))))
-     (propertize " • " 'face `(:foreground "white"))
-     (propertize (format-time-string "%I:%M:%S %p") 'face `(:foreground "#5a5b7f"))
-     (if (= eshell-last-command-status 0)
-         (propertize "\nλ" 'face `(:foreground "#ADCF44"))
-       (propertize "\nλ" 'face `(:foreground "#EC6261")))
-     (propertize " " 'face `(:foreground "white")))))
-
-;;;###autoload
-(defun ale/eshell-init ()
-  (push 'eshell-tramp eshell-modules-list)
-  ;; Save command history when commands are entered
-  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
-  ;; Truncate buffer for performance
-  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-  (define-key eshell-hist-mode-map (kbd "M-r") 'consult-history)
-  ;; Initialize the shell history
-  (eshell-hist-initialize)
-  (setenv "PAGER" "cat")
-  (setq eshell-prompt-function      'ale/eshell-prompt)
-  (setq eshell-prompt-regexp        "^λ ")
-  (setq eshell-history-size         10000)
-  (setq eshell-buffer-maximum-lines 10000)
-  (setq eshell-hist-ignoredups t)
-  (setq eshell-highlight-prompt t)
-  (setq eshell-scroll-to-bottom-on-input t)
-  (setq eshell-prefer-lisp-functions nil))
-
-(add-hook 'eshell-exit-hook
-          (lambda () (setq ale/eshell-buffers (delq (current-buffer) ale/eshell-buffers))))
-
-;;;###autoload
-(defun ale/eshell-updir ()
-  "Up a directory in eshell."
-  (interactive)
-  (eshell/cd "..")
-  (eshell-emit-prompt))
-
-(defun ale/eshell--get-win-params ()
-  "Parse `ale/eshell-position' to get eshell display parameters."
-  (let (pos)
-    (cl-dolist (setting ale/eshell-position)
-        (when (derived-mode-p (car setting))
-          (setq pos (cdr setting)) (cl-return))
-        (when (eq (car setting) 'default)
-          (setq pos (cdr setting))))
-    `(("^\\*[e]shell.*"
-       (display-buffer-in-side-window)
-       (window-parameters . ((mode-line-format . none)))
-       ,@pos))))
-
-;;;###autoload
-(defun ale/eshell-toggle (&optional force-new)
-  "Toggle eshell.
-If called with prefix argument, create a new eshell buffer if
-current one have different `default-directory'."
-  (interactive "P")
-  (if (eq major-mode 'eshell-mode)
-      (delete-window)
-    (let* ((display-buffer-alist (ale/eshell--get-win-params))
-           (buf (nth ale/eshell-index ale/eshell-buffers))
-           (dir (expand-file-name default-directory))
-           (index (if buf (ale/eshell-get--index buf) 0)))
-      (add-to-list 'ale/eshell-buffers (eshell index))
-      (when force-new
-        (unless (string= dir (expand-file-name default-directory))
-          (let ((default-directory dir))
-            (ale/eshell-new))))
-      (when (featurep 'evil) (evil-insert-state))
-      (when (featurep 'meow) (meow-insert)))))
-
-(defun ale/eshell-get--index (buf)
-  (let* ((name (buffer-name buf)))
-    (string-match "\\*eshell\\*\<\\([0-9]+\\)\>" name)
-    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
-
-;;;###autoload
-(defun ale/eshell-new ()
-  "Create new eshell buffer."
-  (interactive)
-  (let ((new-index (1+ (ale/eshell-get--index (car ale/eshell-buffers))))
-        (display-buffer-alist (ale/eshell--get-win-params)))
-    (add-to-list 'ale/eshell-buffers (eshell new-index))
-    (when (featurep 'evil) (evil-insert-state))
-    (when (featurep 'meow) (meow-insert))))
-
-;;;###autoload
-(defun ale/eshell-next (&optional arg)
-  "Select next eshell buffer.
-Create new one if no eshell buffer exists."
-  (interactive "P")
-  (let* ((curr-index (cl-position (current-buffer) ale/eshell-buffers))
-         (new-index (+ curr-index (or arg -1)))
-         (buf (nth new-index ale/eshell-buffers)))
-    (when buf
-      (switch-to-buffer buf)
-      (setq ale/eshell-index new-index))))
-
-;;;###autoload
-(defun ale/eshell-prev (&optional arg)
-  "Select previous eshell buffer."
-  (interactive "p")
-  (ale/eshell-next arg))
-
-;;;###autoload
-(defun ale/eshell-clear-buffer ()
-  "Clear eshell buffer."
-  (interactive)
-  (let ((inhibit-read-only t))
-    (erase-buffer)
-    (eshell-send-input nil nil t)))
-
-(provide 'ale-eshell)
-#+end_src
-
-*** Multi-eshell
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Multi-eshell-be8b7994
-:END:
-
-A poor man's multi-eshell.
-
-#+begin_src emacs-lisp
-(use-package esh-mode
-  :straight (:type built-in)
-  :config
-  (setq eshell-banner-message "")
-  :hook
-  (eshell-first-time-mode . ale/eshell-init)
-  :bind
-  (("<delete>" . ale/eshell-toggle)
-   ("<deletechar>" . ale/eshell-toggle)
-   :map eshell-mode-map
-   ("M-<delete>" . ale/eshell-new)
-   ("C-l" . ale/eshell-clear-buffer)
-   ("C-\\" . ale/eshell-updir)
-   ("s-n" . eshell-next-prompt)
-   ("s-p" . eshell-previous-prompt)
-   ("M-." . ale/eshell-next)
-   ("M-," . ale/eshell-prev)))
-#+end_src
-
-*** Aliases
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Aliases-b4dab12f
-:END:
-
-This section will be tangled to `eshell-aliases-file'.
-
-#+begin_src conf :tangle (concat user-emacs-directory "eshell/alias")
-alias e find-file-other-window $1
-alias ls exa -a --color=always --group-directories-first $*
-alias la exa -al --color=always --group-directories-first $*
-alias ll exa -lu --color=always --group-directories-first --no-user --no-permissions -@ $*
-alias lt exa -aT --color=always --git-ignore -I=.git --group-directories-first $*
-alias ka killall $1
-alias px export HTTP_PROXY=http://127.0.0.1:1088; export HTTPS_PROXY=http://127.0.0.1:1088
-alias yd youtube-dl --proxy 127.0.0.1:1088 --write-sub --write-auto-sub -o "~/Downloads/%(title)s-%(id)s.%(ext)s" $1
-alias ydl youtube-dl --proxy 127.0.0.1:1088 --yes-playlist --write-sub --write-auto-sub -o "~/Downloads/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s" $1
-alias y yarn $*
-alias ys yarn dev
-alias rs rsync $*
-alias rsa rsync -avz $*
-#+end_src
-
-*** Colors (xterm-color.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Colors_(xterm-color.el)-0e147b82
-:END:
-
-We want to use xterm-256color when running interactive commands in eshell but
-not during other times when we might be launching a shell command to gather its
-output.
-
-#+begin_src emacs-lisp
-(use-package xterm-color
-  :after esh-mode
-  :config
-  (push 'xterm-color-filter eshell-preoutput-filter-functions)
-  (add-hook 'eshell-pre-command-hook (lambda () (setenv "TERM" "xterm-256color")))
-  (add-hook 'eshell-post-command-hook (lambda () (setenv "TERM" "dumb")))
-  (add-hook 'eshell-before-prompt-hook (lambda () (setq xterm-color-preserve-properties t)))
-  (delq 'eshell-handle-ansi-color eshell-output-filter-functions))
-#+end_src
-
-*** Fish like Completion (fish-completion.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Fish_like_Completion_(fish-completion.el)-33646f21
-:END:
-
-This enhances eshell's completions with those that Fish is capable of and also
-falls back to any additional completions that are configured for Bash on the
-system.  The primary benefit here (for me) is getting completion for commits and
-branches in =git= commands.
-
-#+begin_src emacs-lisp
-(use-package fish-completion
-  :hook (eshell-mode . fish-completion-mode))
-#+end_src
-
-*** Z navigation (eshell-z.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Z_navigation_(eshell-z.el)-ff605765
-:END:
-
-#+begin_src emacs-lisp
-(use-package eshell-z
-  :hook ((eshell-first-time-mode . (lambda () (require 'eshell-z)))
-         (eshell-z-change-dir .  (lambda () (eshell/pushd (eshell/pwd))))))
-#+end_src
-
-*** Highlighting (eshell-syntax-highlighting.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-Highlighting_(eshell-syntax-highlighting.el)-5ae0f686
-:END:
-
-#+begin_src emacs-lisp
-(use-package eshell-syntax-highlighting
-  :after esh-mode
-  :config
-  (eshell-syntax-highlighting-global-mode +1))
-#+end_src
-
-*** History completion (esh-autosuggest.el)
-:PROPERTIES:
-:CUSTOM_ID: Terminal-COMMENT_Eshell_(eshell.el)-History_completion_(esh-autosuggest.el)-f98f2566
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package esh-autosuggest
-  :hook (eshell-mode . esh-autosuggest-mode)
-  :bind
-  (:map esh-autosuggest-active-map
-        ("M-f" . esh-autosuggest-complete-word)
-        ("C-e" . company-complete-selection))
-  :config
-  (set-face-foreground 'company-preview-common "#4b5668")
-  (set-face-background 'company-preview nil))
-#+end_src
-
-* Version control
-:PROPERTIES:
-:CUSTOM_ID: Version_control-f1492345
-:END:
-** Built-in vc config
-:PROPERTIES:
-:CUSTOM_ID: Version_control-Built-in_vc_config-229bbdf5
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package vc-hooks
-  :straight (:type built-in)
-  :config
-  ;; No ask for follow symlink
-  (setq vc-follow-symlinks t))
-#+end_src
-
-** Git porcelain (magit.el)
-:PROPERTIES:
-:CUSTOM_ID: Version_control-Git_porcelain_(magit.el)-c4d669de
-:END:
-
-#+begin_src emacs-lisp
-(use-package magit
-  :config
-  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
-  (setq magit-define-global-key-bindings nil)
-  (setq git-commit-summary-max-length 50)
-  (setq git-commit-known-pseudo-headers
-        '("Signed-off-by"
-          "Acked-by"
-          "Modified-by"
-          "Cc"
-          "Suggested-by"
-          "Reported-by"
-          "Tested-by"
-          "Reviewed-by"))
-  (setq git-commit-style-convention-checks
-        '(non-empty-second-line
-          overlong-summary-line))
-  (setq magit-diff-refine-hunk t)
-  (setq magit-repository-directories
-        '(("~/Code" . 1) ("~" . 1)))
-  :bind (("C-M-g" . magit-status-here)
-         :map magit-mode-map
-         ("q" . kill-this-buffer)
-         ("`" . magit-diff-show-or-scroll-up)
-         :map magit-diff-section-base-map
-         ("<C-return>" . magit-diff-visit-file-other-window)
-         :map magit-diff-mode-map
-         ("`" . scroll-up)))
-#+end_src
-
-** Hunk indicator (git-gutter.el)
-:PROPERTIES:
-:CUSTOM_ID: Version_control-Hunk_indicator_(git-gutter.el)-fc549ecc
-:END:
-
-#+begin_src emacs-lisp
-(use-package git-gutter
-  :config
-  (custom-set-variables
-   '(git-gutter:modified-sign "⏽")
-   '(git-gutter:added-sign "⏽")
-   '(git-gutter:deleted-sign "⏽")))
-#+end_src
-
-** Resolve conflict (ediff.el)
-:PROPERTIES:
-:CUSTOM_ID: Version_control-Resolve_conflict_(ediff.el)-75d04561
-:END:
-
-#+begin_src emacs-lisp
-(use-package ediff
-  :config
-  (setq ediff-keep-variants nil)
-  (setq ediff-make-buffers-readonly-at-startup nil)
-  (setq ediff-merge-revisions-with-ancestor t)
-  (setq ediff-show-clashes-only t)
-  (setq ediff-split-window-function 'split-window-horizontally)
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  ;; Tweak those for safer identification and removal
-  (setq ediff-combination-pattern
-        '("<<<<<<< ale-ediff-combine Variant A" A
-          ">>>>>>> ale-ediff-combine Variant B" B
-          "####### ale-ediff-combine Ancestor" Ancestor
-          "======= ale-ediff-combine End"))
-  (defun ale/ediff-flush-combination-pattern ()
-    "Remove my custom `ediff-combination-pattern' markers.
-This is a quick-and-dirty way to get rid of the markers that are
-left behind by `smerge-ediff' when combining the output of two
-diffs.  While this could be automated via a hook, I am not yet
-sure this is a good approach."
-    (interactive)
-    (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil)))
-#+end_src
-
-** COMMENT Forges (forge.el)
-:PROPERTIES:
-:CUSTOM_ID: Version_control-Forges_(forge.el)-a6211961
-:END:
-
-#+begin_src emacs-lisp
-(use-package forge)
-#+end_src
-
-* Org mode
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-0462b968
-:END:
-** Org (org.el)
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Org_(org.el)-386b4f16
-:END:
-
-In its purest form, Org is a markup language that is similar to
-Markdown: symbols are used to denote the meaning of a construct in its
-context, such as what may represent a headline element or a phrase that
-calls for emphasis.
-
-What lends Org its super powers though is everything else built around
-it: a rich corpus of Elisp functions that automate, link, combine,
-enhance, structure, or otherwise enrich the process of using this rather
-straightforward system of plain text notation.
-
-Couched in those terms, Org is at once a distribution of well integrated
-libraries and a vibrant ecosystem that keeps producing new ideas and
-workflows on how to organise one's life with plain text.
-
-This section is all about basic configurations for Org-mode which
-contains several subsections as follows:
-
-- How a =.org= file should look like
-- Basic bhhaviour of headings
-- Basic behaviour of source block
-
-#+begin_src emacs-lisp
-(use-package org
-  :straight (:type built-in)
-  :hook
-  (org-mode . ale-org-font-setup)
-  (org-tab-first . org-end-of-line)
-  :config
-  (setq org-adapt-indentation nil)
-  (setq org-hide-leading-stars t)
-  (setq org-startup-folded t)
-  (setq org-confirm-babel-evaluate nil)
-  (setq org-ellipsis " ▾")
-  (setq org-hide-emphasis-markers t)
-  (setq org-agenda-start-with-log-mode t)
-  (setq org-log-done 'time)
-  (setq org-log-into-drawer t)
-  (setq org-image-actual-width nil)
-  (setq org-display-remote-inline-images 'download)
-  :bind
-  (:map org-mode-map
-        ("C-c S-l" . org-toggle-link-display)
-        ("C-c C-S-l" . org-insert-last-stored-link)))
-#+end_src
-
-** Source block
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Source_block-6287f1a5
-:END:
-
-#+begin_src emacs-lisp
-(use-package org-src
-  :straight (:type built-in)
-  :after-call org-mode
-  :config
-  (push '("conf-unix" . conf-unix) org-src-lang-modes)
-  (setq org-edit-src-content-indentation 0)
-  (setq org-src-window-setup 'split-window-right))
-
-(use-package org-tempo ; this is needed as of Org 9.2
-  :straight (:type built-in)
-  :after-call org-mode
-  :config
-  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("hk" . "src haskell"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python")))
-
-;; Tricks for lazy loading.
-;; Thanks to: https://blog.d46.us/advanced-emacs-startup/
-(use-package ob-python
-  :straight (:type built-in)
-  :commands (org-babel-execute:python))
-
-(use-package ob-shell
-  :straight (:type built-in)
-  :commands
-  (org-babel-execute:shell))
-#+end_src
-
-** Bullet (org-superstar.el)
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Bullet_(org-superstar.el)-b168cf34
+:CUSTOM_ID: Extras-Org_mode-Bullet_(org-superstar.el)-ee1ddf29
 :END:
 
 #+begin_src emacs-lisp
@@ -2716,22 +1743,34 @@ contains several subsections as follows:
   (org-mode . org-superstar-mode))
 #+end_src
 
-** Habit (org-habit.el)
+*** Reveal invisible org elements (org-appear.el)
 :PROPERTIES:
-:CUSTOM_ID: Org_mode-Habit_(org-habit.el)-326621f4
+:CUSTOM_ID: Extras-Org_mode-Reveal_invisible_org_elements_(org-appear.el)-5a519b8e
+:END:
+
+#+begin_src emacs-lisp
+(use-package org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-hide-emphasis-markers t))
+#+end_src
+
+*** Habit (org-habit.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-Org_mode-Habit_(org-habit.el)-84378bbd
 :END:
 
 #+begin_src emacs-lisp
 (use-package org-habit
-  :straight nil
+  :straight (:type built-in)
   :config
   (add-to-list 'org-modules 'org-habit)
   (setq org-habit-graph-column 60))
 #+end_src
 
-** Wiki (org-roam.el)
+*** Wiki (org-roam.el)
 :PROPERTIES:
-:CUSTOM_ID: Org_mode-Wiki_(org-roam.el)-63f2460d
+:CUSTOM_ID: Extras-Org_mode-Wiki_(org-roam.el)-21a1dff1
 :END:
 
 #+begin_src emacs-lisp
@@ -2754,13 +1793,270 @@ contains several subsections as follows:
   (org-roam-setup))
 #+end_src
 
-* Media
+#+RESULTS:
+: org-roam-dailies-capture-today
+
+*** Slide (org-tree-slide.el)
 :PROPERTIES:
-:CUSTOM_ID: Media-fb3ec055
+:CUSTOM_ID: Extras-Org_mode-Slide_(org-tree-slide.el)-93a2298d
 :END:
-** Pdf reader (pdf-tools.el)
+
+=org-tree-slide.el= is a presentation tool using =org-mode=.
+
+#+begin_src emacs-lisp
+(use-package org-tree-slide)
+#+end_src
+
+** User interface
 :PROPERTIES:
-:CUSTOM_ID: Media-Pdf_reader_(pdf-tools.el)-114591dd
+:CUSTOM_ID: Extras-User_interface-7ec18361
+:END:
+*** Icons (all-the-icons.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Icons_(all-the-icons.el)-11f3bcb6
+:END:
+
+This package is a utility for using and formatting various Icon fonts within
+Emacs.  Icon Fonts allow you to propertize and format icons the same way you
+would normal text.  This enables things such as better scaling of and anti
+aliasing of the icons.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package all-the-icons
+  :init
+  (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
+    (all-the-icons-install-fonts)))
+#+end_src
+
+*** A colorful dired (diredfl.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-A_colorful_dired_(diredfl.el)-96954331
+:END:
+
+Additional syntax highlighting in dired buffer.
+
+#+begin_src emacs-lisp
+(use-package diredfl
+  :hook (dired-mode . diredfl-mode))
+#+end_src
+
+*** Interactive query replace (anzu.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Interactive_query_replace_(anzu.el)-49a57e17
+:END:
+
+=anzu.el= provides a minor mode which displays 'current match/total
+matches' in the mode-line in various search modes.  This makes it
+easy to understand how many matches there are in the current buffer
+for your search query.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package anzu
+  :after-call isearch-mode
+  :bind
+  ([remap query-replace] . anzu-query-replace)
+  ([remap query-replace-regexp] . anzu-query-replace-regexp)
+  :config
+  (global-anzu-mode +1))
+#+end_src
+
+*** Alternative isearch UI (isearch-mb.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Alternative_isearch_UI_(isearch-mb.el)-4d292b47
+:END:
+
+This package provides an alternative isearch UI based on the minibuffer.  This
+allows editing the search string in arbitrary ways without any special maneuver;
+unlike standard isearch, cursor motion commands do not end the search.
+Moreover, the search status information in the echo area and some keybindings
+are slightly simplified.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package isearch-mb
+  :after-call isearch-mode
+  :config
+  (isearch-mb-mode)
+  (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
+  (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
+  :bind
+  (:map isearch-mb-minibuffer-map
+        ([remap previous-matching-history-element] . consult-isearch-history)))
+#+end_src
+
+*** Window position (transpose-frame.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Window_position_(transpose-frame.el)-75b05cdf
+:END:
+
+The =transpose-frame= library defines a set of commands for shifting the
+layout of Emacs windows.  Rather than me describing how these work, I
+strongly encourage you to read the "Commentary" section in the source
+code.  Do it with =M-x find-library transpose-frame=.
+
+#+begin_src emacs-lisp
+(use-package transpose-frame)
+#+end_src
+
+*** Fill column (visual-fill-column.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Fill_column_(visual-fill-column.el)-765e3035
+:END:
+
+#+begin_src emacs-lisp
+(use-package visual-fill-column)
+#+end_src
+
+*** Key bindings hint (which-key.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Key_bindings_hint_(which-key.el)-f9058599
+:END:
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :init
+  (which-key-mode 1 ))
+#+end_src
+
+*** Buffer list (ibuffer.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Buffer_list_(ibuffer.el)-ea7d7e3b
+:END:
+
+=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
+=list-buffers=.  Compared to its counterpart, it allows for granular
+control over the buffer list and is more powerful overall.
+
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :init
+  (advice-add 'list-buffers :override 'ibuffer)
+  :bind
+  (:map ibuffer-mode-map
+        ("M-o" . nil)
+        ("* f" . ibuffer-mark-by-file-name-regexp)
+        ("* g" . ibuffer-mark-by-content-regexp)
+        ("* n" . ibuffer-mark-by-name-regexp)
+        ("s n" . ibuffer-do-sort-by-alphabetic)
+        ("/ g" . ibuffer-filter-by-content))
+  :config
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  (setq ibuffer-never-show-predicates '("^ \\*.*"))
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+#+end_src
+*** Hunk indicator (git-gutter.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Hunk_indicator_(git-gutter.el)-6206a06d
+:END:
+
+#+begin_src emacs-lisp
+(use-package git-gutter
+  :config
+  (custom-set-variables
+   '(git-gutter:modified-sign "⏽")
+   '(git-gutter:added-sign "⏽")
+   '(git-gutter:deleted-sign "⏽")))
+#+end_src
+
+** Utils
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-235edba8
+:END:
+*** Man page (man.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Man_page_(man.el)-279510ed
+:END:
+
+#+begin_src emacs-lisp
+(use-package man
+  :straight (:type built-in)
+  :bind
+  (:map Man-mode-map
+        ("q" . kill-this-buffer))
+  :config
+  (setq Man-notify-method 'newframe))
+#+end_src
+*** Ripgrep (rg.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Ripgrep_(rg.el)-d92e6c2b
+:END:
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Ripgrep_(rg.el)-Autoload-fdfcca61
+:END:
+
+The purpose of the function =ale/rg-define-toggle= is to avoid executing
+=rg-define-toggle= directly in =use-package=, because this macro introduces too many
+deps that we don't need at startup.
+
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
+;;; ale-rg.el -*- lexical-binding: t; -*-
+
+;;;###autoload
+(defun ale/rg-define-toggles ()
+  "Define toggles in `rg-mode'."
+  (rg-define-toggle "--context 3" (kbd "C"))
+  (rg-define-toggle "-A 5" (kbd "A")))
+
+(provide 'ale-rg)
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Ripgrep_(rg.el)-Config-a16f247e
+:END:
+
+#+begin_src emacs-lisp
+(use-package rg
+  :config
+  (ale/rg-define-toggles)
+  :bind
+  (:map ale-mct-map
+        ("g" . rg)))
+#+end_src
+
+*** Writable grep (wgrep.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Writable_grep_(wgrep.el)-3143bf57
+:END:
+
+With =wgrep= we can directly edit the results of a grep and save the changes to
+all affected buffers.  In principle, this is the same as what the built-in occur
+offers.  We can use it to operate on a list of matches by leveraging the full
+power of Emacs' editing capabilities (e.g. keyboard macros, query and replace a
+regexp .etc).
+
+#+begin_src emacs-lisp
+(use-package wgrep
+  :config
+  (setq wgrep-auto-save-buffer t)
+  (setq wgrep-change-readonly-file t)
+  :bind
+  (:map wgrep-mode-map
+        ("M-n" . next-error-no-select)
+        ("M-p" . previous-error-no-select)))
+#+end_src
+
+*** Pdf reader (pdf-tools.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Pdf_reader_(pdf-tools.el)-2ac4cc7a
 :END:
 
 #+begin_src emacs-lisp
@@ -2784,9 +2080,9 @@ contains several subsections as follows:
   ("D" . 'pdf-annot-delete)))
 #+end_src
 
-** Epub reader (nov.el)
+*** Epub reader (nov.el)
 :PROPERTIES:
-:CUSTOM_ID: Media-Epub_reader_(nov.el)-c09bd163
+:CUSTOM_ID: Extras-Utils-Epub_reader_(nov.el)-ab651de6
 :END:
 
 #+begin_src emacs-lisp
@@ -2817,17 +2113,13 @@ contains several subsections as follows:
     (shrface-mode)))
 #+end_src
 
-* Applications
+*** Murl (ale-murl.el)
 :PROPERTIES:
-:CUSTOM_ID: Applications-58712356
+:CUSTOM_ID: Extras-Utils-Murl_(ale-murl.el)-9a852f2d
 :END:
-** Murl (ale-murl.el)
+**** Autoload
 :PROPERTIES:
-:CUSTOM_ID: Applications-Murl_(ale-murl.el)-6d1441b8
-:END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Applications-Murl_(ale-murl.el)-Autoload-a18e747c
+:CUSTOM_ID: Extras-Utils-Murl_(ale-murl.el)-Autoload-2bb85cf4
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
@@ -2872,28 +2164,479 @@ contains several subsections as follows:
 (provide 'ale-murl)
 #+end_src
 
-*** Config
+**** Config
 :PROPERTIES:
-:CUSTOM_ID: Applications-Murl_(ale-murl.el)-Config-134a3a89
+:CUSTOM_ID: Extras-Utils-Murl_(ale-murl.el)-Config-d34e795b
 :END:
 
 #+begin_src emacs-lisp
 (bind-keys
- :map ale-utils-map
+ :map ale-apps-map
  ("m" . ale/murl-open))
 #+end_src
 
-** Dictionary (fanyi.el)
+*** Dictionary (fanyi.el)
 :PROPERTIES:
-:CUSTOM_ID: Applications-Dictionary_(fanyi.el)-0ef34b59
+:CUSTOM_ID: Extras-Utils-Dictionary_(fanyi.el)-ebcda713
 :END:
 
 #+begin_src emacs-lisp
 (use-package fanyi
   :bind
-  (:map ale-utils-map
+  (:map ale-apps-map
         ("t" . fanyi-dwim))
   :custom
   (fanyi-providers '(fanyi-etymon-provider
                      fanyi-longman-provider)))
+#+end_src
+
+*** Forges (forge.el)
+:PROPERTIES:
+:CUSTOM_ID: Extras-Utils-Forges_(forge.el)-95e0681b
+:END:
+
+#+begin_src emacs-lisp
+(use-package forge)
+#+end_src
+
+* Programming
+:PROPERTIES:
+:CUSTOM_ID: Programming-ced42c83
+:END:
+** Languages
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-20e54288
+:END:
+*** .rs
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.rs-d4906770
+:END:
+
+#+begin_src emacs-lisp
+(use-package rust-mode
+  :hook
+  (rust-mode . (lambda () (setq indent-tabs-mode nil))))
+#+end_src
+
+*** .py
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.py-6c13a4b1
+:END:
+
+#+begin_src emacs-lisp
+(use-package python
+  :straight (:type built-in)
+  :config
+  (setq python-indent-offset 4))
+#+end_src
+
+*** .lua
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.lua-fa0cf5f5
+:END:
+
+#+begin_src emacs-lisp
+(use-package lua-mode
+  :config
+  (setq lua-indent-level 2))
+#+end_src
+
+*** .yaml
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.yaml-28a51e72
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package yaml-mode)
+#+end_src
+
+*** .html
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.html-4f4121f0
+:END:
+
+#+begin_src emacs-lisp
+(use-package emmet-mode)
+#+end_src
+
+*** .jsx?
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.jsx?-5b9bedbd
+:END:
+
+#+begin_src emacs-lisp
+(use-package js
+  :straight (:type built-in)
+  :config
+  (setq js-indent-level 2))
+
+(use-package web-mode
+  :config
+  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+  :hook
+  (web-mode . (lambda ()
+                (emmet-mode)
+                (setq web-mode-markup-indent-offset 2)
+                (setq web-mode-code-indent-offset 2)
+                (setq web-mode-script-padding 0)))
+  :mode (("\\.vue\\'" . web-mode)
+         ("\\.jsx?$" . web-mode)))
+#+end_src
+
+*** .z?sh
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.z?sh-b993a3a1
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package sh-script
+  :straight (:type built-in)
+  :config
+  (setq sh-basic-offset 2))
+#+end_src
+
+** DevTools
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-906375ad
+:END:
+*** LSP (lsp.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-LSP_(lsp.el)-4c71009f
+:END:
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-LSP_(lsp.el)-Autoload-beb6900d
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
+;;; ale-lsp.el --- -*- lexical-binding: t -*-
+
+(defun ale/lsp-pyright-import-venv ()
+  "Fix `import' resolution with projects with virtual env like conda."
+  (require 'lsp-pyright)
+  (let* ((pr-root (lsp-workspace-root))
+         (py-ver "python3.9")
+         (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
+    (setq lsp-pyright-extra-paths (vector extra-path))))
+
+(defun ale/lsp--inhibit ()
+  "Disable `lsp-deferred' in minibuffer."
+  (advice-add 'lsp-deferred :override #'ignore))
+
+(defun ale/lsp--recover ()
+  "Recover `lsp-deferred' after quit minibuffer."
+  (advice-remove 'lsp-deferred #'ignore))
+
+;;;###autoload
+(define-minor-mode ale/lsp-mode
+  "Inhibit lsp in minibuffer."
+  :init-value nil
+  :global t
+  (if ale/lsp-mode
+      (progn
+        (add-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
+        (add-hook 'minibuffer-exit-hook 'ale/lsp--recover))
+    (progn
+      (remove-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
+      (remove-hook 'minibuffer-exit-hook 'ale/lsp--recover))))
+
+(provide 'ale-lsp)
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-LSP_(lsp.el)-Config-c060d3d2
+:END:
+
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :hook ((sh-mode
+          lua-mode
+          python-mode
+          web-mode
+          typescript-mode
+          rust-mode)
+         . lsp-deferred)
+  :init
+  (ale/lsp-mode)
+  :config
+  (setq lsp-eldoc-hook nil)
+  (setq lsp-signature-auto-activate t)
+  (setq lsp-signature-function 'lsp-signature-posframe)
+  (setq lsp-signature-doc-lines 20)
+  (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'")
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
+#+end_src
+
+**** Extensions
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-LSP_(lsp.el)-Extensions-87cd1753
+:END:
+
+#+begin_src emacs-lisp
+(use-package lsp-tailwindcss
+  :after (lsp-mode web-mode)
+  :init
+  (setq lsp-tailwindcss-add-on-mode t))
+
+(use-package lsp-pyright
+  :hook (python-mode . ale/lsp-pyright-import-venv)
+  :init
+  (when (executable-find "python3")
+    (setq lsp-pyright-python-executable-cmd "python3")))
+
+(use-package lsp-ui
+  :after-call lsp-deferred
+  :config
+  (setq lsp-ui-sideline-show-code-actions nil)
+  (setq lsp-ui-doc-position 'bottom)
+  :hook
+  (lsp-mode . lsp-ui-mode))
+#+end_src
+
+*** Virturl environment (conda.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Virturl_environment_(conda.el)-2738a5db
+:END:
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Virturl_environment_(conda.el)-Autoload-45fc1daf
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
+;;; ale-conda.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-conda-env-activate-for-buffer-ad ()
+  "Advice for `conda-env-activate-for-buffer'.
+
+Make it support local `conda-env-subdirectory' such as `./envs'."
+  (interactive)
+  (if-let ((dir-local-env (bound-and-true-p conda-project-env-path)))
+      (conda-env-activate dir-local-env)
+    (when-let* ((filename (buffer-file-name))
+                (yml-file (conda--find-env-yml (f-dirname filename)))
+                (yml-path (f-dirname yml-file))
+                (prefix-env (concat yml-path "/" conda-env-subdirectory "/")))
+      (if (file-exists-p prefix-env)
+          (unless (string= prefix-env (or conda-env-current-name ""))
+            (conda-env-activate-path prefix-env))
+        (when-let ((env-name (conda-env-name-to-dir
+                              (conda--get-name-from-env-yml yml-file))))
+          (unless (string= env-name (or conda-env-current-name ""))
+            (conda-env-activate env-name)))))))
+
+;;;###autoload
+(define-minor-mode +conda-env-autoactivate-mode
+  "Toggle +conda-env-autoactivate mode.
+
+This mode automatically tries to activate a conda environment for the current
+buffer."
+  :group 'conda
+  :global t
+  (if +conda-env-autoactivate-mode
+      (progn
+        (advice-add 'pop-to-buffer :after #'conda--switch-buffer-auto-activate)
+        (advice-add 'switch-to-buffer :after #'conda--switch-buffer-auto-activate))
+    (advice-remove 'pop-to-buffer #'conda--switch-buffer-auto-activate)
+    (advice-remove 'switch-to-buffer #'conda--switch-buffer-auto-activate)))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Virturl_environment_(conda.el)-Config-f92c947d
+:END:
+
+#+begin_src emacs-lisp
+(use-package conda
+  :after-call find-file-hook
+  :config
+  (setq conda-anaconda-home "/opt/miniconda/")
+  (setq conda-env-home-directory "/opt/miniconda/")
+  (setq conda-message-on-environment-switch t)
+  (advice-add 'conda-env-activate-for-buffer
+              :override #'ale-conda-env-activate-for-buffer-ad)
+  (+conda-env-autoactivate-mode t)
+  :hook
+  (conda-postactivate . (lambda () (interactive) (jupyter-available-kernelspecs t))))
+#+end_src
+
+*** Jupyter (jupyter.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Jupyter_(jupyter.el)-27ba08f2
+:END:
+
+#+begin_src emacs-lisp
+(use-package jupyter
+  :after-call (org-cycle conda-preactivate-hook)
+  :config
+  ;; FIXME: jupyter require this function but it doesn't exist in emacs-version > 28.
+  (defun ansi-color--find-face (codes)
+    "Return the face corresponding to CODES."
+    (let (faces)
+      (while codes
+        (let ((face (ansi-color-get-face-1 (pop codes))))
+	        (unless (eq face 'default)
+	          (push face faces))))
+      (if (cdr faces) (nreverse faces) (car faces))))
+  (require 'ob-jupyter)
+  (org-babel-jupyter-override-src-block "python")
+  (setq org-babel-default-header-args:python '((:async . "yes") (:kernel . "python3"))))
+#+end_src
+
+*** Colorizer (rainbow-mode.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Colorizer_(rainbow-mode.el)-9b193930
+:END:
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :hook
+  (prog-mode . rainbow-mode))
+#+end_src
+
+*** Formatter (reformatter.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Formatter_(reformatter.el)-c873c6b6
+:END:
+
+=reformatter.el= (created by Purcell) lets you easily define an idiomatic command
+to reformat the current buffer using a command-line program, together with an
+optional minor mode which can apply this command automatically on save.
+
+#+begin_src emacs-lisp
+(use-package reformatter
+  :init
+  (defun ale-format-buffer ()
+    (interactive)
+    (let* ((mode-name (string-remove-suffix "-mode" (format "%s" major-mode)))
+           (func-name (intern (format "%s-format-buffer" mode-name))))
+      (if (functionp func-name)
+          (funcall func-name)
+        (user-error
+         (format
+          "No available formatter for %s. Use `reformatter-define' to create it."
+          major-mode)))))
+  :config
+  (reformatter-define lua-format
+    :program "stylua"
+    :args '("--indent-width" "2" "-")
+    :lighter " styLua")
+  (reformatter-define python-format
+    :program "black"
+    :args '("-")
+    :lighter " blackFMT")
+  :bind
+  (:map ale-apps-map
+        ("f" . ale-format-buffer)))
+#+end_src
+
+*** Indent lines (highlight-indent-guides.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Indent_lines_(highlight-indent-guides.el)-df3d281e
+:END:
+
+#+begin_src emacs-lisp
+(use-package highlight-indent-guides
+  :hook
+  (prog-mode . (lambda ()
+                 (unless (eq major-mode 'js-mode)
+                   (highlight-indent-guides-mode))))
+  :config
+  (setq highlight-indent-guides-method 'bitmap)
+  (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line)
+  (setq highlight-indent-guides-responsive 'stack)
+  (setq highlight-indent-guides-delay 0)
+  (setq highlight-indent-guides-suppress-auto-error t)
+  (setq highlight-indent-guides-auto-stack-odd-face-perc 15)
+  (setq highlight-indent-guides-auto-stack-even-face-perc 25)
+  (setq highlight-indent-guides-auto-stack-character-face-perc 35))
+#+end_src
+
+*** Syntax checker (flycheck.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Syntax_checker_(flycheck.el)-932c904f
+:END:
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :after-call prog-mode-hook
+  :config
+  (flycheck-add-mode 'javascript-eslint 'web-mode)
+  (global-flycheck-mode)
+  (setq-default flycheck-emacs-lisp-load-path 'inherit)
+  (setq-default flycheck-disabled-checkers
+                (append flycheck-disabled-checkers '(javascript-jshint json-jsonlist))))
+#+end_src
+
+*** REST client (restclient.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-REST_client_(restclient.el)-cd7d4301
+:END:
+
+#+begin_src emacs-lisp
+(use-package restclient)
+#+end_src
+
+*** Scratch buffers (scratch.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Scratch_buffers_(scratch.el)-c4698d0e
+:END:
+
+=ale/scratch= will produce a org-mode buffer with right header-args for current
+jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) will
+prompt for a major mode instead.  Simple yet super effective!
+
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Scratch_buffers_(scratch.el)-Autoload-7b83f99a
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
+;;; ale-scratch.el --- -*- lexical-binding: t -*-
+
+(defun ale-scratch--list-modes ()
+  "List known major modes."
+  (cl-loop for sym the symbols of obarray
+           for name = (symbol-name sym)
+           when (and (functionp sym)
+                     (not (member sym minor-mode-list))
+                     (string-match "-mode$" name)
+                     (not (string-match "--" name)))
+           collect (substring name 0 -5)))
+
+;;;###autoload
+(defun ale/scratch (query-for-mode)
+  "Create or switch to an org-mode scratch buffer with jupyter session configured.
+If called with prefix arg, prompt for a major mode for the buffer."
+  (interactive "P")
+  (let ((buf (get-buffer "*ALE-scratch*")))
+    (unless buf
+      (let* ((new-buf (generate-new-buffer "*ALE-scratch*"))
+             (jpt-session (or (bound-and-true-p conda-env-current-name) "base"))
+             (text (concat "#+PROPERTY: header-args:python :session " jpt-session))
+             (mode "org"))
+        (with-current-buffer new-buf
+          (when query-for-mode
+            (setq mode (completing-read "Mode: " (ale-scratch--list-modes) nil t nil nil))
+            (setq text (format "Scratch buffer for: %s" mode)))
+          (insert text)
+          (funcall (intern (concat mode "-mode")))
+          (setq-local org-image-actual-width '(1024))
+          (unless (string= mode "org") (comment-region (point-min) (point-max)))
+          (insert "\n\n")
+          (setq buf new-buf))))
+    (pop-to-buffer buf)))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Programming-DevTools-Scratch_buffers_(scratch.el)-Config-0f0fb1cb
+:END:
+
+#+begin_src emacs-lisp
+(bind-keys
+ :map ale-apps-map
+ ("s" . ale/scratch))
 #+end_src
