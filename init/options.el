@@ -43,6 +43,7 @@
 ;; configuration.
 (put 'list-timers 'disabled nil)
 (put 'erase-buffer 'disabled nil)
+(put 'dired-find-alternate-file 'disabled nil)
 (setq custom-file (concat user-emacs-directory "custom.el"))
 
 ;; I believe tabs, in the sense of inserting the tab character, are

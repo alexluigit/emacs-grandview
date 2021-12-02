@@ -2,6 +2,7 @@
 
 (require 'mailcap)
 (eval-when-compile (require 'cl-lib))
+(declare-function 'danger-find-file "danger")
 
 (defcustom ale-files-additional-mime '((".ape" . "audio/ape") (".rmvb" . "video/rm") (".f4v" . "video/f4v"))
   "doc")
@@ -20,13 +21,6 @@
     (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
   "doc"
   :group 'files :type '(alist :value-type ((choice list string) list)))
-
-;;;###autoload
-(defalias 'ale-files-find-dir 'find-file)
-
-;;;###autoload
-(with-eval-after-load 'danger
-  (defalias 'ale-files-find-dir 'danger-find-file))
 
 (cl-defun ale-files-match-mime (file)
   "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
@@ -103,7 +97,7 @@
          (files-raw (split-string output "\0" t))
          (files (ale-minibuffer-append-metadata 'file files-raw))
          (file (completing-read "Goto: " files)))
-    (ale-files-find-dir file)))
+    (ale-dired-find-file file)))
 
 ;;;###autoload
 (defun ale-files-other-window ()
