@@ -715,8 +715,8 @@ Keeps a record of actions involving the minibuffer.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package savehist
-  :after-call minibuffer-setup-hook
   :straight (:type built-in)
+  :after-call minibuffer-setup-hook
   :config
   (setq savehist-file (locate-user-emacs-file "savehist"))
   (setq history-length 10000)
@@ -972,40 +972,24 @@ look like which can be described briefly as follows:
   (setq org-src-window-setup 'split-window-right))
 #+end_src
 
-*** Template expansion (org-tempo.el)
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Org_mode-Template_expansion_(org-tempo.el)-44d95b15
-:END:
-
-#+begin_src emacs-lisp
-(use-package org-tempo
-  :straight (:type built-in)
-  :after-call org-mode
-  :config
-  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("hk" . "src haskell"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python")))
-#+end_src
-
 *** Literate programming (ob.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Org_mode-Literate_programming_(ob.el)-fe3bec67
 :END:
 
+Thanks to https://blog.d46.us/advanced-emacs-startup
+
 #+begin_src emacs-lisp
 (use-package ob
   :straight (:type built-in)
-  :after-call org-mode
+  :after-call org-cycle
   :hook (org-babel-after-execute . org-redisplay-inline-images)
   :config
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((python . t)
-     (shell . t)
-     (latex . t)
-     (C . t)
-     (makefile . t)))
+  (use-package org-tempo
+    :straight (:type built-in)
+    :after-call self-insert-command
+    :config
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp")))
   (setq org-babel-default-header-args:sh    '((:results . "output replace"))
         org-babel-default-header-args:bash  '((:results . "output replace"))
         org-babel-default-header-args:shell '((:results . "output replace"))))
@@ -2203,7 +2187,7 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: Programming-ced42c83
 :END:
-** Languages
+** Languages / Filetypes
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-20e54288
 :END:
@@ -2218,6 +2202,24 @@ regexp .etc).
   (rust-mode . (lambda () (setq indent-tabs-mode nil))))
 #+end_src
 
+*** .c|cpp
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages__Filetypes-.ccpp-af24247b
+:END:
+
+#+begin_src emacs-lisp
+(use-package ob-C
+  :straight (:type built-in)
+  :after-call org-cycle
+  :commands (org-babel-execute:C
+             org-babel-expand:C
+             org-babel-execute:cpp
+             org-babel-expand:cpp)
+  :config
+  (add-to-list 'org-structure-template-alist '("cc" . "src C"))
+  (add-to-list 'org-structure-template-alist '("cp" . "src cpp")))
+#+end_src
+
 *** .py
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-.py-6c13a4b1
@@ -2228,6 +2230,15 @@ regexp .etc).
   :straight (:type built-in)
   :config
   (setq python-indent-offset 4))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package ob-python
+  :straight (:type built-in)
+  :after-call org-cycle
+  :commands (org-babel-execute:python)
+  :config
+  (add-to-list 'org-structure-template-alist '("py" . "src python")))
 #+end_src
 
 *** .lua
@@ -2250,16 +2261,7 @@ regexp .etc).
 (use-package yaml-mode)
 #+end_src
 
-*** .html
-:PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.html-4f4121f0
-:END:
-
-#+begin_src emacs-lisp
-(use-package emmet-mode)
-#+end_src
-
-*** .jsx?
+*** .js|.jsx
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-.jsx?-5b9bedbd
 :END:
@@ -2283,7 +2285,16 @@ regexp .etc).
          ("\\.jsx?$" . web-mode)))
 #+end_src
 
-*** .z?sh
+#+begin_src emacs-lisp
+(use-package ob-js
+  :straight (:type built-in)
+  :after-call org-cycle
+  :commands (org-babel-execute:js)
+  :config
+  (add-to-list 'org-structure-template-alist '("js" . "src js")))
+#+end_src
+
+*** .sh|.zsh
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-.z?sh-b993a3a1
 :END:
@@ -2293,6 +2304,52 @@ regexp .etc).
   :straight (:type built-in)
   :config
   (setq sh-basic-offset 2))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package ob-shell
+  :straight (:type built-in)
+  :after-call org-cycle
+  :commands (org-babel-execute:bash)
+  :config
+  (add-to-list 'org-structure-template-alist '("sh" . "src bash")))
+#+end_src
+
+*** .html
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.html-4f4121f0
+:END:
+
+#+begin_src emacs-lisp
+(use-package emmet-mode)
+#+end_src
+
+*** .tex
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages-.tex-75bc10f3
+:END:
+
+#+begin_src emacs-lisp
+(use-package ob-latex
+  :straight (:type built-in)
+  :after-call org-cycle
+  :commands (org-babel-execute:latex org-babel-expand:latex)
+  :config
+  (add-to-list 'org-structure-template-alist '("la" . "src latex")))
+#+end_src
+
+*** Makefile
+:PROPERTIES:
+:CUSTOM_ID: Programming-Languages__Filetypes-Makefile-75791d96
+:END:
+
+#+begin_src emacs-lisp
+(use-package ob-makefile
+  :straight (:type built-in)
+  :after-call org-cycle
+  :commands (org-babel-execute:makefile)
+  :config
+  (add-to-list 'org-structure-template-alist '("mk" . "src makefile")))
 #+end_src
 
 ** DevTools
