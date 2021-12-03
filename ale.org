@@ -1218,6 +1218,7 @@ need to add =--with-xinput2= in build flags to enable this feature.
 #+begin_src emacs-lisp
 (use-package vterm
   :config
+  (ale-vterm-mux-mode)
   (setq vterm-max-scrollback 5000)
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
   (set-face-attribute 'vterm-color-black nil :foreground "#111111")

@@ -18,13 +18,6 @@
 (defvar ale-vterm-index 0
   "The index of current vterm buffer.")
 
-(add-hook 'kill-buffer-hook
-          (lambda ()
-            (let* ((buf (current-buffer))
-                   (name (buffer-name buf)))
-              (when (string-prefix-p "*vterm" name)
-                (delq! buf ale-vterm-buffers)))))
-
 ;;;###autoload
 (defun ale-vterm-escape-advisor (fn &rest args)
   (if (derived-mode-p 'vterm-mode)
@@ -37,15 +30,11 @@
       (funcall ale-vterm-kill-whole-line-cmd)
     (apply fn args)))
 
-;;;###autoload
 (defun ale-vterm--disable-side-window (fn &rest args)
   "Prevent vterm size adjust break selection."
   (unless (and (region-active-p)
                (derived-mode-p 'vterm-mode))
     (apply fn args)))
-
-;;;###autoload
-(advice-add 'display-buffer-in-side-window :around 'ale-vterm--disable-side-window)
 
 ;;;###autoload
 (defun vterm-send-C-delete ()
@@ -147,6 +136,27 @@ Create new one if no vterm buffer exists."
   "Select previous vterm buffer."
   (interactive "p")
   (ale-vterm-next arg))
+
+(defun ale-vterm--kill-buffer ()
+  "Remove killed buffer from `ale-vterm-buffers'.
+
+Used as a hook function added to `kill-buffer-hook'."
+  (let* ((buf (current-buffer))
+         (name (buffer-name buf)))
+    (when (string-prefix-p "*vterm" name)
+      (delq! buf ale-vterm-buffers))))
+
+;;;###autoload
+(define-minor-mode ale-vterm-mux-mode
+  "Show/hide multiple vterm windows under control."
+  :global t
+  :group 'vterm
+  (if ale-vterm-mux-mode
+      (progn
+        (advice-add 'display-buffer-in-side-window :around 'ale-vterm--disable-side-window)
+        (add-hook 'kill-buffer-hook #'ale-vterm--kill-buffer))
+    (advice-remove 'display-buffer-in-side-window 'ale-vterm--disable-side-window)
+    (remove-hook 'kill-buffer-hook #'ale-vterm--kill-buffer)))
 
 (provide 'ale-vterm)
 
