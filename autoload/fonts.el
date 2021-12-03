@@ -13,28 +13,33 @@
 ;;;###autoload
 (defun ale-font-chooser (fonts)
   "Return first valid (exists in OS) font from FONTS."
-  (cl-find-if
-   (lambda (f) (if (null (x-list-fonts f)) nil t)) fonts))
+  (when window-system
+    (cl-find-if
+     (lambda (f) (if (null (list-fonts (font-spec :family f))) nil t)) fonts)))
 
 ;;;###autoload
 (defun ale-font-setup ()
   "Setup default/fixed-pitch/variable-pitch/zh-font."
   (interactive)
+  (custom-theme-set-faces
+   'user
+   '(font-lock-keyword-face ((t (:slant italic))))
+   '(font-lock-variable-name-face ((t (:weight demibold))))
+   '(font-lock-function-name-face ((t (:weight demibold)))))
   (when-let ((default (ale-font-chooser ale-default-fonts))
              (fixed-pitch (ale-font-chooser ale-fixed-fonts))
              (variable-pitch (ale-font-chooser ale-variable-fonts))
              (zh-font (font-spec :family (ale-font-chooser ale-zh-fonts))))
-    (set-face-attribute 'default nil :font (font-spec :family default :size ale-font-size))
-    (set-face-attribute 'fixed-pitch nil :font (font-spec :family fixed-pitch :size ale-font-size))
-    (set-face-attribute 'variable-pitch nil :font (font-spec :family variable-pitch :size ale-font-size))
-    (custom-set-faces '(font-lock-keyword-face ((t (:slant italic)))))
-    (custom-set-faces '(font-lock-variable-name-face ((t (:weight demibold)))))
-    (custom-set-faces '(font-lock-function-name-face ((t (:weight demibold)))))
-    (set-fontset-font t 'symbol ale-emoji-font)
+    (custom-theme-set-faces
+     'user
+     `(default ((t (:font ,(font-spec :family default :size ale-font-size)))))
+     `(fixed-pitch ((t (:font ,(font-spec :family fixed-pitch :size ale-font-size)))))
+     `(variable-pitch ((t (:font ,(font-spec :family variable-pitch :size ale-font-size))))))
     (unless (equal zh-font (font-spec :family variable-pitch))
       (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
     (dolist (charset '(kana han cjk-misc bopomofo))
-      (set-fontset-font (frame-parameter nil 'font) charset zh-font))))
+      (set-fontset-font (frame-parameter nil 'font) charset zh-font))
+    (set-fontset-font t 'symbol ale-emoji-font)))
 
 ;;;###autoload
 (defun ale-font-cn-set-title (beg end)

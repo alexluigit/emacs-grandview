@@ -5,7 +5,8 @@
   (if (daemonp)
       (add-hook 'after-make-frame-functions
                 `(lambda (f) (with-selected-frame f (,setup-func))))
-    (when window-system
-      (add-hook 'window-setup-hook `,setup-func))))
+    (if window-system
+        (add-hook 'window-setup-hook `,setup-func)
+      (add-hook 'after-init-hook `,setup-func))))
 
 (provide 'ale-frame)
