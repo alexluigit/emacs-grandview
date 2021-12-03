@@ -2192,9 +2192,9 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-20e54288
 :END:
-*** .rs
+*** Rust
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.rs-d4906770
+:CUSTOM_ID: Programming-Languages-Rust-11ec7300
 :END:
 
 #+begin_src emacs-lisp
@@ -2203,9 +2203,9 @@ regexp .etc).
   (rust-mode . (lambda () (setq indent-tabs-mode nil))))
 #+end_src
 
-*** .c|cpp
+*** C|C++
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages__Filetypes-.ccpp-af24247b
+:CUSTOM_ID: Programming-Languages-C|C++-c3dfdbc6
 :END:
 
 #+begin_src emacs-lisp
@@ -2221,9 +2221,9 @@ regexp .etc).
   (add-to-list 'org-structure-template-alist '("cp" . "src cpp")))
 #+end_src
 
-*** .py
+*** Python
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.py-6c13a4b1
+:CUSTOM_ID: Programming-Languages-Python-97f13f63
 :END:
 
 #+begin_src emacs-lisp
@@ -2242,9 +2242,9 @@ regexp .etc).
   (add-to-list 'org-structure-template-alist '("py" . "src python")))
 #+end_src
 
-*** .lua
+*** Lua
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.lua-fa0cf5f5
+:CUSTOM_ID: Programming-Languages-Lua-ce676f62
 :END:
 
 #+begin_src emacs-lisp
@@ -2253,18 +2253,18 @@ regexp .etc).
   (setq lua-indent-level 2))
 #+end_src
 
-*** .yaml
+*** Yaml
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.yaml-28a51e72
+:CUSTOM_ID: Programming-Languages-Yaml-a2932d90
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package yaml-mode)
 #+end_src
 
-*** .js|.jsx
+*** JavaScript
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.jsx?-5b9bedbd
+:CUSTOM_ID: Programming-Languages-JavaScript-e03f8d1e
 :END:
 
 #+begin_src emacs-lisp
@@ -2295,9 +2295,9 @@ regexp .etc).
   (add-to-list 'org-structure-template-alist '("js" . "src js")))
 #+end_src
 
-*** .sh|.zsh
+*** Bash|Zsh
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.z?sh-b993a3a1
+:CUSTOM_ID: Programming-Languages-Bash|Zsh-e089394f
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
@@ -2316,18 +2316,18 @@ regexp .etc).
   (add-to-list 'org-structure-template-alist '("sh" . "src bash")))
 #+end_src
 
-*** .html
+*** HTML
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.html-4f4121f0
+:CUSTOM_ID: Programming-Languages-HTML-ca12fd43
 :END:
 
 #+begin_src emacs-lisp
 (use-package emmet-mode)
 #+end_src
 
-*** .tex
+*** LaTeX
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages-.tex-75bc10f3
+:CUSTOM_ID: Programming-Languages-LaTeX-eb5bdd01
 :END:
 
 #+begin_src emacs-lisp
@@ -2341,7 +2341,7 @@ regexp .etc).
 
 *** Makefile
 :PROPERTIES:
-:CUSTOM_ID: Programming-Languages__Filetypes-Makefile-75791d96
+:CUSTOM_ID: Programming-Languages-Makefile-dc8be5d7
 :END:
 
 #+begin_src emacs-lisp
