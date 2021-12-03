@@ -125,6 +125,12 @@
     (keyboard-escape-quit)))
 
 ;;;###autoload
+(defun ale-files-revert-buffer-no-ask ()
+  "Revert buffer, no ask for confirmation."
+  (interactive)
+  (revert-buffer nil t))
+
+;;;###autoload
 (defun ale-files-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."

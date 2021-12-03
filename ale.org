@@ -236,7 +236,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
           (meow-change . meow-change-char)
           (ale-meow-save . ale-pulse-save-line)
           (meow-kill . meow-kill-whole-line)
-          (meow-pop-selection . meow-pop-grab)
+          (meow-pop-selection . ale-files-revert-buffer-no-ask)
           (meow-cancel . keyboard-quit)
           (meow-delete . meow-C-d)))
   (setq meow-char-thing-table
@@ -2188,7 +2188,7 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: Programming-ced42c83
 :END:
-** Languages / Filetypes
+** Languages
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-20e54288
 :END:
