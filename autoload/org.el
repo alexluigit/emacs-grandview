@@ -20,8 +20,9 @@
      `(org-level-3 ((t (,@variable-pitch :height 1.3))))
      `(org-level-2 ((t (,@variable-pitch :height 1.4))))
      `(org-level-1 ((t (,@variable-pitch :height 1.5))))
-     `(org-block ((t (,@default))))
+     `(org-block ((t (,@default :background ,(face-attribute 'org-block-begin-line :background)))))
      ;; ensure that anything that should be fixed-pitch in Org files appears that way
+     `(org-block-begin-line ((t (:foreground "#606060" ,@(and (>= emacs-major-version 27) '(:extend t))))))
      '(org-code ((t (:inherit (shadow fixed-pitch)))))
      '(org-formula ((t (:inherit (shadow fixed-pitch)))))
      '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
