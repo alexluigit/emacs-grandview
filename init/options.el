@@ -73,6 +73,6 @@
 (setq echo-keystrokes 0.25)
 
 ;; y,n for yes,no
-(if (version< emacs-version "28")
+(if (<= emacs-major-version 28)
     (defalias 'yes-or-no-p 'y-or-n-p)
   (setq use-short-answers t))

@@ -1030,7 +1030,6 @@ suggests that a simpler method is just as effective for my case.
 Additionally, I've set =split-height-threshold= to nil and =split-width-threshold=
 to 0 to ensure every new window will open in horizontal split.
 
-
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package window
   :straight (:type built-in)
@@ -1164,8 +1163,9 @@ need to add =--with-xinput2= in build flags to enable this feature.
 =transient.el= built-in package in emacs 28 for "transient" commands.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
+(straight-use-package `(transient ,@(when (>= emacs-major-version 28) '(:type built-in))))
+
 (use-package transient
-  :straight (:type built-in)
   :config
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
