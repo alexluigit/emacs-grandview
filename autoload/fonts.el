@@ -7,7 +7,6 @@
 (defvar ale-fixed-fonts '("Sarasa Mono SC" "Fira Code Retina"))
 (defvar ale-variable-fonts '("Sarasa Mono SC" "Victor Mono" "Fira Code Retina"))
 (defvar ale-zh-fonts '("FZSuXinShiLiuKaiS-R-GB" "Smartisan Compact CNS" "Sarasa Mono SC" "青鸟华光简报宋二"))
-(defvar ale-emoji-font (font-spec :family "Noto Color Emoji" :width 'normal :slant 'normal))
 (defvar ale-zh-font-scale 1.2)
 
 ;;;###autoload
@@ -39,7 +38,8 @@
       (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
     (dolist (charset '(kana han cjk-misc bopomofo))
       (set-fontset-font (frame-parameter nil 'font) charset zh-font))
-    (set-fontset-font t 'symbol ale-emoji-font)))
+    (when (< emacs-major-version 28)
+      (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji")))))
 
 ;;;###autoload
 (defun ale-font-cn-set-title (beg end)
