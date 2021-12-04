@@ -87,6 +87,74 @@ advisor."
        (setenv (car var) (cdr var)))
      ,@body))
 
+;;; Closure factories
+
+;;;###autoload
+(defmacro letf! (bindings &rest body)
+  "Temporarily rebind function, macros, and advice in BODY.
+Intended as syntax sugar for `cl-letf', `cl-labels', `cl-macrolet', and
+temporary advice.
+BINDINGS is either:
+  A list of, or a single, `defun', `defun*', or `defmacro' forms.
+  A list of (PLACE VALUE) bindings as `cl-letf*' would accept.
+TYPE is one of:
+  `defun' (uses `cl-letf')
+  `defun*' (uses `cl-labels'; allows recursive references),
+  `defmacro' (uses `cl-macrolet')
+\(fn ((TYPE NAME ARGLIST &rest BODY) ...) BODY...)"
+  (declare (indent defun))
+  (setq body (macroexp-progn body))
+  (when (memq (car bindings) '(defun defun* defmacro))
+    (setq bindings (list bindings)))
+  (dolist (binding (reverse bindings) body)
+    (let ((type (car binding))
+          (rest (cdr binding)))
+      (setq
+       body (pcase type
+              (`defmacro `(cl-macrolet ((,@rest)) ,body))
+              ((or `defun `defun*)
+               `(cl-letf ((,(car rest) (symbol-function #',(car rest))))
+                  (ignore ,(car rest))
+                  ,(if (eq type 'defun*)
+                       `(cl-labels ((,@rest)) ,body)
+                     `(cl-letf (((symbol-function #',(car rest))
+                                 (fn! ,(cadr rest) ,@(cddr rest))))
+                        ,body))))
+              (_
+               (when (eq (car-safe type) 'function)
+                 (setq type (list 'symbol-function type)))
+               (list 'cl-letf (list (cons type rest)) body)))))))
+
+;;;###autoload
+(defmacro fn! (arglist &rest body)
+  "Returns (cl-function (lambda ARGLIST BODY...))
+The closure is wrapped in `cl-function', meaning ARGLIST will accept anything
+`cl-defun' will. Implicitly adds `&allow-other-keys' if `&key' is present in
+ARGLIST."
+  (declare (indent defun) (doc-string 1) (pure t) (side-effect-free t))
+  `(cl-function
+    (lambda
+      ,(letf! (defun* allow-other-keys (args)
+                (mapcar
+                 (lambda (arg)
+                   (cond ((nlistp (cdr-safe arg)) arg)
+                         ((listp arg) (allow-other-keys arg))
+                         (arg)))
+                 (if (and (memq '&key args)
+                          (not (memq '&allow-other-keys args)))
+                     (if (memq '&aux args)
+                         (let (newargs arg)
+                           (while args
+                             (setq arg (pop args))
+                             (when (eq arg '&aux)
+                               (push '&allow-other-keys newargs))
+                             (push arg newargs))
+                           (nreverse newargs))
+                       (append args (list '&allow-other-keys)))
+                   args)))
+         (allow-other-keys arglist))
+      ,@body)))
+
 ;;; Mutation
 
 ;;;###autoload
