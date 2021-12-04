@@ -9,6 +9,7 @@
 :PROPERTIES:
 :CUSTOM_ID: Overview-337ea426
 :END:
+
 ** About
 :PROPERTIES:
 :CUSTOM_ID: Overview-About-1982a697
@@ -661,6 +662,7 @@ Basically, its interaction model is as follows:
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 #+end_src
+
 ** Completion framework
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Completion_framework-69b42cad
@@ -1261,6 +1263,7 @@ need to add =--with-xinput2= in build flags to enable this feature.
         ("M-n" . forward-paragraph)
         ("M-p" . backward-paragraph)))
 #+end_src
+
 *** Helpful (helpful.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Utils-Helpful_(helpful.el)-9a1ec3de
@@ -1354,6 +1357,8 @@ Here are some keybindings that are always available (except in INSERT mode).
  '("8" . meow-digit-argument)
  '("9" . meow-digit-argument)
  '("<escape>" . ale-meow-escape)
+ '("<backspace>" . scroll-down)
+ '("'" . scroll-up)
  '("/" . consult-line)
  '("%" . ale-match-paren)
  '(";" . meow-reverse)
@@ -1488,6 +1493,7 @@ Here are some keybindings that are always available (except in INSERT mode).
 :PROPERTIES:
 :CUSTOM_ID: Extras-ee4a17aa
 :END:
+
 ** Text editor
 :PROPERTIES:
 :CUSTOM_ID: Extras-Text_editor-8f02d31d
@@ -1713,6 +1719,7 @@ Summary of what these do:
 :PROPERTIES:
 :CUSTOM_ID: Extras-Org_mode-acdf7707
 :END:
+
 *** Bullet (org-superstar.el)
 :PROPERTIES:
 :CUSTOM_ID: Extras-Org_mode-Bullet_(org-superstar.el)-ee1ddf29
@@ -1786,10 +1793,80 @@ Summary of what these do:
 :CUSTOM_ID: Extras-Org_mode-Slide_(org-tree-slide.el)-93a2298d
 :END:
 
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Extras-Org_mode-Slide_(org-tree-slide.el)-Autoload-ee507058
+:END:
+
+#+begin_src emacs-lisp
+;;; +org-tree-slide.el -*- lexical-binding: t; -*-
+
+(defcustom +org-tree-hide-elements
+  '("^[[:space:]]*\\(#\\+\\)\\(\\(?:BEGIN\\|END\\|ATTR\\)[^[:space:]]+\\).*" ; src block
+    "^\\(\\*+\\)"                                                            ; leading stars
+    "\\(^:PROPERTIES:\\(.*\n\\)+?:END:\\)")                                  ; :PROPERTIES:.*:END:
+  "Regexps of org elements to hide in `org-tree-slide-mode'."
+  :group 'org-tree-slide
+  :type '(repeat string))
+
+;;;###autoload
+(defun +org-tree-slide--simple-header (blank-lines)
+  "Set the header with overlay.
+
+Some number of BLANK-LINES will be shown below the header."
+  (org-tree-slide--hide-slide-header)
+  (setq org-tree-slide--header-overlay
+        (make-overlay (point-min) (+ 1 (point-min))))
+  (overlay-put org-tree-slide--header-overlay
+               'face
+               'org-tree-slide-header-overlay-face)
+  (if org-tree-slide-header
+      (overlay-put org-tree-slide--header-overlay 'display
+                   (concat
+                    (when org-tree-slide-breadcrumbs
+                      (concat "\n" (org-tree-slide--get-parents
+                                    org-tree-slide-breadcrumbs)))
+                    (org-tree-slide--get-blank-lines blank-lines)))
+    (overlay-put org-tree-slide--header-overlay 'display
+                 (org-tree-slide--get-blank-lines blank-lines))))
+
+;;;###autoload
+(defun +org-tree-slide-hide-elements-h ()
+  "Hide org constructs defined in `+org-tree-hide-elements'."
+  (dolist (reg +org-tree-hide-elements)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward reg nil t)
+        (org-flag-region (match-beginning 1) (match-end 0) org-tree-slide-mode t)))))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Extras-Org_mode-Slide_(org-tree-slide.el)-Config-d70c0f41
+:END:
+
 =org-tree-slide.el= is a presentation tool using =org-mode=.
 
 #+begin_src emacs-lisp
-(use-package org-tree-slide)
+(use-package org-tree-slide
+  :bind
+  (:map org-tree-slide-mode-map
+        ("<left>" . org-tree-slide-move-previous-tree)
+        ("<right>" . org-tree-slide-move-next-tree)
+   :map ale-org-map
+   ("S" . org-tree-slide-mode))
+  :config
+  (setq org-tree-slide-activate-message " ")
+  (setq org-tree-slide-deactivate-message " ")
+  (setq org-tree-slide-modeline-display nil)
+  (setq org-tree-slide-heading-emphasis t)
+  (setq org-tree-slide-breadcrumbs
+        (propertize " ⯈ " 'display
+                    `(height ,(face-attribute 'org-level-1 :height))))
+  (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
+  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
+  (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
+  (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header))
 #+end_src
 
 ** User interface
@@ -1978,6 +2055,7 @@ control over the buffer list and is more powerful overall.
   :config
   (setq Man-notify-method 'newframe))
 #+end_src
+
 *** Ripgrep (rg.el)
 :PROPERTIES:
 :CUSTOM_ID: Extras-Utils-Ripgrep_(rg.el)-d92e6c2b
@@ -2188,6 +2266,7 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: Programming-ced42c83
 :END:
+
 ** Languages
 :PROPERTIES:
 :CUSTOM_ID: Programming-Languages-20e54288
