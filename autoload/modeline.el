@@ -36,12 +36,12 @@
   :group 'ale-modeline)
 
 (defface ale-modeline-status-neutral
-  '((t (:inherit (shadow))))
+  '((t (:inherit (shadow bold))))
   "Face used for neutral or inactive status indicators in the mode-line."
   :group 'ale-modeline)
 
 (defface ale-modeline-status-info
-  '((t (:inherit (font-lock-constant-face))))
+  '((t (:inherit (font-lock-constant-face bold))))
   "Face used for generic status indicators in the mode-line."
   :group 'ale-modeline)
 

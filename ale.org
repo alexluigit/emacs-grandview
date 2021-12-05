@@ -1094,7 +1094,6 @@ Tabs for frequently used buffers.
 Its source code lies in *autoload/modeline.el*
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-;; (ale-modeline-mode)
 (ale-frame-enable 'ale-modeline-mode)
 #+end_src
 
@@ -1133,9 +1132,11 @@ need to add =--with-xinput2= in build flags to enable this feature.
 
 ;; https://lists.gnu.org/archive/html/emacs-devel/2021-11/msg01636.html
 (defun +modeline-font-temp-fix ()
-  (when-let ((default (ale-font-chooser ale-default-fonts)))
-    (set-face-attribute 'mode-line nil :font (font-spec :family default :size ale-font-size))
-    (set-face-attribute 'mode-line-inactive nil :font (font-spec :family default :size ale-font-size))))
+  (when-let* ((font-name (ale-font-chooser ale-default-fonts))
+              (font (font-spec :family font-name :size ale-font-size)))
+    (set-face-attribute 'mode-line nil :font font)
+    (set-face-attribute 'mode-line-inactive nil :font font)))
+
 (ale-frame-enable '+modeline-font-temp-fix)
 #+end_src
 
