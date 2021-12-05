@@ -2327,7 +2327,8 @@ regexp .etc).
 (use-package python
   :straight (:type built-in)
   :config
-  (setq python-indent-offset 4))
+  (setq python-indent-offset 4)
+  (setq python-indent-guess-indent-offset-verbose nil))
 #+end_src
 
 #+begin_src emacs-lisp
