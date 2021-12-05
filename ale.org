@@ -1802,6 +1802,11 @@ Summary of what these do:
 #+begin_src emacs-lisp
 ;;; +org-tree-slide.el -*- lexical-binding: t; -*-
 
+(defcustom +org-tree-slide-text-scale 1.5
+  "Text scaling for `org-tree-slide-mode'."
+  :group 'org-tree-slide
+  :type 'number)
+
 (defcustom +org-tree-hide-elements
   '("^[[:space:]]*\\(#\\+\\)\\(\\(?:BEGIN\\|END\\|ATTR\\)[^[:space:]]+\\).*" ; src block
     "^\\(\\*+\\)"                                                            ; leading stars
@@ -1839,6 +1844,18 @@ Some number of BLANK-LINES will be shown below the header."
       (goto-char (point-min))
       (while (re-search-forward reg nil t)
         (org-flag-region (match-beginning 1) (match-end 0) org-tree-slide-mode t)))))
+
+;;;###autoload
+(defun +org-tree-slide-prettify-slide-h ()
+  "Set up the org window for presentation."
+  (cond (org-tree-slide-mode
+         (when (bound-and-true-p flyspell-mode) (flyspell-mode -1))
+         (text-scale-set +org-tree-slide-text-scale)
+         (ignore-errors (org-latex-preview '(4))))
+        (t
+         (text-scale-set 0)
+         (org-clear-latex-preview)
+         (org-mode))))
 #+end_src
 
 **** Config
@@ -1862,11 +1879,11 @@ Some number of BLANK-LINES will be shown below the header."
   (setq org-tree-slide-modeline-display nil)
   (setq org-tree-slide-heading-emphasis t)
   (setq org-tree-slide-breadcrumbs
-        (propertize " ⯈ " 'display
-                    `(height ,(face-attribute 'org-level-1 :height))))
+        (propertize " ⯈ " 'display `(height ,(face-attribute 'org-level-1 :height))))
   (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
+  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
   (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header))
 #+end_src
 

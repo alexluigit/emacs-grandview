@@ -11,29 +11,21 @@
     (setq visual-fill-column-width 120)
     (setq visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
-  ;; Setup font
+  ;; Setup font specs
   (let ((variable-pitch `(:font ,(ale-font-chooser ale-variable-fonts)))
         (default `(:font ,(ale-font-chooser ale-default-fonts))))
     (custom-theme-set-faces
      'user
-     `(org-level-4 ((t (,@variable-pitch :height 1.2))))
-     `(org-level-3 ((t (,@variable-pitch :height 1.3))))
-     `(org-level-2 ((t (,@variable-pitch :height 1.4))))
      `(org-level-1 ((t (,@variable-pitch :height 1.5))))
-     `(org-block ((t (,@default :background ,(face-attribute 'org-block-begin-line :background)))))
-     ;; ensure that anything that should be fixed-pitch in Org files appears that way
-     `(org-block-begin-line ((t (:foreground "#606060" ,@(and (>= emacs-major-version 27) '(:extend t))))))
-     '(org-code ((t (:inherit (shadow fixed-pitch)))))
-     '(org-formula ((t (:inherit (shadow fixed-pitch)))))
-     '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
-     '(org-link ((t (:foreground "royal blue" :underline t))))
-     '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-     '(org-property-value ((t (:inherit fixed-pitch))) t)
-     '(org-checkbox ((t (:inherit fixed-pitch))) t)
-     '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
-     '(org-table ((t (:inherit (shadow fixed-pitch)))))
-     '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-     '(org-verbatim ((t (:inherit (shadow fixed-pitch))))))))
+     `(org-level-2 ((t (,@variable-pitch :height 1.4))))
+     `(org-level-3 ((t (,@variable-pitch :height 1.3))))
+     `(org-level-4 ((t (,@variable-pitch :height 1.2))))
+     `(org-block ((t (,@default :inherit (default shadow)
+                                :height 1.0
+                                :background ,(face-attribute 'org-block-begin-line :background)
+                                :extend t))))
+     `(org-block-begin-line ((t (:foreground "#606060" :extend t))))
+     '(org-tag ((t (:inherit (shadow) :weight bold :height 0.8)))))))
 
 ;;;###autoload
 (defun ale-org-comment-entry-in-region ()
