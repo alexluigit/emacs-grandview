@@ -463,26 +463,27 @@ inside of an Emacs buffer.  It is simply superb!
     :hook
     (dired-mode . (lambda () (interactive) (setq-local mode-line-format nil)))
     :bind
-    (:map dired-mode-map
-          ("/" . dired-goto-file)
-          ("a" . dired-create-empty-file)
-          ("f" . ale-dired-toolbox)
-          ("r" . ale-dired-jump)
-          ("I" . dired-insert-subdir)
-          ("?" . dired-create-directory)
-          ("O" . dired-find-file-other-window)
-          ("i" . ale-dired-file-rename-eol)
-          ("d" . dired-kill-subdir)
-          ("<" . beginning-of-buffer)
-          (">" . end-of-buffer)
-          ("[" . dired-prev-dirline)
-          ("]" . dired-next-dirline)
-          ("o" . dired-up-directory)
-          ("^" . mode-line-other-buffer)
-          ("x" . dired-do-delete)
-          ("y" . dired-do-copy)
-          ("." . dired-omit-mode)
-          ("% SPC" . ale-dired-rename-space-to-underscore))
+    (nil
+     :map dired-mode-map
+     ("/" . dired-goto-file)
+     ("a" . dired-create-empty-file)
+     ("f" . ale-dired-toolbox)
+     ("r" . ale-dired-jump)
+     ("I" . dired-insert-subdir)
+     ("?" . dired-create-directory)
+     ("O" . dired-find-file-other-window)
+     ("i" . ale-dired-file-rename-eol)
+     ("d" . dired-kill-subdir)
+     ("<" . beginning-of-buffer)
+     (">" . end-of-buffer)
+     ("[" . dired-prev-dirline)
+     ("]" . dired-next-dirline)
+     ("o" . dired-up-directory)
+     ("^" . mode-line-other-buffer)
+     ("x" . dired-do-delete)
+     ("y" . dired-do-copy)
+     ("." . dired-omit-mode)
+     ("% SPC" . ale-dired-rename-space-to-underscore))
     :config
     (setq! ale-dired-tools
            '(("m" "mark file REGEX" dired-mark-files-regexp)
@@ -630,11 +631,12 @@ inside of Emacs (e.g. kill a Magit diff).
             (ale-project-commit-log "Log VC" ?l)))
     (setq ale-project-commit-log-limit 25)
     :bind
-    (:map project-prefix-map
-          ("l" . ale-project-commit-log)
-          ("m" . ale-project-magit-status)
-          ("s" . ale-project-find-subdir)
-          ("t" . ale-project-retrieve-tag)))
+    (nil
+     :map project-prefix-map
+     ("l" . ale-project-commit-log)
+     ("m" . ale-project-magit-status)
+     ("s" . ale-project-find-subdir)
+     ("t" . ale-project-retrieve-tag)))
 #+end_src
 
 *** Trash (trashed.el)
@@ -811,19 +813,20 @@ Selectrum, Vertico and Embark.
     (setq xref-show-xrefs-function #'consult-xref
           xref-show-definitions-function #'consult-xref)
     :bind
-    (:map ale-mct-map
-          ("/" . consult-line-multi)
-          ("e" . consult-compile-error)
-          ("r" . consult-ripgrep)
-          ("k" . consult-keep-lines)
-          ("i" . consult-imenu-multi)
-          ("f" . consult-focus-lines)
-          ("o" . consult-outline)
-          ("R" . consult-register)
-          ("y" . consult-yank-from-kill-ring)
-          ("m" . consult-minor-mode-menu)
-          ("c" . consult-complex-command)
-          ("C" . consult-mode-command))
+    (nil
+     :map ale-mct-map
+     ("/" . consult-line-multi)
+     ("e" . consult-compile-error)
+     ("r" . consult-ripgrep)
+     ("k" . consult-keep-lines)
+     ("i" . consult-imenu-multi)
+     ("f" . consult-focus-lines)
+     ("o" . consult-outline)
+     ("R" . consult-register)
+     ("y" . consult-yank-from-kill-ring)
+     ("m" . consult-minor-mode-menu)
+     ("c" . consult-complex-command)
+     ("C" . consult-mode-command))
     :config
     (advice-add #'consult-line :around #'ale-consult-line-advisor)
     (setq consult-project-root-function #'ale-consult-project-root)
@@ -954,10 +957,11 @@ look like which can be described briefly as follows:
     (setq org-image-actual-width nil)
     (setq org-display-remote-inline-images 'download)
     :bind
-    (:map org-mode-map
-          ([remap org-toggle-comment] . ale-org-comment-entry-in-region)
-          ("C-c S-l" . org-toggle-link-display)
-          ("C-c C-S-l" . org-insert-last-stored-link)))
+    (nil
+     :map org-mode-map
+     ([remap org-toggle-comment] . ale-org-comment-entry-in-region)
+     ("C-c S-l" . org-toggle-link-display)
+     ("C-c C-S-l" . org-insert-last-stored-link)))
 #+end_src
 
 *** Source code block (org-src.el)
@@ -1174,10 +1178,11 @@ need to add =--with-xinput2= in build flags to enable this feature.
     (setq transient-show-popup -0.5)
     (transient-bind-q-to-quit)
     :bind
-    ((:map transient-map
-           ("<escape>" . transient-quit-all))
-     (:map transient-sticky-map
-           ("ESC" . transient-quit-all))))
+    (nil
+     :map transient-map
+     ("<escape>" . transient-quit-all)
+     :map transient-sticky-map
+     ("ESC" . transient-quit-all)))
 #+end_src
 
 ** Utils
@@ -1257,13 +1262,14 @@ need to add =--with-xinput2= in build flags to enable this feature.
   (use-package info
     :straight (:type built-in)
     :bind
-    (:map Info-mode-map
-          ("n" . next-line)
-          ("p" . previous-line)
-          ("C-n" . Info-next)
-          ("C-p" . Info-prev)
-          ("M-n" . forward-paragraph)
-          ("M-p" . backward-paragraph)))
+    (nil
+     :map Info-mode-map
+     ("n" . next-line)
+     ("p" . previous-line)
+     ("C-n" . Info-next)
+     ("C-p" . Info-prev)
+     ("M-n" . forward-paragraph)
+     ("M-p" . backward-paragraph)))
 #+end_src
 
 *** Helpful (helpful.el)
@@ -1776,13 +1782,14 @@ Summary of what these do:
     (org-roam-directory (file-truename "~/Documents/roam"))
     (org-roam-completion-everywhere t)
     :bind
-    (:map ale-org-map
-          ("l" . org-roam-buffer-toggle)
-          ("f" . org-roam-node-find)
-          ("g" . org-roam-graph)
-          ("i" . org-roam-node-insert)
-          ("c" . org-roam-capture)
-          ("j" . org-roam-dailies-capture-today))
+    (nil
+     :map ale-org-map
+     ("l" . org-roam-buffer-toggle)
+     ("f" . org-roam-node-find)
+     ("g" . org-roam-graph)
+     ("i" . org-roam-node-insert)
+     ("c" . org-roam-capture)
+     ("j" . org-roam-dailies-capture-today))
     :config
     (org-roam-setup))
 #+end_src
@@ -1869,11 +1876,12 @@ Summary of what these do:
 #+begin_src emacs-lisp
   (use-package org-tree-slide
     :bind
-    (:map org-tree-slide-mode-map
-          ("<left>" . org-tree-slide-move-previous-tree)
-          ("<right>" . org-tree-slide-move-next-tree)
-          :map ale-org-map
-          ("S" . org-tree-slide-mode))
+    (nil
+     :map org-tree-slide-mode-map
+     ("<left>" . org-tree-slide-move-previous-tree)
+     ("<right>" . org-tree-slide-move-next-tree)
+     :map ale-org-map
+     ("S" . org-tree-slide-mode))
     :config
     (setq org-tree-slide-activate-message " ")
     (setq org-tree-slide-deactivate-message " ")
@@ -1960,8 +1968,9 @@ are slightly simplified.
     (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
     (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
     :bind
-    (:map isearch-mb-minibuffer-map
-          ([remap previous-matching-history-element] . consult-isearch-history)))
+    (nil
+     :map isearch-mb-minibuffer-map
+     ([remap previous-matching-history-element] . consult-isearch-history)))
 #+end_src
 
 *** Window position (transpose-frame.el)
@@ -2012,13 +2021,14 @@ control over the buffer list and is more powerful overall.
     :init
     (advice-add 'list-buffers :override 'ibuffer)
     :bind
-    (:map ibuffer-mode-map
-          ("M-o" . nil)
-          ("* f" . ibuffer-mark-by-file-name-regexp)
-          ("* g" . ibuffer-mark-by-content-regexp)
-          ("* n" . ibuffer-mark-by-name-regexp)
-          ("s n" . ibuffer-do-sort-by-alphabetic)
-          ("/ g" . ibuffer-filter-by-content))
+    (nil
+     :map ibuffer-mode-map
+     ("M-o" . nil)
+     ("* f" . ibuffer-mark-by-file-name-regexp)
+     ("* g" . ibuffer-mark-by-content-regexp)
+     ("* n" . ibuffer-mark-by-name-regexp)
+     ("s n" . ibuffer-do-sort-by-alphabetic)
+     ("/ g" . ibuffer-filter-by-content))
     :config
     (setq ibuffer-expert t)
     (setq ibuffer-display-summary nil)
@@ -2069,8 +2079,9 @@ control over the buffer list and is more powerful overall.
   (use-package man
     :straight (:type built-in)
     :bind
-    (:map Man-mode-map
-          ("q" . kill-this-buffer))
+    (nil
+     :map Man-mode-map
+     ("q" . kill-this-buffer))
     :config
     (setq Man-notify-method 'newframe))
 #+end_src
@@ -2110,8 +2121,9 @@ deps that we don't need at startup.
     :config
     (ale/rg-define-toggles)
     :bind
-    (:map ale-mct-map
-          ("g" . rg)))
+    (nil
+     :map ale-mct-map
+     ("g" . rg)))
 #+end_src
 
 *** Writable grep (wgrep.el)
@@ -2131,9 +2143,10 @@ regexp .etc).
     (setq wgrep-auto-save-buffer t)
     (setq wgrep-change-readonly-file t)
     :bind
-    (:map wgrep-mode-map
-          ("M-n" . next-error-no-select)
-          ("M-p" . previous-error-no-select)))
+    (nil
+     :map wgrep-mode-map
+     ("M-n" . next-error-no-select)
+     ("M-p" . previous-error-no-select)))
 #+end_src
 
 *** Pdf reader (pdf-tools.el)
@@ -2155,11 +2168,12 @@ regexp .etc).
     (setq pdf-view-resize-factor 1.1)
     ;; keyboard shortcuts
     :bind
-    (:map pdf-view-mode-map
-          ("C-s" . isearch-forward)
-          ("h" . pdf-annot-add-highlight-markup-annotation)
-          ("t" . 'pdf-annot-add-text-annotation)
-          ("D" . 'pdf-annot-delete)))
+    (nil
+     :map pdf-view-mode-map
+     ("C-s" . isearch-forward)
+     ("h" . pdf-annot-add-highlight-markup-annotation)
+     ("t" . 'pdf-annot-add-text-annotation)
+     ("D" . 'pdf-annot-delete)))
 #+end_src
 
 *** Epub reader (nov.el)
@@ -2265,8 +2279,9 @@ regexp .etc).
 #+begin_src emacs-lisp
   (use-package fanyi
     :bind
-    (:map ale-apps-map
-          ("t" . fanyi-dwim))
+    (nil
+     :map ale-apps-map
+     ("t" . fanyi-dwim))
     :custom
     (fanyi-providers '(fanyi-etymon-provider
                        fanyi-longman-provider)))
@@ -2685,8 +2700,9 @@ optional minor mode which can apply this command automatically on save.
       :args '("-")
       :lighter " blackFMT")
     :bind
-    (:map ale-apps-map
-          ("f" . ale-format-buffer)))
+    (nil
+     :map ale-apps-map
+     ("f" . ale-format-buffer)))
 #+end_src
 
 *** Indent lines (highlight-indent-guides.el)
