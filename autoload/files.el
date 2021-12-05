@@ -2,7 +2,7 @@
 
 (require 'mailcap)
 (eval-when-compile (require 'cl-lib))
-(declare-function 'danger-find-file "danger")
+(declare-function 'dirvish-find-file "dirvish")
 
 (defcustom ale-files-additional-mime '((".ape" . "audio/ape") (".rmvb" . "video/rm") (".f4v" . "video/f4v"))
   "doc")

@@ -8,7 +8,7 @@
   :type 'symbol :group 'vterm)
 
 (defcustom ale-vterm-position
-  '((danger-mode . ((window-height . 0.4) (side . bottom)))
+  '((dirvish-mode . ((window-height . 0.4) (side . bottom)))
     (default . ((window-width . 0.4) (side . right))))
   "doc")
 

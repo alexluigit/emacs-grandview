@@ -501,34 +501,34 @@ inside of an Emacs buffer.  It is simply superb!
     (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
 #+end_src
 
-*** A better dired interface (danger.el)
+*** A better dired interface (dirvish.el)
 :PROPERTIES:
-:CUSTOM_ID: *CORE*-File_management-A_better_dired_interface_(danger.el)-3d9f5675
+:CUSTOM_ID: *CORE*-File_management-A_better_dired_interface_(dirvish.el)-3d9f5675
 :END:
 
 This package is inspired the popular file manager =ranger=, I created it
 on the basis of =ranger.el=. Compare to =ranger.el=, this package only
 keeps features I wanted, and some sensible functionalities were added
-as well. See details at: https://github.com/alexluigit/danger.el
+as well. See details at: https://github.com/alexluigit/dirvish.el
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package danger
+  (use-package dirvish
     :after-call pre-command-hook
     :init
     (add-to-list 'load-path (concat straight-base-dir "straight/"
-                                    straight-build-dir "/danger/extensions"))
-    :straight (danger :type git :depth full :host github :repo "alexluigit/danger.el"
+                                    straight-build-dir "/dirvish/extensions"))
+    :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish.el"
                       :files ("*.el" "extensions"))
     :hook
-    (danger-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+    (dirvish-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
     :bind
-    (:map danger-mode-map ("SPC" . danger-show-history))
+    (:map dirvish-mode-map ("SPC" . dirvish-show-history))
     :config
-    (advice-add 'ale-dired-find-file :override 'danger-find-file-dwim)
-    (danger-override-dired-mode)
-    (require 'danger-minibuffer)
-    (danger-minibuf-preview-mode)
-    (setq danger-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files")
+    (advice-add 'ale-dired-find-file :override 'dirvish-find-file-dwim)
+    (dirvish-override-dired-mode)
+    (require 'dirvish-minibuffer)
+    (dirvish-minibuf-preview-mode)
+    (setq dirvish-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files")
                                    ("/mnt/Cloud/" . ".Trash/files"))))
 #+end_src
 
@@ -567,7 +567,7 @@ Keep a record of all recently opened files.
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package recentf
     :straight (:type built-in)
-    :after-call find-file-hook danger
+    :after-call find-file-hook dirvish
     :config
     (setq recentf-max-saved-items 100)
     (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
@@ -1483,7 +1483,7 @@ Here are some keybindings that are always available (except in INSERT mode).
    ("a" . ale-files-browse-all-directories)
    ("e" . ale-files-edit-emacs-config)
    ("l" . find-library)
-   ("n" . danger)
+   ("n" . dirvish)
    ("r" . ale-files-rename-file-and-buffer)
    ("u" . ale-files-in-user-dirs)
    :map ale-apps-map
