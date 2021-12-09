@@ -2,16 +2,9 @@
 
 ;;;###autoload
 (defun ale-org-font-setup ()
+  "Setup variable-pitch fonts in org-mode."
   (interactive)
   (variable-pitch-mode)
-  (org-indent-mode)
-  (visual-line-mode)
-  ;; Centering text
-  (when (fboundp 'visual-fill-column-mode)
-    (setq visual-fill-column-width 120)
-    (setq visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
-  ;; Setup font specs
   (let ((variable-pitch `(:font ,(ale-font-chooser ale-variable-fonts)))
         (default `(:font ,(ale-font-chooser ale-default-fonts))))
     (custom-theme-set-faces

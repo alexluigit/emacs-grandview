@@ -944,6 +944,7 @@ look like which can be described briefly as follows:
     :straight (:type built-in)
     :hook
     (org-mode . ale-org-font-setup)
+    (org-mode . org-indent-mode)
     (org-tab-first . org-end-of-line)
     :config
     (setq org-adapt-indentation nil)
@@ -1168,7 +1169,7 @@ need to add =--with-xinput2= in build flags to enable this feature.
 :CUSTOM_ID: *CORE*-User_interface-Transient_commands_(transient.el)-d8945949
 :END:
 
-=transient.el= built-in package in emacs 28 for "transient" commands.
+=transient.el= built-in package in emacs 28 for *transient* commands.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (straight-use-package `(transient ,@(when (>= emacs-major-version 28) '(:type built-in))))
@@ -1515,7 +1516,7 @@ Here are some keybindings that are always available (except in INSERT mode).
 :CUSTOM_ID: Extras-Text_editor-Input_method_(rime.el)-Autoload-004c7e4b
 :END:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
   ;;; ale-rime.el --- -*- lexical-binding: t -*-
 
   ;;;###autoload
@@ -1859,9 +1860,13 @@ Summary of what these do:
     (cond (org-tree-slide-mode
            (when (bound-and-true-p flyspell-mode) (flyspell-mode -1))
            (text-scale-set +org-tree-slide-text-scale)
+           (ale-monocle-mode +1)
+           (when (fboundp 'writeroom-mode) (writeroom-mode +1))
            (ignore-errors (org-latex-preview '(4))))
           (t
            (text-scale-set 0)
+           (when (fboundp 'writeroom-mode) (writeroom-mode -1))
+           (ale-monocle-mode -1)
            (org-clear-latex-preview)
            (org-mode))))
 #+end_src
@@ -1987,13 +1992,36 @@ code.  Do it with =M-x find-library transpose-frame=.
   (use-package transpose-frame)
 #+end_src
 
-*** Fill column (visual-fill-column.el)
+*** Distraction-free writing (writeroom-mode.el)
 :PROPERTIES:
-:CUSTOM_ID: Extras-User_interface-Fill_column_(visual-fill-column.el)-765e3035
+:CUSTOM_ID: Extras-User_interface-Distraction-free_writing_(writeroom-mode.el)-5e5e452b
+:END:
+
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Distraction-free_writing_(writeroom-mode.el)-Autoload-896a7786
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-init-ext-tangle)
+  ;;;###autoload
+  (defun +visual-fill-center-text ()
+    "Centering text."
+    (interactive)
+    (setq-local visual-fill-column-width 120)
+    (setq-local visual-fill-column-center-text t)
+    (visual-fill-column-mode 1))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Extras-User_interface-Distraction-free_writing_(writeroom-mode.el)-Config-0948114f
 :END:
 
 #+begin_src emacs-lisp
-  (use-package visual-fill-column)
+  (use-package writeroom-mode
+    :after-call find-file-hook
+    :hook
+    (org-mode . +visual-fill-center-text))
 #+end_src
 
 *** Key bindings hint (which-key.el)
