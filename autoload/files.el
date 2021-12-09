@@ -86,7 +86,8 @@
 (defun ale-files-edit-emacs-config ()
   "Editing emacs init file."
   (interactive)
-  (find-file ale-full-config-org))
+  (find-file ale-full-config-org)
+  (setq-local completion-at-point-functions '(elisp-completion-at-point t)))
 
 ;;;###autoload
 (defun ale-files-browse-all-directories ()
