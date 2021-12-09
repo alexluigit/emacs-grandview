@@ -1867,6 +1867,7 @@ Summary of what these do:
            (text-scale-set 0)
            (when (fboundp 'writeroom-mode) (writeroom-mode -1))
            (ale-monocle-mode -1)
+           (ale-cursor-dim-mode -1)
            (org-clear-latex-preview)
            (org-mode))))
 #+end_src
@@ -1895,6 +1896,7 @@ Summary of what these do:
     (setq org-tree-slide-breadcrumbs
           (propertize " ⯈ " 'display `(height ,(face-attribute 'org-level-1 :height))))
     (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
+    (add-hook 'org-tree-slide-after-narrow-hook #'ale-cursor-dim-mode)
     (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
     (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
     (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
