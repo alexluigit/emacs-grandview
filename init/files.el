@@ -1,26 +1,16 @@
-;;; autoload/files.el --- -*- lexical-binding: t -*-
+;;; init/files.el --- -*- lexical-binding: t -*-
 
 (require 'mailcap)
 (eval-when-compile (require 'cl-lib))
 (declare-function 'dirvish-find-file "dirvish")
 
-(defcustom ale-files-additional-mime '((".ape" . "audio/ape") (".rmvb" . "video/rm") (".f4v" . "video/f4v"))
-  "doc")
+(defadvice find-library (around always-follow-link activate)
+  "Always follow symlink when using `find-library'.
 
-(defvar ale-files-dot-repo (getenv "DOTPATH")
-  "doc")
-
-(defcustom ale-files-dir-alist
-  '(((title . "  Photos")       (path . "~/Pictures/"))
-    ((title . "  Videos")       (path . "~/Video/"))
-    ((title . "  Downloads")    (path . "~/Downloads/")))
-  "doc")
-
-(defcustom ale-files-cmd-alist
-  '(("video/" ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
-    (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
-  "doc"
-  :group 'files :type '(alist :value-type ((choice list string) list)))
+Package managers like `straight.el' use symlink to manage
+package/libraries. This advice will enable user always find
+libraries's truename."
+  (let ((vc-follow-symlinks t)) ad-do-it))
 
 (cl-defun ale-files-match-mime (file)
   "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
@@ -37,6 +27,12 @@
               (cl-return-from ale-files-match-mime cmd)))
         (when (string-match re-or-exts meta)
           (cl-return-from ale-files-match-mime cmd))))))
+
+(defun ale-files-get-all-elisp (dirs)
+  (require 'cl-lib)
+  (cl-loop for dir in dirs
+           append (directory-files-recursively dir "\\.el$") into files
+           append files))
 
 (defun ale-files-find-file-external (entry &optional cmd args)
   "Open file using external shell command."
@@ -60,7 +56,16 @@
 (advice-add #'find-file :around #'ale-files-find-file-advisor)
 (advice-add #'find-file-other-window :around #'ale-files-find-file-advisor)
 
-;;;###autoload
+(defun ale-files--in-directory (dir &optional prompt)
+  "Use `fd' to list files in DIR."
+  (let* ((default-directory dir)
+         (command "fd -H -t f -0")
+         (output (shell-command-to-string command))
+         (files-raw (split-string output "\0" t))
+         (files (completion-append-metadata! 'file files-raw))
+         (file (completing-read (or prompt "Open file: ") files)))
+    (find-file (concat dir "/" file))))
+
 (defun ale-files-in-user-dirs ()
   "Open files in directories defined in `ale-files-dir-alist'."
   (interactive)
@@ -69,38 +74,34 @@
                                  (when (string= s (cdr (assq 'title i)))
                                    (cl-return (cdr (assq field i)))))))
          (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
-         (cands (ale-minibuffer-append-metadata annotation cands-raw))
+         (cands (completion-append-metadata! annotation cands-raw))
          (title (completing-read "Open: " cands nil t))
          (path (funcall get-item title 'path)))
-    (ale-minibuffer--files-in-directory path (concat title ": "))))
+    (ale-files--in-directory path (concat title ": "))))
 
-;;;###autoload
 (defun ale-files-dotfiles ()
   "Open files in dotfiles repo."
   (interactive)
   (unless ale-files-dot-repo
     (user-error "`ale-files-dot-repo' is undefined"))
-  (ale-minibuffer--files-in-directory ale-files-dot-repo " Dotfiles: "))
+  (ale-files--in-directory ale-files-dot-repo " Dotfiles: "))
 
-;;;###autoload
 (defun ale-files-edit-emacs-config ()
   "Editing emacs init file."
   (interactive)
   (find-file ale-full-config-org)
   (setq-local completion-at-point-functions '(elisp-completion-at-point t)))
 
-;;;###autoload
 (defun ale-files-browse-all-directories ()
   "Browse all directories using `fd' command."
   (interactive)
   (let* ((command "fd -H -td -0 . /")
          (output (shell-command-to-string command))
          (files-raw (split-string output "\0" t))
-         (files (ale-minibuffer-append-metadata 'file files-raw))
+         (files (completion-append-metadata! 'file files-raw))
          (file (completing-read "Goto: " files)))
-    (ale-dired-find-file file)))
+    (dired-jump file)))
 
-;;;###autoload
 (defun ale-files-other-window ()
   "Doc."
   (interactive)
@@ -125,13 +126,11 @@
                     cand)
     (keyboard-escape-quit)))
 
-;;;###autoload
 (defun ale-files-revert-buffer-no-ask ()
   "Revert buffer, no ask for confirmation."
   (interactive)
   (revert-buffer nil t))
 
-;;;###autoload
 (defun ale-files-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."
@@ -143,15 +142,6 @@ Do not try to make a new directory or anything fancy."
       (rename-file file name))
     (set-visited-file-name name t t)))
 
-;;;###autoload
-(defun ale-files-update ()
-  "Update current buffer."
-  (interactive)
-  (if (derived-mode-p 'helpful-mode)
-      (helpful-update)
-    (revert-buffer)))
-
-;;;###autoload
 (defun ale-files-sudo-find ()
   "Reopen current file as root."
   (interactive)

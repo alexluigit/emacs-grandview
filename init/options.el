@@ -6,9 +6,6 @@
       make-backup-files nil
       create-lockfiles nil)
 
-;; No littering
-(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
-
 ;; Don't ask for whether to follow symlink or not
 (setq vc-follow-symlinks nil)
 
@@ -71,6 +68,13 @@
 
 ;; Show current key strokes in echo area after 0.25s
 (setq echo-keystrokes 0.25)
+
+;; Do not display continuation lines
+(setq-default truncate-lines t)
+
+;; Sentence settings
+(setq sentence-end-double-space t)
+(setq sentence-end-without-period nil)
 
 ;; y,n for yes,no
 (if (<= emacs-major-version 28)

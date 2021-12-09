@@ -1,73 +1,52 @@
-;;; autoload/elisp.el --- -*- lexical-binding: t -*-
+;;; init/core.el --- -*- lexical-binding: t -*-
 
 (eval-when-compile (require 'subr-x))
 
-;;;###autoload
-(defun ale-log (format-string &rest args)
-  "Log to *Messages* if `ale-debug-p' is on.
-Does not display text in echo area, but still logs to *Messages*. Accepts the
-same arguments as `message'."
-  (when ale-debug-p
-    (let ((inhibit-message (active-minibuffer-window))
-          (str (concat (propertize "ALE " 'face 'font-lock-comment-face)
-                       format-string)))
-      (apply 'message (push str args)))))
+;;; Helpers
 
-;; Copied from `f.el'
-(defun ale-f--read-bytes (path)
-  "Read binary data from PATH.
+(defun restart-emacs ()
+  "A elisp wrapper to `em' command."
+  (interactive)
+  (let ((default-directory "~"))
+    (start-process "" nil "nohup" "em" "restart")))
 
-Return the binary data as unibyte string."
-  (with-temp-buffer
-    (set-buffer-multibyte nil)
-    (setq buffer-file-coding-system 'binary)
-    (insert-file-contents-literally path)
-    (buffer-substring-no-properties (point-min) (point-max))))
+(defun completion-append-metadata! (meta completions)
+  "doc"
+  (let ((entry (if (functionp meta)
+                   `(metadata (annotation-function . ,meta))
+                 `(metadata (category . ,meta)))))
+    (lambda (string pred action)
+      (if (eq action 'metadata)
+          entry
+        (complete-with-action action completions string pred)))))
 
-;;;###autoload
-(defun ale-f-read (path &optional coding)
-  "Read text with PATH, using CODING.
+(defun frame-enable! (setup-func)
+  "doc"
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions
+                `(lambda (f) (with-selected-frame f (,setup-func))))
+    (if window-system
+        (add-hook 'window-setup-hook `,setup-func)
+      (add-hook 'after-init-hook `,setup-func))))
 
-CODING defaults to `utf-8'.
-Return the decoded text as multibyte string."
-  (decode-coding-string (ale-f--read-bytes path) (or coding 'utf-8)))
+(defun font-chooser! (fonts)
+  "Return first valid (exists in OS) font from FONTS."
+  (when window-system
+    (cl-find-if
+     (lambda (f) (if (null (list-fonts (font-spec :family f))) nil t)) fonts)))
 
-;;;###autoload
-(defun ale-show-messages (&optional erase)
-  "Show *Messages* buffer."
-  (interactive "P")
-  (when erase
-    (let ((inhibit-read-only t))
-      (with-current-buffer "*Messages*" (erase-buffer))))
-  (if-let ((win (get-buffer-window "*Messages*")))
-      (delete-window win)
-    (display-buffer-in-side-window
-     (get-buffer "*Messages*")
-     '((side . right)
-       (window-width . 0.5)))))
+;;; Sugars
 
-;;;###autoload
-(defadvice find-library (around always-follow-link activate)
-  "Always follow symlink when using `find-library'.
-
-Package managers like `straight.el' use symlink to manage
-package/libraries. This advice will enable user always find
-libraries's truename."
-  (let ((vc-follow-symlinks t)) ad-do-it))
-
-;;;###autoload
 (defun silent! (fn &rest args)
   "Do not show any messages while executing FN. Used as an
 advisor."
   (let ((inhibit-message t)) (apply fn args)))
 
-;;;###autoload
 (defun dir! ()
   "Returns the directory of the emacs lisp file this macro is called from."
   (when-let (path (file!))
     (directory-file-name (file-name-directory path))))
 
-;;;###autoload
 (defun file! ()
   "Return the emacs lisp file this macro is called from."
   (cond ((bound-and-true-p byte-compile-current-file))
@@ -77,7 +56,18 @@ advisor."
         (buffer-file-name)
         ((error "Cannot get this file-path"))))
 
-;;;###autoload
+(defun file-read! (path &optional coding)
+  "Read text with PATH, using CODING.
+
+CODING defaults to `utf-8'.
+Return the decoded text as multibyte string."
+  (let ((str (with-temp-buffer
+               (set-buffer-multibyte nil)
+               (setq buffer-file-coding-system 'binary)
+               (insert-file-contents-literally path)
+               (buffer-substring-no-properties (point-min) (point-max)))))
+  (decode-coding-string str (or coding 'utf-8))))
+
 (defmacro letenv! (envvars &rest body)
   "Lexically bind ENVVARS in BODY, like `let' but for `process-environment'."
   (declare (indent 1))
@@ -89,7 +79,6 @@ advisor."
 
 ;;; Closure factories
 
-;;;###autoload
 (defmacro letf! (bindings &rest body)
   "Temporarily rebind function, macros, and advice in BODY.
 Intended as syntax sugar for `cl-letf', `cl-labels', `cl-macrolet', and
@@ -125,7 +114,6 @@ TYPE is one of:
                  (setq type (list 'symbol-function type)))
                (list 'cl-letf (list (cons type rest)) body)))))))
 
-;;;###autoload
 (defmacro fn! (arglist &rest body)
   "Returns (cl-function (lambda ARGLIST BODY...))
 The closure is wrapped in `cl-function', meaning ARGLIST will accept anything
@@ -157,7 +145,6 @@ ARGLIST."
 
 ;;; Mutation
 
-;;;###autoload
 (defmacro setq! (&rest settings)
   "A stripped-down `customize-set-variable' with the syntax of `setq'.
 
@@ -169,12 +156,10 @@ This triggers setters. `setq' does not."
             collect `(funcall (or (get ',var 'custom-set) #'set)
                               ',var ,val))))
 
-;;;###autoload
 (defmacro appendq! (sym &rest lists)
   "Append LISTS to SYM in place."
   `(setq ,sym (append ,sym ,@lists)))
 
-;;;###autoload
 (defmacro delq! (elt list &optional fetcher)
   "`delq' ELT from LIST in-place.
 
@@ -185,7 +170,6 @@ If FETCHER is a function, ELT is used as the key in LIST (an alist)."
                   elt)
                ,list)))
 
-;;;###autoload
 (defmacro pushnew! (place &rest values)
   "Push VALUES sequentially into PLACE, if they aren't already present.
 This is a variadic `cl-pushnew'."
@@ -193,7 +177,6 @@ This is a variadic `cl-pushnew'."
     `(dolist (,var (list ,@values) (with-no-warnings ,place))
        (cl-pushnew ,var ,place :test #'equal))))
 
-;;;###autoload
 (defmacro prependq! (sym &rest lists)
   "Prepend LISTS to SYM in place."
   `(setq ,sym (append ,@lists ,sym)))

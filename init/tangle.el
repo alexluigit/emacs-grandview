@@ -1,19 +1,11 @@
 ;;; init/tangle.el --- -*- lexical-binding: t -*-
 
-(defvar ale-exts-dir (concat ale-cache-dir "extensions/"))
-(defvar ale-full-config-org (concat INIT-DIR "ale.org"))
-(defvar ale-full-config (concat ale-cache-dir "full.el"))
-(defvar ale-autoload-file (concat ale-cache-dir "autoload.el"))
-(defvar ale-autoload-dirs `(,(concat INIT-DIR "autoload/") ,ale-exts-dir))
-
-(defun ale-init-tangle (&optional force)
+(defun ale-tangle--all (&optional force)
   "doc"
-  (autoload 'ale-f-read (concat INIT-DIR "autoload/elisp"))
-  (autoload 'ale-init-ext-tangle-target (concat INIT-DIR "autoload/init"))
   (let* ((init-md5 (concat ale-cache-dir "init.md5"))
          (old-md5 (when (file-exists-p init-md5)
-                    (ale-f-read init-md5)))
-         (new-md5 (secure-hash 'md5 (ale-f-read ale-full-config-org))))
+                    (file-read! init-md5)))
+         (new-md5 (secure-hash 'md5 (file-read! ale-full-config-org))))
     (when (or force (not (string= old-md5 new-md5)))
       (when (file-exists-p (ale-minimal-config))
         (delete-file (ale-minimal-config)))
@@ -26,21 +18,14 @@
       (require 'ob-tangle)
       (org-babel-tangle-file ale-full-config-org ale-full-config))))
 
-(defun ale-init-autoload-files ()
-  (require 'cl-lib)
-  (cl-loop for dir in ale-autoload-dirs
-           append (directory-files-recursively dir "\\.el$") into files
-           append files))
-
-(defun ale-init-gen-autoloads (&optional force)
+(defun ale-tangle--gen-autoload (&optional force)
   "Generate core autoload files."
   (require 'autoload)
-  (autoload 'ale-f-read (concat INIT-DIR "autoload/elisp"))
   (let* ((autoload-md5 (concat ale-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
-                    (ale-f-read autoload-md5)))
+                    (file-read! autoload-md5)))
          (files-as-str (with-temp-buffer
-                         (dolist (file (ale-init-autoload-files))
+                         (dolist (file (ale-files-get-all-elisp ale-autoload-dirs))
                            (insert-file-contents file))
                          (buffer-string)))
          (new-md5 (secure-hash 'md5 files-as-str)))
@@ -48,7 +33,7 @@
       (with-temp-file ale-autoload-file
         (cl-loop with generated-autoload-file = nil
                  with inhibit-message = t
-                 for file in (ale-init-autoload-files)
+                 for file in (ale-files-get-all-elisp ale-autoload-dirs)
                  for generated-autoload-load-name = (file-name-sans-extension file)
                  do (autoload-generate-file-autoloads file (current-buffer))))
       (with-temp-buffer
@@ -56,31 +41,33 @@
         (insert new-md5)
         (write-region (point-min) (point-max) autoload-md5)))))
 
-(defun ale-minimal-config ()
-  (concat ale-cache-dir "minimal.el"))
+(defun ale-tangle (&optional force)
+  (ale-tangle--prepare-heading)
+  (ale-tangle--all force)
+  (ale-tangle--gen-autoload force))
 
-(defun ale-init-ext-tangle ()
-  (concat ale-exts-dir (ale-org-custom-id-get) ".el"))
+(defun ale-tangle--gen-path-for-autoload (pom)
+  (org-with-point-at pom
+    (when (string= (org-get-heading) "Autoload")
+      (let* ((package-name
+              (save-excursion
+                (org-up-heading-safe)
+                (let ((heading (org-get-heading)))
+                  (substring-no-properties heading (1+ (string-match "(\\(.*\\))" heading)) (match-end 1)))))
+             (tangle-path (concat ":tangle \"" ale-autoload-default-dir package-name "\"")))
+        (org-entry-put pom "header-args:emacs-lisp" tangle-path)))))
 
-(defun ale-init-profiler ()
-  "Init info with packages loaded and init time."
-  (when ale-debug-p
-    (let ((package-count 0)
-          (time (emacs-init-time "%.3f"))
-          (docstr "%d packages loaded in %ss"))
-      (when (boundp 'straight--profile-cache)
-        (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
-      (run-with-timer 1 nil 'ale-log docstr package-count time))))
+(defun ale-tangle--prepare-heading ()
+  (with-current-buffer (find-file-noselect ale-full-config-org)
+    (save-excursion
+      (widen)
+      (goto-char (point-min))
+      (org-map-entries (lambda () (ale-tangle--gen-path-for-autoload (point)))))
+    (save-buffer)
+    (kill-this-buffer)))
 
-(defun ale-init-build (&optional force)
-  (ale-init-tangle force)
-  (ale-init-gen-autoloads force))
-
-(add-hook 'kill-emacs-hook #'ale-init-build)
-
-(add-hook 'emacs-startup-hook #'ale-init-profiler)
+(add-hook 'kill-emacs-hook #'ale-tangle)
 
 (unless (file-exists-p ale-cache-dir)
-  (autoload 'ale-org-custom-id-get (concat INIT-DIR "autoload/org-id.el"))
-  (make-directory ale-cache-dir)
-  (ale-init-build t))
+  (make-directory ale-autoload-default-dir t)
+  (ale-tangle t))

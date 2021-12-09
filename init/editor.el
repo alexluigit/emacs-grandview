@@ -1,4 +1,4 @@
-;;; autoload/editor.el --- -*- lexical-binding: t -*-
+;;; init/editor.el --- -*- lexical-binding: t -*-
 
 (defcustom ale-date-specifier "%F"
   "Date specifier for `format-time-string'.
@@ -17,22 +17,18 @@ Used by `ale-insert-date'."
   :type '(repeat symbol)
   :group 'ale)
 
-;;;###autoload
 (defadvice keyboard-escape-quit (around keep-windows activate)
   "Do not close any window when calling `keyboard-escape-quit'."
   (let ((buffer-quit-function #'ignore)) ad-do-it))
 
-;;;###autoload
 (defadvice next-error-no-select (around reuse-window activate)
   "Do not open new window when calling `next-error-no-select'."
   (let ((split-width-threshold nil)) ad-do-it))
 
-;;;###autoload
 (defadvice previous-error-no-select (around reuse-window activate)
   "Do not open new window when calling `previous-error-no-select'."
   (let ((split-width-threshold nil)) ad-do-it))
 
-;;;###autoload
 (defadvice yank (before bol activate)
   "Make `yank' behave like paste (p) command in vim."
   (when-let ((clip (condition-case nil (current-kill 0 t) (error ""))))
@@ -40,18 +36,15 @@ Used by `ale-insert-date'."
     (when (string-suffix-p "\n" clip)
       (goto-char (line-beginning-position)))))
 
-;;;###autoload
 (defadvice delete-backward-char (around no-read-only activate)
   "Do not try to delete char when last char is read-only."
   (unless (get-text-property (1- (point)) 'read-only) ad-do-it))
 
-;;;###autoload
 (defun ale-top-join-line ()
   "Join the current line with the line beneath it."
   (interactive)
   (delete-indentation 1))
 
-;;;###autoload
 (defun ale-inner-line ()
   "Mark inner line and move cursor to bol."
   (interactive)
@@ -60,7 +53,6 @@ Used by `ale-insert-date'."
     (set-mark-command nil)
     (back-to-indentation)))
 
-;;;###autoload
 (defun ale-match-paren (arg)
   "Go to the matching paren if on a paren; otherwise
 forward-list (backward-list if `arg' is Non-nil).
@@ -77,7 +69,6 @@ This command emulates the `%' key in vim."
    ((looking-at "\\s\)") (backward-list 1))
    (t (if arg (backward-list 1) (forward-list 1)))))
 
-;;;###autoload
 (defun ale-comment-or-uncomment-region ()
   "Toggle comment in active-region (when available) or current line."
   (interactive)
@@ -92,7 +83,6 @@ This command emulates the `%' key in vim."
     (call-interactively comment-func)
     (goto-char old-point)))
 
-;;;###autoload
 (defun ale-insert-date (&optional arg)
   "Insert the current date as `ale-date-specifier'.
 
@@ -112,7 +102,6 @@ with the specified date."
 (autoload 'ffap-url-at-point "ffap")
 (defvar ffap-string-at-point-region)
 
-;;;###autoload
 (defun ale-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."
@@ -124,7 +113,6 @@ Do not try to make a new directory or anything fancy."
       (rename-file file name))
     (set-visited-file-name name t t)))
 
-;;;###autoload
 (defun ale-quit ()
   "Disable some minor modes or kill current window/buffer.
 
@@ -143,10 +131,3 @@ any error occurs, kill this buffer instead."
       (condition-case nil
           (delete-window)
         (error (kill-this-buffer))))))
-
-;;;###autoload
-(defun ale-electric-inhibit-< ()
-  (setq-local electric-pair-inhibit-predicate
-              `(lambda (c) (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
-
-(provide 'ale-editor)
