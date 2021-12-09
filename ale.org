@@ -460,8 +460,6 @@ inside of an Emacs buffer.  It is simply superb!
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package dired
     :straight (:type built-in)
-    :hook
-    (dired-mode . (lambda () (interactive) (setq-local mode-line-format nil)))
     :bind
     (nil
      :map dired-mode-map
@@ -515,22 +513,15 @@ as well. See details at: https://github.com/alexluigit/dirvish.el
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package dirvish
     :after-call pre-command-hook
-    :init
-    (add-to-list 'load-path (concat straight-base-dir "straight/"
-                                    straight-build-dir "/dirvish/extensions"))
-    :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish.el"
-                      :files ("*.el" "extensions"))
-    :hook
-    (dirvish-mode . (lambda () (setq cursor-type nil) (setq mode-line-format nil)))
+    :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish.el")
     :bind
     (:map dirvish-mode-map ("SPC" . dirvish-show-history))
     :config
     (advice-add 'ale-dired-find-file :override 'dirvish-find-file-dwim)
-    (dirvish-override-dired-mode)
-    (require 'dirvish-minibuffer)
+    (dirvish-override-dired-jump)
+    (require 'dirvish-minibuffer-preview)
     (dirvish-minibuf-preview-mode)
-    (setq dirvish-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files")
-                                   ("/mnt/Cloud/" . ".Trash/files"))))
+    (setq dirvish-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files"))))
 #+end_src
 
 *** Writable dired (wdired.el)
