@@ -8,18 +8,18 @@
     meow-next
     meow-prev
     meow-search
-    consult-outline
-    consult-line
-    consult-project-imenu
     avy-goto-char-timer
     er/expand-region
-    xref-find-definitions)
-  "A list of file, adviced function, and advice function.")
+    xref-find-definitions
+    pop-to-buffer)
+  "A list of functions for `ale-jumper-sensible-jump-mode'.")
 
 (defun ale-jumper-advice (fn &rest args)
-  (let ((old-pos (point)))
+  (let ((old-buf (current-buffer))
+        (old-pos (point)))
     (apply fn args)
-    (when (> (abs (- (line-number-at-pos old-pos) (line-number-at-pos (point)))) 1)
+    (when (or (not (eq old-buf (current-buffer)))
+              (> (abs (- (line-number-at-pos old-pos) (line-number-at-pos (point)))) 1))
       (better-jumper-set-jump old-pos))))
 
 ;;;###autoload
