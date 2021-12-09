@@ -12,6 +12,11 @@ Used by `ale-insert-date'."
   :type 'string
   :group 'ale)
 
+(defcustom ale-quit-minor-modes '(org-tree-slide-mode)
+  "Disable these minor modes when calling `ale-quit'."
+  :type '(repeat symbol)
+  :group 'ale)
+
 ;;;###autoload
 (defadvice keyboard-escape-quit (around keep-windows activate)
   "Do not close any window when calling `keyboard-escape-quit'."
@@ -121,12 +126,23 @@ Do not try to make a new directory or anything fancy."
 
 ;;;###autoload
 (defun ale-quit ()
-  "Try delete window, if any error occurs, kill this buffer
-instead."
+  "Disable some minor modes or kill current window/buffer.
+
+Try to quit minor modes defined in `ale-quit-minor-modes', if
+none of these minor modes were enabled, try to delete window, if
+any error occurs, kill this buffer instead."
   (interactive)
-  (condition-case nil
-      (delete-window)
-    (error (kill-this-buffer))))
+  (let ((skip-kill-window nil))
+    (dolist (mode ale-quit-minor-modes)
+      (when (and (boundp mode)
+                 (or (derived-mode-p mode)
+                     (buffer-local-value mode (current-buffer))))
+        (setq skip-kill-window t)
+        (apply mode '(-1))))
+    (unless skip-kill-window
+      (condition-case nil
+          (delete-window)
+        (error (kill-this-buffer))))))
 
 ;;;###autoload
 (defun ale-electric-inhibit-< ()
