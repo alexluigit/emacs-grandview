@@ -17,28 +17,33 @@ Used by `ale-insert-date'."
   :type '(repeat symbol)
   :group 'ale)
 
-(defadvice keyboard-escape-quit (around keep-windows activate)
+(defadvice! +delete-backward-char-ad (fn &rest args)
+  "Do not try to delete char when last char is read-only."
+  :around #'delete-backward-char
+  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
+
+(defadvice! +keyboard-escape-quit-ad (fn &rest args)
   "Do not close any window when calling `keyboard-escape-quit'."
-  (let ((buffer-quit-function #'ignore)) ad-do-it))
+  :around #'keyboard-escape-quit
+  (let ((buffer-quit-function #'ignore)) (apply fn args)))
 
-(defadvice next-error-no-select (around reuse-window activate)
+(defadvice! +next-error-no-select-ad (fn &rest args)
   "Do not open new window when calling `next-error-no-select'."
-  (let ((split-width-threshold nil)) ad-do-it))
+  :around #'next-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
 
-(defadvice previous-error-no-select (around reuse-window activate)
+(defadvice! +previous-error-no-select-ad (fn &rest args)
   "Do not open new window when calling `previous-error-no-select'."
-  (let ((split-width-threshold nil)) ad-do-it))
+  :around #'previous-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
 
-(defadvice yank (before bol activate)
+(defadvice! +yank-ad (&rest _)
   "Make `yank' behave like paste (p) command in vim."
+  :before #'yank
   (when-let ((clip (condition-case nil (current-kill 0 t) (error ""))))
     (set-text-properties 0 (length clip) nil clip)
     (when (string-suffix-p "\n" clip)
       (goto-char (line-beginning-position)))))
-
-(defadvice delete-backward-char (around no-read-only activate)
-  "Do not try to delete char when last char is read-only."
-  (unless (get-text-property (1- (point)) 'read-only) ad-do-it))
 
 (defun ale-top-join-line ()
   "Join the current line with the line beneath it."

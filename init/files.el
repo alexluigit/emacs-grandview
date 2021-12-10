@@ -2,15 +2,26 @@
 
 (require 'mailcap)
 (eval-when-compile (require 'cl-lib))
-(declare-function 'dirvish-find-file "dirvish")
 
-(defadvice find-library (around always-follow-link activate)
+(defadvice! +find-library-ad (fn &rest args)
   "Always follow symlink when using `find-library'.
 
 Package managers like `straight.el' use symlink to manage
 package/libraries. This advice will enable user always find
 libraries's truename."
-  (let ((vc-follow-symlinks t)) ad-do-it))
+  :around #'find-library
+  (let ((vc-follow-symlinks t)) (apply fn args)))
+
+(defadvice! +files-find-file-ad (fn file &rest args)
+  "Advisor of `find-file' that opens some types of file externally."
+  :around #'find-file
+  :around #'find-file-other-window
+  (if-let ((match (ale-files-match-mime file)))
+      (let ((cmd (car match))
+            (args (cdr match)))
+        (add-to-list 'recentf-list file)
+        (ale-files-find-file-external file cmd args))
+    (apply fn file args)))
 
 (cl-defun ale-files-match-mime (file)
   "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
@@ -43,18 +54,6 @@ libraries's truename."
     (setq args (cl-substitute entry "%f" args :test 'string=))
     (let ((default-directory "~"))
       (apply #'start-process "" nil "nohup" (append (list cmd) args)))))
-
-(defun ale-files-find-file-advisor (fn file &rest args)
-  "Advisor of `find-file' that opens some types of file externally."
-  (if-let ((match (ale-files-match-mime file)))
-      (let ((cmd (car match))
-            (args (cdr match)))
-        (add-to-list 'recentf-list file)
-        (ale-files-find-file-external file cmd args))
-    (apply fn file args)))
-
-(advice-add #'find-file :around #'ale-files-find-file-advisor)
-(advice-add #'find-file-other-window :around #'ale-files-find-file-advisor)
 
 (defun ale-files--in-directory (dir &optional prompt)
   "Use `fd' to list files in DIR."
