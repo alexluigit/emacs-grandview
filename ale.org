@@ -185,7 +185,12 @@ emacs (again, comfirm your $PATH environment variable).
 
 Load core of =emacs-grandview=. It is *NOT* recommended to delete / comment out this section.
 
-** Modal editing (meow.el)
+** Editor
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Editor-057db42f
+:END:
+
+*** Modal editing (meow.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-e09b77b4
 :END:
@@ -199,7 +204,7 @@ because it can be very lengthy and should be configured separately, see
 
 If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
-*** Autoload
+**** Autoload
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/meow.el"
 :CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Autoload-2a98f6b5
@@ -272,7 +277,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
     (meow-insert))
 #+end_src
 
-*** Config
+**** Config
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Config-64c57594
 :END:
@@ -324,7 +329,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
     (add-to-list 'meow-mode-state-list '(helpful-mode . normal)))
 #+end_src
 
-** Quick goto char (avy.el)
+*** Quick goto char (avy.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Quick_goto_char_(avy.el)-ad47a7e8
 :END:
@@ -339,7 +344,7 @@ Jump to any visible text.
     (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
 #+end_src
 
-** Symbol pairs (embrace.el)
+*** Symbol pairs (embrace.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Symbol_pairs_(embrace.el)-3fa63e6e
 :END:
@@ -373,12 +378,74 @@ has been bound to =meow-inner-of-thing=.)
             (?` . ("`" . "`")))))
 #+end_src
 
-** Window placement (window.el)
+*** Keyboard orientation (kbd.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-bff4df22
+:END:
+
+**** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/kbd.el"
+:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Autoload-bdfa18e4
+:END:
+
+#+begin_src emacs-lisp
+;;; ale/autoload/kbd.el --- -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-kbd-C-i-fix ()
+  "Make emacs differentiate C-i and Tab keys.
+
+For historical reason, terminal can not tell the difference between
+some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
+etc. By default, emacs follow this convention, but it doesn't mean
+emacs are not able to tell the difference. To change this behaviour,
+we can use `input-decode-map' to give `C-i' different meaning."
+  (if IS-GUI
+      (add-hook 'after-make-frame-functions
+                (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
+    (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
+
+(defun ale-kbd--C-i-fix-GUI ()
+  "Helper for `ale-kbd-C-i-fix'."
+  (define-key input-decode-map [?\C-i] [C-i]))
+
+(defun ale-kbd--C-i-fix-TERM ()
+  "Helper for `ale-kbd-C-i-fix'."
+  (bind-keys
+   ("<f6>" . better-jumper-jump-forward)
+   :map minibuffer-local-map
+   ("<f6>" . forward-char)
+   :map meow-insert-state-keymap
+   ("<f6>" . ale-insert-ctrl-i)))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Config-2df5940c
+:END:
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs
+follow this convention, but it doesn't mean emacs are not able to tell the
+difference. To change this behaviour, we can use =input-decode-map= to give =C-i=
+different meaning. See =ale-kbd--C-i-fix-GUI= and =ale-kbd--C-i-fix-TERM= for more
+details.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (ale-kbd-C-i-fix)
+#+end_src
+
+** Core UI
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Core_UI-5777cbac
+:END:
+*** Window placement (window.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Window_placement_(window.el)-932bb9f2
 :END:
 
-*** Autoload
+**** Autoload
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/window.el"
 :CUSTOM_ID: *CORE*-Window_placement_(window.el)-Autoload-0ba61476
@@ -439,7 +506,7 @@ has been bound to =meow-inner-of-thing=.)
         (switch-to-buffer buf))))
 #+end_src
 
-*** Config
+**** Config
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Window_placement_(window.el)-Config-ee22f395
 :END:
@@ -482,12 +549,12 @@ to 0 to ensure every new window will open in horizontal split.
     (setq split-width-threshold 0))
 #+end_src
 
-** Pulse line (pulse.el)
+*** Pulse line (pulse.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-3e34bd88
 :END:
 
-*** Autoload
+**** Autoload
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/pulse.el"
 :CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-Autoload-bce647b5
@@ -552,7 +619,7 @@ take effect."
       (advice-remove fn (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))))
 #+end_src
 
-*** Config
+**** Config
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-Config-9c494a60
 :END:
@@ -561,7 +628,7 @@ take effect."
   (frame-enable! 'ale-pulse-line-mode)
 #+end_src
 
-** Transient commands (transient.el)
+*** Transient commands (transient.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Transient_commands_(transient.el)-a13dcb68
 :END:
@@ -583,62 +650,456 @@ take effect."
      ("ESC" . transient-quit-all)))
 #+end_src
 
-** Keyboard orientation (kbd.el)
+** Completion framework
 :PROPERTIES:
-:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-bff4df22
+:CUSTOM_ID: Completion_framework-b6134271
 :END:
 
-*** Autoload
+The optimal way of using Emacs is through searching and narrowing
+selection candidates.  Spend less time worrying about where things are
+on the screen and more on how fast you can bring them into focus.
+This is, of course, a matter of realigning priorities, as we still
+wish to control every aspect of the interface.
+
+*** Minibuffer and completion functions (minibuffer.el)
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/kbd.el"
-:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Autoload-bdfa18e4
+:CUSTOM_ID: Completion_framework-Minibuffer_and_completion_functions_(minibuffer.el)-6d27448d
+:END:
+
+The minibuffer is the epicentre of extended interactivity with all sorts of
+Emacs workflows: to select a buffer, open a file, provide an answer to some
+prompt, such as a number, regular expression, password, and so on.
+
+What my minibuffer config does:
+
++ Intangible cursors :: disallow user move cursors into prompt.
++ Recursive minibuffers :: I enable recursive minibuffers.  This
+  practically means that you can start something in the minibuffer,
+  switch to another window, call the minibuffer again, run some
+  commands, and then move back to what you initiated in the original
+  minibuffer.  Or simply call an =M-x= command while in the midst of a
+  minibuffer session.  To exit, hit =C-[= (=abort-recursive-edit=), though
+  the regular =C-g= should also do the trick.
+
+  The =minibuffer-depth-indicate-mode= will show a recursion indicator,
+  represented as a number, next to the minibuffer prompt, if a recursive
+  edit is in progress.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package minibuffer
+    :straight (:type built-in)
+    :config
+    (setq enable-recursive-minibuffers t)
+    (setq minibuffer-eldef-shorten-default t)
+    (setq! minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+    (minibuffer-depth-indicate-mode 1))
+#+end_src
+
+*** Minibuffer history (savehist.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Minibuffer_history_(savehist.el)-f2dcd446
+:END:
+
+Keeps a record of actions involving the minibuffer.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package savehist
+    :straight (:type built-in)
+    :after-call minibuffer-setup-hook
+    :config
+    (setq savehist-file (locate-user-emacs-file "savehist"))
+    (setq history-length 10000)
+    (setq history-delete-duplicates t)
+    (setq savehist-save-minibuffer-history t)
+    (savehist-mode))
+#+end_src
+
+*** Vertical completion candidates (vertico.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Vertical_completion_candidates_(vertico.el)-89b0d491
+:END:
+
+Vertico provides a performant and minimalistic vertical completion UI based on
+the default completion system. By reusing the built-in facilities, Vertico
+achieves full compatibility with built-in Emacs completion commands and
+completion tables.
+
+Here I just modified face for current candidate and make height of vertico
+window as a constant value.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package vertico
+    :after-call pre-command-hook
+    :config
+    (setq resize-mini-windows 'grow-only)
+    (set-face-attribute 'vertico-current nil :background
+                        (face-attribute 'lazy-highlight :background nil t)
+                        :weight 'semi-bold)
+    (vertico-mode 1))
+#+end_src
+
+*** Match candidates made easy (orderless.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-535aac27
+:END:
+
+This package provides an =orderless= completion style that divides the pattern
+into components (space-separated by default), and matches candidates that match
+all of the components in any order.
+
+**** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/orderless.el"
+:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Autoload-ff183b03
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/kbd.el --- -*- lexical-binding: t -*-
+;;; ale/autoload/orderless.el --- -*- lexical-binding: t -*-
+
+(require 'pinyinlib)
+
+(defun ale-orderless-pinyin-only-initialism (pattern)
+  "Leading pinyin initialism regex generator."
+  (if (< (length pattern) 10)
+      (pinyinlib-build-regexp-string pattern t nil t)
+    pattern))
 
 ;;;###autoload
-(defun ale-kbd-C-i-fix ()
-  "Make emacs differentiate C-i and Tab keys.
+(defun ale-orderless-literal-dispatcher (pattern _index _total)
+  "Literal style dispatcher using the equals sign as a prefix."
+  (when (string-suffix-p "=" pattern)
+    `(orderless-literal . ,(substring pattern 0 -1))))
 
-For historical reason, terminal can not tell the difference between
-some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
-etc. By default, emacs follow this convention, but it doesn't mean
-emacs are not able to tell the difference. To change this behaviour,
-we can use `input-decode-map' to give `C-i' different meaning."
-  (if IS-GUI
-      (add-hook 'after-make-frame-functions
-                (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
-    (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
+;;;###autoload
+(defun ale-orderless-initialism-dispatcher (pattern _index _total)
+  "Leading initialism dispatcher using the comma sign as a prefix."
+  (when (string-prefix-p "," pattern)
+    `(orderless-strict-leading-initialism . ,(substring pattern 1))))
 
-(defun ale-kbd--C-i-fix-GUI ()
-  "Helper for `ale-kbd-C-i-fix'."
-  (define-key input-decode-map [?\C-i] [C-i]))
+;;;###autoload
+(defun ale-orderless-pinyin-dispatcher (pattern _index _total)
+  "Pinyin initialism dispatcher using the backtick sign as a prefix."
+  (when (string-prefix-p "`" pattern)
+    `(ale-orderless-pinyin-only-initialism . ,(substring pattern 1))))
 
-(defun ale-kbd--C-i-fix-TERM ()
-  "Helper for `ale-kbd-C-i-fix'."
-  (bind-keys
-   ("<f6>" . better-jumper-jump-forward)
-   :map minibuffer-local-map
-   ("<f6>" . forward-char)
-   :map meow-insert-state-keymap
-   ("<f6>" . ale-insert-ctrl-i)))
+;;;###autoload
+(defun ale-orderless-without-literal-dispatcher (pattern _index _total)
+  (when (string-prefix-p "~" pattern)
+    `(orderless-without-literal . ,(substring pattern 1))))
 #+end_src
 
-*** Config
+**** Config
 :PROPERTIES:
-:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Config-2df5940c
+:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Config-3998f123
 :END:
 
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs
-follow this convention, but it doesn't mean emacs are not able to tell the
-difference. To change this behaviour, we can use =input-decode-map= to give =C-i=
-different meaning. See =ale-kbd--C-i-fix-GUI= and =ale-kbd--C-i-fix-TERM= for more
-details.
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package pinyinlib)
+
+  (use-package orderless
+    :after-call minibuffer-setup-hook
+    :config
+    (setq completion-styles '(orderless))
+    (setq orderless-component-separator " +")
+    (setq orderless-matching-styles
+          '(ale-orderless-pinyin-only-initialism
+            orderless-initialism
+            orderless-prefixes
+            orderless-regexp))
+    (setq orderless-style-dispatchers
+          '(ale-orderless-literal-dispatcher
+            ale-orderless-initialism-dispatcher
+            ale-orderless-without-literal-dispatcher
+            ale-orderless-pinyin-dispatcher)))
+#+end_src
+
+*** Useful commands using completion (consult.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-f833f527
+:END:
+
+Consult implements a set of =consult-<thing>= commands which use
+=completing-read= to select from a list of candidates. Consult provides an
+enhanced buffer switcher =consult-buffer= and search and navigation commands
+like =consult-imenu= and =consult-line=. Searching through multiple files is
+supported by the asynchronous =consult-grep= command. Many Consult commands
+allow previewing candidates - if a candidate is selected in the completion view,
+the buffer shows the candidate immediately.
+
+The Consult commands are compatible with completion systems based on the Emacs
+=completing-read= API, including the default completion system, Icomplete,
+Selectrum, Vertico and Embark.
+
+**** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/consult.el"
+:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-Autoload-5cf23958
+:END:
+
+#+begin_src emacs-lisp
+  ;;; ale/autoload/consult.el --- -*- lexical-binding: t -*-
+
+  (require 'consult)
+  (autoload 'consult-org "consult-org")
+
+  (defun ale-consult-ripgrep-current-file ()
+    "Call `consult-ripgrep' for the current buffer (a single file)."
+    (interactive)
+    (let ((consult-project-root-function #'ignore)
+          (consult-ripgrep-args
+           (concat "rg "
+                   "--null "
+                   "--line-buffered "
+                   "--color=never "
+                   "--line-number "
+                   "--smart-case "
+                   "--no-heading "
+                   "--max-columns=1000 "
+                   "--max-columns-preview "
+                   "--search-zip "
+                   "--with-filename "
+                   (shell-quote-argument buffer-file-name))))
+      (consult-ripgrep)))
+
+  ;;;###autoload
+  (defun ale-consult-line-advisor (fn &rest args)
+    "An advice for `consult-line'.
+
+  When in a very large file (total lines > 100000), call
+  `consult-ripgrep' on current file, otherwise execute it
+  directly."
+    (interactive)
+    (let ((total-lines (count-lines (point-min) (point-max))))
+      (if (> total-lines 100000)
+          (ale-consult-ripgrep-current-file)
+        (apply fn args))))
+
+  ;;;###autoload
+  (defun ale-consult-outline-advisor (fn &rest args)
+    "An advice for `consult-outline'.
+
+  When in `org-mode', call `consult-org-heading', otherwise call
+  `consult-outline'."
+    (if (derived-mode-p 'org-mode)
+        (consult-org-heading)
+      (apply fn args)))
+
+  ;;;###autoload
+  (defun ale-consult-project-root ()
+    (when-let (project (project-current))
+      (car (project-roots project))))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-Config-5a35740a
+:END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (ale-kbd-C-i-fix)
+  (use-package consult
+    :after-call minibuffer-setup-hook
+    :init
+    (setq completion-in-region-function #'consult-completion-in-region)
+    (setq register-preview-delay 0.2)
+    (setq register-preview-function #'consult-register-format)
+    (advice-add #'register-preview :override #'consult-register-window)
+    (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+    (advice-add #'consult-outline :around #'ale-consult-outline-advisor)
+    (advice-add #'consult-line :around #'ale-consult-line-advisor)
+    (setq xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
+    (meow-motion-overwrite-define-key '("/" . consult-line))
+    :bind
+    (nil
+     :map meow-normal-state-keymap
+     ("/" . consult-line)
+     :map ale-mct-map
+     ("/" . consult-line-multi)
+     ("e" . consult-compile-error)
+     ("r" . consult-ripgrep)
+     ("k" . consult-keep-lines)
+     ("i" . consult-imenu-multi)
+     ("f" . consult-focus-lines)
+     ("o" . consult-outline)
+     ("R" . consult-register)
+     ("y" . consult-yank-from-kill-ring)
+     ("m" . consult-minor-mode-menu)
+     ("c" . consult-complex-command)
+     ("C" . consult-mode-command))
+    :config
+    (setq consult-project-root-function #'ale-consult-project-root)
+    (setq consult-line-numbers-widen t)
+    (setq consult-async-min-input 3)
+    (setq consult-async-input-debounce 0.5)
+    (setq consult-async-input-throttle 0.8)
+    (setq consult-narrow-key ">"))
+#+end_src
+
+*** Keyboard version right-click (embark.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-9bcc9b5b
+:END:
+
+This package provides a sort of right-click contextual menu for
+Emacs, accessed through the `embark-act' command (which you should
+bind to a convenient key), offering you relevant actions to use on
+a target determined by the context.
+
+**** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/embark.el"
+:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Autoload-81b70035
+:END:
+
+#+begin_src emacs-lisp
+  ;;; ale/autoload/embark.el --- -*- lexical-binding: t -*-
+
+  (autoload 'consult-grep "consult")
+  (autoload 'consult-line "consult")
+  (autoload 'consult-imenu "consult-imenu")
+  (autoload 'consult-outline "consult")
+
+  (defvar ale-embark-become-general-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "g") 'consult-grep)
+      map)
+    "General custom cross-package `embark-become' keymap.")
+
+  (defvar ale-embark-become-line-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "l") 'consult-line)
+      (define-key map (kbd "i") 'consult-imenu)
+      (define-key map (kbd "s") 'consult-outline) ; as my default is 'M-s s'
+      map)
+    "Line-specific custom cross-package `embark-become' keymap.")
+
+  (defvar embark-become-file+buffer-map)
+  (autoload 'project-switch-to-buffer "project")
+  (autoload 'project-find-file "project")
+
+  (defvar ale-embark-become-file+buffer-map
+    (let ((map (make-sparse-keymap)))
+      (set-keymap-parent map embark-become-file+buffer-map)
+      (define-key map (kbd "B") 'project-switch-to-buffer)
+      (define-key map (kbd "F") 'project-find-file)
+      map)
+    "File+buffer custom cross-package `embark-become' keymap.")
+
+  (defvar embark-become-keymaps)
+
+  ;;;###autoload
+  (define-minor-mode ale-embark-keymaps
+    "Add or remove keymaps from Embark.
+  This is based on the value of `ale-embark-add-keymaps'
+  and is meant to keep things clean in case I ever wish to disable
+  those so-called 'extras'."
+    :init-value nil
+    :global t
+    (let ((maps '(ale-embark-become-general-map
+                  ale-embark-become-line-map
+                  ale-embark-become-file+buffer-map)))
+      (if ale-embark-keymaps
+          (dolist (map maps)
+            (cl-pushnew map embark-become-keymaps))
+        (setq embark-become-keymaps
+              (dolist (map maps)
+                (delete map embark-become-keymaps))))))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Config-12386c51
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package embark
+    :after-call dired-after-readin-hook minibuffer-setup-hook
+    :bind
+    (("C-." . embark-act)
+     :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
+     :map embark-collect-mode-map ("C-." . embark-act))
+    :config
+    (use-package embark-consult :demand t)
+    (ale-embark-keymaps 1)
+    (setq embark-quit-after-action t)
+    (setq embark-action-indicator
+          (let ((act (propertize "Act" 'face 'success)))
+            (cons act (concat act " on '%s'"))))
+    (setq embark-become-indicator (propertize "Become" 'face 'warning)))
+#+end_src
+
+*** Candidate annotation (marginalia.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Candidate_annotation_(marginalia.el)-9e2b7fe3
+:END:
+
+This is a utility jointly developed by Daniel Mendler and Omar Antolín Camarena
+that provides annotations to completion candidates.  It is meant to be
+framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
+
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package marginalia
+    :after-call minibuffer-setup-hook
+    :config
+    (setq marginalia-annotators
+          '(marginalia-annotators-heavy
+            marginalia-annotators-light))
+    (marginalia-mode))
+#+end_src
+
+*** Auto completion in buffer (company.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Auto_completion_in_buffer_(company.el)-7737bb99
+:END:
+
+=company= is a modular completion framework.  Modules for retrieving completion
+candidates are called backends, modules for displaying them are frontends. It
+comes with many backends, e.g. =company-etags=.  These are distributed in
+separate files and can be used individually.
+
+=tng= in =company-tng-mode= means tab and go, in this mode tab key will complete and
+move to the next candidate meanwhile keep company window open.
+
+**** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/company.el"
+:CUSTOM_ID: Completion_framework-Auto_completion_in_buffer_(company.el)-Autoload-d7f5ec68
+:END:
+
+#+begin_src emacs-lisp
+;;; ale/autoload/company.el --- Extension for company.el -*- lexical-binding: t -*-
+
+(defvar ale-company-disabled-modes '(org-mode))
+
+;;;###autoload
+(defun ale-company-enable-ispell (&optional force)
+  "Add `company-ispell' to local `company-backends'."
+  (interactive "P")
+  (require 'company-ispell)
+  (when (company-ispell-available)
+    (when (or force
+              (not (memq major-mode ale-company-disabled-modes)))
+      (make-local-variable 'company-backends)
+      (if (memq 'company-ispell company-backends)
+          (setq-local company-backends (delq 'company-ispell company-backends))
+        (add-to-list 'company-backends 'company-ispell)))))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Auto_completion_in_buffer_(company.el)-Config-320bce2c
+:END:
+
+#+begin_src emacs-lisp
+  (use-package company
+    :after-call self-insert-command
+    :hook
+    (text-mode . ale-company-enable-ispell)
+    :config
+    (global-company-mode)
+    (company-tng-mode)
+    (setq company-idle-delay 0.0))
 #+end_src
 
 ** *KEYBINDINGS*
@@ -774,6 +1235,18 @@ This section contains all core keybindings of =emacs-grandview=.
    '("t" . ale-mct-map)
    '("w" . save-buffer)
    '("z" . window-toggle-side-windows))
+
+  (bind-keys
+   :map ale-files-map
+   ("." . ale-files-dotfiles)
+   ("a" . ale-files-browse-all-directories)
+   ("e" . ale-files-edit-emacs-config)
+   ("l" . find-library)
+   ("r" . ale-files-rename-file-and-buffer)
+   ("u" . ale-files-in-user-dirs)
+   :map ale-apps-map
+   ("o" . ale-opacity-set)
+   ("=" . count-words))
 #+end_src
 
 *** GLOBAL
@@ -793,18 +1266,7 @@ This section contains all core keybindings of =emacs-grandview=.
    ("S-<return>" . ale-files-other-window)
    ("C-u" . meow-kill-whole-line)
    ("<C-i>" . forward-char)
-   ("C-o" . backward-char)
-   :map ale-files-map
-   ("." . ale-files-dotfiles)
-   ("a" . ale-files-browse-all-directories)
-   ("e" . ale-files-edit-emacs-config)
-   ("l" . find-library)
-   ("n" . dirvish)
-   ("r" . ale-files-rename-file-and-buffer)
-   ("u" . ale-files-in-user-dirs)
-   :map ale-apps-map
-   ("o" . ale-opacity-set)
-   ("=" . count-words))
+   ("C-o" . backward-char))
 #+end_src
 
 These are some default keybindings that will be available when the current major
@@ -1539,7 +2001,9 @@ as well. See details at: https://github.com/alexluigit/dirvish.el
     :after-call pre-command-hook
     :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish.el")
     :bind
-    (:map dirvish-mode-map ("SPC" . dirvish-show-history))
+    (nil
+     :map dirvish-mode-map ("SPC" . dirvish-show-history)
+     :map ale-files-map ("n" . dirvish))
     :config
     (advice-add 'ale-dired-find-file :override 'dirvish-find-file-dwim)
     (dirvish-override-dired-jump)
@@ -2124,7 +2588,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
            (text-scale-set 0)
            (when (fboundp 'writeroom-mode) (writeroom-mode -1))
            (ale-monocle-mode -1)
-           (ale-cursor-dim-mode -1)
+           (+frame-cursor-dim-mode -1)
            (org-clear-latex-preview)
            (org-mode))))
 #+end_src
@@ -2153,7 +2617,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
     (setq org-tree-slide-breadcrumbs
           (propertize " ⯈ " 'display `(height ,(face-attribute 'org-level-1 :height))))
     (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
-    (add-hook 'org-tree-slide-after-narrow-hook #'ale-cursor-dim-mode)
+    (add-hook 'org-tree-slide-after-narrow-hook #'+frame-cursor-dim-mode)
     (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
     (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
     (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
@@ -2251,6 +2715,44 @@ Protesilaos Stavrou.
       (set-face-attribute 'mode-line-inactive nil :font font)))
 
   (frame-enable! '+modeline-font-temp-fix)
+#+end_src
+
+** Frame (frame.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Frame_(frame.el)-34e11fb3
+:END:
+
+Frame settings.
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Frame_(frame.el)-Autoload-ac196a91
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/frame.el"
+:END:
+
+#+begin_src emacs-lisp
+  ;;; ale/autoload/frame.el --- -*- lexical-binding: t -*-
+
+  (defvar +frame-cursor-saved-color
+    (frame-parameter nil 'cursor-color))
+
+  (defcustom +frame-cursor-dim-color "#606060"
+    "Cursor color for `+frame-cursor-dim-mode'."
+    :group 'cursor :type 'string)
+
+  ;;;###autoload
+  (define-minor-mode +frame-cursor-dim-mode
+    "Enable dimmed `cursor-color' for current frame."
+    :global t
+    :lighter nil
+    :group 'cursor
+    (if +frame-cursor-dim-mode
+        (progn
+          (setq-local cursor-type nil)
+          (blink-cursor-mode -1)
+          (set-cursor-color +frame-cursor-dim-color))
+      (blink-cursor-mode +1)
+      (set-cursor-color +frame-cursor-saved-color)))
 #+end_src
 
 ** Tab (+tab.el)
@@ -2976,11 +3478,6 @@ need to add =--with-xinput2= in build flags to enable this feature.
     (pixel-scroll-precision-mode 1))
 #+end_src
 
-* User interface extras
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-edb04d72
-:END:
-
 ** Icons (all-the-icons.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Icons_(all-the-icons.el)-cec48ab7
@@ -3172,458 +3669,6 @@ control over the buffer list and is more powerful overall.
      '(git-gutter:modified-sign "⏽")
      '(git-gutter:added-sign "⏽")
      '(git-gutter:deleted-sign "⏽")))
-#+end_src
-
-* Completion framework
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-b6134271
-:END:
-
-The optimal way of using Emacs is through searching and narrowing
-selection candidates.  Spend less time worrying about where things are
-on the screen and more on how fast you can bring them into focus.
-This is, of course, a matter of realigning priorities, as we still
-wish to control every aspect of the interface.
-
-** Minibuffer and completion functions (minibuffer.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Minibuffer_and_completion_functions_(minibuffer.el)-6d27448d
-:END:
-
-The minibuffer is the epicentre of extended interactivity with all sorts of
-Emacs workflows: to select a buffer, open a file, provide an answer to some
-prompt, such as a number, regular expression, password, and so on.
-
-What my minibuffer config does:
-
-+ Intangible cursors :: disallow user move cursors into prompt.
-+ Recursive minibuffers :: I enable recursive minibuffers.  This
-  practically means that you can start something in the minibuffer,
-  switch to another window, call the minibuffer again, run some
-  commands, and then move back to what you initiated in the original
-  minibuffer.  Or simply call an =M-x= command while in the midst of a
-  minibuffer session.  To exit, hit =C-[= (=abort-recursive-edit=), though
-  the regular =C-g= should also do the trick.
-
-  The =minibuffer-depth-indicate-mode= will show a recursion indicator,
-  represented as a number, next to the minibuffer prompt, if a recursive
-  edit is in progress.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package minibuffer
-    :straight (:type built-in)
-    :config
-    (setq enable-recursive-minibuffers t)
-    (setq minibuffer-eldef-shorten-default t)
-    (setq! minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
-    (minibuffer-depth-indicate-mode 1))
-#+end_src
-
-** Minibuffer history (savehist.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Minibuffer_history_(savehist.el)-f2dcd446
-:END:
-
-Keeps a record of actions involving the minibuffer.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package savehist
-    :straight (:type built-in)
-    :after-call minibuffer-setup-hook
-    :config
-    (setq savehist-file (locate-user-emacs-file "savehist"))
-    (setq history-length 10000)
-    (setq history-delete-duplicates t)
-    (setq savehist-save-minibuffer-history t)
-    (savehist-mode))
-#+end_src
-
-** Vertical completion candidates (vertico.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Vertical_completion_candidates_(vertico.el)-89b0d491
-:END:
-
-Vertico provides a performant and minimalistic vertical completion UI based on
-the default completion system. By reusing the built-in facilities, Vertico
-achieves full compatibility with built-in Emacs completion commands and
-completion tables.
-
-Here I just modified face for current candidate and make height of vertico
-window as a constant value.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package vertico
-    :after-call pre-command-hook
-    :config
-    (setq resize-mini-windows 'grow-only)
-    (set-face-attribute 'vertico-current nil :background
-                        (face-attribute 'lazy-highlight :background nil t)
-                        :weight 'semi-bold)
-    (vertico-mode 1))
-#+end_src
-
-** Match candidates made easy (orderless.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-535aac27
-:END:
-
-This package provides an =orderless= completion style that divides the pattern
-into components (space-separated by default), and matches candidates that match
-all of the components in any order.
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/orderless.el"
-:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Autoload-ff183b03
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/orderless.el --- -*- lexical-binding: t -*-
-
-(require 'pinyinlib)
-
-(defun ale-orderless-pinyin-only-initialism (pattern)
-  "Leading pinyin initialism regex generator."
-  (if (< (length pattern) 10)
-      (pinyinlib-build-regexp-string pattern t nil t)
-    pattern))
-
-;;;###autoload
-(defun ale-orderless-literal-dispatcher (pattern _index _total)
-  "Literal style dispatcher using the equals sign as a prefix."
-  (when (string-suffix-p "=" pattern)
-    `(orderless-literal . ,(substring pattern 0 -1))))
-
-;;;###autoload
-(defun ale-orderless-initialism-dispatcher (pattern _index _total)
-  "Leading initialism dispatcher using the comma sign as a prefix."
-  (when (string-prefix-p "," pattern)
-    `(orderless-strict-leading-initialism . ,(substring pattern 1))))
-
-;;;###autoload
-(defun ale-orderless-pinyin-dispatcher (pattern _index _total)
-  "Pinyin initialism dispatcher using the backtick sign as a prefix."
-  (when (string-prefix-p "`" pattern)
-    `(ale-orderless-pinyin-only-initialism . ,(substring pattern 1))))
-
-;;;###autoload
-(defun ale-orderless-without-literal-dispatcher (pattern _index _total)
-  (when (string-prefix-p "~" pattern)
-    `(orderless-without-literal . ,(substring pattern 1))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Config-3998f123
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package pinyinlib)
-
-  (use-package orderless
-    :after-call minibuffer-setup-hook
-    :config
-    (setq completion-styles '(orderless))
-    (setq orderless-component-separator " +")
-    (setq orderless-matching-styles
-          '(ale-orderless-pinyin-only-initialism
-            orderless-initialism
-            orderless-prefixes
-            orderless-regexp))
-    (setq orderless-style-dispatchers
-          '(ale-orderless-literal-dispatcher
-            ale-orderless-initialism-dispatcher
-            ale-orderless-without-literal-dispatcher
-            ale-orderless-pinyin-dispatcher)))
-#+end_src
-
-** Useful commands using completion (consult.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-f833f527
-:END:
-
-Consult implements a set of =consult-<thing>= commands which use
-=completing-read= to select from a list of candidates. Consult provides an
-enhanced buffer switcher =consult-buffer= and search and navigation commands
-like =consult-imenu= and =consult-line=. Searching through multiple files is
-supported by the asynchronous =consult-grep= command. Many Consult commands
-allow previewing candidates - if a candidate is selected in the completion view,
-the buffer shows the candidate immediately.
-
-The Consult commands are compatible with completion systems based on the Emacs
-=completing-read= API, including the default completion system, Icomplete,
-Selectrum, Vertico and Embark.
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/consult.el"
-:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-Autoload-5cf23958
-:END:
-
-#+begin_src emacs-lisp
-  ;;; ale/autoload/consult.el --- -*- lexical-binding: t -*-
-
-  (require 'consult)
-  (autoload 'consult-org "consult-org")
-
-  (defun ale-consult-ripgrep-current-file ()
-    "Call `consult-ripgrep' for the current buffer (a single file)."
-    (interactive)
-    (let ((consult-project-root-function #'ignore)
-          (consult-ripgrep-args
-           (concat "rg "
-                   "--null "
-                   "--line-buffered "
-                   "--color=never "
-                   "--line-number "
-                   "--smart-case "
-                   "--no-heading "
-                   "--max-columns=1000 "
-                   "--max-columns-preview "
-                   "--search-zip "
-                   "--with-filename "
-                   (shell-quote-argument buffer-file-name))))
-      (consult-ripgrep)))
-
-  ;;;###autoload
-  (defun ale-consult-line-advisor (fn &rest args)
-    "An advice for `consult-line'.
-
-  When in a very large file (total lines > 100000), call
-  `consult-ripgrep' on current file, otherwise execute it
-  directly."
-    (interactive)
-    (let ((total-lines (count-lines (point-min) (point-max))))
-      (if (> total-lines 100000)
-          (ale-consult-ripgrep-current-file)
-        (apply fn args))))
-
-  ;;;###autoload
-  (defun ale-consult-outline-advisor (fn &rest args)
-    "An advice for `consult-outline'.
-
-  When in `org-mode', call `consult-org-heading', otherwise call
-  `consult-outline'."
-    (if (derived-mode-p 'org-mode)
-        (consult-org-heading)
-      (apply fn args)))
-
-  ;;;###autoload
-  (defun ale-consult-project-root ()
-    (when-let (project (project-current))
-      (car (project-roots project))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-Config-5a35740a
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package consult
-    :after-call minibuffer-setup-hook
-    :init
-    (setq completion-in-region-function #'consult-completion-in-region)
-    (setq register-preview-delay 0.2)
-    (setq register-preview-function #'consult-register-format)
-    (advice-add #'register-preview :override #'consult-register-window)
-    (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
-    (advice-add #'consult-outline :around #'ale-consult-outline-advisor)
-    (advice-add #'consult-line :around #'ale-consult-line-advisor)
-    (setq xref-show-xrefs-function #'consult-xref
-          xref-show-definitions-function #'consult-xref)
-    (meow-motion-overwrite-define-key '("/" . consult-line))
-    :bind
-    (nil
-     :map meow-normal-state-keymap
-     ("/" . consult-line)
-     :map ale-mct-map
-     ("/" . consult-line-multi)
-     ("e" . consult-compile-error)
-     ("r" . consult-ripgrep)
-     ("k" . consult-keep-lines)
-     ("i" . consult-imenu-multi)
-     ("f" . consult-focus-lines)
-     ("o" . consult-outline)
-     ("R" . consult-register)
-     ("y" . consult-yank-from-kill-ring)
-     ("m" . consult-minor-mode-menu)
-     ("c" . consult-complex-command)
-     ("C" . consult-mode-command))
-    :config
-    (setq consult-project-root-function #'ale-consult-project-root)
-    (setq consult-line-numbers-widen t)
-    (setq consult-async-min-input 3)
-    (setq consult-async-input-debounce 0.5)
-    (setq consult-async-input-throttle 0.8)
-    (setq consult-narrow-key ">"))
-#+end_src
-
-** Keyboard version right-click (embark.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-9bcc9b5b
-:END:
-
-This package provides a sort of right-click contextual menu for
-Emacs, accessed through the `embark-act' command (which you should
-bind to a convenient key), offering you relevant actions to use on
-a target determined by the context.
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/embark.el"
-:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Autoload-81b70035
-:END:
-
-#+begin_src emacs-lisp
-  ;;; ale/autoload/embark.el --- -*- lexical-binding: t -*-
-
-  (autoload 'consult-grep "consult")
-  (autoload 'consult-line "consult")
-  (autoload 'consult-imenu "consult-imenu")
-  (autoload 'consult-outline "consult")
-
-  (defvar ale-embark-become-general-map
-    (let ((map (make-sparse-keymap)))
-      (define-key map (kbd "g") 'consult-grep)
-      map)
-    "General custom cross-package `embark-become' keymap.")
-
-  (defvar ale-embark-become-line-map
-    (let ((map (make-sparse-keymap)))
-      (define-key map (kbd "l") 'consult-line)
-      (define-key map (kbd "i") 'consult-imenu)
-      (define-key map (kbd "s") 'consult-outline) ; as my default is 'M-s s'
-      map)
-    "Line-specific custom cross-package `embark-become' keymap.")
-
-  (defvar embark-become-file+buffer-map)
-  (autoload 'project-switch-to-buffer "project")
-  (autoload 'project-find-file "project")
-
-  (defvar ale-embark-become-file+buffer-map
-    (let ((map (make-sparse-keymap)))
-      (set-keymap-parent map embark-become-file+buffer-map)
-      (define-key map (kbd "B") 'project-switch-to-buffer)
-      (define-key map (kbd "F") 'project-find-file)
-      map)
-    "File+buffer custom cross-package `embark-become' keymap.")
-
-  (defvar embark-become-keymaps)
-
-  ;;;###autoload
-  (define-minor-mode ale-embark-keymaps
-    "Add or remove keymaps from Embark.
-  This is based on the value of `ale-embark-add-keymaps'
-  and is meant to keep things clean in case I ever wish to disable
-  those so-called 'extras'."
-    :init-value nil
-    :global t
-    (let ((maps '(ale-embark-become-general-map
-                  ale-embark-become-line-map
-                  ale-embark-become-file+buffer-map)))
-      (if ale-embark-keymaps
-          (dolist (map maps)
-            (cl-pushnew map embark-become-keymaps))
-        (setq embark-become-keymaps
-              (dolist (map maps)
-                (delete map embark-become-keymaps))))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Config-12386c51
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package embark
-    :after-call dired-after-readin-hook minibuffer-setup-hook
-    :bind
-    (("C-." . embark-act)
-     :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
-     :map embark-collect-mode-map ("C-." . embark-act))
-    :config
-    (use-package embark-consult :demand t)
-    (ale-embark-keymaps 1)
-    (setq embark-quit-after-action t)
-    (setq embark-action-indicator
-          (let ((act (propertize "Act" 'face 'success)))
-            (cons act (concat act " on '%s'"))))
-    (setq embark-become-indicator (propertize "Become" 'face 'warning)))
-#+end_src
-
-** Candidate annotation (marginalia.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Candidate_annotation_(marginalia.el)-9e2b7fe3
-:END:
-
-This is a utility jointly developed by Daniel Mendler and Omar Antolín Camarena
-that provides annotations to completion candidates.  It is meant to be
-framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
-
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package marginalia
-    :after-call minibuffer-setup-hook
-    :config
-    (setq marginalia-annotators
-          '(marginalia-annotators-heavy
-            marginalia-annotators-light))
-    (marginalia-mode))
-#+end_src
-
-** Auto completion in buffer (company.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Auto_completion_in_buffer_(company.el)-7737bb99
-:END:
-
-=company= is a modular completion framework.  Modules for retrieving completion
-candidates are called backends, modules for displaying them are frontends. It
-comes with many backends, e.g. =company-etags=.  These are distributed in
-separate files and can be used individually.
-
-=tng= in =company-tng-mode= means tab and go, in this mode tab key will complete and
-move to the next candidate meanwhile keep company window open.
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/company.el"
-:CUSTOM_ID: Completion_framework-Auto_completion_in_buffer_(company.el)-Autoload-d7f5ec68
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/company.el --- Extension for company.el -*- lexical-binding: t -*-
-
-(defvar ale-company-disabled-modes '(org-mode))
-
-;;;###autoload
-(defun ale-company-enable-ispell (&optional force)
-  "Add `company-ispell' to local `company-backends'."
-  (interactive "P")
-  (require 'company-ispell)
-  (when (company-ispell-available)
-    (when (or force
-              (not (memq major-mode ale-company-disabled-modes)))
-      (make-local-variable 'company-backends)
-      (if (memq 'company-ispell company-backends)
-          (setq-local company-backends (delq 'company-ispell company-backends))
-        (add-to-list 'company-backends 'company-ispell)))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Auto_completion_in_buffer_(company.el)-Config-320bce2c
-:END:
-
-#+begin_src emacs-lisp
-  (use-package company
-    :after-call self-insert-command
-    :hook
-    (text-mode . ale-company-enable-ispell)
-    :config
-    (global-company-mode)
-    (company-tng-mode)
-    (setq company-idle-delay 0.0))
 #+end_src
 
 * Utils
