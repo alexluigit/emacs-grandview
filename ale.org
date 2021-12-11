@@ -216,22 +216,23 @@ If you want to know more about meow or modal editing in general, check out [[htt
   (require 'meow)
 
   ;;;###autoload
-  (defun ale-meow-save ()
-    (interactive)
-    (save-excursion
-      (meow--with-selection-fallback
-       (meow--prepare-region-for-kill)
-       (call-interactively 'kill-ring-save))))
-
-  ;;;###autoload
-  (defun ale-meow-query-replace-auto-fill-advisor (fn &rest args)
+  (defadvice! +meow-query-replace-ad (fn &rest args)
     "Call `meow-query-replace' and auto fill prompt with region text."
+    :around #'meow-query-replace
     (unless (region-active-p) (meow-mark-symbol 1))
     (call-interactively 'kill-ring-save)
     (exchange-point-and-mark)
     (deactivate-mark t)
     (run-with-timer 0.05 nil 'yank)
     (apply fn args))
+
+  ;;;###autoload
+  (defun ale-meow-save ()
+    (interactive)
+    (save-excursion
+      (meow--with-selection-fallback
+       (meow--prepare-region-for-kill)
+       (call-interactively 'kill-ring-save))))
 
   ;;;###autoload
   (defun ale-meow-escape ()
@@ -291,7 +292,6 @@ If you want to know more about meow or modal editing in general, check out [[htt
     (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
     (advice-add 'meow-start-kmacro-or-insert-counter :around #'silent!)
     (advice-add 'meow-end-or-call-kmacro :around #'silent!)
-    (advice-add 'meow-query-replace :around #'ale-meow-query-replace-auto-fill-advisor)
     (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
     (meow-setup-line-number)
     (setq meow-visit-sanitize-completion nil)
@@ -383,6 +383,7 @@ has been bound to =meow-inner-of-thing=.)
 :CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-bff4df22
 :END:
 
+
 **** Autoload
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/kbd.el"
@@ -390,34 +391,34 @@ has been bound to =meow-inner-of-thing=.)
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/kbd.el --- -*- lexical-binding: t -*-
+  ;;; ale/autoload/kbd.el --- -*- lexical-binding: t -*-
 
-;;;###autoload
-(defun ale-kbd-C-i-fix ()
-  "Make emacs differentiate C-i and Tab keys.
+  ;;;###autoload
+  (defun ale-kbd-C-i-fix ()
+    "Make emacs differentiate C-i and Tab keys.
 
-For historical reason, terminal can not tell the difference between
-some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
-etc. By default, emacs follow this convention, but it doesn't mean
-emacs are not able to tell the difference. To change this behaviour,
-we can use `input-decode-map' to give `C-i' different meaning."
-  (if IS-GUI
-      (add-hook 'after-make-frame-functions
-                (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
-    (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
+  For historical reason, terminal can not tell the difference between
+  some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
+  etc. By default, emacs follow this convention, but it doesn't mean
+  emacs are not able to tell the difference. To change this behaviour,
+  we can use `input-decode-map' to give `C-i' different meaning."
+    (if IS-GUI
+        (add-hook 'after-make-frame-functions
+                  (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
+      (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
 
-(defun ale-kbd--C-i-fix-GUI ()
-  "Helper for `ale-kbd-C-i-fix'."
-  (define-key input-decode-map [?\C-i] [C-i]))
+  (defun ale-kbd--C-i-fix-GUI ()
+    "Helper for `ale-kbd-C-i-fix'."
+    (define-key input-decode-map [?\C-i] [C-i]))
 
-(defun ale-kbd--C-i-fix-TERM ()
-  "Helper for `ale-kbd-C-i-fix'."
-  (bind-keys
-   ("<f6>" . better-jumper-jump-forward)
-   :map minibuffer-local-map
-   ("<f6>" . forward-char)
-   :map meow-insert-state-keymap
-   ("<f6>" . ale-insert-ctrl-i)))
+  (defun ale-kbd--C-i-fix-TERM ()
+    "Helper for `ale-kbd-C-i-fix'."
+    (bind-keys
+     ("<f6>" . better-jumper-jump-forward)
+     :map minibuffer-local-map
+     ("<f6>" . forward-char)
+     :map meow-insert-state-keymap
+     ("<f6>" . ale-insert-ctrl-i)))
 #+end_src
 
 **** Config
@@ -561,62 +562,62 @@ to 0 to ensure every new window will open in horizontal split.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/pulse.el --- -*- lexical-binding: t -*-
+  ;;; ale/autoload/pulse.el --- -*- lexical-binding: t -*-
 
-(require 'pulse)
+  (require 'pulse)
 
-(defgroup ale-pulse ()
-  "Extensions for `pulse.el'."
-  :group 'editing)
+  (defgroup ale-pulse ()
+    "Extensions for `pulse.el'."
+    :group 'editing)
 
-(defcustom ale-pulse-pulse-command-list
-  '(recenter-top-bottom
-    reposition-window
-    consult--jump-nomark
-    ace-select-window)
-  "Commands that should automatically `ale-pulse-pulse-line'.
-You must restart function `ale-pulse-line-mode' for changes to
-take effect."
-  :type 'list
-  :group 'ale-pulse)
+  (defcustom ale-pulse-pulse-command-list
+    '(recenter-top-bottom
+      reposition-window
+      consult--jump-nomark
+      ace-select-window)
+    "Commands that should automatically `ale-pulse-pulse-line'.
+  You must restart function `ale-pulse-line-mode' for changes to
+  take effect."
+    :type 'list
+    :group 'ale-pulse)
 
-(defface ale-pulse-line
-  '((default :extend t)
-    (((class color) (min-colors 88) (background light))
-     :background "#8eecf4")
-    (t :inverse-video t :background "#004065"))
-  "Default face for `ale-pulse-pulse-line'."
-  :group 'ale-pulse)
+  (defface ale-pulse-line
+    '((default :extend t)
+      (((class color) (min-colors 88) (background light))
+       :background "#8eecf4")
+      (t :inverse-video t :background "#004065"))
+    "Default face for `ale-pulse-pulse-line'."
+    :group 'ale-pulse)
 
-;;;###autoload
-(defun ale-pulse-pulse-line (&optional face kill)
-  "Temporarily highlight the current line with optional FACE."
-  (interactive)
-  (let ((beg (if (eobp)
-                 (line-beginning-position 0)
-               (line-beginning-position)))
-        (end (line-beginning-position 2))
-        (pulse-delay .05)
-        (face (or face 'ale-pulse-line)))
-    (pulse-momentary-highlight-region beg end face)
-    (when kill (kill-ring-save beg end))))
+  ;;;###autoload
+  (defun ale-pulse-pulse-line (&optional face kill)
+    "Temporarily highlight the current line with optional FACE."
+    (interactive)
+    (let ((beg (if (eobp)
+                   (line-beginning-position 0)
+                 (line-beginning-position)))
+          (end (line-beginning-position 2))
+          (pulse-delay .05)
+          (face (or face 'ale-pulse-line)))
+      (pulse-momentary-highlight-region beg end face)
+      (when kill (kill-ring-save beg end))))
 
-;;;###autoload
-(defun ale-pulse-save-line ()
-  "Temporarily highlight the current line and copy it."
-  (interactive)
-  (ale-pulse-pulse-line nil t))
+  ;;;###autoload
+  (defun ale-pulse-save-line ()
+    "Temporarily highlight the current line and copy it."
+    (interactive)
+    (ale-pulse-pulse-line nil t))
 
-;;;###autoload
-(define-minor-mode ale-pulse-line-mode
-  "Set up for `ale-pulse-pulse-command-list'."
-  :init-value nil
-  :global t
-  (if ale-pulse-line-mode
+  ;;;###autoload
+  (define-minor-mode ale-pulse-line-mode
+    "Set up for `ale-pulse-pulse-command-list'."
+    :init-value nil
+    :global t
+    (if ale-pulse-line-mode
+        (dolist (fn ale-pulse-pulse-command-list)
+          (advice-add fn :after (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))
       (dolist (fn ale-pulse-pulse-command-list)
-        (advice-add fn :after (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))
-    (dolist (fn ale-pulse-pulse-command-list)
-      (advice-remove fn (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))))
+        (advice-remove fn (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))))
 #+end_src
 
 **** Config
@@ -672,14 +673,18 @@ prompt, such as a number, regular expression, password, and so on.
 
 What my minibuffer config does:
 
-+ Intangible cursors :: disallow user move cursors into prompt.
-+ Recursive minibuffers :: I enable recursive minibuffers.  This
-  practically means that you can start something in the minibuffer,
-  switch to another window, call the minibuffer again, run some
-  commands, and then move back to what you initiated in the original
-  minibuffer.  Or simply call an =M-x= command while in the midst of a
-  minibuffer session.  To exit, hit =C-[= (=abort-recursive-edit=), though
-  the regular =C-g= should also do the trick.
+- Intangible cursors ::
+
+  Disallow user move cursors into prompt.
+
+- Recursive minibuffers ::
+
+  Enable recursive minibuffers.  This practically means that you can start
+  something in the minibuffer, switch to another window, call the minibuffer
+  again, run some commands, and then move back to what you initiated in the
+  original minibuffer.  Or simply call an =M-x= command while in the midst of a
+  minibuffer session.  To exit, hit =C-[= (=abort-recursive-edit=), though the
+  regular =C-g= should also do the trick.
 
   The =minibuffer-depth-indicate-mode= will show a recursion indicator,
   represented as a number, next to the minibuffer prompt, if a recursive
@@ -754,38 +759,38 @@ all of the components in any order.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/orderless.el --- -*- lexical-binding: t -*-
+  ;;; ale/autoload/orderless.el --- -*- lexical-binding: t -*-
 
-(require 'pinyinlib)
+  (require 'pinyinlib)
 
-(defun ale-orderless-pinyin-only-initialism (pattern)
-  "Leading pinyin initialism regex generator."
-  (if (< (length pattern) 10)
-      (pinyinlib-build-regexp-string pattern t nil t)
-    pattern))
+  (defun ale-orderless-pinyin-only-initialism (pattern)
+    "Leading pinyin initialism regex generator."
+    (if (< (length pattern) 10)
+        (pinyinlib-build-regexp-string pattern t nil t)
+      pattern))
 
-;;;###autoload
-(defun ale-orderless-literal-dispatcher (pattern _index _total)
-  "Literal style dispatcher using the equals sign as a prefix."
-  (when (string-suffix-p "=" pattern)
-    `(orderless-literal . ,(substring pattern 0 -1))))
+  ;;;###autoload
+  (defun ale-orderless-literal-dispatcher (pattern _index _total)
+    "Literal style dispatcher using the equals sign as a prefix."
+    (when (string-suffix-p "=" pattern)
+      `(orderless-literal . ,(substring pattern 0 -1))))
 
-;;;###autoload
-(defun ale-orderless-initialism-dispatcher (pattern _index _total)
-  "Leading initialism dispatcher using the comma sign as a prefix."
-  (when (string-prefix-p "," pattern)
-    `(orderless-strict-leading-initialism . ,(substring pattern 1))))
+  ;;;###autoload
+  (defun ale-orderless-initialism-dispatcher (pattern _index _total)
+    "Leading initialism dispatcher using the comma sign as a prefix."
+    (when (string-prefix-p "," pattern)
+      `(orderless-strict-leading-initialism . ,(substring pattern 1))))
 
-;;;###autoload
-(defun ale-orderless-pinyin-dispatcher (pattern _index _total)
-  "Pinyin initialism dispatcher using the backtick sign as a prefix."
-  (when (string-prefix-p "`" pattern)
-    `(ale-orderless-pinyin-only-initialism . ,(substring pattern 1))))
+  ;;;###autoload
+  (defun ale-orderless-pinyin-dispatcher (pattern _index _total)
+    "Pinyin initialism dispatcher using the backtick sign as a prefix."
+    (when (string-prefix-p "`" pattern)
+      `(ale-orderless-pinyin-only-initialism . ,(substring pattern 1))))
 
-;;;###autoload
-(defun ale-orderless-without-literal-dispatcher (pattern _index _total)
-  (when (string-prefix-p "~" pattern)
-    `(orderless-without-literal . ,(substring pattern 1))))
+  ;;;###autoload
+  (defun ale-orderless-without-literal-dispatcher (pattern _index _total)
+    (when (string-prefix-p "~" pattern)
+      `(orderless-without-literal . ,(substring pattern 1))))
 #+end_src
 
 **** Config
@@ -1068,22 +1073,22 @@ move to the next candidate meanwhile keep company window open.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/company.el --- Extension for company.el -*- lexical-binding: t -*-
+  ;;; ale/autoload/company.el --- Extension for company.el -*- lexical-binding: t -*-
 
-(defvar ale-company-disabled-modes '(org-mode))
+  (defvar ale-company-disabled-modes '(org-mode))
 
-;;;###autoload
-(defun ale-company-enable-ispell (&optional force)
-  "Add `company-ispell' to local `company-backends'."
-  (interactive "P")
-  (require 'company-ispell)
-  (when (company-ispell-available)
-    (when (or force
-              (not (memq major-mode ale-company-disabled-modes)))
-      (make-local-variable 'company-backends)
-      (if (memq 'company-ispell company-backends)
-          (setq-local company-backends (delq 'company-ispell company-backends))
-        (add-to-list 'company-backends 'company-ispell)))))
+  ;;;###autoload
+  (defun ale-company-enable-ispell (&optional force)
+    "Add `company-ispell' to local `company-backends'."
+    (interactive "P")
+    (require 'company-ispell)
+    (when (company-ispell-available)
+      (when (or force
+                (not (memq major-mode ale-company-disabled-modes)))
+        (make-local-variable 'company-backends)
+        (if (memq 'company-ispell company-backends)
+            (setq-local company-backends (delq 'company-ispell company-backends))
+          (add-to-list 'company-backends 'company-ispell)))))
 #+end_src
 
 **** Config
@@ -1300,41 +1305,41 @@ Create a jump list (same concept in vim) in emacs.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/better-jumper.el --- -*- lexical-binding: t -*-
+  ;;; ale/autoload/better-jumper.el --- -*- lexical-binding: t -*-
 
-(defvar ale-jumper-cmd-alist
-  '(beginning-of-buffer
-    end-of-buffer
-    forward-sexp
-    backward-sexp
-    meow-next
-    meow-prev
-    meow-search
-    avy-goto-char-timer
-    er/expand-region
-    xref-find-definitions
-    pop-to-buffer)
-  "A list of functions for `ale-jumper-sensible-jump-mode'.")
+  (defvar ale-jumper-cmd-alist
+    '(beginning-of-buffer
+      end-of-buffer
+      forward-sexp
+      backward-sexp
+      meow-next
+      meow-prev
+      meow-search
+      avy-goto-char-timer
+      er/expand-region
+      xref-find-definitions
+      pop-to-buffer)
+    "A list of functions for `ale-jumper-sensible-jump-mode'.")
 
-(defun ale-jumper-advice (fn &rest args)
-  (let ((old-buf (current-buffer))
-        (old-pos (point)))
-    (apply fn args)
-    (when (or (not (eq old-buf (current-buffer)))
-              (> (abs (- (line-number-at-pos old-pos) (line-number-at-pos (point)))) 1))
-      (better-jumper-set-jump old-pos))))
+  (defun ale-jumper-advice (fn &rest args)
+    (let ((old-buf (current-buffer))
+          (old-pos (point)))
+      (apply fn args)
+      (when (or (not (eq old-buf (current-buffer)))
+                (> (abs (- (line-number-at-pos old-pos) (line-number-at-pos (point)))) 1))
+        (better-jumper-set-jump old-pos))))
 
-;;;###autoload
-(define-minor-mode ale-jumper-sensible-jump-mode
-  "Add sensible commands to jump list."
-  :init-value nil
-  :global t
-  :group 'convenience
-  (if ale-jumper-sensible-jump-mode
+  ;;;###autoload
+  (define-minor-mode ale-jumper-sensible-jump-mode
+    "Add sensible commands to jump list."
+    :init-value nil
+    :global t
+    :group 'convenience
+    (if ale-jumper-sensible-jump-mode
+        (dolist (sym ale-jumper-cmd-alist)
+          (advice-add sym :around 'ale-jumper-advice))
       (dolist (sym ale-jumper-cmd-alist)
-        (advice-add sym :around 'ale-jumper-advice))
-    (dolist (sym ale-jumper-cmd-alist)
-      (advice-remove sym 'ale-jumper-advice))))
+        (advice-remove sym 'ale-jumper-advice))))
 #+end_src
 
 *** Config
@@ -1791,99 +1796,99 @@ inside of an Emacs buffer.  It is simply superb!
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/dired.el --- -*- lexical-binding: t -*-
+  ;;; ale/autoload/dired.el --- -*- lexical-binding: t -*-
 
-(require 'transient)
-(require 'dired)
+  (require 'transient)
+  (require 'dired)
 
-;;;###autoload
-(defun ale-dired-find-file (&rest args)
-  (interactive)
-  (apply 'find-alternate-file args))
+  ;;;###autoload
+  (defun ale-dired-find-file (&rest args)
+    (interactive)
+    (apply 'find-alternate-file args))
 
-;;;###autoload
-(defun ale-dired-file-true-path ()
-  (interactive)
-  (ale-dired-find-file (file-truename (dired-get-filename))))
+  ;;;###autoload
+  (defun ale-dired-file-true-path ()
+    (interactive)
+    (ale-dired-find-file (file-truename (dired-get-filename))))
 
-;;;###autoload
-(defun ale-dired-yank-file-name ()
-  "Copy filename under the cursor."
-  (interactive)
-  (message "Copied: %s" (dired-copy-filename-as-kill)))
+  ;;;###autoload
+  (defun ale-dired-yank-file-name ()
+    "Copy filename under the cursor."
+    (interactive)
+    (message "Copied: %s" (dired-copy-filename-as-kill)))
 
-;;;###autoload
-(defun ale-dired-yank-file-path ()
-  "Copy filename under the cursor."
-  (interactive)
-  (message "Copied: %s" (kill-new (dired-get-filename nil t))))
+  ;;;###autoload
+  (defun ale-dired-yank-file-path ()
+    "Copy filename under the cursor."
+    (interactive)
+    (message "Copied: %s" (kill-new (dired-get-filename nil t))))
 
-;;;###autoload
-(defun ale-dired-yank-file-dir ()
-  "Copy the current directory's (`default-directory''s) absolute path."
-  (interactive)
-  (message "Copied: %s" (kill-new (expand-file-name default-directory))))
+  ;;;###autoload
+  (defun ale-dired-yank-file-dir ()
+    "Copy the current directory's (`default-directory''s) absolute path."
+    (interactive)
+    (message "Copied: %s" (kill-new (expand-file-name default-directory))))
 
-;;;###autoload
-(defun ale-dired-browse-all-directories ()
-  "Browse all directories using `fd' command."
-  (interactive)
-  (let* ((command "fd -H -td -0 . /")
-         (output (shell-command-to-string command))
-         (files-raw (split-string output "\0" t))
-         (files (ale-minibuffer-append-metadata 'file files-raw))
-         (file (completing-read "Goto: " files)))
-    (ale-dired-find-file file)))
+  ;;;###autoload
+  (defun ale-dired-browse-all-directories ()
+    "Browse all directories using `fd' command."
+    (interactive)
+    (let* ((command "fd -H -td -0 . /")
+           (output (shell-command-to-string command))
+           (files-raw (split-string output "\0" t))
+           (files (ale-minibuffer-append-metadata 'file files-raw))
+           (file (completing-read "Goto: " files)))
+      (ale-dired-find-file file)))
 
-;;;###autoload
-(defun ale-dired-jump () nil)
+  ;;;###autoload
+  (defun ale-dired-jump () nil)
 
-;;;###autoload
-(defun ale-dired-toolbox () nil)
+  ;;;###autoload
+  (defun ale-dired-toolbox () nil)
 
-(defcustom ale-dired-tools '()
-  "doc"
-  :group 'dired :type 'list
-  :set
-  (lambda (k v)
-    `(setq ,k v)
-    (eval `(transient-define-prefix ale-dired-toolbox ()
-             ["Select operation for entry: "
-              ,@(cl-loop for (key desc fun) in v
-                         collect (list key desc fun))]))))
+  (defcustom ale-dired-tools '()
+    "doc"
+    :group 'dired :type 'list
+    :set
+    (lambda (k v)
+      `(setq ,k v)
+      (eval `(transient-define-prefix ale-dired-toolbox ()
+                                      ["Select operation for entry: "
+                                       ,@(cl-loop for (key desc fun) in v
+                                                  collect (list key desc fun))]))))
 
-(defcustom ale-dired-routes '()
-  "doc"
-  :group 'dired :type 'list
-  :set
-  (lambda (k v)
-    `(setq ,k v)
-    (eval `(transient-define-prefix ale-dired-jump ()
-             ["Go to Directory: "
-              ,@(cl-loop for (key desc path) in v
-                         collect (list key desc `(lambda () (interactive) (ale-dired-find-file ,path))))]))))
+  (defcustom ale-dired-routes '()
+    "doc"
+    :group 'dired :type 'list
+    :set
+    (lambda (k v)
+      `(setq ,k v)
+      (eval `(transient-define-prefix ale-dired-jump ()
+                                      ["Go to Directory: "
+                                       ,@(cl-loop for (key desc path) in v
+                                                  collect (list key desc `(lambda () (interactive) (ale-dired-find-file ,path))))]))))
 
-;;;###autoload
-(defun ale-dired-rename-space-to-underscore ()
-  "Rename current or marked files by replacing space to underscore."
-  (interactive)
-  (require 'dired-aux)
-  (if (derived-mode-p 'dired-mode)
-      (let ((markedFiles (dired-get-marked-files )))
-        (mapc (lambda (x)
-                (when (string-match " " x )
-                  (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
-              markedFiles)
-        (when (eq major-mode 'dired-mode) (revert-buffer)))
-    (user-error "Not in a dired buffer.")))
+  ;;;###autoload
+  (defun ale-dired-rename-space-to-underscore ()
+    "Rename current or marked files by replacing space to underscore."
+    (interactive)
+    (require 'dired-aux)
+    (if (derived-mode-p 'dired-mode)
+        (let ((markedFiles (dired-get-marked-files )))
+          (mapc (lambda (x)
+                  (when (string-match " " x )
+                    (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
+                markedFiles)
+          (when (eq major-mode 'dired-mode) (revert-buffer)))
+      (user-error "Not in a dired buffer.")))
 
-;;;###autoload
-(defun ale-dired-file-rename-eol ()
-  "Rename current file from end of line."
-  (interactive)
-  (end-of-line)
-  (wdired-change-to-wdired-mode)
-  (when (featurep 'meow) (meow-append)))
+  ;;;###autoload
+  (defun ale-dired-file-rename-eol ()
+    "Rename current file from end of line."
+    (interactive)
+    (end-of-line)
+    (wdired-change-to-wdired-mode)
+    (when (featurep 'meow) (meow-append)))
 #+end_src
 
 *** Config
@@ -1991,15 +1996,15 @@ inside of Emacs (e.g. kill a Magit diff).
 :CUSTOM_ID: File_management-A_better_dired_interface_(dirvish.el)-19d683c0
 :END:
 
-This package is inspired the popular file manager =ranger=, I created it
+[[https://github.com/alexluigit/dirvish][Dirvish]] is inspired the popular file manager =ranger=, I created it
 on the basis of =ranger.el=. Compare to =ranger.el=, this package only
 keeps features I wanted, and some sensible functionalities were added
-as well. See details at: https://github.com/alexluigit/dirvish.el
+as well.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package dirvish
     :after-call pre-command-hook
-    :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish.el")
+    :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish")
     :bind
     (nil
      :map dirvish-mode-map ("SPC" . dirvish-show-history)
@@ -2066,8 +2071,8 @@ as well. See details at: https://github.com/alexluigit/dirvish.el
   (defun ale-project--directory-subdirs (dir)
     "Return list of subdirectories in DIR."
     (cl-remove-if (lambda (x) (string-match-p "\\.git" x))
-      (cl-remove-if-not (lambda (x) (file-directory-p x))
-        (directory-files-recursively dir ".*" t t))))
+                  (cl-remove-if-not (lambda (x) (file-directory-p x))
+                                    (directory-files-recursively dir ".*" t t))))
 
   ;;;###autoload
   (defun ale-project-find-subdir ()
@@ -2770,7 +2775,7 @@ Tabs for frequently used buffers.
 
 #+begin_src emacs-lisp
   ;;; ale/autoload/+tab.el --- Tabs for frequently used buffers -*- lexical-binding: t -*-
-  
+
   (require 'cl-lib)
 
   (defvar ale-tab-count-freq-idle-time 1
@@ -2920,27 +2925,27 @@ Tabs for frequently used buffers.
            (group (ale-tab/buffer-group buf))
            (counter 0)
            tabs)
-        (when group
-          (dolist (b ale-tab/sorted-buffer-list)
-            (when (equal (ale-tab/buffer-group b) group)
-              (if (< (length tabs) ale-tab-visible-buffer-limit)
-                  (push b tabs)
-                (cl-incf counter))))
-          (cons (nreverse tabs)
-                counter))))
+      (when group
+        (dolist (b ale-tab/sorted-buffer-list)
+          (when (equal (ale-tab/buffer-group b) group)
+            (if (< (length tabs) ale-tab-visible-buffer-limit)
+                (push b tabs)
+              (cl-incf counter))))
+        (cons (nreverse tabs)
+              counter))))
 
   (defun ale-tab-visible-tabs ()
     "Return the visible tabs."
     (let* ((buf (current-buffer))
            (group (ale-tab/buffer-group buf))
            tabs)
-        (when group
-          (cl-dolist (b ale-tab/sorted-buffer-list)
-            (when (equal (ale-tab/buffer-group b) group)
-              (push b tabs)
-              (when (= (length tabs) ale-tab-visible-buffer-limit)
-                (cl-return))))
-          (nreverse tabs))))
+      (when group
+        (cl-dolist (b ale-tab/sorted-buffer-list)
+          (when (equal (ale-tab/buffer-group b) group)
+            (push b tabs)
+            (when (= (length tabs) ale-tab-visible-buffer-limit)
+              (cl-return))))
+        (nreverse tabs))))
 
   (defun ale-tab-string ()
     "Return a string that shows the tabs for current buffer.
@@ -3100,277 +3105,277 @@ Tabs for frequently used buffers.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/+modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
+  ;;; ale/autoload/+modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
 
-(defvar flycheck-current-errors)
-(defvar anzu--state)
-(defvar anzu--cached-count)
-(defvar anzu--overflow-p)
-(defvar anzu--current-position)
-(defvar anzu--total-matched)
-(defvar multiple-cursors-mode)
-(declare-function flycheck-count-errors "flycheck" (errors))
-(declare-function meow-indicator "meow")
-(declare-function ale-tab-string "autoload/tab")
+  (defvar flycheck-current-errors)
+  (defvar anzu--state)
+  (defvar anzu--cached-count)
+  (defvar anzu--overflow-p)
+  (defvar anzu--current-position)
+  (defvar anzu--total-matched)
+  (defvar multiple-cursors-mode)
+  (declare-function flycheck-count-errors "flycheck" (errors))
+  (declare-function meow-indicator "meow")
+  (declare-function ale-tab-string "autoload/tab")
 
-(defgroup ale-modeline nil
-  "A minimal mode-line configuration inspired by doom-modeline."
-  :group 'mode-line)
+  (defgroup ale-modeline nil
+    "A minimal mode-line configuration inspired by doom-modeline."
+    :group 'mode-line)
 
-(defcustom ale-modeline-show-eol-style nil
-  "If t, the EOL style of the current buffer will be displayed in the mode-line."
-  :group 'ale-modeline
-  :type 'boolean)
+  (defcustom ale-modeline-show-eol-style nil
+    "If t, the EOL style of the current buffer will be displayed in the mode-line."
+    :group 'ale-modeline
+    :type 'boolean)
 
-(defcustom ale-modeline-show-encoding-information nil
-  "If t, the encoding format of the current buffer will be displayed in the mode-line."
-  :group 'ale-modeline
-  :type 'boolean)
+  (defcustom ale-modeline-show-encoding-information nil
+    "If t, the encoding format of the current buffer will be displayed in the mode-line."
+    :group 'ale-modeline
+    :type 'boolean)
 
-(defcustom ale-modeline-show-cursor-point nil
-  "If t, the value of `point' will be displayed next to the cursor position in the mode-line."
-  :group 'ale-modeline
-  :type 'boolean)
+  (defcustom ale-modeline-show-cursor-point nil
+    "If t, the value of `point' will be displayed next to the cursor position in the mode-line."
+    :group 'ale-modeline
+    :type 'boolean)
 
-(defface ale-modeline-input-method
-  '((t (:inherit (bold))))
-  "Face used for input method indicator in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-input-method
+    '((t (:inherit (bold))))
+    "Face used for input method indicator in the mode-line."
+    :group 'ale-modeline)
 
-(defface ale-modeline-status-neutral
-  '((t (:inherit (shadow bold))))
-  "Face used for neutral or inactive status indicators in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-status-neutral
+    '((t (:inherit (shadow bold))))
+    "Face used for neutral or inactive status indicators in the mode-line."
+    :group 'ale-modeline)
 
-(defface ale-modeline-status-info
-  '((t (:inherit (font-lock-constant-face bold))))
-  "Face used for generic status indicators in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-status-info
+    '((t (:inherit (font-lock-constant-face bold))))
+    "Face used for generic status indicators in the mode-line."
+    :group 'ale-modeline)
 
-(defface ale-modeline-status-success
-  '((t (:inherit (success))))
-  "Face used for success status indicators in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-status-success
+    '((t (:inherit (success))))
+    "Face used for success status indicators in the mode-line."
+    :group 'ale-modeline)
 
-(defface ale-modeline-status-warning
-  '((t (:inherit (warning))))
-  "Face for warning status indicators in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-status-warning
+    '((t (:inherit (warning))))
+    "Face for warning status indicators in the mode-line."
+    :group 'ale-modeline)
 
-(defface ale-modeline-status-error
-  '((t (:inherit (error))))
-  "Face for error stauts indicators in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-status-error
+    '((t (:inherit (error))))
+    "Face for error stauts indicators in the mode-line."
+    :group 'ale-modeline)
 
-(defface ale-modeline-unimportant
-  '((t (:inherit (shadow))))
-  "Face used for less important mode-line elements."
-  :group 'ale-modeline)
+  (defface ale-modeline-unimportant
+    '((t (:inherit (shadow))))
+    "Face used for less important mode-line elements."
+    :group 'ale-modeline)
 
-(defface ale-modeline-modified
-  '((t (:inherit (error))))
-  "Face used for the 'modified' indicator symbol in the mode-line."
-  :group 'ale-modeline)
+  (defface ale-modeline-modified
+    '((t (:inherit (error))))
+    "Face used for the 'modified' indicator symbol in the mode-line."
+    :group 'ale-modeline)
 
-(defun ale-modeline--string-trim-left (string)
-  "Remove whitespace at the beginning of STRING."
-  (if (string-match "\\`[ \t\n\r]+" string)
-      (replace-match "" t t string)
-    string))
+  (defun ale-modeline--string-trim-left (string)
+    "Remove whitespace at the beginning of STRING."
+    (if (string-match "\\`[ \t\n\r]+" string)
+        (replace-match "" t t string)
+      string))
 
-(defun ale-modeline--string-trim-right (string)
-  "Remove whitespace at the end of STRING."
-  (if (string-match "[ \t\n\r]+\\'" string)
-      (replace-match "" t t string)
-    string))
+  (defun ale-modeline--string-trim-right (string)
+    "Remove whitespace at the end of STRING."
+    (if (string-match "[ \t\n\r]+\\'" string)
+        (replace-match "" t t string)
+      string))
 
-(defun ale-modeline--string-trim (string)
-  "Remove whitespace at the beginning and end of STRING."
-  (ale-modeline--string-trim-left (ale-modeline--string-trim-right string)))
+  (defun ale-modeline--string-trim (string)
+    "Remove whitespace at the beginning and end of STRING."
+    (ale-modeline--string-trim-left (ale-modeline--string-trim-right string)))
 
-(defun ale-modeline--format (left right)
-  "Return a string of `window-width' length containing LEFT and
-RIGHT, aligned respectively."
-  (let ((reserve (string-width right)))
-    (concat left
-            (propertize " " 'display
-                        `((space :align-to (- (+ right right-fringe right-margin) ,reserve))))
-            right)))
+  (defun ale-modeline--format (left right)
+    "Return a string of `window-width' length containing LEFT and
+  RIGHT, aligned respectively."
+    (let ((reserve (string-width right)))
+      (concat left
+              (propertize " " 'display
+                          `((space :align-to (- (+ right right-fringe right-margin) ,reserve))))
+              right)))
 
-(defun ale-modeline--place-segment (segment)
-  "If SEGMENT is non-nil, return its context with a suffix
-whitespace, else return nil."
-  (let* ((seg (intern (format "ale-modeline-segment-%s" segment)))
-         (str (funcall seg)))
-    (when (and str (not (string= str "")))
-      (concat str " "))))
+  (defun ale-modeline--place-segment (segment)
+    "If SEGMENT is non-nil, return its context with a suffix
+  whitespace, else return nil."
+    (let* ((seg (intern (format "ale-modeline-segment-%s" segment)))
+           (str (funcall seg)))
+      (when (and str (not (string= str "")))
+        (concat str " "))))
 
-(defvar-local ale-modeline--vc-text nil)
-(defun ale-modeline--update-vc-segment (&rest _)
-  "Update `ale-modeline--vc-text' against the current VCS state."
-  (setq ale-modeline--vc-text
-        (when (and vc-mode buffer-file-name)
-          (let ((backend (vc-backend buffer-file-name))
-                (state (vc-state buffer-file-name (vc-backend buffer-file-name))))
-            (let ((face 'mode-line-neutral))
-              (concat (cond ((memq state '(edited added))
-                             (setq face 'ale-modeline-status-info)
-                             (propertize "+ " 'face face))
-                            ((eq state 'needs-merge)
-                             (setq face 'ale-modeline-status-warning)
-                             (propertize "<> " 'face face))
-                            ((eq state 'needs-update)
-                             (setq face 'ale-modeline-status-warning)
-                             (propertize "↑ " 'face face))
-                            ((memq state '(removed conflict unregistered))
-                             (setq face 'ale-modeline-status-error)
-                             (propertize "✖ " 'face face))
-                            (t
-                             (setq face 'ale-modeline-status-neutral)
-                             (propertize "· " 'face face)))
-                      (propertize (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
-                                  'face face
-                                  'mouse-face face)))))))
+  (defvar-local ale-modeline--vc-text nil)
+  (defun ale-modeline--update-vc-segment (&rest _)
+    "Update `ale-modeline--vc-text' against the current VCS state."
+    (setq ale-modeline--vc-text
+          (when (and vc-mode buffer-file-name)
+            (let ((backend (vc-backend buffer-file-name))
+                  (state (vc-state buffer-file-name (vc-backend buffer-file-name))))
+              (let ((face 'mode-line-neutral))
+                (concat (cond ((memq state '(edited added))
+                               (setq face 'ale-modeline-status-info)
+                               (propertize "+ " 'face face))
+                              ((eq state 'needs-merge)
+                               (setq face 'ale-modeline-status-warning)
+                               (propertize "<> " 'face face))
+                              ((eq state 'needs-update)
+                               (setq face 'ale-modeline-status-warning)
+                               (propertize "↑ " 'face face))
+                              ((memq state '(removed conflict unregistered))
+                               (setq face 'ale-modeline-status-error)
+                               (propertize "✖ " 'face face))
+                              (t
+                               (setq face 'ale-modeline-status-neutral)
+                               (propertize "· " 'face face)))
+                        (propertize (substring vc-mode (+ (if (eq backend 'Hg) 2 3) 2))
+                                    'face face
+                                    'mouse-face face)))))))
 
-(defvar-local ale-modeline--flycheck-text nil)
-(defun ale-modeline--update-flycheck-segment (&optional status)
-  "Update `ale-modeline--flycheck-text' against the reported flycheck STATUS."
-  (setq ale-modeline--flycheck-text
-        (pcase status
-          ('finished (if flycheck-current-errors
-                         (let-alist (flycheck-count-errors flycheck-current-errors)
-                           (let ((sum (+ (or .error 0) (or .warning 0))))
-                             (propertize (concat "⚑ Issues: " (number-to-string sum))
-                                         'face (if .error
-                                                   'ale-modeline-status-error
-                                                 'ale-modeline-status-warning))))
-                       (propertize " ✓ Good " 'face 'ale-modeline-status-success)))
-          ('running (propertize " Δ Checking " 'face 'ale-modeline-status-info))
-          ('errored (propertize " ✖ Error " 'face 'ale-modeline-status-error))
-          ('interrupted (propertize " ⏵ Paused " 'face 'ale-modeline-status-neutral))
-          ('no-checker ""))))
+  (defvar-local ale-modeline--flycheck-text nil)
+  (defun ale-modeline--update-flycheck-segment (&optional status)
+    "Update `ale-modeline--flycheck-text' against the reported flycheck STATUS."
+    (setq ale-modeline--flycheck-text
+          (pcase status
+            ('finished (if flycheck-current-errors
+                           (let-alist (flycheck-count-errors flycheck-current-errors)
+                             (let ((sum (+ (or .error 0) (or .warning 0))))
+                               (propertize (concat "⚑ Issues: " (number-to-string sum))
+                                           'face (if .error
+                                                     'ale-modeline-status-error
+                                                   'ale-modeline-status-warning))))
+                         (propertize " ✓ Good " 'face 'ale-modeline-status-success)))
+            ('running (propertize " Δ Checking " 'face 'ale-modeline-status-info))
+            ('errored (propertize " ✖ Error " 'face 'ale-modeline-status-error))
+            ('interrupted (propertize " ⏵ Paused " 'face 'ale-modeline-status-neutral))
+            ('no-checker ""))))
 
-(defvar-local ale-modeline-total-lines "")
-(defun ale-modeline-count-lines ()
-  (setq ale-modeline-total-lines (int-to-string (count-lines (point-min) (point-max)))))
+  (defvar-local ale-modeline-total-lines "")
+  (defun ale-modeline-count-lines ()
+    (setq ale-modeline-total-lines (int-to-string (count-lines (point-min) (point-max)))))
 
-(defun ale-modeline-segment-total-lines ()
-  "Display total lines of current buffer."
-  (propertize ale-modeline-total-lines 'face 'ale-modeline-unimportant))
+  (defun ale-modeline-segment-total-lines ()
+    "Display total lines of current buffer."
+    (propertize ale-modeline-total-lines 'face 'ale-modeline-unimportant))
 
-(defun ale-modeline-segment-editing-state ()
-  "Display current input state."
-  (when (bound-and-true-p meow-mode)
-    (ale-modeline--string-trim (meow-indicator))))
+  (defun ale-modeline-segment-editing-state ()
+    "Display current input state."
+    (when (bound-and-true-p meow-mode)
+      (ale-modeline--string-trim (meow-indicator))))
 
-(defsubst ale-modeline-segment-macro-recording ()
-  "Display current macro being recorded."
-  (when (or defining-kbd-macro executing-kbd-macro)
-    (propertize "KM" 'face 'warning)))
+  (defsubst ale-modeline-segment-macro-recording ()
+    "Display current macro being recorded."
+    (when (or defining-kbd-macro executing-kbd-macro)
+      (propertize "KM" 'face 'warning)))
 
-(defun ale-modeline-segment-modified ()
-  "Displays a color-coded buffer modification/read-only indicator in the mode-line."
-  (when (not (string-match-p "\\*.*\\*" (buffer-name)))
-    (if (buffer-modified-p)
-        (propertize "●" 'face 'ale-modeline-modified)
-      (when (and buffer-read-only (buffer-file-name))
-        (propertize "■" 'face 'ale-modeline-unimportant)))))
+  (defun ale-modeline-segment-modified ()
+    "Displays a color-coded buffer modification/read-only indicator in the mode-line."
+    (when (not (string-match-p "\\*.*\\*" (buffer-name)))
+      (if (buffer-modified-p)
+          (propertize "●" 'face 'ale-modeline-modified)
+        (when (and buffer-read-only (buffer-file-name))
+          (propertize "■" 'face 'ale-modeline-unimportant)))))
 
-(defun ale-modeline-segment-anzu ()
-  "Displays color-coded anzu status information in the mode-line (if available)."
-  (when (and (boundp 'anzu--state) anzu--state)
-    (cond ((eq anzu--state 'replace-query)
-           (format #("Replace: %d  " 0 11 (face ale-modeline-status-warning)) anzu--cached-count))
-          (anzu--overflow-p
-           (format #("%d/%d+  " 0 3 (face ale-modeline-status-info) 3 6 (face ale-modeline-status-error)) anzu--current-position anzu--total-matched))
-          (t
-           (format #("%d/%d  " 0 5 (face ale-modeline-status-info)) anzu--current-position anzu--total-matched)))))
+  (defun ale-modeline-segment-anzu ()
+    "Displays color-coded anzu status information in the mode-line (if available)."
+    (when (and (boundp 'anzu--state) anzu--state)
+      (cond ((eq anzu--state 'replace-query)
+             (format #("Replace: %d  " 0 11 (face ale-modeline-status-warning)) anzu--cached-count))
+            (anzu--overflow-p
+             (format #("%d/%d+  " 0 3 (face ale-modeline-status-info) 3 6 (face ale-modeline-status-error)) anzu--current-position anzu--total-matched))
+            (t
+             (format #("%d/%d  " 0 5 (face ale-modeline-status-info)) anzu--current-position anzu--total-matched)))))
 
-(defun ale-modeline-segment-position ()
-  "Displays the current cursor position in the mode-line."
-  (concat "%l:%c"
-          (when ale-modeline-show-cursor-point (propertize (format ":%d" (point)) 'face 'ale-modeline-unimportant))))
+  (defun ale-modeline-segment-position ()
+    "Displays the current cursor position in the mode-line."
+    (concat "%l:%c"
+            (when ale-modeline-show-cursor-point (propertize (format ":%d" (point)) 'face 'ale-modeline-unimportant))))
 
-(defun ale-modeline-segment-eol ()
-  "Displays the EOL style of the current buffer in the mode-line."
-  (when ale-modeline-show-eol-style
-    (pcase (coding-system-eol-type buffer-file-coding-system)
-      (0 "LF")
-      (1 "CRLF")
-      (2 "CR"))))
+  (defun ale-modeline-segment-eol ()
+    "Displays the EOL style of the current buffer in the mode-line."
+    (when ale-modeline-show-eol-style
+      (pcase (coding-system-eol-type buffer-file-coding-system)
+        (0 "LF")
+        (1 "CRLF")
+        (2 "CR"))))
 
-(defun ale-modeline-segment-encoding ()
-  "Displays the encoding and EOL style of the buffer in the mode-line."
-  (when ale-modeline-show-encoding-information
-    (let ((sys (coding-system-plist buffer-file-coding-system)))
-      (cond ((memq (plist-get sys :category) '(coding-category-undecided coding-category-utf-8))
-             "UTF-8")
-            (t (upcase (symbol-name (plist-get sys :name))))))))
+  (defun ale-modeline-segment-encoding ()
+    "Displays the encoding and EOL style of the buffer in the mode-line."
+    (when ale-modeline-show-encoding-information
+      (let ((sys (coding-system-plist buffer-file-coding-system)))
+        (cond ((memq (plist-get sys :category) '(coding-category-undecided coding-category-utf-8))
+               "UTF-8")
+              (t (upcase (symbol-name (plist-get sys :name))))))))
 
-(defun ale-modeline-segment-vc ()
-  "Displays color-coded version control information in the mode-line."
-  ale-modeline--vc-text)
+  (defun ale-modeline-segment-vc ()
+    "Displays color-coded version control information in the mode-line."
+    ale-modeline--vc-text)
 
-(defun ale-modeline-segment-tab ()
-  "Return tabs."
-  (when (bound-and-true-p ale-tab-mode) (ale-tab-string)))
+  (defun ale-modeline-segment-tab ()
+    "Return tabs."
+    (when (bound-and-true-p ale-tab-mode) (ale-tab-string)))
 
-(defun ale-modeline-segment-input-method ()
-  "Displays the current major mode in the mode-line."
-  (when (bound-and-true-p rime-mode) (ale-modeline--string-trim (rime-lighter))))
+  (defun ale-modeline-segment-input-method ()
+    "Displays the current major mode in the mode-line."
+    (when (bound-and-true-p rime-mode) (ale-modeline--string-trim (rime-lighter))))
 
-(defun ale-modeline-segment-flycheck ()
-  "Displays color-coded flycheck information in the mode-line (if available)."
-  ale-modeline--flycheck-text)
+  (defun ale-modeline-segment-flycheck ()
+    "Displays color-coded flycheck information in the mode-line (if available)."
+    ale-modeline--flycheck-text)
 
-(defvar ale-modeline--default-mode-line mode-line-format
-  "Store the default mode-line format")
+  (defvar ale-modeline--default-mode-line mode-line-format
+    "Store the default mode-line format")
 
-;;;###autoload
-(define-minor-mode ale-modeline-mode
-  "Toggle ale-modeline on or off."
-  :group 'ale-modeline
-  :global t
-  :lighter nil
-  (if ale-modeline-mode
+  ;;;###autoload
+  (define-minor-mode ale-modeline-mode
+    "Toggle ale-modeline on or off."
+    :group 'ale-modeline
+    :global t
+    :lighter nil
+    (if ale-modeline-mode
+        (progn
+          (set-face-attribute 'mode-line nil :box `(:line-width 8 :color ,(face-attribute 'mode-line :background)))
+          (add-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
+          (add-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
+          (add-hook 'find-file-hook #'ale-modeline--update-vc-segment)
+          (add-hook 'after-save-hook #'ale-modeline--update-vc-segment)
+          (add-hook 'find-file-hook 'ale-modeline-count-lines)
+          (add-hook 'after-save-hook 'ale-modeline-count-lines)
+          (add-hook 'after-revert-hook 'ale-modeline-count-lines)
+          (advice-add #'vc-refresh-state :after #'ale-modeline--update-vc-segment)
+          (setq-default mode-line-format
+                        '((:eval
+                           (ale-modeline--format
+                            (format-mode-line
+                             '(" "
+                               (:eval (ale-modeline--place-segment 'editing-state))
+                               (:eval (ale-modeline--place-segment 'macro-recording))
+                               (:eval (ale-modeline--place-segment 'modified))
+                               (:eval (ale-modeline--place-segment 'tab))))
+                            (format-mode-line
+                             '((:eval (ale-modeline--place-segment 'anzu))
+                               (:eval (ale-modeline--place-segment 'position))
+                               (:eval (ale-modeline--place-segment 'total-lines))
+                               (:eval (ale-modeline--place-segment 'eol))
+                               (:eval (ale-modeline--place-segment 'encoding))
+                               (:eval (ale-modeline--place-segment 'vc))
+                               (:eval (ale-modeline--place-segment 'input-method))
+                               (:eval (ale-modeline--place-segment 'flycheck)))))))))
       (progn
-        (set-face-attribute 'mode-line nil :box `(:line-width 8 :color ,(face-attribute 'mode-line :background)))
-        (add-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
-        (add-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
-        (add-hook 'find-file-hook #'ale-modeline--update-vc-segment)
-        (add-hook 'after-save-hook #'ale-modeline--update-vc-segment)
-        (add-hook 'find-file-hook 'ale-modeline-count-lines)
-        (add-hook 'after-save-hook 'ale-modeline-count-lines)
-        (add-hook 'after-revert-hook 'ale-modeline-count-lines)
-        (advice-add #'vc-refresh-state :after #'ale-modeline--update-vc-segment)
-        (setq-default mode-line-format
-                      '((:eval
-                         (ale-modeline--format
-                          (format-mode-line
-                           '(" "
-                             (:eval (ale-modeline--place-segment 'editing-state))
-                             (:eval (ale-modeline--place-segment 'macro-recording))
-                             (:eval (ale-modeline--place-segment 'modified))
-                             (:eval (ale-modeline--place-segment 'tab))))
-                          (format-mode-line
-                           '((:eval (ale-modeline--place-segment 'anzu))
-                             (:eval (ale-modeline--place-segment 'position))
-                             (:eval (ale-modeline--place-segment 'total-lines))
-                             (:eval (ale-modeline--place-segment 'eol))
-                             (:eval (ale-modeline--place-segment 'encoding))
-                             (:eval (ale-modeline--place-segment 'vc))
-                             (:eval (ale-modeline--place-segment 'input-method))
-                             (:eval (ale-modeline--place-segment 'flycheck)))))))))
-    (progn
-      (remove-hook 'find-file-hook #'ale-modeline-count-lines)
-      (remove-hook 'after-save-hook #'ale-modeline-count-lines)
-      (remove-hook 'after-revert-hook #'ale-modeline-count-lines)
-      (remove-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
-      (remove-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
-      (remove-hook 'file-find-hook #'ale-modeline--update-vc-segment)
-      (remove-hook 'after-save-hook #'ale-modeline--update-vc-segment)
-      (advice-remove #'vc-refresh-state #'ale-modeline--update-vc-segment)
-      (setq-default mode-line-format ale-modeline--default-mode-line))))
+        (remove-hook 'find-file-hook #'ale-modeline-count-lines)
+        (remove-hook 'after-save-hook #'ale-modeline-count-lines)
+        (remove-hook 'after-revert-hook #'ale-modeline-count-lines)
+        (remove-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
+        (remove-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
+        (remove-hook 'file-find-hook #'ale-modeline--update-vc-segment)
+        (remove-hook 'after-save-hook #'ale-modeline--update-vc-segment)
+        (advice-remove #'vc-refresh-state #'ale-modeline--update-vc-segment)
+        (setq-default mode-line-format ale-modeline--default-mode-line))))
 #+end_src
 
 *** Config
@@ -3957,21 +3962,21 @@ made for this package and built-in help buffer:
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/helpful.el --- -*- lexical-binding: t -*-
+  ;;; ale/autoload/helpful.el --- -*- lexical-binding: t -*-
 
-(defvar ale-helpful-initialized nil)
+  (defvar ale-helpful-initialized nil)
 
-;;;###autoload
-(defun ale-helpful-mode-hook ()
-  ;; FIXME: A better way?
-  (setq ale-helpful-initialized nil)
-  (advice-add 'find-file :before
-              (lambda (&rest _)
-                (when (and (not ale-helpful-initialized) (derived-mode-p 'helpful-mode))
-                  (switch-to-buffer "*scratch*")
-                  (switch-to-prev-buffer)
-                  (setq ale-helpful-initialized t))))
-  (visual-line-mode))
+  ;;;###autoload
+  (defun ale-helpful-mode-hook ()
+    ;; FIXME: A better way?
+    (setq ale-helpful-initialized nil)
+    (advice-add 'find-file :before
+                (lambda (&rest _)
+                  (when (and (not ale-helpful-initialized) (derived-mode-p 'helpful-mode))
+                    (switch-to-buffer "*scratch*")
+                    (switch-to-prev-buffer)
+                    (setq ale-helpful-initialized t))))
+    (visual-line-mode))
 #+end_src
 
 *** Config
