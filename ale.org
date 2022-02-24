@@ -651,6 +651,80 @@ to 0 to ensure every new window will open in horizontal split.
      ("ESC" . transient-quit-all)))
 #+end_src
 
+*** Automatic opacity adjustment (+opacity.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-a9e74647
+:END:
+
+**** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/+opacity.el"
+:CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Autoload-b30648ad
+:END:
+
+#+begin_src emacs-lisp
+  ;;; ale/autoload/+opacity.el --- -*- lexical-binding: t -*-
+
+  (defcustom ale-opacity 80
+    "Default frame opacity."
+    :group 'ale
+    :type 'integer)
+
+  (defcustom ale-opacity-disabled-predicates '()
+    "A list of predicate functions in which the `ale-opacity-auto-mode' will not be turned on."
+    :group 'ale
+    :type 'hook)
+
+  ;;;###autoload
+  (defun ale-opacity-set (&optional percent)
+    (interactive "P")
+    (cond ((or (and percent (not current-prefix-arg))
+               (numberp percent))
+           (setq ale-opacity (* 10 percent))
+           (set-frame-parameter (selected-frame) 'alpha-background ale-opacity))
+          ((equal current-prefix-arg '(4))
+           (ale-opacity-default))
+          (t
+           (let ((opa (frame-parameter nil 'alpha-background))
+                 (low 60) (high 100))
+             (if (eq opa low)
+                 (set-frame-parameter (selected-frame) 'alpha-background high)
+               (set-frame-parameter (selected-frame) 'alpha-background low))))))
+
+  (defun ale-opacity-disable ()
+    (set-frame-parameter (selected-frame) 'alpha-background 100))
+
+  (defun ale-opacity-default ()
+    (set-frame-parameter (selected-frame) 'alpha-background ale-opacity))
+
+  ;;;###autoload
+  (defun ale-opacity-auto ()
+    "Setup frame opacity according to current major-mode."
+    (if (seq-find 'funcall ale-opacity-disabled-predicates)
+        (ale-opacity-disable)
+      (ale-opacity-default)))
+
+  ;;;###autoload
+  (define-minor-mode ale-opacity-auto-mode
+    "Minor mode for adjusting frame opacity."
+    :lighter " ale-auto-opacity"
+    :group 'ale
+    :global t
+    (ale-opacity-default)
+    (if ale-opacity-auto-mode
+        (add-hook 'window-configuration-change-hook #'ale-opacity-auto)
+      (remove-hook 'window-configuration-change-hook #'ale-opacity-auto)))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Config-21749923
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (frame-enable! 'ale-opacity-auto-mode)
+#+end_src
+
 ** Completion framework
 :PROPERTIES:
 :CUSTOM_ID: Completion_framework-b6134271
@@ -3337,87 +3411,6 @@ Tabs for frequently used buffers.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (frame-enable! 'ale-modeline-mode)
-#+end_src
-
-** Automatic opacity adjustment (+opacity.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-a9e74647
-:END:
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/+opacity.el"
-:CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Autoload-b30648ad
-:END:
-
-#+begin_src emacs-lisp
-  ;;; ale/autoload/+opacity.el --- -*- lexical-binding: t -*-
-
-  (defcustom ale-opacity 80
-    "Default frame opacity."
-    :group 'ale
-    :type 'integer)
-
-  (defcustom ale-opacity-disabled-modes
-    '(dired-mode
-      image-mode
-      minibuffer-mode
-      pdf-view-mode
-      org-tree-slide-mode)
-    "A list of major or minor modes in which the global better-jumper minor mode will not be turned on."
-    :group 'ale
-    :type '(repeat symbol))
-
-  ;;;###autoload
-  (defun ale-opacity-set (&optional percent)
-    (interactive "P")
-    (cond ((or (and percent (not current-prefix-arg))
-               (numberp percent))
-           (setq ale-opacity (* 10 percent))
-           (set-frame-parameter (selected-frame) 'alpha `(,ale-opacity . 50)))
-          ((equal current-prefix-arg '(4))
-           (ale-opacity-default))
-          (t
-           (let ((opa (car (frame-parameter nil 'alpha)))
-                 (low 60) (high 100))
-             (if (eq opa low)
-                 (set-frame-parameter (selected-frame) 'alpha `(,high . 50))
-               (set-frame-parameter (selected-frame) 'alpha `(,low . 50)))))))
-
-  (defun ale-opacity-disable ()
-    (set-frame-parameter (selected-frame) 'alpha '(100 . 50)))
-
-  (defun ale-opacity-default ()
-    (set-frame-parameter (selected-frame) 'alpha `(,ale-opacity . 50)))
-
-  ;;;###autoload
-  (defun ale-opacity-auto ()
-    "Setup frame opacity according to current major-mode."
-    (if (or (apply #'derived-mode-p ale-opacity-disabled-modes)
-            (cl-find-if (lambda (mode) (memq mode (active-minor-modes!)))
-                        ale-opacity-disabled-modes))
-        (ale-opacity-disable)
-      (ale-opacity-default)))
-
-  ;;;###autoload
-  (define-minor-mode ale-opacity-auto-mode
-    "Minor mode for adjusting frame opacity."
-    :lighter " ale-auto-opacity"
-    :group 'ale
-    :global t
-    (ale-opacity-default)
-    (if ale-opacity-auto-mode
-        (add-hook 'window-configuration-change-hook #'ale-opacity-auto)
-      (remove-hook 'window-configuration-change-hook #'ale-opacity-auto)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Config-21749923
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (frame-enable! 'ale-opacity-auto-mode)
 #+end_src
 
 ** Frame margin (fringe.el)
