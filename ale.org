@@ -3485,7 +3485,7 @@ need to add =--with-xinput2= in build flags to enable this feature.
     (pixel-scroll-precision-mode 1))
 #+end_src
 
-** Icons (all-the-icons.el)
+** Icons (vscode-icon.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Icons_(all-the-icons.el)-cec48ab7
 :END:
@@ -3496,10 +3496,7 @@ would normal text.  This enables things such as better scaling of and anti
 aliasing of the icons.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package all-the-icons
-    :init
-    (unless (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
-      (all-the-icons-install-fonts)))
+  (use-package vscode-icon)
 #+end_src
 
 ** A colorful dired (diredfl.el)
