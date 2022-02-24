@@ -3987,6 +3987,7 @@ made for this package and built-in help buffer:
      ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
      ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t))))
     :config
+    (defvar read-symbol-positions-list nil)
     (setq find-function-C-source-directory "~/.cache/paru/clone/emacs-git/src/emacs-git/src"))
 #+end_src
 
