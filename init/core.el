@@ -22,17 +22,6 @@
           entry
         (complete-with-action action completions string pred)))))
 
-(defun active-minor-modes! ()
-  "Get a list of which minor modes are enabled in the current buffer."
-  (let (active-minor-modes)
-    (mapc (lambda (mode)
-            (condition-case nil
-                (if (and (symbolp mode) (symbol-value mode))
-                    (setq active-minor-modes (cons mode active-minor-modes)))
-              (error nil)))
-          minor-mode-list)
-    active-minor-modes))
-
 (defun frame-enable! (setup-func)
   "doc"
   (if (daemonp)
