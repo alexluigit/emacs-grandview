@@ -1474,7 +1474,7 @@ Create a jump list (same concept in vim) in emacs.
     (ale-jumper-sensible-jump-mode))
 #+end_src
 
-** Line numbers (display-line-numbers.el)
+** COMMENT Line numbers (display-line-numbers.el)
 :PROPERTIES:
 :CUSTOM_ID: Text_editor-Line_numbers_(display-line-numbers.el)-54dd9a1f
 :END:
