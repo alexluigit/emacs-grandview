@@ -3914,7 +3914,7 @@ Index based window motions.
     :config
     (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
     (setq magit-define-global-key-bindings nil)
-    (setq git-commit-summary-max-length 50)
+    (setq git-commit-summary-max-length 68)
     (setq git-commit-known-pseudo-headers
           '("Signed-off-by"
             "Acked-by"
