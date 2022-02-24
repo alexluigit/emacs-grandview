@@ -908,6 +908,15 @@ all of the components in any order.
 :CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Config-3998f123
 :END:
 
+Setup completion styles in minibuffer.
+
+Not that we have set =orderless-component-separator= to the function
+=orderless-escapable-split-on-space=.  This allows us to match candidates with
+literal spaces.  Suppose you are browsing =dired.el= and try to locate the =dired=
+function, you can issue a =consult-outline= command and input "defun dired\ \(\)",
+this gives you =(defun dired (dirname &optional switches)= as the sole match
+rather than all of the =dired-*= noise.
+
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package pinyinlib)
 
@@ -915,7 +924,7 @@ all of the components in any order.
     :after-call minibuffer-setup-hook
     :config
     (setq completion-styles '(orderless))
-    (setq orderless-component-separator " +")
+    (setq orderless-component-separator #'orderless-escapable-split-on-space)
     (setq orderless-matching-styles
           '(ale-orderless-pinyin-only-initialism
             orderless-initialism
