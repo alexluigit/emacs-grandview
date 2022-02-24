@@ -1165,10 +1165,8 @@ framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
   (use-package marginalia
     :after-call minibuffer-setup-hook
     :config
-    (setq marginalia-annotators
-          '(marginalia-annotators-heavy
-            marginalia-annotators-light))
-    (marginalia-mode))
+    (marginalia-mode)
+    (setq marginalia-align 'center))
 #+end_src
 
 *** Auto completion in buffer (company.el)
