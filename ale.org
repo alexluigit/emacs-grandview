@@ -215,6 +215,11 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
   (require 'meow)
 
+  (defvar ale-meow-fallback-key-cmd-alist
+    '(("SPC" . consult-buffer)
+      ("/" . consult-line))
+    "Doc.")
+
   ;;;###autoload
   (defadvice! +meow-query-replace-ad (fn &rest args)
     "Call `meow-query-replace' and auto fill prompt with region text."
@@ -238,18 +243,24 @@ If you want to know more about meow or modal editing in general, check out [[htt
   (defun ale-meow-escape ()
     (interactive)
     (cond
-     ((region-active-p) (meow-cancel))
+     ((minibufferp)
+      (keyboard-escape-quit))
+     ((region-active-p)
+      (meow-cancel))
      (t (call-interactively 'execute-extended-command))))
 
   ;;;###autoload
-  (defun ale-meow-leader-space ()
-    "If `SPC' is bounded to any command in current major-mode, call
-  that command, otherwise call `consult-buffer'."
+  (defun ale-meow-with-key-fallback ()
+    "Execute fallback command if exists.
+  If `last-input-event' is bounded to any command in current
+  major-mode, call that command, otherwise call its fallback
+  command defined in `ale-meow-fallback-key-cmd-alist'."
     (interactive)
-    (let ((key (meow--parse-input-event last-input-event)))
-      (if-let* ((rebind-key (meow--get-origin-command key)))
+    (let* ((key (meow--parse-input-event last-input-event))
+           (rebind-key (concat meow-motion-remap-prefix key)))
+      (if (and (key-binding (kbd rebind-key)) (not (derived-mode-p 'special-mode)))
           (meow--execute-kbd-macro rebind-key)
-        (consult-buffer))))
+        (funcall (alist-get key ale-meow-fallback-key-cmd-alist #'ignore nil #'string=)))))
 
   ;;;###autoload
   (defun ale--bounds-of-tag ()
@@ -285,15 +296,16 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package meow
+    :straight (meow :type git :depth full :host github :repo "meow-edit/meow")
     :demand t
-    :init (meow-global-mode)
+    :init
+    (setq meow-keymap nil)
+    (meow-global-mode)
     :config
     (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
-    (advice-add 'meow-minibuffer-quit :override #'keyboard-escape-quit)
     (advice-add 'meow-start-kmacro-or-insert-counter :around #'silent!)
     (advice-add 'meow-end-or-call-kmacro :around #'silent!)
     (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
-    (meow-setup-line-number)
     (setq meow-visit-sanitize-completion nil)
     (setq meow-use-clipboard t)
     (setq meow-esc-delay 0.001)
@@ -326,7 +338,8 @@ If you want to know more about meow or modal editing in general, check out [[htt
             (?i . indent)
             (?t . tag)
             (?x . extend)))
-    (add-to-list 'meow-mode-state-list '(helpful-mode . normal)))
+    (add-to-list 'meow-mode-state-list '(helpful-mode . normal))
+    (add-to-list 'meow-mode-state-list '(message-buffer-mode . normal)))
 #+end_src
 
 *** Quick goto char (avy.el)
@@ -382,7 +395,6 @@ has been bound to =meow-inner-of-thing=.)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-bff4df22
 :END:
-
 
 **** Autoload
 :PROPERTIES:
@@ -987,7 +999,6 @@ Selectrum, Vertico and Embark.
     (advice-add #'consult-line :around #'ale-consult-line-advisor)
     (setq xref-show-xrefs-function #'consult-xref
           xref-show-definitions-function #'consult-xref)
-    (meow-motion-overwrite-define-key '("/" . consult-line))
     :bind
     (nil
      :map meow-normal-state-keymap
@@ -1297,7 +1308,7 @@ This section contains all core keybindings of =emacs-grandview=.
    '("5" . ctl-x-5-prefix)
    '("8" . insert-char)
    '("9" . tab-map)
-   '("SPC" . ale-meow-leader-space)
+   '("SPC" . ale-meow-with-key-fallback)
    '("?" . describe-keymap)
    '("/" . describe-symbol)
    '(";" . ale-comment-or-uncomment-region)
@@ -1356,7 +1367,8 @@ mode doesn't specify one.
               (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'ale-meow-leader-space)
 
   (meow-motion-overwrite-define-key
-   '("<escape>" . ale-meow-escape))
+   '("<escape>" . ale-meow-escape)
+   '("/" . ale-meow-with-key-fallback))
 #+end_src
 
 * Text editor
