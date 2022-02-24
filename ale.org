@@ -571,8 +571,19 @@ to 0 to ensure every new window will open in horizontal split.
     (setq even-window-sizes 'height-only)
     (setq window-sides-vertical nil)
     (setq switch-to-buffer-in-dedicated-window 'pop)
-    (setq split-height-threshold nil)
-    (setq split-width-threshold 0))
+    (setq split-height-threshold nil))
+#+end_src
+
+*** Tabs as workspaces (tab-bar.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Core_UI-Tabs_placement_(tab-bar.el)-0f58f818
+:END:
+
+#+begin_src emacs-lisp
+  (use-package tab-bar
+    :straight (:type built-in)
+    :config
+    (setq tab-bar-new-tab-choice "~/"))
 #+end_src
 
 *** Pulse line (pulse.el)
