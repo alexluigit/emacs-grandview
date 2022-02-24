@@ -10,12 +10,12 @@
         ((title . "  Photos")       (path . "~/Pictures"))
         ((title . "  Downloads")    (path . "~/Downloads"))))
 
-(setq! ale-dired-routes
-       '(("o" "Home"        "~")
-         ("d" "Dotfiles"    "/opt/dotfiles")
-         ("u" "Emacs cache" "~/.cache/emacs")
-         ("p" "Code"        "~/Code")
-         ("n" "Downloads"   "~/Downloads")
-         ("w" "Wallpaper"   "~/Pictures/wallpaper")
-         ("m" "Drives"      "/mnt")
-         ("t" "Trash"       "~/.local/share/Trash")))
+(setq ale-roam-dirs-alist
+      '(("o" "~/"                          "Home")
+        ("d" "/opt/dotfiles/"              "Dotfiles")
+        ("u" "~/.cache/emacs/"             "Emacs cache")
+        ("p" "~/Code/"                     "Code")
+        ("n" "~/Downloads/"                "Downloads")
+        ("w" "~/Pictures/wallpaper/"       "Wallpaper")
+        ("m" "/mnt/"                       "Drives")
+        ("t" "~/.local/share/Trash/files/" "Trash")))

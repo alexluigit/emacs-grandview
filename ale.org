@@ -1244,7 +1244,6 @@ This section contains all core keybindings of =emacs-grandview=.
   (bind-keys
    :map ale-files-map
    ("." . ale-files-dotfiles)
-   ("a" . ale-files-browse-all-directories)
    ("e" . ale-files-edit-emacs-config)
    ("l" . find-library)
    ("r" . ale-files-rename-file-and-buffer)
@@ -1778,165 +1777,8 @@ Summary of what these do:
     :straight (:type built-in)
     :config
     (setq confirm-kill-processes nil)
-    (setq permanently-enabled-local-variables '(lexical-binding encoding)))
-#+end_src
-
-** Dired (dired.el)
-:PROPERTIES:
-:CUSTOM_ID: File_management-Dired_(dired.el)-2ce621bd
-:END:
-
-=Dired= is a built-in tool that performs file management operations
-inside of an Emacs buffer.  It is simply superb!
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/dired.el"
-:CUSTOM_ID: File_management-Dired_(dired.el)-Autoload-a76ae3d5
-:END:
-
-#+begin_src emacs-lisp
-  ;;; ale/autoload/dired.el --- -*- lexical-binding: t -*-
-
-  (require 'transient)
-  (require 'dired)
-
-  ;;;###autoload
-  (defun ale-dired-find-file (&rest args)
-    (interactive)
-    (apply 'find-alternate-file args))
-
-  ;;;###autoload
-  (defun ale-dired-file-true-path ()
-    (interactive)
-    (ale-dired-find-file (file-truename (dired-get-filename))))
-
-  ;;;###autoload
-  (defun ale-dired-yank-file-name ()
-    "Copy filename under the cursor."
-    (interactive)
-    (message "Copied: %s" (dired-copy-filename-as-kill)))
-
-  ;;;###autoload
-  (defun ale-dired-yank-file-path ()
-    "Copy filename under the cursor."
-    (interactive)
-    (message "Copied: %s" (kill-new (dired-get-filename nil t))))
-
-  ;;;###autoload
-  (defun ale-dired-yank-file-dir ()
-    "Copy the current directory's (`default-directory''s) absolute path."
-    (interactive)
-    (message "Copied: %s" (kill-new (expand-file-name default-directory))))
-
-  ;;;###autoload
-  (defun ale-dired-browse-all-directories ()
-    "Browse all directories using `fd' command."
-    (interactive)
-    (let* ((command "fd -H -td -0 . /")
-           (output (shell-command-to-string command))
-           (files-raw (split-string output "\0" t))
-           (files (ale-minibuffer-append-metadata 'file files-raw))
-           (file (completing-read "Goto: " files)))
-      (ale-dired-find-file file)))
-
-  ;;;###autoload
-  (defun ale-dired-jump () nil)
-
-  ;;;###autoload
-  (defun ale-dired-toolbox () nil)
-
-  (defcustom ale-dired-tools '()
-    "doc"
-    :group 'dired :type 'list
-    :set
-    (lambda (k v)
-      `(setq ,k v)
-      (eval `(transient-define-prefix ale-dired-toolbox ()
-                                      ["Select operation for entry: "
-                                       ,@(cl-loop for (key desc fun) in v
-                                                  collect (list key desc fun))]))))
-
-  (defcustom ale-dired-routes '()
-    "doc"
-    :group 'dired :type 'list
-    :set
-    (lambda (k v)
-      `(setq ,k v)
-      (eval `(transient-define-prefix ale-dired-jump ()
-                                      ["Go to Directory: "
-                                       ,@(cl-loop for (key desc path) in v
-                                                  collect (list key desc `(lambda () (interactive) (ale-dired-find-file ,path))))]))))
-
-  ;;;###autoload
-  (defun ale-dired-rename-space-to-underscore ()
-    "Rename current or marked files by replacing space to underscore."
-    (interactive)
-    (require 'dired-aux)
-    (if (derived-mode-p 'dired-mode)
-        (let ((markedFiles (dired-get-marked-files )))
-          (mapc (lambda (x)
-                  (when (string-match " " x )
-                    (dired-rename-file x (replace-regexp-in-string " " "_" x) nil)))
-                markedFiles)
-          (when (eq major-mode 'dired-mode) (revert-buffer)))
-      (user-error "Not in a dired buffer.")))
-
-  ;;;###autoload
-  (defun ale-dired-file-rename-eol ()
-    "Rename current file from end of line."
-    (interactive)
-    (end-of-line)
-    (wdired-change-to-wdired-mode)
-    (when (featurep 'meow) (meow-append)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: File_management-Dired_(dired.el)-Config-f48030ba
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (use-package dired
-    :straight (:type built-in)
-    :bind
-    (nil
-     :map dired-mode-map
-     ("/" . dired-goto-file)
-     ("a" . dired-create-empty-file)
-     ("f" . ale-dired-toolbox)
-     ("r" . ale-dired-jump)
-     ("I" . dired-insert-subdir)
-     ("?" . dired-create-directory)
-     ("O" . dired-find-file-other-window)
-     ("i" . ale-dired-file-rename-eol)
-     ("d" . dired-kill-subdir)
-     ("<" . beginning-of-buffer)
-     (">" . end-of-buffer)
-     ("[" . dired-prev-dirline)
-     ("]" . dired-next-dirline)
-     ("o" . dired-up-directory)
-     ("^" . mode-line-other-buffer)
-     ("x" . dired-do-delete)
-     ("y" . dired-do-copy)
-     ("." . dired-omit-mode)
-     ("% SPC" . ale-dired-rename-space-to-underscore))
-    :config
-    (setq! ale-dired-tools
-           '(("m" "mark file REGEX" dired-mark-files-regexp)
-             ("n" "copy file NAME" ale-dired-yank-file-name)
-             ("p" "copy file NAME" ale-dired-yank-file-path)
-             ("d" "copy file PATH" ale-dired-yank-file-dir)
-             ("t" "show file TYPE" dired-show-file-type)
-             ("l" "goto file TRUEPATH" ale-dired-file-true-path)))
-    (setq dired-kill-when-opening-new-dired-buffer t) ;; added in emacs 28
-    (setq dired-clean-confirm-killing-deleted-buffers nil)
     (setq large-file-warning-threshold 50000000)
-    (setq dired-recursive-copies 'always)
-    (setq dired-recursive-deletes 'always)
-    (setq delete-by-moving-to-trash t)
-    (setq dired-dwim-target t)
-    (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
+    (setq permanently-enabled-local-variables '(lexical-binding encoding)))
 #+end_src
 
 ** Recent files (recentf.el)
@@ -1991,30 +1833,140 @@ inside of Emacs (e.g. kill a Magit diff).
     (global-auto-revert-mode))
 #+end_src
 
+** Dired (dired.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Dired_(dired.el)-2ce621bd
+:END:
+
+=Dired= is a built-in tool that performs file management operations
+inside of an Emacs buffer.  It is simply superb!
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package dired
+    :straight (:type built-in)
+    :bind
+    (nil
+     :map dired-mode-map
+     ("/" . dired-goto-file)
+     ("a" . dired-create-empty-file)
+     ("i" . wdired-change-to-wdired-mode)
+     ("I" . dired-insert-subdir)
+     ("K" . dired-kill-subdir)
+     ("O" . dired-find-file-other-window)
+     ("<" . beginning-of-buffer)
+     (">" . end-of-buffer)
+     ("[" . dired-prev-dirline)
+     ("]" . dired-next-dirline)
+     ("o" . dired-up-directory)
+     ("^" . mode-line-other-buffer)
+     ("x" . dired-do-delete)
+     ("X" . dired-do-flagged-delete)
+     ("y" . dired-do-copy)
+     ("." . dired-omit-mode))
+    :config
+    (setq dired-kill-when-opening-new-dired-buffer t) ;; added in emacs 28
+    (setq dired-clean-confirm-killing-deleted-buffers nil)
+    (setq dired-recursive-copies 'always)
+    (setq dired-recursive-deletes 'always)
+    (setq delete-by-moving-to-trash t)
+    (setq dired-dwim-target t)
+    (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
+
+  (use-package dired-x
+    :straight (:type built-in)
+    :after dired
+    :init
+    (setq! dired-bind-info nil)
+    :config
+    (setq dired-omit-files
+          (concat dired-omit-files "\\|^\\..*$")))
+
+  (use-package dired-aux
+    :straight (:type built-in)
+    :after dired
+    :config
+    (setq dired-do-revert-buffer t))
+#+end_src
+
 ** A better dired interface (dirvish.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-A_better_dired_interface_(dirvish.el)-19d683c0
 :END:
 
-[[https://github.com/alexluigit/dirvish][Dirvish]] is inspired the popular file manager =ranger=, I created it
-on the basis of =ranger.el=. Compare to =ranger.el=, this package only
-keeps features I wanted, and some sensible functionalities were added
-as well.
+This package empowers dired by giving it a modern UI in a unintrusive way. Emacs
+users deserve a file manager better than those popular ones on terminal such as
+[[https://github.com/ranger/ranger][ranger]], [[https://github.com/vifm/vifm][vifm]], [[https://github.com/gokcehan/lf][lf]] since Emacs is more than a terminal emulator.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (use-package dirvish
-    :after-call pre-command-hook
-    :straight (dirvish :type git :depth full :host github :repo "alexluigit/dirvish")
+    :after-call post-command-hook
     :bind
     (nil
-     :map dirvish-mode-map ("SPC" . dirvish-show-history)
-     :map ale-files-map ("n" . dirvish))
+     :map dirvish-mode-map
+     ("SPC" . dirvish-show-history)
+     ("f"   . dirvish-menu-file-info-cmds)
+     ("r"   . dirvish-roam)
+     ("M-c" . dirvish-ui-config)
+     ("M-f" . dirvish-toggle-fullscreen)
+     ("M-l" . dirvish-change-depth)
+     ([remap dired-summary] . dirvish-dispatch)
+     ([remap dired-do-copy] . dirvish-yank)
+     ([remap mode-line-other-buffer] . dirvish-other-buffer)
+     :map ale-files-map
+     ("a" . dirvish-browse-all-directories)
+     ("n" . dirvish)
+     ("m" . dirvish-dired)
+     ("t" . dirvish-side))
     :config
-    (advice-add 'ale-dired-find-file :override 'dirvish-find-file-dwim)
-    (dirvish-override-dired-jump)
-    (require 'dirvish-minibuffer-preview)
-    (dirvish-minibuf-preview-mode)
+    (setq! dirvish-roam-dirs-alist ale-roam-dirs-alist)
+    (setq dirvish-debug-p t)
+    (defun +dirvish-fullframep ()
+      (and (dirvish-curr) (not (dirvish-dired-p))))
+    (add-to-list 'ale-term-position-alist
+                 '(+dirvish-fullframep . ((window-height . 0.4) (side . bottom))))
+    (dirvish-override-dired-mode)
+    (dirvish-yank-display-progress)
+    (dirvish-peek-mode)
     (setq dirvish-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files"))))
+#+end_src
+
+** A fd procelain (fd-dired.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-'Dired'_the_fd_command_output-5899f431
+:END:
+
+#+begin_src emacs-lisp
+  (use-package fd-dired
+    :after-call dired-noselect
+    :bind
+    ("C-c f" . fd-dired))
+#+end_src
+
+** Useful dired extensions (dired-hacks)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Useful_dired_extensions_(dired-hacks)-95bd1798
+:END:
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+  (use-package dired-narrow
+    :after-call dired-noselect
+    :bind
+    (nil
+     :map dired-mode-map
+     ("N" . dired-narrow)))
+
+  (use-package dired-subtree
+    :after-call dired-noselect
+    :bind
+    (nil
+     :map dired-mode-map
+     ("TAB" . dired-subtree-toggle)))
+
+  (use-package dired-filter
+    :after-call dired-noselect
+    :bind
+    (:map dired-mode-map
+          ([remap dired-omit-mode] . dired-filter-mode)))
 #+end_src
 
 ** Project management (project.el)
@@ -3519,7 +3471,9 @@ Additional syntax highlighting in dired buffer.
 
 #+begin_src emacs-lisp
   (use-package diredfl
-    :hook (dired-mode . diredfl-mode))
+    :hook (dired-mode . diredfl-mode)
+    :config
+    (set-face-attribute 'diredfl-dir-name nil :bold t))
 #+end_src
 
 ** Interactive query replace (anzu.el)

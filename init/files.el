@@ -91,16 +91,6 @@ libraries's truename."
   (find-file ale-full-config-org)
   (setq-local completion-at-point-functions '(elisp-completion-at-point t)))
 
-(defun ale-files-browse-all-directories ()
-  "Browse all directories using `fd' command."
-  (interactive)
-  (let* ((command "fd -H -td -0 . /")
-         (output (shell-command-to-string command))
-         (files-raw (split-string output "\0" t))
-         (files (completion-append-metadata! 'file files-raw))
-         (file (completing-read "Goto: " files)))
-    (dired-jump file)))
-
 (defun ale-files-other-window ()
   "Doc."
   (interactive)
