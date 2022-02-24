@@ -3408,10 +3408,8 @@ Tabs for frequently used buffers.
     :lighter nil
     (if ale-modeline-mode
         (progn
-          (set-face-attribute 'mode-line nil :box `(:line-width 8 :color ,(face-attribute 'mode-line :background)))
           (add-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
           (add-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
-          (add-hook 'find-file-hook #'ale-modeline--update-vc-segment)
           (add-hook 'after-save-hook #'ale-modeline--update-vc-segment)
           (add-hook 'find-file-hook 'ale-modeline-count-lines)
           (add-hook 'after-save-hook 'ale-modeline-count-lines)
@@ -3441,7 +3439,6 @@ Tabs for frequently used buffers.
         (remove-hook 'after-revert-hook #'ale-modeline-count-lines)
         (remove-hook 'flycheck-status-changed-functions #'ale-modeline--update-flycheck-segment)
         (remove-hook 'flycheck-mode-hook #'ale-modeline--update-flycheck-segment)
-        (remove-hook 'file-find-hook #'ale-modeline--update-vc-segment)
         (remove-hook 'after-save-hook #'ale-modeline--update-vc-segment)
         (advice-remove #'vc-refresh-state #'ale-modeline--update-vc-segment)
         (setq-default mode-line-format ale-modeline--default-mode-line))))
