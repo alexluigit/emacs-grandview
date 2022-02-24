@@ -3681,11 +3681,6 @@ Index based window motions.
     "Command for kill whole line in vterm buffer."
     :type 'symbol :group 'vterm)
 
-  (defcustom ale-vterm-position
-    '((dirvish-mode . ((window-height . 0.4) (side . bottom)))
-      (default . ((window-width . 0.4) (side . right))))
-    "doc")
-
   (defvar ale-vterm-buffers nil
     "The list of non-dedicated vterm buffers.")
 
@@ -3742,17 +3737,13 @@ Index based window motions.
     (vterm-send-key "\"" nil 0 nil))
 
   (defun ale-vterm--get-win-params ()
-    "Parse `ale-vterm-position' to get vterm display parameters."
-    (let (pos)
-      (cl-dolist (setting ale-vterm-position)
-        (when (derived-mode-p (car setting))
-          (setq pos (cdr setting)) (cl-return))
-        (when (eq (car setting) 'default)
-          (setq pos (cdr setting))))
-      `(("^\\*vterm.*"
-         (display-buffer-in-side-window)
-         (window-parameters . ((mode-line-format . none)))
-         ,@pos))))
+    "Parse `ale-term-position-alist' to get vterm display parameters."
+    `(("^\\*vterm.*"
+       (display-buffer-in-side-window)
+       (window-parameters . ((mode-line-format . none)))
+       ,@(cl-loop for (pred . pos) in ale-term-position-alist
+                  when (funcall pred)
+                  return pos))))
 
   ;;;###autoload
   (defun ale-vterm-toggle (&optional project-root)
@@ -3848,9 +3839,9 @@ Index based window motions.
     (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
     (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
     :bind
-    (("M-v" . ale-vterm-toggle)
+    (("M--" . ale-vterm-toggle)
      :map vterm-mode-map
-     ("M-v" . ale-vterm-toggle)
+     ("M--" . ale-vterm-toggle)
      ("M-;" . ale-vterm-new)
      ("M-'" . vterm-send-M-apostrophe)
      ("M-\"" . vterm-send-M-quote)
