@@ -3467,7 +3467,9 @@ Create a 20 pixel margin for emacs frame.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
   (add-to-list 'default-frame-alist '(internal-border-width . 20))
-  (fringe-mode)
+  (add-to-list 'default-frame-alist '(left-fringe . 1))
+  (add-to-list 'default-frame-alist '(right-fringe . 1))
+  (fringe-mode '(1 . 1))
 #+end_src
 
 ** Pixel scrolling (pixel-scroll.el)
