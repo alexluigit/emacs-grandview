@@ -12,7 +12,7 @@ Used by `ale-insert-date'."
   :type 'string
   :group 'ale)
 
-(defcustom ale-quit-minor-modes '(org-tree-slide-mode)
+(defcustom ale-quit-minor-modes '(org-tree-slide-mode view-mode)
   "Disable these minor modes when calling `ale-quit'."
   :type '(repeat symbol)
   :group 'ale)
@@ -104,9 +104,6 @@ with the specified date."
       (delete-region (region-beginning) (region-end)))
     (insert (format-time-string format))))
 
-(autoload 'ffap-url-at-point "ffap")
-(defvar ffap-string-at-point-region)
-
 (defun ale-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."
@@ -121,18 +118,12 @@ Do not try to make a new directory or anything fancy."
 (defun ale-quit ()
   "Disable some minor modes or kill current window/buffer.
 
-Try to quit minor modes defined in `ale-quit-minor-modes', if
-none of these minor modes were enabled, try to delete window, if
-any error occurs, kill this buffer instead."
+Try to quit minor modes defined in `ale-quit-minor-modes' then
+issues a `quit-window'."
   (interactive)
-  (let ((skip-kill-window nil))
-    (dolist (mode ale-quit-minor-modes)
-      (when (and (boundp mode)
-                 (or (derived-mode-p mode)
-                     (buffer-local-value mode (current-buffer))))
-        (setq skip-kill-window t)
-        (apply mode '(-1))))
-    (unless skip-kill-window
-      (condition-case nil
-          (delete-window)
-        (error (kill-this-buffer))))))
+  (dolist (mode ale-quit-minor-modes)
+    (when (and (boundp mode)
+               (or (derived-mode-p mode)
+                   (buffer-local-value mode (current-buffer))))
+      (apply mode '(-1))))
+  (quit-window))
