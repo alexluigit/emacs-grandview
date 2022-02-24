@@ -11,17 +11,19 @@ same arguments as `message'."
       (apply 'message (push str args)))))
 
 (defun ale-show-messages (&optional erase)
-  "Show *Messages* buffer."
+  "Show *Messages* buffer in other frame.
+If ERASE is non-nil, erase the buffer before switching to it."
   (interactive "P")
   (when erase
     (let ((inhibit-read-only t))
       (with-current-buffer "*Messages*" (erase-buffer))))
-  (if-let ((win (get-buffer-window "*Messages*")))
-      (delete-window win)
-    (display-buffer-in-side-window
-     (get-buffer "*Messages*")
-     '((side . right)
-       (window-width . 0.5)))))
+  (let ((win (get-buffer-window "*Messages*" t))
+        (after-make-frame-functions nil))
+    (if (window-live-p win)
+        (delete-frame (window-frame win))
+      (with-selected-frame (make-frame)
+        (set-window-parameter (selected-window) 'no-other-window t)
+        (switch-to-buffer "*Messages*")))))
 
 (defun ale-debug-profiler ()
   "Init info with packages loaded and init time."
