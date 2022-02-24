@@ -2308,7 +2308,7 @@ This section is all about basic configurations for how does a =.org= file should
 look like which can be described briefly as follows:
 
 - use bigger fonts for different levels of heading
-- show ellipsis marker when a node is folded.
+- show ellipsis marker when a node is folded
 - center text when make sense
 - indent text according to outline structure
 - display inline images in url automatically
@@ -2714,8 +2714,8 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 Protesilaos Stavrou.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-  (setq modus-themes-links 'no-underline)
-  (setq modus-themes-mode-line 'borderless)
+  (setq modus-themes-links '(no-underline))
+  (setq modus-themes-mode-line '(borderless))
   (add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
 #+end_src
 
