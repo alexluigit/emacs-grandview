@@ -190,6 +190,19 @@ Load core of =emacs-grandview=. It is *NOT* recommended to delete / comment out 
 :CUSTOM_ID: *CORE*-Editor-057db42f
 :END:
 
+*** Basic editing (simple.el)
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Editor-Basic_editing_(simple.el)-c2fc0fd0
+:END:
+
+=simple.el= consists of a grab-bag of basic Emacs commands not specifically related to some major mode
+or to file-handling.
+
+#+begin_src emacs-lisp
+  (use-package simple
+    :straight (:type built-in))
+#+end_src
+
 *** Modal editing (meow.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-e09b77b4
