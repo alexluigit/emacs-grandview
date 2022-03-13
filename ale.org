@@ -22,13 +22,13 @@ This project is my emacs configuration.
 :CUSTOM_ID: Overview-About-Structure-b170db4c
 :END:
 
-+ Init file (init.el / early-init.el)
-+ Optimization options (early-optimize.el)
-+ Core libraries (core/*, core/autoload/*)
-+ extensions (lisp/*)
-+ Main config file (ale.org)
++ Init file:                      =early-init.el= and =init.el=
++ User options:                   =user.el=
++ Booting and essential defaults: =init/*.el=
++ Main config file:               =ale.org= (this file)
 
-doc
+After the bootstrapping process, the tangled code blocks from this file are
+evaluated by Emacs.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 ;;; minimal.el --- -*- lexical-binding: t -*-
@@ -160,10 +160,9 @@ restart () {
     sleep 0.01
   done
   kill -9 $emacs_pid 2>/dev/null
-  rm -rf ~/.config/emacs/eln-cache 2>/dev/null
-  [[ $1 == "-p" ]] && rm -rf ~/.cache/emacs/{straight/build,eln} 2>/dev/null
+  [[ $1 == "-p" ]] && rm -rf ~/.cache/emacs/{straight/build} 2>/dev/null
   [[ $1 == "-r" ]] && rm -rf ~/.cache/emacs/ale 2>/dev/null
-  [[ $1 == "-R" ]] && rm -rf ~/.cache/emacs/{ale,straight,eln} 2>/dev/null
+  [[ $1 == "-R" ]] && rm -rf ~/.cache/emacs/{ale,straight} 2>/dev/null
   _is_ime_rime && GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs --daemon || emacs --daemon
   command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
   emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
