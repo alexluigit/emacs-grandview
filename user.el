@@ -9,13 +9,3 @@
         ((title . "  Notes")        (path . "~/Documents/notes"))
         ((title . "  Photos")       (path . "~/Pictures"))
         ((title . "  Downloads")    (path . "~/Downloads"))))
-
-(setq ale-roam-dirs-alist
-      '(("o" "~/"                          "Home")
-        ("d" "/opt/dotfiles/"              "Dotfiles")
-        ("u" "~/.cache/emacs/"             "Emacs cache")
-        ("p" "~/Code/"                     "Code")
-        ("n" "~/Downloads/"                "Downloads")
-        ("w" "~/Pictures/wallpaper/"       "Wallpaper")
-        ("m" "/mnt/"                       "Drives")
-        ("t" "~/.local/share/Trash/files/" "Trash")))

@@ -2005,7 +2005,7 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-do-revert-buffer t))
 #+end_src
 
-** A better dired interface (dirvish.el)
+** A better dired (dirvish.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-A_better_dired_interface_(dirvish.el)-19d683c0
 :END:
@@ -2019,28 +2019,41 @@ users deserve a file manager better than those popular ones on terminal such as
   :after-call post-command-hook
   :bind
   (nil
+   :map dired-mode-map
+   ("r"   . dirvish-goto-bookmark)
+   ("M-f" . dirvish-toggle-fullscreen)
    :map dirvish-mode-map
    ("SPC" . dirvish-show-history)
-   ("f"   . dirvish-menu-file-info-cmds)
-   ("r"   . dirvish-roam)
-   ("M-c" . dirvish-ui-config)
-   ("M-f" . dirvish-toggle-fullscreen)
-   ("M-l" . dirvish-change-depth)
+   ("f"   . dirvish-file-info-menu)
+   ("b"   . dirvish-roam)
+   ("M-s" . dirvish-setup-menu)
    ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank)
    ([remap mode-line-other-buffer] . dirvish-other-buffer)
    :map ale-files-map
-   ("a" . dirvish-browse-all-directories)
+   ("b" . dirvish-roam)
    ("n" . dirvish)
    ("m" . dirvish-dired)
    ("t" . dirvish-side))
+  :custom-face
+  (dirvish-hl-line ((t (:inherit diredfl-flag-mark))))
   :config
-  (setq! dirvish-roam-dirs-alist ale-roam-dirs-alist)
+  (dirvish-define-preview exa (file)
+    "Uses `exa' to generate directory preview."
+    (when (file-directory-p file)
+      `(shell . ("exa" "--color=always" "-al" ,file))))
+  (add-to-list 'dirvish-preview-dispatchers 'exa)
+  (setq! dirvish-bookmarks-alist
+         '(("o" "~/"                          "Home")
+           ("d" "/opt/dotfiles/"              "Dotfiles")
+           ("u" "~/.cache/emacs/"             "Emacs cache")
+           ("p" "~/Code/"                     "Code")
+           ("n" "~/Downloads/"                "Downloads")
+           ("w" "~/Pictures/wallpaper/"       "Wallpaper")
+           ("m" "/mnt/"                       "Drives")
+           ("t" "~/.local/share/Trash/files/" "Trash")))
+  (setq! dirvish-attributes '(vscode-icon file-size))
   (setq dirvish-debug-p t)
-  (defun +dirvish-fullframep ()
-    (and (dirvish-curr) (not (dirvish-dired-p))))
-  (add-to-list 'ale-term-position-alist
-               '(+dirvish-fullframep . ((window-height . 0.4) (side . bottom))))
   (dirvish-override-dired-mode)
   (dirvish-yank-display-progress)
   (dirvish-peek-mode)
@@ -2056,7 +2069,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (use-package fd-dired
   :after-call dired-noselect
   :bind
-  ("C-c f" . fd-dired))
+  ("C-c F" . fd-dired))
 #+end_src
 
 ** Useful dired extensions (dired-hacks)
@@ -2084,6 +2097,13 @@ users deserve a file manager better than those popular ones on terminal such as
   :bind
   (:map dired-mode-map
         ([remap dired-omit-mode] . dired-filter-mode)))
+
+(use-package dired-collapse
+  :after-call dired-noselect
+  :bind
+  (nil
+   :map dired-mode-map
+   ("M-c" . dired-collapse-mode)))
 #+end_src
 
 ** Project management (project.el)
@@ -3491,7 +3511,12 @@ would normal text.  This enables things such as better scaling of and anti
 aliasing of the icons.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package vscode-icon)
+(use-package vscode-icon
+  :config
+  (push '("jpg" . "image") vscode-icon-file-alist)
+  (push '("7z" . "zip") vscode-icon-file-alist)
+  (push '("mkv" . "video") vscode-icon-file-alist)
+  (push '("epub" . "storybook") vscode-icon-file-alist))
 #+end_src
 
 ** A colorful dired (diredfl.el)
@@ -3599,17 +3624,17 @@ code.  Do it with =M-x find-library transpose-frame=.
   :after-call find-file-hook
   :hook
   (after-init . global-writeroom-mode)
+  (org-mode . +visual-fill-center-text)
   :config
   (setq split-width-threshold 120
         writeroom-width 128
         writeroom-bottom-divider-width 0
         writeroom-fringes-outside-margins t
         writeroom-fullscreen-effect nil
-        writeroom-major-modes '(text-mode prog-mode conf-mode special-mode Info-mode dired-mode)
+        writeroom-major-modes '(text-mode prog-mode conf-mode special-mode Info-mode)
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
-        writeroom-mode-line t)
-  (org-mode . +visual-fill-center-text))
+        writeroom-mode-line t))
 #+end_src
 
 ** Key bindings hint (which-key.el)
