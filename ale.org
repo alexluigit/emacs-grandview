@@ -2729,9 +2729,12 @@ Some number of BLANK-LINES will be shown below the header."
 Protesilaos Stavrou.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(setq modus-themes-links '(no-underline))
-(setq modus-themes-mode-line '(borderless))
-(add-hook 'emacs-startup-hook (lambda () (load-theme 'modus-vivendi)))
+(straight-use-package `(modus-themes ,@(when (>= emacs-major-version 28) '(:type built-in))))
+(use-package modus-themes
+  :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
+  :config
+  (setq modus-themes-links '(no-underline))
+  (setq modus-themes-mode-line '(borderless)))
 #+end_src
 
 ** Fonts (fonts.el)
