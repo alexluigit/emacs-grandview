@@ -1393,10 +1393,6 @@ These are some default keybindings that will be available when the current major
 mode doesn't specify one.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(define-key meow-motion-state-keymap (kbd ale-local-leader-key) meow-leader-keymap)
-(define-key meow-motion-state-keymap
-            (kbd (concat ale-local-leader-key " " ale-local-leader-key)) 'ale-meow-leader-space)
-
 (meow-motion-overwrite-define-key
  '("<escape>" . ale-meow-escape)
  '("/" . ale-meow-with-key-fallback))
