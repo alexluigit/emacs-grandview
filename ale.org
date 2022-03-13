@@ -4662,7 +4662,7 @@ optional minor mode which can apply this command automatically on save.
    ("f" . ale-format-buffer)))
 #+end_src
 
-** Indent lines (highlight-indent-guides.el)
+** COMMENT Indent lines (highlight-indent-guides.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Indent_lines_(highlight-indent-guides.el)-a48d2be7
 :END:
