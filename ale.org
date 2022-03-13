@@ -571,7 +571,8 @@ to 0 to ensure every new window will open in horizontal split.
   (setq even-window-sizes 'height-only)
   (setq window-sides-vertical nil)
   (setq switch-to-buffer-in-dedicated-window 'pop)
-  (setq split-height-threshold nil))
+  (setq split-height-threshold nil)
+  (setq split-width-threshold 0))
 #+end_src
 
 *** Tabs as workspaces (tab-bar.el)
@@ -679,6 +680,7 @@ take effect."
   :config
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
+  (setq transient-display-buffer-action '(display-buffer-below-selected))
   :bind
   (nil
    :map transient-map

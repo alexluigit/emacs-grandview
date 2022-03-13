@@ -44,7 +44,7 @@
   :group 'files :type '(alist :value-type ((choice list string) list)))
 
 (defcustom ale-term-position-alist
-  '((always . ((window-width . 0.4) (side . right))))
+  '((always . ((window-height . 0.4) (side . bottom))))
   "doc")
 
 (defconst ale-files-dot-repo (getenv "DOTPATH")
