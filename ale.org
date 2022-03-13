@@ -2797,16 +2797,11 @@ Protesilaos Stavrou.
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
+(setq ale-default-fonts '("Victor Mono"))
+(setq ale-fixed-fonts '("Sarasa Mono SC"))
+(setq ale-variable-fonts '("Sarasa Mono SC"))
+(setq ale-zh-fonts '("LXGW WenKai Mono"))
 (frame-enable! 'ale-font-setup)
-
-;; https://lists.gnu.org/archive/html/emacs-devel/2021-11/msg01636.html
-(defun +modeline-font-temp-fix ()
-  (when-let* ((font-name (font-chooser! ale-default-fonts))
-              (font (font-spec :family font-name :size ale-font-size)))
-    (set-face-attribute 'mode-line nil :font font)
-    (set-face-attribute 'mode-line-inactive nil :font font)))
-
-(frame-enable! '+modeline-font-temp-fix)
 #+end_src
 
 ** Frame (frame.el)

@@ -20,7 +20,7 @@
 (defvar ale-default-fonts '("Victor Mono" "Sarasa Mono SC" "Fira Code Retina"))
 (defvar ale-fixed-fonts '("Sarasa Mono SC" "Fira Code Retina"))
 (defvar ale-variable-fonts '("Sarasa Mono SC" "Victor Mono" "Fira Code Retina"))
-(defvar ale-zh-fonts '("FZSuXinShiLiuKaiS-R-GB" "Smartisan Compact CNS" "Sarasa Mono SC" "青鸟华光简报宋二"))
+(defvar ale-zh-fonts '("LXGW WenKai Mono" "HarmonyOS Sans SC Light" "Smartisan Compact CNS" "Sarasa Mono SC" "青鸟华光简报宋二" "FZSuXinShiLiuKaiS-R-GB"))
 (defvar ale-zh-font-scale 1.2)
 
 (defcustom ale-files-additional-mime
