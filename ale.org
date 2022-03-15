@@ -70,6 +70,7 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 Here are the dependency list (it might not be a complete list) that this project
 required or optionally required.
 
+|-----------------------+-----------------------------+-----------|
 | Package               | Description                 | Required? |
 |-----------------------+-----------------------------+-----------|
 | =fd=                    | A modern =find=               |           |
@@ -81,6 +82,7 @@ required or optionally required.
 | =victor-mono-nerd-font= | Default fixed pitch font    | optional  |
 | =sarasa-gothic= (font)  | Default variable pitch font | optional  |
 | =xdotool=               | Automation tool for X11     | optional  |
+|-----------------------+-----------------------------+-----------|
 
 *** Install
 :PROPERTIES:
@@ -465,6 +467,7 @@ details.
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Core_UI-5777cbac
 :END:
+
 *** Window placement (window.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Window_placement_(window.el)-932bb9f2
@@ -2350,10 +2353,11 @@ look like which can be described briefly as follows:
      `(org-level-2 ((t (,@variable-pitch :height 1.4))))
      `(org-level-3 ((t (,@variable-pitch :height 1.3))))
      `(org-level-4 ((t (,@variable-pitch :height 1.2))))
-     `(org-block ((t (,@default :inherit (default shadow)
-                                :height 1.0
-                                :background ,(face-attribute 'org-block-begin-line :background)
-                                :extend t))))
+     `(org-table ((t (,@default))))
+     `(org-verbatim ((t (,@default))))
+     `(org-formula ((t (,@default))))
+     `(org-code ((t (,@default))))
+     `(org-block ((t (,@default))))
      `(org-block-begin-line ((t (:foreground "#606060" :extend t))))
      '(org-tag ((t (:inherit (shadow) :weight bold :height 0.8)))))))
 #+end_src
@@ -2540,21 +2544,6 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
   (setq org-src-window-setup 'split-window-right))
 #+end_src
 
-** Bullet (org-superstar.el)
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Bullet_(org-superstar.el)-270e699b
-:END:
-
-#+begin_src emacs-lisp
-(use-package org-superstar
-  :config
-  (setq org-superstar-item-bullet-alist '((?* . ?•) (?+ . ?+) (?- . ?•)))
-  (setq org-superstar-remove-leading-stars t)
-  (setq org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●"))
-  :hook
-  (org-mode . org-superstar-mode))
-#+end_src
-
 ** Reveal invisible org elements (org-appear.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Reveal_invisible_org_elements_(org-appear.el)-f7a05b14
@@ -2564,7 +2553,20 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (use-package org-appear
   :hook (org-mode . org-appear-mode)
   :config
+  (setq org-appear-autolinks t)
   (setq org-hide-emphasis-markers t))
+#+end_src
+
+** Modern org style (org-modern.el)
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Modern_org_style_(org-modern.el)-e69f10c6
+:END:
+
+#+begin_src emacs-lisp
+(use-package org-modern
+  :hook
+  ((org-mode . org-modern-mode)
+   (org-agenda-finalize . org-modern-agenda)))
 #+end_src
 
 ** Habit (org-habit.el)
