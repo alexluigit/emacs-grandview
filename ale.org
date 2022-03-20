@@ -574,7 +574,7 @@ to 0 to ensure every new window will open in horizontal split.
   (setq window-sides-vertical nil)
   (setq switch-to-buffer-in-dedicated-window 'pop)
   (setq split-height-threshold nil)
-  (setq split-width-threshold 0))
+  (setq split-width-threshold 120))
 #+end_src
 
 *** Tabs as workspaces (tab-bar.el)
@@ -3623,8 +3623,7 @@ code.  Do it with =M-x find-library transpose-frame=.
   (after-init . global-writeroom-mode)
   (org-mode . +visual-fill-center-text)
   :config
-  (setq split-width-threshold 120
-        writeroom-width 128
+  (setq writeroom-width 128
         writeroom-bottom-divider-width 0
         writeroom-fringes-outside-margins t
         writeroom-fullscreen-effect nil
