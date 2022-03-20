@@ -849,11 +849,10 @@ window as a constant value.
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package vertico
   :after-call pre-command-hook
+  :custom-face
+  (vertico-current ((t (:inherit lazy-highlight))))
   :config
   (setq resize-mini-windows 'grow-only)
-  (set-face-attribute 'vertico-current nil :background
-                      (face-attribute 'lazy-highlight :background nil t)
-                      :weight 'semi-bold)
   (vertico-mode 1))
 #+end_src
 
