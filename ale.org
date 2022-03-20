@@ -680,6 +680,7 @@ take effect."
 
 (use-package transient
   :config
+  (setq transient-default-level 7)
   (setq transient-show-popup -0.5)
   (transient-bind-q-to-quit)
   (setq transient-display-buffer-action '(display-buffer-below-selected))
@@ -2021,10 +2022,10 @@ users deserve a file manager better than those popular ones on terminal such as
    :map dired-mode-map
    ("r"   . dirvish-goto-bookmark)
    ("M-f" . dirvish-toggle-fullscreen)
-   :map dirvish-mode-map
    ("SPC" . dirvish-show-history)
    ("f"   . dirvish-file-info-menu)
    ("b"   . dirvish-roam)
+   ("M-a" . dirvish-mark-actions-menu)
    ("M-s" . dirvish-setup-menu)
    ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank)
@@ -2034,13 +2035,13 @@ users deserve a file manager better than those popular ones on terminal such as
    ("n" . dirvish)
    ("m" . dirvish-dired)
    ("t" . dirvish-side))
-  :custom-face
-  (dirvish-hl-line ((t (:inherit diredfl-flag-mark))))
   :config
+  (dirvish-override-dired-mode)
+  (dirvish-peek-mode)
   (dirvish-define-preview exa (file)
-    "Uses `exa' to generate directory preview."
+    "Use `exa' to generate directory preview."
     (when (file-directory-p file)
-      `(shell . ("exa" "--color=always" "-al" ,file))))
+      `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
   (add-to-list 'dirvish-preview-dispatchers 'exa)
   (setq! dirvish-bookmarks-alist
          '(("o" "~/"                          "Home")
@@ -2051,11 +2052,14 @@ users deserve a file manager better than those popular ones on terminal such as
            ("w" "~/Pictures/wallpaper/"       "Wallpaper")
            ("m" "/mnt/"                       "Drives")
            ("t" "~/.local/share/Trash/files/" "Trash")))
-  (setq! dirvish-attributes '(vscode-icon file-size))
+  (setq! dirvish-attributes '(expanded-state all-the-icons file-size))
+  (setq! dirvish-all-the-icons-height 0.8)
+  (setq! dirvish-side-attributes (append '(vc-state git-msg) dirvish-attributes))
+  (setq! dirvish-side-preview-dispatchers
+         (append '(vc-diff) dirvish-preview-dispatchers))
+  (setq! dirvish-side-mode-line-format
+         '(:left (vc-info sort filter) :right (index)))
   (setq dirvish-debug-p t)
-  (dirvish-override-dired-mode)
-  (dirvish-yank-display-progress)
-  (dirvish-peek-mode)
   (setq dirvish-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files"))))
 #+end_src
 
@@ -2093,6 +2097,15 @@ users deserve a file manager better than those popular ones on terminal such as
 
 (use-package dired-filter
   :after-call dired-noselect
+  :config
+  (setq dired-filter-show-filters nil)
+  (setq dired-filter-revert 'always)
+  (dirvish-define-mode-line filter "Describe filters."
+    (when dired-filter-mode
+      (format " %s %s " (propertize "Filters:" 'face 'bold)
+              (dired-filter--describe-filters))))
+  (setq! dirvish-mode-line-format
+         '(:left (vc-info sort filter) :right (yank index)))
   :bind
   (:map dired-mode-map
         ([remap dired-omit-mode] . dired-filter-mode)))
