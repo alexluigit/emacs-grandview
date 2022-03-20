@@ -3497,15 +3497,22 @@ need to add =--with-xinput2= in build flags to enable this feature.
   (pixel-scroll-precision-mode 1))
 #+end_src
 
-** Icons (vscode-icon.el)
+** Icons (all-the-icons.el | vscode-icon.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Icons_(all-the-icons.el)-cec48ab7
 :END:
 
-This package is a utility for using and formatting various Icon fonts within
+=all-the-icons= is a utility for using and formatting various Icon fonts within
 Emacs.  Icon Fonts allow you to propertize and format icons the same way you
 would normal text.  This enables things such as better scaling of and anti
 aliasing of the icons.
+
+#+begin_src emacs-lisp :tangle (ale-minimal-config)
+(use-package all-the-icons)
+#+end_src
+
+Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
+style icons with image format.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package vscode-icon
