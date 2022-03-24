@@ -35,4 +35,7 @@ If ERASE is non-nil, erase the buffer before switching to it."
         (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
       (run-with-timer 1 nil 'ale-log docstr package-count time))))
 
+(defun ale-called (&optional label)
+  (message "ALE: %s" (or label "default")))
+
 (add-hook 'emacs-startup-hook #'ale-debug-profiler)
