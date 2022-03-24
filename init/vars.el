@@ -67,6 +67,9 @@
 ;; `mct' is the acronym for "Minibuffer and Completions in Tandem".
 (define-prefix-command 'ale-mct-map)
 
+;; Programming related commands
+(define-prefix-command 'ale-prog-map)
+
 ;; Shortcuts for org related commands
 (define-prefix-command 'ale-org-map)
 

@@ -1355,9 +1355,10 @@ This section contains all core keybindings of =emacs-grandview=.
  '("k" . kill-this-buffer)
  '("n" . ale-project-find-file)
  '("o" . ale-org-map)
- '("p" . project-map)
+ '("P" . project-map)
  '("r" . register-map)
  '("t" . ale-mct-map)
+ '("p" . ale-prog-map)
  '("w" . save-buffer)
  '("z" . window-toggle-side-windows))
 
