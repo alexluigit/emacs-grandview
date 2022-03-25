@@ -67,23 +67,21 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 :CUSTOM_ID: Overview-Quickstart-Dependencies-39c01c85
 :END:
 
-Here are the dependency list (it might not be a complete list) that this project
-required or optionally required.
+Here are the dependencies of this project.
 
-|-----------------------+-----------------------------+-----------|
-| Package               | Description                 | Required? |
-|-----------------------+-----------------------------+-----------|
-| =fd=                    | A modern =find=               |           |
-| =rg=                    | A modern =grep=               |           |
-| =exa=                   | A modern =ls=                 |           |
-| =git=                   | Version control             |           |
-| =noto-fonts-emoji=      | Font for emojis             | optional  |
-| =words=                 | English words completion    | optional  |
-| =victor-mono-nerd-font= | Default fixed pitch font    | optional  |
-| =sarasa-gothic= (font)  | Default variable pitch font | optional  |
-| =xdotool=               | Automation tool for X11     | optional  |
-|-----------------------+-----------------------------+-----------|
-
+|-----------------------+-----------------------------+----------|
+| Package               | Description                 | Required |
+|-----------------------+-----------------------------+----------|
+| =fd=                    | A modern =find=               |          |
+| =rg=                    | A modern =grep=               |          |
+| =git=                   | Version control             |          |
+| =exa=                   | A modern =ls=                 | optional |
+| =noto-fonts-emoji=      | Font for emojis             | optional |
+| =words=                 | English words completion    | optional |
+| =victor-mono-nerd-font= | Default fixed pitch font    | optional |
+| =sarasa-gothic= (font)  | Default variable pitch font | optional |
+| =xdotool=               | Automation tool for X11     | optional |
+|-----------------------+-----------------------------+----------|
 *** Install
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-Install-2db8f0c1
@@ -1371,7 +1369,9 @@ This section contains all core keybindings of =emacs-grandview=.
  ("u" . ale-files-in-user-dirs)
  :map ale-apps-map
  ("o" . ale-opacity-set)
- ("=" . count-words))
+ ("=" . count-words)
+ ("n" . ale-tab-next)
+ ("p" . ale-tab-previous))
 #+end_src
 
 *** GLOBAL
@@ -1383,8 +1383,6 @@ This section contains all core keybindings of =emacs-grandview=.
 (bind-keys
  :map global-map
  ("C-;" . exchange-point-and-mark)
- ("M-n" . ale-tab-next)
- ("M-p" . ale-tab-previous)
  ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
  ("C-c C-M-m" . ale-show-messages)
  :map minibuffer-local-map
@@ -2091,6 +2089,8 @@ users deserve a file manager better than those popular ones on terminal such as
 
 (use-package dired-subtree
   :after-call dired-noselect
+  :config
+  (setq dired-subtree-use-backgrounds nil)
   :bind
   (nil
    :map dired-mode-map
@@ -2748,8 +2748,8 @@ Protesilaos Stavrou.
 (use-package modus-themes
   :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
   :config
-  (setq modus-themes-links '(no-underline))
-  (setq modus-themes-mode-line '(borderless)))
+  (setq! modus-themes-links '(no-underline))
+  (setq! modus-themes-mode-line '(borderless)))
 #+end_src
 
 ** Fonts (fonts.el)
@@ -2882,12 +2882,6 @@ Tabs for frequently used buffers.
 
 (defvar ale-tab-visible-buffer-limit 4
   "Max number of visible buffers in a group.")
-
-(defvar ale-tab-project-root-function
-  (lambda ()
-    (when-let ((project (project-current nil)))
-      (expand-file-name (cdr project))))
-  "A function that returns project root for current buffer.")
 
 (defvar ale-tab-separator "|"
   "A string used as separator between tabs.")
