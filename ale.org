@@ -43,6 +43,7 @@ evaluated by Emacs.
 :CUSTOM_ID: Overview-About-COPYING-89382013
 :END:
 
+#+begin_quote
 Copyright (c) 2020-2021  Alex Lu <alexluigit@gmail.com>
 
 This file is free software: you can redistribute it and/or modify it
@@ -57,6 +58,7 @@ General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this file.  If not, see <http://www.gnu.org/licenses/>.
+#+end_quote
 
 ** Quickstart
 :PROPERTIES:
@@ -4503,20 +4505,22 @@ optional minor mode which can apply this command automatically on save.
   (setq highlight-indent-guides-auto-stack-character-face-perc 35))
 #+end_src
 
-** Syntax checker (flycheck.el)
+** Syntax checker (flymake.el)
 :PROPERTIES:
-:CUSTOM_ID: DevTools-Syntax_checker_(flycheck.el)-23c93d72
+:CUSTOM_ID: DevTools-Syntax_checker_(flymake.el)-5c068834
 :END:
 
 #+begin_src emacs-lisp
-(use-package flycheck
-  :after-call prog-mode-hook
-  :config
-  (flycheck-add-mode 'javascript-eslint 'web-mode)
-  (global-flycheck-mode)
-  (setq-default flycheck-emacs-lisp-load-path 'inherit)
-  (setq-default flycheck-disabled-checkers
-                (append flycheck-disabled-checkers '(javascript-jshint json-jsonlist))))
+(use-package flymake
+  :straight (:type built-in)
+  :hook ((prog-mode . flymake-mode)
+         (text-mode . flymake-mode))
+  :bind
+  (nil
+   :map ale-prog-map
+   ("N" . 'flymake-goto-next-error)
+   ("P" . 'flymake-goto-prev-error)
+   ("S" . 'flymake-start)))
 #+end_src
 
 ** REST client (restclient.el)
