@@ -50,7 +50,7 @@ advisor."
   (let ((inhibit-message t)) (apply fn args)))
 
 (defun dir! ()
-  "Returns the directory of the emacs lisp file this macro is called from."
+  "Return the directory of the emacs lisp file this macro is called from."
   (when-let (path (file!))
     (directory-file-name (file-name-directory path))))
 

@@ -2,9 +2,9 @@
 
 (defun ale-tangle--all (&optional force)
   "doc"
-  (let* ((init-md5 (concat ale-cache-dir "init.md5"))
-         (old-md5 (when (file-exists-p init-md5)
-                    (file-read! init-md5)))
+  (let* ((md5-file (concat ale-cache-dir "init.md5"))
+         (old-md5 (when (file-exists-p md5-file)
+                    (file-read! md5-file)))
          (new-md5 (secure-hash 'md5 (file-read! ale-full-config-org))))
     (when (or force (not (string= old-md5 new-md5)))
       (when (file-exists-p (ale-minimal-config))
@@ -14,7 +14,7 @@
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
-        (write-region (point-min) (point-max) init-md5))
+        (write-region (point-min) (point-max) md5-file))
       (require 'ob-tangle)
       (org-babel-tangle-file ale-full-config-org ale-full-config))))
 
@@ -66,7 +66,7 @@
     (save-buffer)
     (kill-this-buffer)))
 
-(add-hook 'kill-emacs-hook #'ale-tangle)
+(add-hook 'kill-emacs-hook #'ale-tangle -90)
 
 (unless (file-exists-p ale-cache-dir)
   (make-directory ale-autoload-default-dir t)
