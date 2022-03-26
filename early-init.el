@@ -4,6 +4,7 @@
 (setq gc-cons-threshold most-positive-fixnum)
 
 ;; Setup native compilation
+(add-to-list 'native-comp-eln-load-path "~/.cache/emacs/eln-cache/")
 (setq native-comp-async-report-warnings-errors 'silent)
 
 (setq package-quickstart nil)

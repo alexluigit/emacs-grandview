@@ -156,7 +156,7 @@ restart () {
   emacs_pid=$(pidof emacs)
   timeout=300
   counter=0
-  emacsclient --eval '(kill-emacs)' &
+  emacsclient --eval '(kill-emacs)' 2>/dev/null &
   while $(kill -0 $emacs_pid 2>/dev/null) && [[ $counter -lt $timeout ]]; do
     counter=$((counter + 1))
     sleep 0.01
