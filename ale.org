@@ -3874,18 +3874,20 @@ made for this package and built-in help buffer:
 :CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-34255532
 :END:
 
-The purpose of the function =ale/rg-define-toggle= is to avoid executing
-=rg-define-toggle= directly in =use-package=, because this macro introduces too many
-deps that we don't need at startup.
+The purpose of the function =ale/rg-setup= is to avoid executing
+=rg-define-toggle/search= directly in =use-package=, because this macro introduces
+some deps that we don't need at startup.
 
 #+begin_src emacs-lisp
 ;;; ale-rg.el -*- lexical-binding: t; -*-
 
 ;;;###autoload
-(defun ale/rg-define-toggles ()
+(defun ale/rg-setup ()
   "Define toggles in `rg-mode'."
   (rg-define-toggle "--context 3" (kbd "C"))
-  (rg-define-toggle "-A 5" (kbd "A")))
+  (rg-define-toggle "-A 5" (kbd "A"))
+  (rg-define-search rg-project-all-files-no-ask
+    :dir project :files "all"))
 
 (provide 'ale-rg)
 #+end_src
@@ -3898,11 +3900,11 @@ deps that we don't need at startup.
 #+begin_src emacs-lisp
 (use-package rg
   :config
-  (ale/rg-define-toggles)
+  (ale/rg-setup)
   :bind
   (nil
-   :map ale-mct-map
-   ("g" . rg)))
+   :map ale-prog-map
+   ("p" . rg-project-all-files-no-ask)))
 #+end_src
 
 ** Writable grep (wgrep.el)
