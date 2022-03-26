@@ -1,7 +1,13 @@
 ;;; init/files.el --- -*- lexical-binding: t -*-
 
 (require 'mailcap)
+(require 'files)
 (eval-when-compile (require 'cl-lib))
+
+;; Local variables in our main config file.
+(setq safe-local-variable-values
+      '((completion-at-point-functions . (elisp-completion-at-point t))
+        (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))))
 
 (defadvice! +find-library-ad (fn &rest args)
   "Always follow symlink when using `find-library'.
@@ -88,8 +94,7 @@ libraries's truename."
 (defun ale-files-edit-emacs-config ()
   "Editing emacs init file."
   (interactive)
-  (find-file ale-full-config-org)
-  (setq-local completion-at-point-functions '(elisp-completion-at-point t)))
+  (find-file ale-full-config-org))
 
 (defun ale-files-other-window ()
   "Doc."

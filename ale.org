@@ -4594,3 +4594,18 @@ If called with prefix arg, prompt for a major mode for the buffer."
  :map ale-apps-map
  ("s" . ale/scratch))
 #+end_src
+
+* COMMENT Footer
+:PROPERTIES:
+:CUSTOM_ID: Footer-5602837a
+:END:
+
+This section contains local variables for this file.
+
++ ~completion-at-point-functions~: make autocompletion works in source code block
++ ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
+
+# Local Variables:
+# completion-at-point-functions: (elisp-completion-at-point t))
+# eldoc-documentation-functions: (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
+# End:
