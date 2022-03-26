@@ -1,22 +1,5 @@
 ;;; init/editor.el --- -*- lexical-binding: t -*-
 
-(defcustom ale-date-specifier "%F"
-  "Date specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-(defcustom ale-time-specifier "%R %z"
-  "Time specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-(defcustom ale-quit-minor-modes '(org-tree-slide-mode view-mode)
-  "Disable these minor modes when calling `ale-quit'."
-  :type '(repeat symbol)
-  :group 'ale)
-
 (defadvice! +delete-backward-char-ad (fn &rest args)
   "Do not try to delete char when last char is read-only."
   :around #'delete-backward-char

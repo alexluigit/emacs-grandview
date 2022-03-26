@@ -1,10 +1,5 @@
 ;;; init/gc.el --- -*- lexical-binding: t -*-
 
-(defvar ale-gc-cons-threshold 134217728 ; 128mb
-  "The default value to use for `gc-cons-threshold'.
-If you experience freezing, decrease this.  If you experience
-stuttering, increase this.")
-
 (defun ale-gc-set-threshold ()
   (setq gc-cons-threshold ale-gc-cons-threshold))
 

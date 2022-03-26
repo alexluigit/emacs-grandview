@@ -23,6 +23,28 @@
 (defvar ale-zh-fonts '("LXGW WenKai Mono" "HarmonyOS Sans SC Light" "Smartisan Compact CNS" "Sarasa Mono SC" "青鸟华光简报宋二" "FZSuXinShiLiuKaiS-R-GB"))
 (defvar ale-zh-font-scale 1.2)
 
+(defvar ale-gc-cons-threshold 134217728 ; 128mb
+  "The default value to use for `gc-cons-threshold'.
+If you experience freezing, decrease this.  If you experience
+stuttering, increase this.")
+
+(defcustom ale-date-specifier "%F"
+  "Date specifier for `format-time-string'.
+Used by `ale-insert-date'."
+  :type 'string
+  :group 'ale)
+
+(defcustom ale-time-specifier "%R %z"
+  "Time specifier for `format-time-string'.
+Used by `ale-insert-date'."
+  :type 'string
+  :group 'ale)
+
+(defcustom ale-quit-minor-modes '(org-tree-slide-mode view-mode)
+  "Disable these minor modes when calling `ale-quit'."
+  :type '(repeat symbol)
+  :group 'ale)
+
 (defcustom ale-files-additional-mime
   '((".ape" . "audio/ape")
     (".rmvb" . "video/rm")
