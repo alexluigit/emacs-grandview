@@ -44,6 +44,12 @@
 
 ;;; Sugars
 
+(defmacro log! (&optional label &rest body)
+  "Simple logging command.
+Optional LABEL and BODY are evaluated and echoed out."
+  (declare (indent defun))
+  `(message "ALE: %s %s" (or ,label "default") (or ,@body "Nothing")))
+
 (defun silent! (fn &rest args)
   "Do not show any messages while executing FN. Used as an
 advisor."

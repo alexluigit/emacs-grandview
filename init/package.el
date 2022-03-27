@@ -33,7 +33,7 @@
         (use-package-concat
          `((fset ',fn
                  (lambda (&rest _)
-                   (ale-log "Loading deferred package %s from %s" ',name ',fn)
+                   (ale-debug-log "Loading deferred package %s from %s" ',name ',fn)
                    (condition-case e
                        (let ((default-directory user-emacs-directory))
                          (require ',name))

@@ -1,6 +1,6 @@
 ;;; init/debug.el --- -*- lexical-binding: t -*-
 
-(defun ale-log (format-string &rest args)
+(defun ale-debug-log (format-string &rest args)
   "Log to *Messages* if `ale-debug-p' is on.
 Does not display text in echo area, but still logs to *Messages*. Accepts the
 same arguments as `message'."
@@ -33,9 +33,6 @@ If ERASE is non-nil, erase the buffer before switching to it."
           (docstr "%d packages loaded in %ss"))
       (when (boundp 'straight--profile-cache)
         (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
-      (run-with-timer 1 nil 'ale-log docstr package-count time))))
-
-(defun ale-called (&optional label)
-  (message "ALE: %s" (or label "default")))
+      (run-with-timer 1 nil 'ale-debug-log docstr package-count time))))
 
 (add-hook 'emacs-startup-hook #'ale-debug-profiler)
