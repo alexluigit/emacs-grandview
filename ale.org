@@ -2,7 +2,6 @@
 #+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
-#+OPTIONS: auto-id:t
 #+STARTUP: showall
 
 * Overview
@@ -2493,7 +2492,7 @@ somewhere. ie, #+OPTIONS: auto-id:t"
   (save-excursion
     (widen)
     (goto-char (point-min))
-    (when (re-search-forward "^#\\+OPTIONS:.*auto-id:t" (point-max) t)
+    (when ale-org-id-auto
       (when force
         (org-map-entries (lambda () (org-entry-delete nil "CUSTOM_ID"))))
       (org-map-entries (lambda () (ale-org-custom-id-get (point) 'create))))))
@@ -4610,4 +4609,5 @@ This section contains local variables for this file.
 # Local Variables:
 # completion-at-point-functions: (elisp-completion-at-point t))
 # eldoc-documentation-functions: (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
+# ale-org-id-auto: t
 # End:

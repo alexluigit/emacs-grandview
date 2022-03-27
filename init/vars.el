@@ -75,6 +75,8 @@ Used by `ale-insert-date'."
 (defcustom ale-local-leader-key "C-x x SPC"
   "Another Leader key trigger")
 
+(defvar-local ale-org-id-auto nil)
+
 ;; `project-prefix-map' is available in emacs > 28.
 (if (boundp 'project-prefix-map)
     (defalias 'project-map project-prefix-map)

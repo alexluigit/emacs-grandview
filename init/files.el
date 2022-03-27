@@ -7,7 +7,8 @@
 ;; Local variables in our main config file.
 (setq safe-local-variable-values
       '((completion-at-point-functions . (elisp-completion-at-point t))
-        (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))))
+        (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
+        (ale-org-id-auto . t)))
 
 (defadvice! +find-library-ad (fn &rest args)
   "Always follow symlink when using `find-library'.
