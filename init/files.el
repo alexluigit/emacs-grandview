@@ -6,13 +6,12 @@
 
 ;; Local variables in our main config file.
 (setq safe-local-variable-values
-      '((completion-at-point-functions . (elisp-completion-at-point t))
+      '((completion-at-point-functions . (pcomplete-completions-at-point elisp-completion-at-point t))
         (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
         (ale-org-id-auto . t)))
 
 (defadvice! +find-library-ad (fn &rest args)
   "Always follow symlink when using `find-library'.
-
 Package managers like `straight.el' use symlink to manage
 package/libraries. This advice will enable user always find
 libraries's truename."
@@ -29,6 +28,27 @@ libraries's truename."
         (add-to-list 'recentf-list file)
         (ale-files-find-file-external file cmd args))
     (apply fn file args)))
+
+(defun ale-files-read-file (path &optional coding)
+  "Read text with PATH, using CODING.
+CODING defaults to `utf-8'.
+Return the decoded text as multibyte string."
+  (let ((str (with-temp-buffer
+               (set-buffer-multibyte nil)
+               (setq buffer-file-coding-system 'binary)
+               (insert-file-contents-literally path)
+               (buffer-substring-no-properties (point-min) (point-max)))))
+  (decode-coding-string str (or coding 'utf-8))))
+
+(defun ale-files-append-meta (metadata candidates)
+  "Append METADATA for CANDIDATES."
+  (let ((entry (if (functionp metadata)
+                   `(metadata (annotation-function . ,metadata))
+                 `(metadata (category . ,metadata)))))
+    (lambda (string pred action)
+      (if (eq action 'metadata)
+          entry
+        (complete-with-action action candidates string pred)))))
 
 (cl-defun ale-files-match-mime (file)
   "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
@@ -68,7 +88,7 @@ libraries's truename."
          (command "fd -H -t f -0")
          (output (shell-command-to-string command))
          (files-raw (split-string output "\0" t))
-         (files (completion-append-metadata! 'file files-raw))
+         (files (ale-files-append-meta 'file files-raw))
          (file (completing-read (or prompt "Open file: ") files)))
     (find-file (concat dir "/" file))))
 
@@ -80,7 +100,7 @@ libraries's truename."
                                  (when (string= s (cdr (assq 'title i)))
                                    (cl-return (cdr (assq field i)))))))
          (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
-         (cands (completion-append-metadata! annotation cands-raw))
+         (cands (ale-files-append-meta annotation cands-raw))
          (title (completing-read "Open: " cands nil t))
          (path (funcall get-item title 'path)))
     (ale-files--in-directory path (concat title ": "))))

@@ -1,4 +1,4 @@
-#+TITLE: Emacs Configuration
+#+TITLE: Emacs Grandview
 #+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
@@ -14,7 +14,7 @@
 :CUSTOM_ID: Overview-About-c1129ead
 :END:
 
-This project is my emacs configuration.
+This is my emacs configuration.
 
 *** Structure
 :PROPERTIES:
@@ -27,7 +27,8 @@ This project is my emacs configuration.
 + Main config file:               =ale.org= (this file)
 
 After the bootstrapping process, the tangled code blocks from this file are
-evaluated by Emacs.
+evaluated by Emacs. It will update all of the config upon restarting once the
+content of this file get modified.
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 ;;; minimal.el --- -*- lexical-binding: t -*-
@@ -79,10 +80,11 @@ Here are the dependencies of this project.
 | =exa=                   | A modern =ls=                 | optional |
 | =noto-fonts-emoji=      | Font for emojis             | optional |
 | =words=                 | English words completion    | optional |
-| =victor-mono-nerd-font= | Default fixed pitch font    | optional |
+| =font-victor-mono=      | Default fixed pitch font    | optional |
 | =sarasa-gothic= (font)  | Default variable pitch font | optional |
 | =xdotool=               | Automation tool for X11     | optional |
 |-----------------------+-----------------------------+----------|
+
 *** Install
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-Install-2db8f0c1
@@ -113,39 +115,27 @@ emacs --daemon
 emacsclient -e '(kill-emacs)'
 #+end_src
 
-*** CLI
+*** Reload with ~restart-emacs~ command
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-CLI-9a957ea9
 :END:
 
-Script for starting up emacs.
+A thing that all Emacs tinkers do very often is: /reload the config/.
 
-+ *Why this bash script?*
+Emacs is a single-threaded program.  When it hangs up, we can not expect it to
+evaluate any elisp code, the only thing we can do is spawn a terminal and kill
+the Emacs process.
 
-  Emacs is a single-threaded program, so if it hangs, we can not
-  expect it to evaluate any elisp code.
+Since the tangle function is added to =kill-emacs-hook=, emacs main process only
+get killed after the tangle function finishes (unless we use '-9' flag in kill
+command).  In my case, it usually takes emacs less than 1s to tangle this org
+file, so if emacs main process keep alive for over 3s after *killall emacs*
+command, it probably means emacs get frozen, so we just kill it with *kill -9*.
 
-+ *What does this script do?*
-
-  If this org file get modified, =ale-init-build= function will tangle
-  this file.  After the build function finishes, it kill current emacs
-  and open emacs with new init file.
-
-  Since =ale-init-build= function is added to =kill-emacs-hook=, emacs
-  main process only get killed after the tangle function finishes
-  (unless we use '-9' flag in kill command).  In my case, it usually
-  takes emacs less than 1s to tangle this org file, so if emacs main
-  process keep alive for over 3s after *killall emacs* command, it
-  probably means emacs get frozen, so we just kill it with *kill -9*.
-
-+ *How to use this script?*
-
-  You don't need to install this script if you have followed
-  =Installation= section. This script will be tangled to
-  *~/.local/share/em*, so if you want to get access to =em restart= command from
-  terminal, make sure *~/.local/bin/em* is in your *PATH*.
-
-Here is the content of the script.
+You don't need to install this script if you have followed =Installation=
+section. This script will be tangled to *~/.local/share/em*, so if you want to get
+access to =em restart= command from terminal, make sure *~/.local/bin/em* is in your
+*PATH*.
 
 #+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash"
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
@@ -175,15 +165,25 @@ open () { emacs -nw ${@}; }
 $1 ${@:2}
 #+end_src
 
-You can also restart emacs by invoking =restart-emacs= command inside
-emacs (again, comfirm your $PATH environment variable).
+You can also restart emacs by invoking =restart-emacs= command inside emacs.
+
+#+begin_src emacs-lisp
+(defun restart-emacs ()
+  "A elisp wrapper to `em' command."
+  (interactive)
+  (let ((default-directory "~"))
+    (start-process "" nil "nohup" "em" "restart")))
+#+end_src
 
 * *CORE*
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-f9b16bd5
 :END:
 
-Load core of =emacs-grandview=. It is *NOT* recommended to delete / comment out this section.
+Loads core of =emacs-grandview=.
+
+It is *NOT* recommended to delete / comment out this section except for debugging
+purpose.
 
 ** Editor
 :PROPERTIES:
@@ -195,8 +195,8 @@ Load core of =emacs-grandview=. It is *NOT* recommended to delete / comment out 
 :CUSTOM_ID: *CORE*-Editor-Basic_editing_(simple.el)-c2fc0fd0
 :END:
 
-=simple.el= consists of a grab-bag of basic Emacs commands not specifically related to some major mode
-or to file-handling.
+=simple.el= consists of a grab-bag of basic Emacs commands not specifically
+related to some major mode or to file-handling.
 
 #+begin_src emacs-lisp
 (use-package simple
@@ -664,7 +664,9 @@ take effect."
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(frame-enable! 'ale-pulse-line-mode)
+(if (daemonp)
+    (add-hook 'after-make-frame-functions (lambda (f) (with-selected-frame f (ale-pulse-line-mode))))
+  (add-hook 'emacs-startup-hook #'ale-pulse-line-mode))
 #+end_src
 
 *** Transient commands (transient.el)
@@ -762,7 +764,7 @@ take effect."
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(frame-enable! 'ale-opacity-auto-mode)
+(ale-opacity-auto-mode)
 #+end_src
 
 ** Completion framework
@@ -1385,7 +1387,7 @@ This section contains all core keybindings of =emacs-grandview=.
  :map global-map
  ("C-;" . exchange-point-and-mark)
  ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
- ("C-c C-M-m" . ale-show-messages)
+ ("C-c m" . ale-debug-show-messages)
  :map minibuffer-local-map
  ("S-<return>" . ale-files-other-window)
  ("C-u" . meow-kill-whole-line)
@@ -2150,7 +2152,9 @@ A value of 0 means 'unlimited'."
 
 (cl-defmethod project-root ((project (head local)))
   "Project root for PROJECT with HEAD and LOCAL."
-  (cdr project))
+  (if (< emacs-major-version 29)
+      (cdr-safe project)
+    (car (project-roots project))))
 
 ;; Copied from Manuel Uberti and tweaked accordingly:
 ;; <https://www.manueluberti.eu/emacs/2020/11/14/extending-project/>.
@@ -2182,9 +2186,9 @@ DIRS."
   "Find subdirectories in the current project, using completion."
   (interactive)
   (let* ((pr (project-current t))
-         (dir (cdr pr))
+         (dir (project-root pr))
          (dirs-raw (ale-project--directory-subdirs dir))
-         (subdirs (ale-minibuffer-append-metadata 'file dirs-raw))
+         (subdirs (ale-files-append-meta 'file dirs-raw))
          (directory (completing-read "Select Project subdir: " subdirs)))
     (dired directory)))
 
@@ -2339,11 +2343,11 @@ on how to organise one's life with plain text.
 This section is all about basic configurations for how does a =.org= file should
 look like which can be described briefly as follows:
 
-- use bigger fonts for different levels of heading
-- show ellipsis marker when a node is folded
-- center text when make sense
-- indent text according to outline structure
-- display inline images in url automatically
++ use bigger fonts for different levels of heading
++ show ellipsis marker when a node is folded
++ center text when make sense
++ indent text according to outline structure
++ display inline images in url automatically
 
 *** Autoload
 :PROPERTIES:
@@ -2356,11 +2360,11 @@ look like which can be described briefly as follows:
 
 ;;;###autoload
 (defun ale-org-font-setup ()
-  "Setup variable-pitch fonts in org-mode."
+  "Setup variable-pitch fonts for org-mode."
   (interactive)
   (variable-pitch-mode)
-  (let ((variable-pitch `(:font ,(font-chooser! ale-variable-fonts)))
-        (default `(:font ,(font-chooser! ale-default-fonts))))
+  (let ((variable-pitch `(:font ,ale-variable-font))
+        (default `(:font ,ale-default-font)))
     (custom-theme-set-faces
      'user
      `(org-level-1 ((t (,@variable-pitch :height 1.5))))
@@ -2770,29 +2774,30 @@ Protesilaos Stavrou.
 (require 'cl-lib)
 
 ;;;###autoload
-(defun ale-font-setup ()
+(defun ale-font-setup (&optional frame)
   "Setup default/fixed-pitch/variable-pitch/zh-font."
   (interactive)
-  (custom-theme-set-faces
-   'user
-   '(font-lock-keyword-face ((t (:slant italic))))
-   '(font-lock-variable-name-face ((t (:weight demibold))))
-   '(font-lock-function-name-face ((t (:weight demibold)))))
-  (when-let ((default (font-chooser! ale-default-fonts))
-             (fixed-pitch (font-chooser! ale-fixed-fonts))
-             (variable-pitch (font-chooser! ale-variable-fonts))
-             (zh-font (font-spec :family (font-chooser! ale-zh-fonts))))
+  (with-selected-frame (or frame (selected-frame))
     (custom-theme-set-faces
      'user
-     `(default ((t (:font ,(font-spec :family default :size ale-font-size)))))
-     `(fixed-pitch ((t (:font ,(font-spec :family fixed-pitch :size ale-font-size)))))
-     `(variable-pitch ((t (:font ,(font-spec :family variable-pitch :size ale-font-size))))))
-    (unless (equal zh-font (font-spec :family variable-pitch))
-      (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
-    (dolist (charset '(kana han cjk-misc bopomofo))
-      (set-fontset-font (frame-parameter nil 'font) charset zh-font))
-    (when (< emacs-major-version 28)
-      (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji")))))
+     '(font-lock-keyword-face ((t (:slant italic))))
+     '(font-lock-variable-name-face ((t (:weight demibold))))
+     '(font-lock-function-name-face ((t (:weight demibold)))))
+    (when-let ((default ale-default-font)
+               (fixed-pitch ale-fixed-font)
+               (variable-pitch ale-variable-font)
+               (zh-font (font-spec :family ale-zh-font)))
+      (custom-theme-set-faces
+       'user
+       `(default ((t (:font ,(font-spec :family default :size ale-font-size)))))
+       `(fixed-pitch ((t (:font ,(font-spec :family fixed-pitch :size ale-font-size)))))
+       `(variable-pitch ((t (:font ,(font-spec :family variable-pitch :size ale-font-size))))))
+      (unless (equal zh-font (font-spec :family variable-pitch))
+        (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
+      (dolist (charset '(kana han cjk-misc bopomofo))
+        (set-fontset-font (frame-parameter nil 'font) charset zh-font))
+      (when (< emacs-major-version 28)
+        (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))))
 
 ;;;###autoload
 (defun ale-font-cn-set-title (beg end)
@@ -2814,12 +2819,28 @@ Protesilaos Stavrou.
 :CUSTOM_ID: User_interface-Fonts_(fonts.el)-Config-1d6e7f5b
 :END:
 
+Here are some recommended fonts for programming or general text editing.
+
+- =Victor Mono=
+- =Sarasa Mono SC=
+- =Fira Code Retina=
+
+A list of my favorite CJK fonts.
+
+- =LXGW WenKai Mono=
+- =HarmonyOS Sans SC Light=
+- =Smartisan Compact CNS=
+- =青鸟华光简报宋二=
+- =FZSuXinShiLiuKaiS-R-GB=
+
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
-(setq ale-default-fonts '("Victor Mono"))
-(setq ale-fixed-fonts '("Sarasa Mono SC"))
-(setq ale-variable-fonts '("Sarasa Mono SC"))
-(setq ale-zh-fonts '("LXGW WenKai Mono"))
-(frame-enable! 'ale-font-setup)
+(setq ale-default-font "Victor Mono")
+(setq ale-fixed-font "Sarasa Mono SC")
+(setq ale-variable-font "Sarasa Mono SC")
+(setq ale-zh-font "LXGW WenKai Mono")
+(if (daemonp)
+    (add-hook 'after-make-frame-functions #'ale-font-setup)
+  (add-hook 'emacs-startup-hook #'ale-font-setup))
 #+end_src
 
 ** Frame (frame.el)
@@ -3279,7 +3300,7 @@ The SEGMENTs are defined by `ale-define-mode-line'."
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (setq! ale-mode-line-format
        '(:left (editing-state macro-rec modified tab) :right (position input-method)))
-(frame-enable! 'ale-modeline-mode)
+(ale-modeline-mode)
 #+end_src
 
 ** Frame margin (fringe.el)
@@ -4034,7 +4055,7 @@ regexp .etc).
           (write-region (point-min) (point-max) ale/murl-list-file)))))
   (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) (ale/murl--playlist)))
          (annotation (lambda (s) (marginalia--documentation (ale/murl--get-attr s 'url))))
-         (cands (completion-append-metadata! annotation cands-raw))
+         (cands (ale-files-append-meta annotation cands-raw))
          (title (completing-read "murls: " cands))
          (sub (ale/murl--get-attr title 'sub)))
     (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (ale/murl--get-attr title 'url))))
@@ -4607,7 +4628,7 @@ This section contains local variables for this file.
 + ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
 
 # Local Variables:
-# completion-at-point-functions: (elisp-completion-at-point t))
+# completion-at-point-functions: (pcomplete-completions-at-point elisp-completion-at-point t))
 # eldoc-documentation-functions: (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
 # ale-org-id-auto: t
 # End:

@@ -2,47 +2,12 @@
 
 (eval-when-compile (require 'subr-x))
 
-;;; Commands
-
-(defun restart-emacs ()
-  "A elisp wrapper to `em' command."
-  (interactive)
-  (let ((default-directory "~"))
-    (start-process "" nil "nohup" "em" "restart")))
-
-;;; Public library
-
-(defun completion-append-metadata! (meta completions)
-  "doc"
-  (let ((entry (if (functionp meta)
-                   `(metadata (annotation-function . ,meta))
-                 `(metadata (category . ,meta)))))
-    (lambda (string pred action)
-      (if (eq action 'metadata)
-          entry
-        (complete-with-action action completions string pred)))))
-
-(defun frame-enable! (setup-func)
-  "doc"
-  (if (daemonp)
-      (add-hook 'after-make-frame-functions
-                `(lambda (f) (with-selected-frame f (,setup-func))))
-    (if window-system
-        (add-hook 'window-setup-hook `,setup-func)
-      (add-hook 'after-init-hook `,setup-func))))
-
-(defun font-chooser! (fonts)
-  "Return first valid (exists in OS) font from FONTS."
-  (when window-system
-    (cl-find-if
-     (lambda (f) (if (null (list-fonts (font-spec :family f))) nil t)) fonts)))
+;;; Sugars
 
 (defun listify! (exp)
   "Return EXP wrapped in a list, or as-is if already a list."
   (declare (pure t) (side-effect-free t))
   (if (proper-list-p exp) exp (list exp)))
-
-;;; Sugars
 
 (defmacro log! (&optional label &rest body)
   "Simple logging command.
@@ -51,35 +16,10 @@ Optional LABEL and BODY are evaluated and echoed out."
   `(message "ALE: %s %s" (or ,label "default") (or ,@body "Nothing")))
 
 (defun silent! (fn &rest args)
-  "Do not show any messages while executing FN. Used as an
-advisor."
+  "Do not show any messages while executing FN and ARGS."
   (let ((inhibit-message t)) (apply fn args)))
 
-(defun dir! ()
-  "Return the directory of the emacs lisp file this macro is called from."
-  (when-let (path (file!))
-    (directory-file-name (file-name-directory path))))
-
-(defun file! ()
-  "Return the emacs lisp file this macro is called from."
-  (cond ((bound-and-true-p byte-compile-current-file))
-        (load-file-name)
-        ((stringp (car-safe current-load-list))
-         (car current-load-list))
-        (buffer-file-name)
-        ((error "Cannot get this file-path"))))
-
-(defun file-read! (path &optional coding)
-  "Read text with PATH, using CODING.
-
-CODING defaults to `utf-8'.
-Return the decoded text as multibyte string."
-  (let ((str (with-temp-buffer
-               (set-buffer-multibyte nil)
-               (setq buffer-file-coding-system 'binary)
-               (insert-file-contents-literally path)
-               (buffer-substring-no-properties (point-min) (point-max)))))
-  (decode-coding-string str (or coding 'utf-8))))
+;;; Closure factories
 
 (defmacro letenv! (envvars &rest body)
   "Lexically bind ENVVARS in BODY, like `let' but for `process-environment'."
@@ -89,8 +29,6 @@ Return the decoded text as multibyte string."
                                    collect `(cons ,var ,val))))
        (setenv (car var) (cdr var)))
      ,@body))
-
-;;; Closure factories
 
 (defmacro letf! (bindings &rest body)
   "Temporarily rebind function, macros, and advice in BODY.

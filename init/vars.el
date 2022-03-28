@@ -17,10 +17,10 @@
 (defvar ale-autoload-dirs `(,ale-autoload-default-dir))
 
 (defvar ale-font-size 32)
-(defvar ale-default-fonts '("Victor Mono" "Sarasa Mono SC" "Fira Code Retina"))
-(defvar ale-fixed-fonts '("Sarasa Mono SC" "Fira Code Retina"))
-(defvar ale-variable-fonts '("Sarasa Mono SC" "Victor Mono" "Fira Code Retina"))
-(defvar ale-zh-fonts '("LXGW WenKai Mono" "HarmonyOS Sans SC Light" "Smartisan Compact CNS" "Sarasa Mono SC" "青鸟华光简报宋二" "FZSuXinShiLiuKaiS-R-GB"))
+(defvar ale-default-font "Victor Mono")
+(defvar ale-fixed-font "Sarasa Mono SC")
+(defvar ale-variable-font "Sarasa Mono SC")
+(defvar ale-zh-font "LXGW WenKai Mono")
 (defvar ale-zh-font-scale 1.2)
 
 (defvar ale-gc-cons-threshold 134217728 ; 128mb

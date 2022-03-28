@@ -4,8 +4,8 @@
   "doc"
   (let* ((md5-file (concat ale-cache-dir "init.md5"))
          (old-md5 (when (file-exists-p md5-file)
-                    (file-read! md5-file)))
-         (new-md5 (secure-hash 'md5 (file-read! ale-full-config-org))))
+                    (ale-files-read-file md5-file)))
+         (new-md5 (secure-hash 'md5 (ale-files-read-file ale-full-config-org))))
     (when (or force (not (string= old-md5 new-md5)))
       (when (file-exists-p (ale-minimal-config))
         (delete-file (ale-minimal-config)))
@@ -23,7 +23,7 @@
   (require 'autoload)
   (let* ((autoload-md5 (concat ale-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
-                    (file-read! autoload-md5)))
+                    (ale-files-read-file autoload-md5)))
          (files-as-str (with-temp-buffer
                          (dolist (file (ale-files-get-all-elisp ale-autoload-dirs))
                            (insert-file-contents file))

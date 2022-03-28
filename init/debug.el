@@ -10,7 +10,7 @@ same arguments as `message'."
                        format-string)))
       (apply 'message (push str args)))))
 
-(defun ale-show-messages (&optional erase)
+(defun ale-debug-show-messages (&optional erase)
   "Show *Messages* buffer in other frame.
 If ERASE is non-nil, erase the buffer before switching to it."
   (interactive "P")
