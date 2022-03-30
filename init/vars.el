@@ -21,7 +21,7 @@
 (defvar ale-fixed-font "Sarasa Mono SC")
 (defvar ale-variable-font "Sarasa Mono SC")
 (defvar ale-zh-font "LXGW WenKai Mono")
-(defvar ale-zh-font-scale 1.2)
+(defvar ale-zh-font-scale 1.0)
 
 (defvar ale-gc-cons-threshold 134217728 ; 128mb
   "The default value to use for `gc-cons-threshold'.

@@ -1538,8 +1538,9 @@ sure this is a good approach."
 ;;; ale/autoload/rime.el --- -*- lexical-binding: t -*-
 
 ;;;###autoload
-(defun ale/rime-return-advice (fn &rest args)
+(defadvice! +rime-return-ad (fn &rest args)
   "Make return key (commit script text) compatible with vterm."
+  :around #'rime-return
   (interactive)
   (if (eq major-mode 'vterm-mode)
       (progn
@@ -1552,7 +1553,7 @@ sure this is a good approach."
     (apply fn args)))
 
 ;;;###autoload
-(defun ale/rime--candidate-num-format (num select-labels)
+(defun ale-rime-candidate-num-fmt (num select-labels)
   "Format for the number before each candidate."
   (if select-labels
       (format "%s " (nth (1- num) select-labels))
@@ -1567,6 +1568,8 @@ sure this is a good approach."
 #+begin_src emacs-lisp
 (use-package rime
   :after-call self-insert-command
+  :custom-face
+  (rime-preedit-face ((t (:inherit lazy-highlight))))
   :bind
   (("S-SPC" . toggle-input-method)
    :map rime-active-mode-map
@@ -1586,17 +1589,11 @@ sure this is a good approach."
                                   rime-predicate-after-alphabet-char-p))
   (setq rime-inline-predicates '(rime-predicate-space-after-cc-p
                                  rime-predicate-current-uppercase-letter-p))
-  (set-face-attribute 'rime-preedit-face nil
-                      :foreground "#80c0e0" :background "#404040"
-                      :inverse-video nil :weight 'bold)
   (setq rime-show-candidate 'posframe)
   (setq rime-posframe-style 'vertical)
-  (setq rime-posframe-properties
-        (list :font "Sarasa Mono SC"
-              :internal-border-width 10))
-  (setq rime-title " ㄓ")
-  (setq rime-candidate-num-format-function 'ale/rime--candidate-num-format)
-  (advice-add 'rime--return :around 'ale/rime-return-advice))
+  (setq rime-posframe-properties '(:internal-border-width 10 :lines-truncate t))
+  (setq rime-title "ㄓ")
+  (setq rime-candidate-num-format-function #'ale-rime-candidate-num-fmt))
 #+end_src
 
 ** Snippet (yasnippet.el)
