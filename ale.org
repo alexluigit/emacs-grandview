@@ -1952,7 +1952,9 @@ users deserve a file manager better than those popular ones on terminal such as
 (use-package fd-dired
   :after-call dired-noselect
   :bind
-  ("C-c F" . fd-dired))
+  (nil
+   :map ale-files-map
+   ("f" . fd-dired)))
 #+end_src
 
 ** Useful dired extensions (dired-hacks)
@@ -2166,6 +2168,20 @@ With a universal prefix to choose project anyway."
   :config
   (setq wdired-allow-to-change-permissions t)
   (setq wdired-create-parent-directories t))
+#+end_src
+
+** Working with remote files (tramp.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Working_with_remote_files_(tramp.el)-c0084707
+:END:
+
+#+begin_src emacs-lisp
+(use-package tramp
+  :straight (:type built-in)
+  :config
+  (setq tramp-auto-save-directory (concat user-emacs-directory "tramp/"))
+  (setq tramp-chunksize 2000)
+  (setq! tramp-use-ssh-controlmaster-options nil))
 #+end_src
 
 ** Trash (trashed.el)
