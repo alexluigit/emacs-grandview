@@ -1514,7 +1514,7 @@ you change your mind).
           ">>>>>>> ale-ediff-combine Variant B" B
           "####### ale-ediff-combine Ancestor" Ancestor
           "======= ale-ediff-combine End"))
-  (defun ale/ediff-flush-combination-pattern ()
+  (defun ale-ediff-flush-combination-pattern ()
     "Remove my custom `ediff-combination-pattern' markers.
 This is a quick-and-dirty way to get rid of the markers that are
 left behind by `smerge-ediff' when combining the output of two
@@ -2834,9 +2834,9 @@ update the UI.  `ale-tab-string' can be used in the code.")
   '((t :bold t :inherit 'font-lock-comment-face))
   "Face for current tab.")
 
-(defvar-local ale-tab/buffer-group nil)
+(defvar-local ale-tab-buffer-group nil)
 
-(defun ale-tab/buffer-group (&optional buffer)
+(defun ale-tab-buffer-group (&optional buffer)
   "Return the group name of BUFFER.
 When BUFFER is nil, use current buffer."
   (let* ((buffer (or buffer (current-buffer)))
@@ -2848,33 +2848,33 @@ When BUFFER is nil, use current buffer."
      ((eq (aref name 0) ?*) nil)
      (t "*Others*"))))
 
-(defvar ale-tab/timer nil
+(defvar ale-tab-timer nil
   "Timer used for count buffer used frequency.")
 
-(defvar-local ale-tab/buffer-freq 0
+(defvar-local ale-tab-buffer-freq 0
   "Used frequency of current buffer.")
 
-(defun ale-tab/buffer-freq (buf)
+(defun ale-tab-buffer-freq (buf)
   "Return the used frequency of buffer BUF."
-  (or (buffer-local-value 'ale-tab/buffer-freq buf)
+  (or (buffer-local-value 'ale-tab-buffer-freq buf)
       0))
 
-(defun ale-tab/increase-buffer-freq ()
+(defun ale-tab-increase-buffer-freq ()
   "Increase the used frequency of current buffer by 1."
-  (cl-incf ale-tab/buffer-freq))
+  (cl-incf ale-tab-buffer-freq))
 
-(defun ale-tab/buffer-freq-higher-p (buf1 buf2)
+(defun ale-tab-buffer-freq-higher-p (buf1 buf2)
   "Return t if the used frequency of BUF1 is higher than BUF2."
-  (> (ale-tab/buffer-freq buf1)
-     (ale-tab/buffer-freq buf2)))
+  (> (ale-tab-buffer-freq buf1)
+     (ale-tab-buffer-freq buf2)))
 
-(defun ale-tab/insert-buf (buf bufs)
+(defun ale-tab-insert-buf (buf bufs)
   "Insert BUF into sorted BUFS.
 BUFS is sorted in the decreasing order of used frequency.  The
 insertion keeps this order.
 This is non-destructive and the list after insertion is returned."
-  (let ((freqs (mapcar #'ale-tab/buffer-freq bufs))
-        (freq (ale-tab/buffer-freq buf))
+  (let ((freqs (mapcar #'ale-tab-buffer-freq bufs))
+        (freq (ale-tab-buffer-freq buf))
         idx)
     (cl-dotimes (n (length freqs))
       (when (> freq (nth n freqs))
@@ -2888,55 +2888,55 @@ This is non-destructive and the list after insertion is returned."
 
 (defun ale-tab-start-count-freq ()
   "Start counting buffer used frequency."
-  (setq ale-tab/timer
+  (setq ale-tab-timer
         (run-with-idle-timer ale-tab-count-freq-idle-time
-                             t #'ale-tab/increase-buffer-freq)))
+                             t #'ale-tab-increase-buffer-freq)))
 
 (defun ale-tab-stop-count-freq ()
   "Stop counting buffer used frequency."
-  (cancel-timer ale-tab/timer)
-  (setq ale-tab/timer nil))
+  (cancel-timer ale-tab-timer)
+  (setq ale-tab-timer nil))
 
-(defvar ale-tab/sorted-buffer-list nil
+(defvar ale-tab-sorted-buffer-list nil
   "Buffer list sorted by used frequency.
 This contains all non-hidden buffers returned by `buffer-list'.
-It's updated by `ale-tab/update-buffer-list'.")
+It's updated by `ale-tab-update-buffer-list'.")
 
-(defvar ale-tab/last-active-buffer nil
+(defvar ale-tab-last-active-buffer nil
   "Last active buffer.
 Minibuffer doesn't count.  This is updated by
-`ale-tab/update-buffer-list'.")
+`ale-tab-update-buffer-list'.")
 
-(defvar ale-tab/inhibit-resort nil
-  "Non-nil means don't resort `ale-tab/sorted-buffer-list'.")
+(defvar ale-tab-inhibit-resort nil
+  "Non-nil means don't resort `ale-tab-sorted-buffer-list'.")
 
-(defun ale-tab/update-buffer-list ()
+(defun ale-tab-update-buffer-list ()
   "Update internal data when appropriate."
   (unless (window-minibuffer-p)
     (let ((current-buffer (current-buffer)))
       ;; We don't update when the current buffer is not changed, and non of the
       ;; non-hidden buffers is killed.
-      (unless (and (eq current-buffer ale-tab/last-active-buffer)
+      (unless (and (eq current-buffer ale-tab-last-active-buffer)
                    (cl-every #'buffer-live-p
-                             ale-tab/sorted-buffer-list))
-        (unless ale-tab/inhibit-resort
+                             ale-tab-sorted-buffer-list))
+        (unless ale-tab-inhibit-resort
           (let ((bufs (buffer-list)))
-            (setq bufs (cl-remove-if-not #'ale-tab/buffer-group bufs))
-            (setq bufs (sort bufs #'ale-tab/buffer-freq-higher-p))
-            (setq ale-tab/sorted-buffer-list bufs)))
+            (setq bufs (cl-remove-if-not #'ale-tab-buffer-group bufs))
+            (setq bufs (sort bufs #'ale-tab-buffer-freq-higher-p))
+            (setq ale-tab-sorted-buffer-list bufs)))
         (run-hooks 'ale-tab-update-hook)
-        (setq ale-tab/last-active-buffer (current-buffer))))))
+        (setq ale-tab-last-active-buffer (current-buffer))))))
 
 (defun ale-tab-visible-tabs-and-remain-num ()
   "Return the visible tabs and number of remaining tabs in a cons cell.
 When the current buffer is a hidden buffer, return nil."
   (let* ((buf (current-buffer))
-         (group (ale-tab/buffer-group buf))
+         (group (ale-tab-buffer-group buf))
          (counter 0)
          tabs)
     (when group
-      (dolist (b ale-tab/sorted-buffer-list)
-        (when (equal (ale-tab/buffer-group b) group)
+      (dolist (b ale-tab-sorted-buffer-list)
+        (when (equal (ale-tab-buffer-group b) group)
           (if (< (length tabs) ale-tab-visible-buffer-limit)
               (push b tabs)
             (cl-incf counter))))
@@ -2946,11 +2946,11 @@ When the current buffer is a hidden buffer, return nil."
 (defun ale-tab-visible-tabs ()
   "Return the visible tabs."
   (let* ((buf (current-buffer))
-         (group (ale-tab/buffer-group buf))
+         (group (ale-tab-buffer-group buf))
          tabs)
     (when group
-      (cl-dolist (b ale-tab/sorted-buffer-list)
-        (when (equal (ale-tab/buffer-group b) group)
+      (cl-dolist (b ale-tab-sorted-buffer-list)
+        (when (equal (ale-tab-buffer-group b) group)
           (push b tabs)
           (when (= (length tabs) ale-tab-visible-buffer-limit)
             (cl-return))))
@@ -3005,7 +3005,7 @@ switch to the last tab."
   (let* ((buf (current-buffer))
          (tabs (ale-tab-visible-tabs))
          (idx (cl-position buf tabs :test #'eq))
-         (ale-tab/inhibit-resort t))
+         (ale-tab-inhibit-resort t))
     (cond
      ((or (null idx) (eq idx 0))
       (switch-to-buffer (car (last tabs))))
@@ -3020,7 +3020,7 @@ switch to the first tab."
   (let* ((buf (current-buffer))
          (tabs (ale-tab-visible-tabs))
          (idx (cl-position buf tabs :test #'eq))
-         (ale-tab/inhibit-resort t))
+         (ale-tab-inhibit-resort t))
     (cond
      ((or (null idx) (eq idx (1- (length tabs))))
       (switch-to-buffer (car tabs)))
@@ -3033,28 +3033,28 @@ Notice when the current buffer is not in the tabs, though it may
 still be shown after the \"n+\" part in the tabs, it will be
 killed."
   (interactive)
-  (when-let ((group (ale-tab/buffer-group (current-buffer)))
+  (when-let ((group (ale-tab-buffer-group (current-buffer)))
              (tabs (ale-tab-visible-tabs)))
     (dolist (b (buffer-list))
-      (when (and (equal (ale-tab/buffer-group b) group)
+      (when (and (equal (ale-tab-buffer-group b) group)
                  (not (memq b tabs)))
         (kill-buffer b)))))
 
 (defun ale-tab-kill-buffers-in-group ()
   "Kill all buffers in current group."
   (interactive)
-  (when-let ((group (ale-tab/buffer-group (current-buffer))))
+  (when-let ((group (ale-tab-buffer-group (current-buffer))))
     (dolist (b (buffer-list))
-      (when (equal (ale-tab/buffer-group b) group)
+      (when (equal (ale-tab-buffer-group b) group)
         (kill-buffer b)))))
 
 (defun ale-tab-switch-to-buffer-in-group ()
   "Switch to a buffer in current group."
   (interactive)
-  (when-let ((group (ale-tab/buffer-group (current-buffer))))
+  (when-let ((group (ale-tab-buffer-group (current-buffer))))
     (let (bufs collection)
       (dolist (b (buffer-list))
-        (when (equal (ale-tab/buffer-group b) group)
+        (when (equal (ale-tab-buffer-group b) group)
           (push b bufs)))
       (setq bufs (mapcar #'buffer-name (nreverse bufs)))
       (setq collection
@@ -3078,12 +3078,12 @@ plug-in an UI for tabs."
   (if ale-tab-mode
       (progn
         (ale-tab-start-count-freq)
-        (ale-tab/update-buffer-list)
+        (ale-tab-update-buffer-list)
         (add-hook 'buffer-list-update-hook
-                  #'ale-tab/update-buffer-list))
+                  #'ale-tab-update-buffer-list))
     (ale-tab-stop-count-freq)
     (remove-hook 'buffer-list-update-hook
-                 #'ale-tab/update-buffer-list)))
+                 #'ale-tab-update-buffer-list)))
 #+end_src
 
 *** Config
@@ -3788,7 +3788,7 @@ made for this package and built-in help buffer:
 :CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-34255532
 :END:
 
-The purpose of the function =ale/rg-setup= is to avoid executing
+The purpose of the function =ale-rg-setup= is to avoid executing
 =rg-define-toggle/search= directly in =use-package=, because this macro introduces
 some deps that we don't need at startup.
 
@@ -3796,7 +3796,7 @@ some deps that we don't need at startup.
 ;;; ale-rg.el -*- lexical-binding: t; -*-
 
 ;;;###autoload
-(defun ale/rg-setup ()
+(defun ale-rg-setup ()
   "Define toggles in `rg-mode'."
   (rg-define-toggle "--context 3" (kbd "C"))
   (rg-define-toggle "-A 5" (kbd "A"))
@@ -3814,7 +3814,7 @@ some deps that we don't need at startup.
 #+begin_src emacs-lisp
 (use-package rg
   :config
-  (ale/rg-setup)
+  (ale-rg-setup)
   :bind
   (nil
    :map ale-prog-map
@@ -3890,7 +3890,7 @@ regexp .etc).
 (use-package nov
   :init
   (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (add-hook 'nov-mode-hook 'ale/nov-setup)
+  (add-hook 'nov-mode-hook 'ale-nov-setup)
   :config
   (advice-add 'nov-render-title :override #'ignore)
   (setq nov-shr-rendering-functions '((img . nov-render-img)
@@ -3899,7 +3899,7 @@ regexp .etc).
   (setq nov-shr-rendering-functions
         (append nov-shr-rendering-functions
                 shr-external-rendering-functions))
-  (defun ale/nov-setup ()
+  (defun ale-nov-setup ()
     (require 'shrface)
     (shrface-mode)))
 #+end_src
@@ -3920,18 +3920,18 @@ regexp .etc).
 
 (require 'json)
 
-(defvar ale/murl-list-file (expand-file-name "~/.cache/murl/main_list.json"))
+(defvar murl-list-file (expand-file-name "~/.cache/murl/main_list.json"))
 
-(defun ale/murl--playlist ()
-  (append (json-read-file ale/murl-list-file) nil))
+(defun murl--playlist ()
+  (append (json-read-file murl-list-file) nil))
 
-(defun ale/murl--get-attr (title attr)
-  (cl-dolist (i (ale/murl--playlist))
+(defun murl--get-attr (title attr)
+  (cl-dolist (i (murl--playlist))
     (when (string= title (cdr (assq 'title i)))
       (cl-return (cdr (assq attr i))))))
 
 ;;;###autoload
-(defun ale/murl-open (&optional no-hist)
+(defun murl-open (&optional no-hist)
   "Select video or stream to play in mpv."
   (interactive "P")
   (unless no-hist
@@ -3941,18 +3941,18 @@ regexp .etc).
                   (json (shell-command-to-string (concat "murl -P 1088 json '" clip "'")))
                   (valid (string-prefix-p "{" json))
                   (obj (json-read-from-string json))
-                  (playlist (ale/murl--playlist)))
+                  (playlist (murl--playlist)))
         (cl-pushnew obj playlist :test 'equal)
         (with-temp-buffer
           (insert (json-encode (vconcat playlist)))
           (json-pretty-print-buffer)
-          (write-region (point-min) (point-max) ale/murl-list-file)))))
-  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) (ale/murl--playlist)))
-         (annotation (lambda (s) (marginalia--documentation (ale/murl--get-attr s 'url))))
+          (write-region (point-min) (point-max) murl-list-file)))))
+  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) (murl--playlist)))
+         (annotation (lambda (s) (marginalia--documentation (murl--get-attr s 'url))))
          (cands (ale-files-append-meta annotation cands-raw))
          (title (completing-read "murls: " cands))
-         (sub (ale/murl--get-attr title 'sub)))
-    (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (ale/murl--get-attr title 'url))))
+         (sub (murl--get-attr title 'sub)))
+    (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (murl--get-attr title 'url))))
 #+end_src
 
 *** Config
@@ -3963,7 +3963,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (bind-keys
  :map ale-apps-map
- ("m" . ale/murl-open))
+ ("m" . murl-open))
 #+end_src
 
 ** Dictionary (fanyi.el)
@@ -4176,34 +4176,14 @@ regexp .etc).
 #+begin_src emacs-lisp
 ;;; ale/autoload/lsp.el --- -*- lexical-binding: t -*-
 
-(defun ale/lsp-pyright-import-venv ()
+;;;###autoload
+(defun ale-lsp-pyright-import-venv ()
   "Fix `import' resolution with projects with virtual env like conda."
   (require 'lsp-pyright)
   (let* ((pr-root (lsp-workspace-root))
          (py-ver "python3.9")
          (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
     (setq lsp-pyright-extra-paths (vector extra-path))))
-
-(defun ale/lsp--inhibit ()
-  "Disable `lsp-deferred' in minibuffer."
-  (advice-add 'lsp-deferred :override #'ignore))
-
-(defun ale/lsp--recover ()
-  "Recover `lsp-deferred' after quit minibuffer."
-  (advice-remove 'lsp-deferred #'ignore))
-
-;;;###autoload
-(define-minor-mode ale/lsp-mode
-  "Inhibit lsp in minibuffer."
-  :init-value nil
-  :global t
-  (if ale/lsp-mode
-      (progn
-        (add-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
-        (add-hook 'minibuffer-exit-hook 'ale/lsp--recover))
-    (progn
-      (remove-hook 'minibuffer-setup-hook 'ale/lsp--inhibit)
-      (remove-hook 'minibuffer-exit-hook 'ale/lsp--recover))))
 
 (provide 'ale-lsp)
 #+end_src
@@ -4222,8 +4202,6 @@ regexp .etc).
           typescript-mode
           rust-mode)
          . lsp-deferred)
-  :init
-  (ale/lsp-mode)
   :config
   (setq lsp-eldoc-hook nil)
   (setq lsp-signature-auto-activate t)
@@ -4242,12 +4220,12 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package lsp-tailwindcss
   :after (lsp-mode web-mode)
-  :init
+  :config
   (setq lsp-tailwindcss-add-on-mode t))
 
 (use-package lsp-pyright
-  :hook (python-mode . ale/lsp-pyright-import-venv)
-  :init
+  :hook (python-mode . ale-lsp-pyright-import-venv)
+  :config
   (when (executable-find "python3")
     (setq lsp-pyright-python-executable-cmd "python3")))
 
@@ -4453,7 +4431,7 @@ optional minor mode which can apply this command automatically on save.
 :CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-5eb47ba6
 :END:
 
-=ale/scratch= will produce a org-mode buffer with right header-args for current
+=ale-scratch= will produce a org-mode buffer with right header-args for current
 jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) will
 prompt for a major mode instead.  Simple yet super effective!
 
@@ -4477,7 +4455,7 @@ prompt for a major mode instead.  Simple yet super effective!
            collect (substring name 0 -5)))
 
 ;;;###autoload
-(defun ale/scratch (query-for-mode)
+(defun ale-scratch (query-for-mode)
   "Create or switch to an org-mode scratch buffer with jupyter session configured.
 If called with prefix arg, prompt for a major mode for the buffer."
   (interactive "P")
@@ -4508,7 +4486,7 @@ If called with prefix arg, prompt for a major mode for the buffer."
 #+begin_src emacs-lisp
 (bind-keys
  :map ale-apps-map
- ("s" . ale/scratch))
+ ("s" . ale-scratch))
 #+end_src
 
 * COMMENT Footer
