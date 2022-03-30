@@ -28,6 +28,12 @@
     (when (string-suffix-p "\n" clip)
       (goto-char (line-beginning-position)))))
 
+(defun ale-pop-local-mark-ring ()
+  "Move cursor to last mark position of current buffer.
+Call this repeatedly will cycle all positions in `mark-ring'."
+  (interactive)
+  (set-mark-command t))
+
 (defun ale-top-join-line ()
   "Join the current line with the line beneath it."
   (interactive)

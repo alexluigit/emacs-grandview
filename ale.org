@@ -1385,9 +1385,10 @@ This section contains all core keybindings of =emacs-grandview=.
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (bind-keys
  :map global-map
- ("C-;" . exchange-point-and-mark)
  ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
  ("C-c m" . ale-debug-show-messages)
+ ("<C-i>" . ale-pop-local-mark-ring)
+ ("C-o" . pop-global-mark)
  :map minibuffer-local-map
  ("S-<return>" . ale-files-other-window)
  ("C-u" . meow-kill-whole-line)
@@ -1408,73 +1409,6 @@ mode doesn't specify one.
 :PROPERTIES:
 :CUSTOM_ID: Text_editor-245ae811
 :END:
-
-** Jump list (better-jumper.el)
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Jump_list_(better-jumper.el)-bc8c9edd
-:END:
-
-Create a jump list (same concept in vim) in emacs.
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/better-jumper.el"
-:CUSTOM_ID: Text_editor-Jump_list_(better-jumper.el)-Autoload-f5aa450d
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/better-jumper.el --- -*- lexical-binding: t -*-
-
-(defvar ale-jumper-cmd-alist
-  '(beginning-of-buffer
-    end-of-buffer
-    forward-sexp
-    backward-sexp
-    meow-next
-    meow-prev
-    meow-search
-    avy-goto-char-timer
-    er/expand-region
-    xref-find-definitions
-    pop-to-buffer)
-  "A list of functions for `ale-jumper-sensible-jump-mode'.")
-
-(defun ale-jumper-advice (fn &rest args)
-  (let ((old-buf (current-buffer))
-        (old-pos (point)))
-    (apply fn args)
-    (when (or (not (eq old-buf (current-buffer)))
-              (> (abs (- (line-number-at-pos old-pos) (line-number-at-pos (point)))) 1))
-      (better-jumper-set-jump old-pos))))
-
-;;;###autoload
-(define-minor-mode ale-jumper-sensible-jump-mode
-  "Add sensible commands to jump list."
-  :init-value nil
-  :global t
-  :group 'convenience
-  (if ale-jumper-sensible-jump-mode
-      (dolist (sym ale-jumper-cmd-alist)
-        (advice-add sym :around 'ale-jumper-advice))
-    (dolist (sym ale-jumper-cmd-alist)
-      (advice-remove sym 'ale-jumper-advice))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Jump_list_(better-jumper.el)-Config-1f664eec
-:END:
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-(use-package better-jumper
-  :after-call pre-command-hook
-  :bind
-  ("<C-i>" . better-jumper-jump-forward)
-  ("C-o" . better-jumper-jump-backward)
-  :config
-  (better-jumper-mode +1)
-  (ale-jumper-sensible-jump-mode))
-#+end_src
 
 ** COMMENT Line numbers (display-line-numbers.el)
 :PROPERTIES:
