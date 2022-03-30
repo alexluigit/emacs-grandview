@@ -959,84 +959,16 @@ The Consult commands are compatible with completion systems based on the Emacs
 =completing-read= API, including the default completion system, Icomplete,
 Selectrum, Vertico and Embark.
 
-**** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/consult.el"
-:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-Autoload-5cf23958
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/consult.el --- -*- lexical-binding: t -*-
-
-(require 'consult)
-(autoload 'consult-org "consult-org")
-
-(defun ale-consult-ripgrep-current-file ()
-  "Call `consult-ripgrep' for the current buffer (a single file)."
-  (interactive)
-  (let ((consult-project-root-function #'ignore)
-        (consult-ripgrep-args
-         (concat "rg "
-                 "--null "
-                 "--line-buffered "
-                 "--color=never "
-                 "--line-number "
-                 "--smart-case "
-                 "--no-heading "
-                 "--max-columns=1000 "
-                 "--max-columns-preview "
-                 "--search-zip "
-                 "--with-filename "
-                 (shell-quote-argument buffer-file-name))))
-    (consult-ripgrep)))
-
-;;;###autoload
-(defun ale-consult-line-advisor (fn &rest args)
-  "An advice for `consult-line'.
-
-When in a very large file (total lines > 100000), call
-`consult-ripgrep' on current file, otherwise execute it
-directly."
-  (interactive)
-  (let ((total-lines (count-lines (point-min) (point-max))))
-    (if (> total-lines 100000)
-        (ale-consult-ripgrep-current-file)
-      (apply fn args))))
-
-;;;###autoload
-(defun ale-consult-outline-advisor (fn &rest args)
-  "An advice for `consult-outline'.
-
-When in `org-mode', call `consult-org-heading', otherwise call
-`consult-outline'."
-  (if (derived-mode-p 'org-mode)
-      (consult-org-heading)
-    (apply fn args)))
-
-;;;###autoload
-(defun ale-consult-project-root ()
-  (when-let (project (project-current))
-    (car (project-roots project))))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Useful_commands_using_completion_(consult.el)-Config-5a35740a
-:END:
-
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package consult
   :after-call minibuffer-setup-hook
-  :init
-  (setq completion-in-region-function #'consult-completion-in-region)
+  :config
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
+  (setq xref-show-xrefs-function #'consult-xref)
+  (setq xref-show-definitions-function #'consult-xref)
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
-  (advice-add #'consult-outline :around #'ale-consult-outline-advisor)
-  (advice-add #'consult-line :around #'ale-consult-line-advisor)
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
   :bind
   (nil
    :map meow-normal-state-keymap
@@ -1164,7 +1096,6 @@ those so-called 'extras'."
 This is a utility jointly developed by Daniel Mendler and Omar Antolín Camarena
 that provides annotations to completion candidates.  It is meant to be
 framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
-
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package marginalia
@@ -1533,8 +1464,6 @@ Meant to be called via `prog-mode-hook'."
 (use-package xref
   :straight (:type built-in)
   :config
-  (setq xref-show-definitions-function #'xref-show-definitions-completing-read)
-  (setq xref-show-xrefs-function #'xref-show-definitions-completing-read)
   (setq xref-file-name-display 'project-relative)
   (setq xref-search-program 'ripgrep))
 #+end_src
