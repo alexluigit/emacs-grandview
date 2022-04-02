@@ -180,10 +180,11 @@ You can also restart emacs by invoking =restart-emacs= command inside emacs.
 :CUSTOM_ID: *CORE*-f9b16bd5
 :END:
 
-Loads core of =emacs-grandview=.
+Core libraries/configurations used in this project.
 
-It is *NOT* recommended to delete / comment out this section except for debugging
-purpose.
+Unless you are an Emacs tinker, it is *NOT* recommended to delete / comment out
+this section except for debugging purpose. Because codes in other sections may
+rely on orientations in this section to work properly.
 
 ** Editor
 :PROPERTIES:
@@ -967,13 +968,8 @@ Selectrum, Vertico and Embark.
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
 (use-package consult
   :after-call minibuffer-setup-hook
-  :config
-  (setq register-preview-delay 0.2)
-  (setq register-preview-function #'consult-register-format)
-  (setq xref-show-xrefs-function #'consult-xref)
-  (setq xref-show-definitions-function #'consult-xref)
-  (advice-add #'register-preview :override #'consult-register-window)
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  :init
+  (setq completion-in-region-function #'consult-completion-in-region)
   :bind
   (nil
    :map meow-normal-state-keymap
@@ -992,6 +988,12 @@ Selectrum, Vertico and Embark.
    ("c" . consult-complex-command)
    ("C" . consult-mode-command))
   :config
+  (advice-add #'register-preview :override #'consult-register-window)
+  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  (setq register-preview-delay 0.2)
+  (setq register-preview-function #'consult-register-format)
+  (setq xref-show-xrefs-function #'consult-xref)
+  (setq xref-show-definitions-function #'consult-xref)
   (setq consult-project-root-function #'ale-consult-project-root)
   (setq consult-line-numbers-widen t)
   (setq consult-async-min-input 3)
@@ -1120,6 +1122,9 @@ overlay.  The current candidates are shown in a popup below or above the point.
 Corfu can be considered the minimalistic completion-in-region counterpart of
 =Vertico=.
 
+We also enabled ~corfu-doc-mode~ to show documentation of the candidates in a
+pop-up window.
+
 #+begin_src emacs-lisp
 (use-package corfu
   :after-call self-insert-command
@@ -1136,6 +1141,10 @@ Corfu can be considered the minimalistic completion-in-region counterpart of
    ([backtab] . corfu-previous))
   :config
   (corfu-global-mode))
+
+(use-package corfu-doc
+  :hook
+  (corfu-mode . corfu-doc-mode))
 #+end_src
 
 *** Completion at point Extensions (cape.el)

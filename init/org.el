@@ -20,9 +20,8 @@
 
   (defun ale-org-eldoc-funcall (_callback &rest _ignored)
     "Fix `elisp-eldoc-funcall' at `org-mode'."
-    (let* ((sym-info (elisp--fnsym-in-current-sexp))
-           (fn-sym (car sym-info)))
-      (when fn-sym
+    (let* ((sym-info (elisp--fnsym-in-current-sexp)))
+      (when-let ((fn-sym (car sym-info)))
         (message "%s: %s"
                  (propertize (format "%s" fn-sym) 'face 'font-lock-function-name-face)
                  (apply #'elisp-get-fnsym-args-string sym-info)))))
