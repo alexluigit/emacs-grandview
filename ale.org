@@ -2328,6 +2328,8 @@ look like which can be described briefly as follows:
 
 (require 'org-id)
 
+(defvar-local ale-org-id-auto nil)
+
 (defun ale-org-id-new (&optional prefix)
   "Create a new globally unique ID.
 
