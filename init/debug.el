@@ -1,13 +1,12 @@
 ;;; init/debug.el --- -*- lexical-binding: t -*-
 
-(defun ale-debug-log (format-string &rest args)
+(defun ale-debug-log (format &rest args)
   "Log to *Messages* if `ale-debug-p' is on.
-Does not display text in echo area, but still logs to *Messages*. Accepts the
-same arguments as `message'."
+Does not display text in echo area, but still logs to
+*Messages*.  FORMAT and ARGS are the same arguments as `message'."
   (when ale-debug-p
     (let ((inhibit-message (active-minibuffer-window))
-          (str (concat (propertize "ALE " 'face 'font-lock-comment-face)
-                       format-string)))
+          (str (concat (propertize "ALE " 'face 'font-lock-comment-face) format)))
       (apply 'message (push str args)))))
 
 (defun ale-debug-show-messages (&optional erase)
