@@ -16,15 +16,14 @@
 
 This is my emacs configuration.
 
-*** Structure
+*** Architecture
 :PROPERTIES:
 :CUSTOM_ID: Overview-About-Structure-b170db4c
 :END:
 
 + Init file:                      =early-init.el= and =init.el=
 + User options:                   =user.el=
-+ Booting and essential defaults: =init/*.el=
-+ Main config file:               =ale.org= (this file)
++ Main config file:               This file
 
 After the bootstrapping process, the tangled code blocks from this file are
 evaluated by Emacs. It will update all of the config upon restarting once the
@@ -255,19 +254,21 @@ Call this repeatedly will cycle all positions in `mark-ring'."
     (set-mark-command nil)
     (back-to-indentation)))
 
-(defun ale-comment-or-uncomment-region ()
-  "Toggle comment in active-region (when available) or current line."
-  (interactive)
-  (let ((comment-func (if (eq major-mode 'org-mode)
-                          'org-comment-dwim
-                        'comment-or-uncomment-region))
-        (old-point (point)))
-    (unless (region-active-p)
-      (goto-char (line-beginning-position))
-      (set-mark-command nil)
-      (forward-line 1))
-    (call-interactively comment-func)
-    (goto-char old-point)))
+;;;###autoload
+(defun ale-show-messages (&optional erase)
+  "Show *Messages* buffer in other frame.
+If ERASE is non-nil, erase the buffer before switching to it."
+  (interactive "P")
+  (when erase
+    (let ((inhibit-read-only t))
+      (with-current-buffer "*Messages*" (erase-buffer))))
+  (let ((win (get-buffer-window "*Messages*" t))
+        (after-make-frame-functions nil))
+    (if (window-live-p win)
+        (delete-frame (window-frame win))
+      (with-selected-frame (make-frame)
+        (set-window-parameter (selected-window) 'no-other-window t)
+        (switch-to-buffer "*Messages*")))))
 
 ;;;###autoload
 (defadvice! +delete-backward-char-ad (fn &rest args)
@@ -732,10 +733,6 @@ to 0 to ensure every new window will open in horizontal split.
 
 (require 'pulse)
 
-(defgroup ale-pulse ()
-  "Extensions for `pulse.el'."
-  :group 'editing)
-
 (defcustom ale-pulse-pulse-command-list
   '(recenter-top-bottom
     reposition-window
@@ -744,8 +741,7 @@ to 0 to ensure every new window will open in horizontal split.
   "Commands that should automatically `ale-pulse-pulse-line'.
 You must restart function `ale-pulse-line-mode' for changes to
 take effect."
-  :type 'list
-  :group 'ale-pulse)
+  :group 'ale :type '(repeat function))
 
 (defface ale-pulse-line
   '((default :extend t)
@@ -753,7 +749,7 @@ take effect."
      :background "#8eecf4")
     (t :inverse-video t :background "#004065"))
   "Default face for `ale-pulse-pulse-line'."
-  :group 'ale-pulse)
+  :group 'ale)
 
 ;;;###autoload
 (defun ale-pulse-pulse-line (&optional face kill)
@@ -1427,7 +1423,7 @@ This section contains all core keybindings of =emacs-grandview=.
  '("SPC" . ale-meow-with-key-fallback)
  '("?" . describe-keymap)
  '("/" . describe-symbol)
- '(";" . ale-comment-or-uncomment-region)
+ '(";" . comment-line)
  '("a" . ale-apps-map)
  '("e" . dired-jump)
  '("f" . ale-files-map)
@@ -1445,11 +1441,8 @@ This section contains all core keybindings of =emacs-grandview=.
 
 (bind-keys
  :map ale-files-map
- ("." . ale-files-dotfiles)
- ("e" . ale-files-edit-emacs-config)
+ ("e" . find-emacs-config)
  ("l" . find-library)
- ("r" . ale-files-rename-file-and-buffer)
- ("u" . ale-files-in-user-dirs)
  :map ale-apps-map
  ("o" . ale-opacity-set)
  ("=" . count-words)
@@ -1466,7 +1459,7 @@ This section contains all core keybindings of =emacs-grandview=.
 (bind-keys
  :map global-map
  ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
- ("C-c m" . ale-debug-show-messages)
+ ("C-c m" . ale-show-messages)
  ("<C-i>" . +simple-pop-local-mark-ring)
  ("C-o" . pop-global-mark)
  :map minibuffer-local-map
@@ -1905,6 +1898,72 @@ Summary of what these do:
 :END:
 
 #+begin_src emacs-lisp
+;;; ale/autoload/files.el --- -*- lexical-binding: t -*-
+
+(defcustom ale-files-dotfiles-repo (getenv "DOTPATH")
+  "doc"
+  :group 'ale :type 'string)
+
+(defcustom ale-files-dir-alist
+  '(((title . "  Photos")       (path . "~/Pictures/"))
+    ((title . "  Videos")       (path . "~/Video/"))
+    ((title . "  Downloads")    (path . "~/Downloads/")))
+  "doc"
+  :group 'files :type '(repeat list))
+
+(defcustom ale-files-cmd-alist
+  '(("video/" ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
+    (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
+  "doc"
+  :group 'files :type '(alist :value-type ((choice list string) list)))
+
+;;;###autoload
+(defun +files-append-metadata (metadata candidates)
+  "Append METADATA for CANDIDATES."
+  (let ((entry (if (functionp metadata)
+                   `(metadata (annotation-function . ,metadata))
+                 `(metadata (category . ,metadata)))))
+    (lambda (string pred action)
+      (if (eq action 'metadata)
+          entry
+        (complete-with-action action candidates string pred)))))
+
+(defun +files--in-directory (dir &optional prompt)
+  "Use `fd' to list files in DIR."
+  (let* ((default-directory dir)
+         (command "fd -H -t f -0")
+         (output (shell-command-to-string command))
+         (files-raw (split-string output "\0" t))
+         (files (+files-append-metadata 'file files-raw))
+         (file (completing-read (or prompt "Open file: ") files)))
+    (find-file (concat dir "/" file))))
+
+(cl-defun +files--match-mime (file)
+  "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
+  (setq file (expand-file-name file))
+  (let ((meta (with-temp-buffer
+                (call-process "file" nil t nil "-bi" file) (buffer-string))))
+    (when (or (not (string-match "charset=binary" meta))
+              (string-match "inode/x-empty" meta))
+      (cl-return-from +files--match-mime))
+    (pcase-dolist (`(,re-or-exts ,cmd) ale-files-cmd-alist)
+      (if (listp re-or-exts)
+          (let ((ext (file-name-extension file)))
+            (when (member ext re-or-exts)
+              (cl-return-from +files--match-mime cmd)))
+        (when (string-match re-or-exts meta)
+          (cl-return-from +files--match-mime cmd))))))
+
+(defun +files--open-externally (entry &optional cmd args)
+  "Open file using external shell command."
+  (let ((process-connection-type nil)
+        (entry (shell-quote-argument (expand-file-name entry))))
+    (unless (executable-find cmd)
+      (user-error (format "Install `%s' to preview %s" cmd entry)))
+    (setq args (cl-substitute entry "%f" args :test 'string=))
+    (let ((default-directory "~"))
+      (apply #'start-process "" nil "nohup" (append (list cmd) args)))))
+
 ;;;###autoload
 (defadvice! +find-library-ad (fn &rest args)
   "Always follow symlink when using `find-library'.
@@ -1914,20 +1973,19 @@ libraries's truename."
   :around #'find-library
   (let ((vc-follow-symlinks t)) (apply fn args)))
 
-;;;###autoload
 (defadvice! +files-find-file-ad (fn file &rest args)
   "Advisor of `find-file' that opens some types of file externally."
   :around #'find-file
   :around #'find-file-other-window
-  (if-let ((match (ale-files-match-mime file)))
+  (if-let ((match (+files--match-mime file)))
       (let ((cmd (car match))
             (args (cdr match)))
         (add-to-list 'recentf-list file)
-        (ale-files-find-file-external file cmd args))
+        (+files--open-externally file cmd args))
     (apply fn file args)))
 
 ;;;###autoload
-(defun +files-rename-file-and-buffer (name)
+(defun +rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."
   (interactive
@@ -1937,6 +1995,37 @@ Do not try to make a new directory or anything fancy."
         (vc-rename-file file name)
       (rename-file file name))
     (set-visited-file-name name t t)))
+
+;;;###autoload
+(defun +find-dotfiles ()
+  "Open files in dotfiles repo."
+  (interactive)
+  (unless ale-files-dotfiles-repo
+    (user-error "`ale-files-dot-repo' is undefined"))
+  (+files--in-directory ale-files-dotfiles-repo " Dotfiles: "))
+
+;;;###autoload
+(defun +find-file-sudo ()
+  "Reopen current file as root."
+  (interactive)
+  (let ((file (buffer-file-name)))
+  (find-file (if (file-writable-p file)
+                 file
+               (concat "/sudo::" file)))))
+
+;;;###autoload
+(defun +find-files-in-user-dirs ()
+  "Open files in directories defined in `ale-files-dir-alist'."
+  (interactive)
+  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ale-files-dir-alist))
+         (get-item (lambda (s field) (cl-dolist (i ale-files-dir-alist)
+                                 (when (string= s (cdr (assq 'title i)))
+                                   (cl-return (cdr (assq field i)))))))
+         (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
+         (cands (+files-append-metadata annotation cands-raw))
+         (title (completing-read "Open: " cands nil t))
+         (path (funcall get-item title 'path)))
+    (+files--in-directory path (concat title ": "))))
 #+end_src
 
 *** Config
@@ -1948,9 +2037,42 @@ Do not try to make a new directory or anything fancy."
 (use-package files
   :straight (:type built-in)
   :config
+  (setq ale-files-dir-alist
+        '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
+          ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
+          ((title . "  Books")        (path . "/mnt/HDD/Book"))
+          ((title . "輸  Videos")       (path . "/mnt/HDD/Video"))
+          ((title . "  Notes")        (path . "~/Documents/notes"))
+          ((title . "  Photos")       (path . "~/Pictures"))
+          ((title . "  Downloads")    (path . "~/Downloads"))))
   (setq confirm-kill-processes nil)
   (setq large-file-warning-threshold 50000000)
-  (setq permanently-enabled-local-variables '(lexical-binding encoding)))
+  (setq permanently-enabled-local-variables '(lexical-binding encoding))
+  :bind
+  (nil
+   :map ale-files-map
+   ("." . +find-dotfiles)
+   ("r" . +rename-file-and-buffer)
+   ("u" . +find-files-in-user-dirs)))
+  #+end_src
+
+** Mailcap
+:PROPERTIES:
+:CUSTOM_ID: File_management-Mailcap-9b8cb1f9
+:END:
+
+Provides configuration of MIME media types via the usual mailcap mechanism (RFC
+1524).  Deals with mime.types similarly.
+
+#+begin_src emacs-lisp
+(use-package mailcap
+  :after-call find-file-noselect
+  :config
+  (mailcap-parse-mimetypes)
+  (cl-dolist (mt '((".ape" . "audio/ape")
+                   (".rmvb" . "video/rm")
+                   (".f4v" . "video/f4v")))
+    (add-to-list 'mailcap-mime-extensions mt)))
 #+end_src
 
 ** Recent files (recentf.el)
@@ -2243,7 +2365,7 @@ DIRS."
   (let* ((pr (project-current t))
          (dir (project-root pr))
          (dirs-raw (ale-project--directory-subdirs dir))
-         (subdirs (ale-files-append-meta 'file dirs-raw))
+         (subdirs (+files-append-metadata 'file dirs-raw))
          (directory (completing-read "Select Project subdir: " subdirs)))
     (dired directory)))
 
@@ -2447,6 +2569,15 @@ look like which can be described briefly as follows:
      `(org-block ((t (,@default))))
      `(org-block-begin-line ((t (:foreground "#606060" :extend t))))
      '(org-tag ((t (:inherit (shadow) :weight bold :height 0.8)))))))
+
+;;;###autoload
+(defun ale-org-eldoc-funcall (_callback &rest _ignored)
+  "Fix `elisp-eldoc-funcall' at `org-mode'."
+  (let* ((sym-info (elisp--fnsym-in-current-sexp)))
+    (when-let ((fn-sym (car sym-info)))
+      (message "%s: %s"
+               (propertize (format "%s" fn-sym) 'face 'font-lock-function-name-face)
+               (apply #'elisp-get-fnsym-args-string sym-info)))))
 #+end_src
 
 *** Config
@@ -4135,7 +4266,7 @@ regexp .etc).
           (write-region (point-min) (point-max) murl-list-file)))))
   (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) (murl--playlist)))
          (annotation (lambda (s) (marginalia--documentation (murl--get-attr s 'url))))
-         (cands (ale-files-append-meta annotation cands-raw))
+         (cands (+files-append-metadata annotation cands-raw))
          (title (completing-read "murls: " cands))
          (sub (murl--get-attr title 'sub)))
     (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (murl--get-attr title 'url))))

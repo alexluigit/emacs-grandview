@@ -1,6 +1,6 @@
 ;;; early-init.el --- -*- lexical-binding: t -*-
 
-;; Defer GC (see `autoload/gc.el')
+;; Inhibit garbage collection during startup
 (setq gc-cons-threshold most-positive-fixnum)
 
 ;; Setup native compilation
