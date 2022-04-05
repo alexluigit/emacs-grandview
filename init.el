@@ -9,7 +9,6 @@
   (load (concat init-dir "init/package.el") nil t)
   (load (concat init-dir "init/tangle.el") nil t)
   (load (concat init-dir "init/org.el") nil t)
-  (load (concat init-dir "init/editor.el") nil t)
   (load (concat init-dir "init/debug.el") nil t)
   (load ale-autoload-file nil t)
   (when (file-exists-p user-conf) (load user-conf nil t))

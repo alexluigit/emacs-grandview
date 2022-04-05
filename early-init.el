@@ -162,6 +162,14 @@
     (defalias 'yes-or-no-p 'y-or-n-p)
   (setq use-short-answers t))
 
+(setq safe-local-variable-values
+      '((completion-at-point-functions . (pcomplete-completions-at-point elisp-completion-at-point t))
+        (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
+        (ale-org-id-auto . t)))
+
+;; No littering
+(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
+
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar

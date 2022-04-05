@@ -3,9 +3,6 @@
 (defconst IS-GUI (or (daemonp) (display-graphic-p)))
 (defconst INIT-DIR (file-name-directory user-init-file))
 
-;; No littering
-(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
-
 (defvar ale-debug-p nil)
 (defvar ale-cache-dir (concat user-emacs-directory "ale/"))
 
@@ -16,34 +13,10 @@
 (defvar ale-autoload-file (concat ale-cache-dir "autoload.el"))
 (defvar ale-autoload-dirs `(,ale-autoload-default-dir))
 
-(defvar ale-font-size 32)
-(defvar ale-default-font "Victor Mono")
-(defvar ale-fixed-font "Sarasa Mono SC")
-(defvar ale-variable-font "Sarasa Mono SC")
-(defvar ale-zh-font "LXGW WenKai Mono")
-(defvar ale-zh-font-scale 1.0)
-
 (defvar ale-gc-cons-threshold 134217728 ; 128mb
   "The default value to use for `gc-cons-threshold'.
 If you experience freezing, decrease this.  If you experience
 stuttering, increase this.")
-
-(defcustom ale-date-specifier "%F"
-  "Date specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-(defcustom ale-time-specifier "%R %z"
-  "Time specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-(defcustom ale-quit-minor-modes '(org-tree-slide-mode view-mode)
-  "Disable these minor modes when calling `ale-quit'."
-  :type '(repeat symbol)
-  :group 'ale)
 
 (defcustom ale-files-additional-mime
   '((".ape" . "audio/ape")
@@ -65,15 +38,8 @@ Used by `ale-insert-date'."
   "doc"
   :group 'files :type '(alist :value-type ((choice list string) list)))
 
-(defcustom ale-term-position-alist
-  '((always . ((window-height . 0.4) (side . bottom))))
-  "doc")
-
 (defconst ale-files-dot-repo (getenv "DOTPATH")
   "doc")
-
-(defcustom ale-local-leader-key "C-x x SPC"
-  "Another Leader key trigger")
 
 ;; `project-prefix-map' is available in emacs > 28.
 (if (boundp 'project-prefix-map)

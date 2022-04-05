@@ -199,6 +199,115 @@ rely on orientations in this section to work properly.
 =simple.el= consists of a grab-bag of basic Emacs commands not specifically
 related to some major mode or to file-handling.
 
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Editor-Autoload-cb8b46e5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/simple.el"
+:END:
+
+#+begin_src emacs-lisp
+(defcustom ale-date-specifier "%F"
+  "Date specifier for `format-time-string'.
+Used by `ale-insert-date'."
+  :type 'string
+  :group 'ale)
+
+(defcustom ale-time-specifier "%R %z"
+  "Time specifier for `format-time-string'.
+Used by `ale-insert-date'."
+  :type 'string
+  :group 'ale)
+
+;;;###autoload
+(defun ale-insert-date (&optional arg)
+  "Insert the current date as `ale-date-specifier'.
+With optional prefix ARG (\\[universal-argument]) also append the
+current time understood as `ale-time-specifier'.  When region is
+active, delete the highlighted text and replace it with the
+specified date."
+  (interactive "P")
+  (let* ((date ale-date-specifier)
+         (time ale-time-specifier)
+         (format (if arg (format "%s %s" date time) date)))
+    (when (use-region-p)
+      (delete-region (region-beginning) (region-end)))
+    (insert (format-time-string format))))
+
+;;;###autoload
+(defun +simple-pop-local-mark-ring ()
+  "Move cursor to last mark position of current buffer.
+Call this repeatedly will cycle all positions in `mark-ring'."
+  (interactive)
+  (set-mark-command t))
+
+;;;###autoload
+(defun +simple-join-line ()
+  "Join the current line with the line beneath it."
+  (interactive)
+  (delete-indentation 1))
+
+;;;###autoload
+(defun +simple-mark-inner-line ()
+  "Mark inner line and move cursor to bol."
+  (interactive)
+  (save-window-excursion
+    (end-of-visual-line)
+    (set-mark-command nil)
+    (back-to-indentation)))
+
+(defun ale-comment-or-uncomment-region ()
+  "Toggle comment in active-region (when available) or current line."
+  (interactive)
+  (let ((comment-func (if (eq major-mode 'org-mode)
+                          'org-comment-dwim
+                        'comment-or-uncomment-region))
+        (old-point (point)))
+    (unless (region-active-p)
+      (goto-char (line-beginning-position))
+      (set-mark-command nil)
+      (forward-line 1))
+    (call-interactively comment-func)
+    (goto-char old-point)))
+
+;;;###autoload
+(defadvice! +delete-backward-char-ad (fn &rest args)
+  "Do not try to delete char when last char is read-only."
+  :around #'delete-backward-char
+  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
+
+;;;###autoload
+(defadvice! +keyboard-escape-quit-ad (fn &rest args)
+  "Do not close any window when calling `keyboard-escape-quit'."
+  :around #'keyboard-escape-quit
+  (let ((buffer-quit-function #'ignore)) (apply fn args)))
+
+;;;###autoload
+(defadvice! +next-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `next-error-no-select'."
+  :around #'next-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+;;;###autoload
+(defadvice! +previous-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `previous-error-no-select'."
+  :around #'previous-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+;;;###autoload
+(defadvice! +yank-ad (&rest _)
+  "Make `yank' behave like paste (p) command in vim."
+  :before #'yank
+  (when-let ((clip (condition-case nil (current-kill 0 t) (error ""))))
+    (set-text-properties 0 (length clip) nil clip)
+    (when (string-suffix-p "\n" clip)
+      (goto-char (line-beginning-position)))))
+#+end_src
+
+**** Config
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Editor-Config-fc6a72a5
+:END:
+
 #+begin_src emacs-lisp
 (use-package simple
   :straight (:type built-in))
@@ -487,9 +596,22 @@ details.
 #+begin_src emacs-lisp
 ;;; ale/autoload/window.el --- extensions for window.el -*- lexical-binding: t; -*-
 
-(defgroup ale-window ()
-  "Tweaks for windows."
-  :group 'windows)
+(defcustom ale-quit-minor-modes '(org-tree-slide-mode view-mode)
+  "Disable these minor modes when calling `ale-quit'."
+  :type '(repeat symbol)
+  :group 'ale)
+
+;;;###autoload
+(defadvice! +quit-window-ad (&rest _)
+  "Disable some minor modes or kill current window/buffer.
+Try to quit minor modes defined in `ale-quit-minor-modes' then
+issues a `quit-window'."
+  :before #'quit-window
+  (dolist (mode ale-quit-minor-modes)
+    (when (and (boundp mode)
+               (or (derived-mode-p mode)
+                   (buffer-local-value mode (current-buffer))))
+      (apply mode '(-1)))))
 
 ;;;###autoload
 (defun ale-split-window-right ()
@@ -1226,7 +1348,7 @@ This section contains all core keybindings of =emacs-grandview=.
  '("<escape>" . ale-meow-escape)
  '("<backspace>" . scroll-down)
  '("'" . scroll-up)
- '("%" . ale-match-paren)
+ ;; '("%" . TODO)
  '(";" . meow-reverse)
  '("," . meow-inner-of-thing)
  '("." . meow-bounds-of-thing)
@@ -1248,7 +1370,7 @@ This section contains all core keybindings of =emacs-grandview=.
  '("C" . meow-change-save)
  '("d" . meow-delete)
  '("e" . meow-line)
- '("E" . ale-inner-line)
+ '("E" . +simple-mark-inner-line)
  '("f" . meow-find)
  '("F" . forward-sexp)
  '("g" . meow-grab)
@@ -1256,7 +1378,7 @@ This section contains all core keybindings of =emacs-grandview=.
  '("h" . embrace-commander)
  '("i" . meow-right)
  '("I" . meow-right-expand)
- '("j" . ale-top-join-line)
+ '("j" . +simple-join-line)
  '("J" . meow-join)
  '("k" . meow-kill)
  '("K" . meow-kmacro-matches)
@@ -1269,7 +1391,7 @@ This section contains all core keybindings of =emacs-grandview=.
  '("O" . meow-left-expand)
  '("p" . meow-prev)
  '("P" . meow-open-above)
- '("q" . ale-quit)
+ '("q" . quit-window)
  '("r" . meow-search)
  '("s" . meow-sync-grab)
  '("S" . meow-swap-grab)
@@ -1345,10 +1467,9 @@ This section contains all core keybindings of =emacs-grandview=.
  :map global-map
  ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
  ("C-c m" . ale-debug-show-messages)
- ("<C-i>" . ale-pop-local-mark-ring)
+ ("<C-i>" . +simple-pop-local-mark-ring)
  ("C-o" . pop-global-mark)
  :map minibuffer-local-map
- ("S-<return>" . ale-files-other-window)
  ("C-u" . meow-kill-whole-line)
  ("<C-i>" . forward-char)
  ("C-o" . backward-char))
@@ -1776,6 +1897,51 @@ Summary of what these do:
 ** Find files (files.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Find_files_(files.el)-9cfb4a15
+:END:
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: File_management-Find_files_(files.el)-Autoload-805c2add
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/files.el"
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defadvice! +find-library-ad (fn &rest args)
+  "Always follow symlink when using `find-library'.
+Package managers like `straight.el' use symlink to manage
+package/libraries. This advice will enable user always find
+libraries's truename."
+  :around #'find-library
+  (let ((vc-follow-symlinks t)) (apply fn args)))
+
+;;;###autoload
+(defadvice! +files-find-file-ad (fn file &rest args)
+  "Advisor of `find-file' that opens some types of file externally."
+  :around #'find-file
+  :around #'find-file-other-window
+  (if-let ((match (ale-files-match-mime file)))
+      (let ((cmd (car match))
+            (args (cdr match)))
+        (add-to-list 'recentf-list file)
+        (ale-files-find-file-external file cmd args))
+    (apply fn file args)))
+
+;;;###autoload
+(defun +files-rename-file-and-buffer (name)
+  "Apply NAME to current file and rename its buffer.
+Do not try to make a new directory or anything fancy."
+  (interactive
+   (list (read-string "Rename current file: " (buffer-file-name))))
+  (let* ((file (buffer-file-name)))
+    (if (vc-registered file)
+        (vc-rename-file file name)
+      (rename-file file name))
+    (set-visited-file-name name t t)))
+#+end_src
+
+*** Config
+:PROPERTIES:
+:CUSTOM_ID: File_management-Find_files_(+files.el)-Config-003e8b7d
 :END:
 
 #+begin_src emacs-lisp :tangle (ale-minimal-config)
@@ -2676,7 +2842,12 @@ Protesilaos Stavrou.
 #+begin_src emacs-lisp
 ;;; ale/autoload/fonts.el --- -*- lexical-binding: t -*-
 
-(require 'cl-lib)
+(defvar ale-font-size 32)
+(defvar ale-default-font "Victor Mono")
+(defvar ale-fixed-font "Sarasa Mono SC")
+(defvar ale-variable-font "Sarasa Mono SC")
+(defvar ale-zh-font "LXGW WenKai Mono")
+(defvar ale-zh-font-scale 1.0)
 
 ;;;###autoload
 (defun ale-font-setup (&optional frame)
@@ -3485,6 +3656,10 @@ Index based window motions.
 
 (require 'vterm)
 
+(defcustom ale-vterm-position-alist
+  '((always . ((window-height . 0.4) (side . bottom))))
+  "doc")
+
 (defcustom ale-vterm-kill-whole-line-cmd
   'vterm-send-C-u
   "Command for kill whole line in vterm buffer."
@@ -3546,11 +3721,11 @@ Index based window motions.
   (vterm-send-key "\"" nil 0 nil))
 
 (defun ale-vterm--get-win-params ()
-  "Parse `ale-term-position-alist' to get vterm display parameters."
+  "Parse `ale-vterm-position-alist' to get vterm display parameters."
   `(("^\\*vterm.*"
      (display-buffer-in-side-window)
      (window-parameters . ((mode-line-format . none)))
-     ,@(cl-loop for (pred . pos) in ale-term-position-alist
+     ,@(cl-loop for (pred . pos) in ale-vterm-position-alist
                 when (funcall pred)
                 return pos))))
 

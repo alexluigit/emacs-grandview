@@ -4,31 +4,6 @@
 (require 'files)
 (eval-when-compile (require 'cl-lib))
 
-;; Local variables in our main config file.
-(setq safe-local-variable-values
-      '((completion-at-point-functions . (pcomplete-completions-at-point elisp-completion-at-point t))
-        (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
-        (ale-org-id-auto . t)))
-
-(defadvice! +find-library-ad (fn &rest args)
-  "Always follow symlink when using `find-library'.
-Package managers like `straight.el' use symlink to manage
-package/libraries. This advice will enable user always find
-libraries's truename."
-  :around #'find-library
-  (let ((vc-follow-symlinks t)) (apply fn args)))
-
-(defadvice! +files-find-file-ad (fn file &rest args)
-  "Advisor of `find-file' that opens some types of file externally."
-  :around #'find-file
-  :around #'find-file-other-window
-  (if-let ((match (ale-files-match-mime file)))
-      (let ((cmd (car match))
-            (args (cdr match)))
-        (add-to-list 'recentf-list file)
-        (ale-files-find-file-external file cmd args))
-    (apply fn file args)))
-
 (defun ale-files-read-file (path &optional coding)
   "Read text with PATH, using CODING.
 CODING defaults to `utf-8'.
@@ -117,45 +92,10 @@ Return the decoded text as multibyte string."
   (interactive)
   (find-file ale-full-config-org))
 
-(defun ale-files-other-window ()
-  "Doc."
-  (interactive)
-  (let* ((meta (completion-metadata
-                (buffer-substring-no-properties (field-beginning) (point))
-                minibuffer-completion-table
-                minibuffer-completion-predicate))
-         (category (completion-metadata-get meta 'category))
-         (category-file (memq category '(file project-file)))
-         (cand (vertico--candidate)))
-    (unless category-file (user-error "Candidate is not a file"))
-    (if (eq category 'project-file)
-        (setq cand (expand-file-name cand (or (cdr-safe (project-current))
-                                              (car (minibuffer-history-value)))))
-      (setq cand (expand-file-name cand)))
-    (run-with-timer 0.1 nil
-                    (lambda (p)
-                      (split-window-right)
-                      (other-window 1)
-                      (find-file p)
-                      (meow--update-cursor))
-                    cand)
-    (keyboard-escape-quit)))
-
 (defun ale-files-revert-buffer-no-ask ()
   "Revert buffer, no ask for confirmation."
   (interactive)
   (revert-buffer nil t))
-
-(defun ale-files-rename-file-and-buffer (name)
-  "Apply NAME to current file and rename its buffer.
-Do not try to make a new directory or anything fancy."
-  (interactive
-   (list (read-string "Rename current file: " (buffer-file-name))))
-  (let* ((file (buffer-file-name)))
-    (if (vc-registered file)
-        (vc-rename-file file name)
-      (rename-file file name))
-    (set-visited-file-name name t t)))
 
 (defun ale-files-sudo-find ()
   "Reopen current file as root."
