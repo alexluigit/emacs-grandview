@@ -8,59 +8,27 @@
 :PROPERTIES:
 :CUSTOM_ID: Overview-5d246939
 :END:
-
-** About
+** Introduction
 :PROPERTIES:
-:CUSTOM_ID: Overview-About-c1129ead
+:CUSTOM_ID: Overview-Introduction-a717df64
 :END:
 
-This is my emacs configuration.
-
-*** Architecture
-:PROPERTIES:
-:CUSTOM_ID: Overview-About-Structure-b170db4c
-:END:
+*Emacs-grandview* is my literate Emacs configuration which has the architecture
+looks like:
 
 + Init file:                      =early-init.el= and =init.el=
 + User options:                   =user.el=
 + Main config file (.org):        This file
 + Main config file (.el):         Tangled from this file
 
-The source blocks in this file (defaults to =grandview.org=) is tangled to
-~grandview--el-file~ which will be evaluated by Emacs, let's enable
-=lexical-binding= for it first.
+The elisp source blocks in this file (defaults to =grandview.org=) is tangled to a
+regular =.el= file which is then evaluated by Emacs.  Sections named *Autoload* are
+tangled to separate files upon which corresponding autoloads are generated.
+Whenever the content of this file changes, the whole tangle process is repeated
+on the execution of ~kill-emacs~ command, after that the new generated config will
+replace the old one.
 
-#+begin_src emacs-lisp
-;;; grandview.el --- -*- lexical-binding: t -*-
-#+end_src
-
-*** COPYING
-:PROPERTIES:
-:CUSTOM_ID: Overview-About-COPYING-89382013
-:END:
-
-#+begin_quote
-Copyright (c) 2020-2022  Alex Lu <alexluigit@gmail.com>
-
-This file is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
-
-This file is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this file.  If not, see <http://www.gnu.org/licenses/>.
-#+end_quote
-
-** Quickstart
-:PROPERTIES:
-:CUSTOM_ID: Overview-Quickstart-f3eacf86
-:END:
-*** Dependencies
+** Dependencies
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-Dependencies-39c01c85
 :END:
@@ -81,7 +49,7 @@ Here are the dependencies of this project.
 | =xdotool=               | Automation tool for X11     | optional |
 |-----------------------+-----------------------------+----------|
 
-*** Install
+** Installation
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-Install-2db8f0c1
 :END:
@@ -108,30 +76,41 @@ ln -sf ~/Code/emacs-grandview ~/.config/emacs
 
 # Tangle the config
 emacs --daemon
-emacsclient -e '(kill-emacs)'
 #+end_src
 
-*** Reload configs using ~restart-emacs~
+* *CORE*
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-f9b16bd5
+:END:
+
+Core libraries/configurations used in =Emacs-grandview=.
+
+Unless you know exactly what you are doing, it is *NOT* recommended to delete /
+comment out this section except for debugging purpose. Because codes in other
+sections may rely on orientations in this section to work properly.
+
+Let's enable =lexical-binding= for the main elisp config file first.
+
+#+begin_src emacs-lisp
+;;; grandview.el --- -*- lexical-binding: t -*-
+#+end_src
+
+** Restart it!
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-CLI-9a957ea9
 :END:
 
-A thing that all Emacs tinkers do very often is: /restart Emacs/.
+Although Emacs already provided functionalities like ~unload-feature~ and
+~remove-hook~ to eliminate the side effects of certain packages or user
+configurations, most of the time it's still easier to reload your Emacs
+configurations through a completely restart.
 
-Emacs is a single-threaded program.  When it hangs up, we can not expect it to
-evaluate any elisp code, the only thing we can do is spawn a terminal and kill
-the Emacs process.
+The following section provided a CLI for restarting =Emacs-grandview=.
 
-Since the tangle function is added to =kill-emacs-hook=, emacs main process only
-get killed after the tangle function finishes (unless we use '-9' flag in kill
-command).  In my case, it usually takes emacs less than 1s to tangle this org
-file, so if emacs main process keep alive for over 3s after *killall emacs*
-command, it probably means emacs get frozen, so we just kill it with *kill -9*.
-
-You don't need to install this script if you have followed =Installation=
-section. This script will be tangled to *~/.local/share/em*, so if you want to get
-access to =em restart= command from terminal, make sure *~/.local/bin/em* is in your
-*PATH*.
+*** CLI source
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Reload_your_configs_via_restart-emacs-rem_CLI-1369a44b
+:END:
 
 #+name: grandview-cache
 #+begin_src emacs-lisp :var type="main" :tangle (concat grandview-cache-dir "tmp")
@@ -141,54 +120,68 @@ access to =em restart= command from terminal, make sure *~/.local/bin/em* is in 
   ("pkg-repos" (straight--repos-dir)))
 #+end_src
 
-#+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash" :noweb yes
+#+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
 
-restart () {
-  notify-send "Restarting emacs..." 2>/dev/null
-  emacs_pid=$(pidof emacs)
-  timeout=300
-  counter=0
-  emacsclient --eval '(kill-emacs)' 2>/dev/null &
-  while $(kill -0 $emacs_pid 2>/dev/null) && [[ $counter -lt $timeout ]]; do
-    counter=$((counter + 1))
-    sleep 0.01
-  done
-  kill -9 $emacs_pid 2>/dev/null
-  [[ $1 == "-r" ]] && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
-  [[ $1 == "-p" ]] && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
-  [[ $1 == "-P" ]] && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
-  _is_ime_rime && GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs --daemon || emacs --daemon
-  command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
-  emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
-}
-
-open () { emacs -nw ${@}; }
-
-[[ -z "$@" ]] || ! $(declare -f -F $1 >/dev/null 2>&1) && { open ${@:1}; exit 0; }
-$1 ${@:2}
+notify-send "Restarting emacs..." 2>/dev/null
+emacs_pid=$(pidof emacs)
+timeout=300
+counter=0
+emacsclient --eval '(kill-emacs)' 2>/dev/null &
+while $(kill -0 $emacs_pid 2>/dev/null) && [[ $counter -lt $timeout ]]; do
+  counter=$((counter + 1))
+  sleep 0.01
+done
+kill -9 $emacs_pid 2>/dev/null
+[[ $1 == "-r" ]] && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
+[[ $1 == "-p" ]] && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
+[[ $1 == "-P" ]] && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
+_is_ime_rime && GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs --daemon || emacs --daemon
+command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
+emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
 #+end_src
 
-You can also restart emacs by invoking =restart-emacs= command inside emacs.
+This script first dispatches a ~kill-emacs~ command to the living Emacs process,
+which triggers the ~grandview-tangle~ hook, the main process of Emacs only get
+killed after the tangle function finishes.  It usually takes less than 1s to
+tangle this org file, so if Emacs keeps alive for over 3s after the ~kill-emacs~
+command, it probably gets frozen, so we kill it with ~kill -9~. After the old
+Emacs get killed, the Emacs daemon is initialized followed by a new frame.
+
+You don't need to install this script if you have followed =Installation=
+section. This script will be tangled to *~/.local/bin/rem*, so make sure
+*~/.local/bin* is in your *PATH*.
+
+*** Elisp wrapper
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Reload_your_configs_via_restart-emacs-Elisp_wrapper-6c3014eb
+:END:
+
+Ideally, we can restart Emacs right inside of it via M-x =restart-emacs= which is
+a wrapper for ~rem~ bash command.
 
 #+begin_src emacs-lisp
 (defun restart-emacs ()
-  "A elisp wrapper to `em' command."
+  "A elisp wrapper to `rem' command."
   (interactive)
   (let ((default-directory "~"))
-    (start-process "" nil "nohup" "em" "restart")))
+    (start-process "" nil "nohup" "rem")))
 #+end_src
 
-* *CORE*
+*** CLI usage
 :PROPERTIES:
-:CUSTOM_ID: *CORE*-f9b16bd5
+:CUSTOM_ID: *CORE*-Reload_your_configs_via_restart-emacs-CLI_Usage-a08fa41b
 :END:
 
-Core libraries/configurations used in this project.
+But when Emacs hangs up, we can not expect it to evaluate any elisp code.  The
+only thing we can do by then is spawn a terminal call the ~rem~ (alias for
+~restart-emacs~) bash command.
 
-Unless you are an Emacs tinker, it is *NOT* recommended to delete / comment out
-this section except for debugging purpose. Because codes in other sections may
-rely on orientations in this section to work properly.
+Here are the 3 variant of this command.
+
++ ~rem -r~: delete =Emacs-grandview='s cache before restarting. (re-tangle)
++ ~rem -p~: delete all =.elc= build of packages before restarting. (rebuild)
++ ~rem -P~: delete all package repos before restarting. (re-download & rebuild)
 
 ** Editor
 :PROPERTIES:
@@ -4807,6 +4800,28 @@ If called with prefix arg, prompt for a major mode for the buffer."
  :map grandview-apps-map
  ("s" . ale-scratch))
 #+end_src
+
+* COPYING
+:PROPERTIES:
+:CUSTOM_ID: Overview-About-COPYING-89382013
+:END:
+
+#+begin_quote
+Copyright (c) 2020-2022  Alex Lu <alexluigit@gmail.com>
+
+This file is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
+
+This file is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+#+end_quote
 
 * COMMENT Footer
 :PROPERTIES:
