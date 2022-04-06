@@ -23,18 +23,15 @@ This is my emacs configuration.
 
 + Init file:                      =early-init.el= and =init.el=
 + User options:                   =user.el=
-+ Main config file:               This file
++ Main config file (.org):        This file
++ Main config file (.el):         Tangled from this file
 
-After the bootstrapping process, the tangled code blocks from this file are
-evaluated by Emacs. It will update all of the config upon restarting once the
-content of this file get modified.
-
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
-;;; minimal.el --- -*- lexical-binding: t -*-
-#+end_src
+The source blocks in this file (defaults to =grandview.org=) is tangled to
+~grandview--el-file~ which will be evaluated by Emacs, let's enable
+=lexical-binding= for it first.
 
 #+begin_src emacs-lisp
-;;; full.el --- -*- lexical-binding: t -*-
+;;; grandview.el --- -*- lexical-binding: t -*-
 #+end_src
 
 *** COPYING
@@ -114,12 +111,12 @@ emacs --daemon
 emacsclient -e '(kill-emacs)'
 #+end_src
 
-*** Reload with ~restart-emacs~ command
+*** Reload configs using ~restart-emacs~
 :PROPERTIES:
 :CUSTOM_ID: Overview-Quickstart-CLI-9a957ea9
 :END:
 
-A thing that all Emacs tinkers do very often is: /reload the config/.
+A thing that all Emacs tinkers do very often is: /restart Emacs/.
 
 Emacs is a single-threaded program.  When it hangs up, we can not expect it to
 evaluate any elisp code, the only thing we can do is spawn a terminal and kill
@@ -136,7 +133,15 @@ section. This script will be tangled to *~/.local/share/em*, so if you want to g
 access to =em restart= command from terminal, make sure *~/.local/bin/em* is in your
 *PATH*.
 
-#+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash"
+#+name: grandview-cache
+#+begin_src emacs-lisp :var type="main" :tangle (concat grandview-cache-dir "tmp")
+(pcase type
+  ("main" (format "%s" grandview-cache-dir))
+  ("pkg-builds" (straight--build-dir))
+  ("pkg-repos" (straight--repos-dir)))
+#+end_src
+
+#+begin_src bash :tangle "~/.local/bin/em" :shebang "#!/usr/bin/env bash" :noweb yes
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
 
 restart () {
@@ -150,9 +155,9 @@ restart () {
     sleep 0.01
   done
   kill -9 $emacs_pid 2>/dev/null
-  [[ $1 == "-p" ]] && rm -rf ~/.cache/emacs/{straight/build} 2>/dev/null
-  [[ $1 == "-r" ]] && rm -rf ~/.cache/emacs/ale 2>/dev/null
-  [[ $1 == "-R" ]] && rm -rf ~/.cache/emacs/{ale,straight} 2>/dev/null
+  [[ $1 == "-r" ]] && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
+  [[ $1 == "-p" ]] && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
+  [[ $1 == "-P" ]] && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
   _is_ime_rime && GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs --daemon || emacs --daemon
   command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
   emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
@@ -201,7 +206,7 @@ related to some major mode or to file-handling.
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Editor-Autoload-cb8b46e5
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/simple.el"
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+simple.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -330,8 +335,8 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/meow.el"
 :CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Autoload-2a98f6b5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+meow.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -423,7 +428,7 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
 :CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Config-64c57594
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package meow
   :straight (meow :type git :depth full :host github :repo "meow-edit/meow")
   :demand t
@@ -478,7 +483,7 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
 
 Jump to any visible text.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package avy
   :config
   (setq avy-timeout-seconds 0.3)
@@ -498,7 +503,7 @@ I've forked this package to extract =embrace-default-pairs= out, so we can use
 keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
 has been bound to =meow-inner-of-thing=.)
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package embrace
   :straight
   (embrace :type git :depth full :host github
@@ -527,8 +532,8 @@ has been bound to =meow-inner-of-thing=.)
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/kbd.el"
 :CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Autoload-bdfa18e4
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+kbd.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -543,7 +548,7 @@ some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
 etc. By default, emacs follow this convention, but it doesn't mean
 emacs are not able to tell the difference. To change this behaviour,
 we can use `input-decode-map' to give `C-i' different meaning."
-  (if IS-GUI
+  (if HAS-GUI
       (add-hook 'after-make-frame-functions
                 (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
     (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
@@ -574,7 +579,7 @@ difference. To change this behaviour, we can use =input-decode-map= to give =C-i
 different meaning. See =ale-kbd--C-i-fix-GUI= and =ale-kbd--C-i-fix-TERM= for more
 details.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (ale-kbd-C-i-fix)
 #+end_src
 
@@ -590,8 +595,8 @@ details.
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/window.el"
 :CUSTOM_ID: *CORE*-Window_placement_(window.el)-Autoload-0ba61476
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+window.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -679,7 +684,7 @@ suggests that a simpler method is just as effective for my case.
 Additionally, I've set =split-height-threshold= to nil and =split-width-threshold=
 to 0 to ensure every new window will open in horizontal split.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package window
   :straight (:type built-in)
   :hook
@@ -724,8 +729,8 @@ to 0 to ensure every new window will open in horizontal split.
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/pulse.el"
 :CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-Autoload-bce647b5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+pulse.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -787,7 +792,7 @@ take effect."
 :CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-Config-9c494a60
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (if (daemonp)
     (add-hook 'after-make-frame-functions (lambda (f) (with-selected-frame f (ale-pulse-line-mode))))
   (add-hook 'emacs-startup-hook #'ale-pulse-line-mode))
@@ -800,7 +805,7 @@ take effect."
 
 =transient.el= built-in package in emacs 28 for *transient* commands.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (straight-use-package `(transient ,@(when (>= emacs-major-version 28) '(:type built-in))))
 
 (use-package transient
@@ -817,15 +822,15 @@ take effect."
    ("ESC" . transient-quit-all)))
 #+end_src
 
-*** Automatic opacity adjustment (+opacity.el)
+*** Automatic opacity adjustment (opacity.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-a9e74647
 :END:
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/+opacity.el"
 :CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Autoload-b30648ad
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+opacity.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -887,7 +892,7 @@ take effect."
 :CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Config-21749923
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (ale-opacity-auto-mode)
 #+end_src
 
@@ -930,7 +935,7 @@ What my minibuffer config does:
   represented as a number, next to the minibuffer prompt, if a recursive
   edit is in progress.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package minibuffer
   :straight (:type built-in)
   :config
@@ -947,7 +952,7 @@ What my minibuffer config does:
 
 Keeps a record of actions involving the minibuffer.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package savehist
   :straight (:type built-in)
   :after-call minibuffer-setup-hook
@@ -972,11 +977,19 @@ completion tables.
 Here I just modified face for current candidate and make height of vertico
 window as a constant value.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package vertico
+  :straight (:host github :repo "minad/vertico" :files (:defaults "extensions/*.el"))
   :after-call pre-command-hook
   :custom-face
   (vertico-current ((t (:inherit lazy-highlight))))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
+  :bind
+  (nil
+   :map vertico-map
+   ("RET" . vertico-directory-enter)
+   ("DEL" . vertico-directory-delete-char)
+   ("M-d" . vertico-directory-delete-word))
   :config
   (setq resize-mini-windows 'grow-only)
   (vertico-mode 1))
@@ -993,8 +1006,8 @@ all of the components in any order.
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/orderless.el"
 :CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Autoload-ff183b03
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+orderless.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1046,7 +1059,7 @@ function, you can issue a =consult-outline= command and input "defun dired\ \(\)
 this gives you =(defun dired (dirname &optional switches)= as the sole match
 rather than all of the =dired-*= noise.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package pinyinlib)
 
 (use-package orderless
@@ -1083,7 +1096,7 @@ The Consult commands are compatible with completion systems based on the Emacs
 =completing-read= API, including the default completion system, Icomplete,
 Selectrum, Vertico and Embark.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package consult
   :after-call minibuffer-setup-hook
   :init
@@ -1092,7 +1105,7 @@ Selectrum, Vertico and Embark.
   (nil
    :map meow-normal-state-keymap
    ("/" . consult-line)
-   :map ale-mct-map
+   :map grandview-mct-map
    ("/" . consult-line-multi)
    ("e" . consult-compile-error)
    ("r" . consult-ripgrep)
@@ -1132,8 +1145,8 @@ a target determined by the context.
 
 **** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/embark.el"
 :CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Autoload-81b70035
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+embark.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1196,7 +1209,7 @@ those so-called 'extras'."
 :CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Config-12386c51
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package embark
   :after-call dired-after-readin-hook minibuffer-setup-hook
   :bind
@@ -1222,7 +1235,7 @@ This is a utility jointly developed by Daniel Mendler and Omar Antolín Camarena
 that provides annotations to completion candidates.  It is meant to be
 framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package marginalia
   :after-call minibuffer-setup-hook
   :config
@@ -1280,7 +1293,7 @@ in the form of Capfs (~completion-at-point-functions~).
   (cape-dict-file "/usr/share/dict/words")
   :bind
   (nil
-   :map ale-prog-map
+   :map grandview-prog-map
    ("t" . complete-tag)        ;; etags
    ("d" . cape-dabbrev)        ;; or dabbrev-completion
    ("f" . cape-file)
@@ -1316,7 +1329,7 @@ This section contains all core keybindings of =emacs-grandview=.
 :CUSTOM_ID: *CORE*-*KEYBINDINGS*-INSERT-82f3f973
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (bind-keys
  :map meow-insert-state-keymap
  ("C-u" . meow-kill-whole-line)
@@ -1329,7 +1342,7 @@ This section contains all core keybindings of =emacs-grandview=.
 :CUSTOM_ID: *CORE*-*KEYBINDINGS*-NORMAL-2664b206
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (meow-normal-define-key
  '("0" . meow-digit-argument)
  '("1" . meow-digit-argument)
@@ -1410,7 +1423,7 @@ This section contains all core keybindings of =emacs-grandview=.
 :CUSTOM_ID: *CORE*-*KEYBINDINGS*-LEADER-1ce6a716
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (meow-leader-define-key
  '("0" . delete-window)
  '("1" . delete-other-windows)
@@ -1419,31 +1432,31 @@ This section contains all core keybindings of =emacs-grandview=.
  '("4" . ctl-x-4-prefix)
  '("5" . ctl-x-5-prefix)
  '("8" . insert-char)
- '("9" . tab-map)
+ '("9" . grandview-tab-map)
  '("SPC" . ale-meow-with-key-fallback)
  '("?" . describe-keymap)
  '("/" . describe-symbol)
  '(";" . comment-line)
- '("a" . ale-apps-map)
+ '("a" . grandview-apps-map)
  '("e" . dired-jump)
- '("f" . ale-files-map)
+ '("f" . grandview-files-map)
  '("E" . eval-expression)
  '("i" . list-buffers)
  '("k" . kill-this-buffer)
  '("n" . ale-project-find-file)
- '("o" . ale-org-map)
- '("P" . project-map)
- '("r" . register-map)
- '("t" . ale-mct-map)
- '("p" . ale-prog-map)
+ '("o" . grandview-org-map)
+ '("P" . grandview-project-map)
+ '("r" . grandview-reg-map)
+ '("t" . grandview-mct-map)
+ '("p" . grandview-prog-map)
  '("w" . save-buffer)
  '("z" . window-toggle-side-windows))
 
 (bind-keys
- :map ale-files-map
+ :map grandview-files-map
  ("e" . find-emacs-config)
  ("l" . find-library)
- :map ale-apps-map
+ :map grandview-apps-map
  ("o" . ale-opacity-set)
  ("=" . count-words)
  ("n" . ale-tab-next)
@@ -1455,7 +1468,7 @@ This section contains all core keybindings of =emacs-grandview=.
 :CUSTOM_ID: *CORE*-*KEYBINDINGS*-GLOBAL-09d090ba
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (bind-keys
  :map global-map
  ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
@@ -1471,7 +1484,7 @@ This section contains all core keybindings of =emacs-grandview=.
 These are some default keybindings that will be available when the current major
 mode doesn't specify one.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (meow-motion-overwrite-define-key
  '("<escape>" . ale-meow-escape)
  '("/" . ale-meow-with-key-fallback))
@@ -1507,7 +1520,7 @@ buffers with very long lines. What “very long” means is, of course,
 configurable: M-x find-library so-long covers several customisation options,
 though I find that the defaults require no further intervention from my part.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package so-long
   :after-call find-file-hook
   :straight (:type built-in)
@@ -1536,8 +1549,8 @@ customisations.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/fill.el"
 :CUSTOM_ID: Text_editor-Fill_line_(fill.el)-Autoload-89360f21
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+fill.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1583,7 +1596,7 @@ Meant to be called via `prog-mode-hook'."
 :CUSTOM_ID: Text_editor-Fill_line_(fill.el)-Config-84572b08
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package fill
   :straight (:type built-in)
   :init
@@ -1601,7 +1614,7 @@ Meant to be called via `prog-mode-hook'."
 
 *xref* provides helpful commands for code navigation and discovery.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package xref
   :straight (:type built-in)
   :config
@@ -1653,8 +1666,8 @@ sure this is a good approach."
 :END:
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/rime.el"
 :CUSTOM_ID: Text_editor-Input_method_(rime.el)-Autoload-18f7b6ac
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rime.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1768,8 +1781,8 @@ of characters.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/eletric.el"
 :CUSTOM_ID: Text_editor-Pair_insertion_(eletric.el)-Autoload-a1e7f91e
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+eletric.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1839,7 +1852,7 @@ Summary of what these do:
   parenthesis.
 - Use rainbow color for delimiters
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package paren
   :straight (:type built-in)
   :after-call meow-block meow-line self-insert-command
@@ -1894,7 +1907,7 @@ Summary of what these do:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: File_management-Find_files_(files.el)-Autoload-805c2add
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/files.el"
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+files.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2033,7 +2046,7 @@ Do not try to make a new directory or anything fancy."
 :CUSTOM_ID: File_management-Find_files_(+files.el)-Config-003e8b7d
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package files
   :straight (:type built-in)
   :config
@@ -2050,7 +2063,7 @@ Do not try to make a new directory or anything fancy."
   (setq permanently-enabled-local-variables '(lexical-binding encoding))
   :bind
   (nil
-   :map ale-files-map
+   :map grandview-files-map
    ("." . +find-dotfiles)
    ("r" . +rename-file-and-buffer)
    ("u" . +find-files-in-user-dirs)))
@@ -2082,7 +2095,7 @@ Provides configuration of MIME media types via the usual mailcap mechanism (RFC
 
 Keep a record of all recently opened files.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package recentf
   :straight (:type built-in)
   :after-call find-file-hook dirvish
@@ -2100,7 +2113,7 @@ Just remember where the point is in any given file.  This can often
 be a subtle reminder of what you were doing the last time you
 visited that file, allowing you to pick up from there.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package saveplace
   :straight (:type built-in)
   :after-call find-file-hook
@@ -2118,7 +2131,7 @@ This mode ensures that the buffer is updated whenever the file
 changes.  A change can happen externally or by some other tool
 inside of Emacs (e.g. kill a Magit diff).
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package autorevert
   :straight (:type built-in)
   :after-call self-insert-command
@@ -2135,7 +2148,7 @@ inside of Emacs (e.g. kill a Magit diff).
 =Dired= is a built-in tool that performs file management operations
 inside of an Emacs buffer.  It is simply superb!
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package dired
   :straight (:type built-in)
   :bind
@@ -2191,7 +2204,7 @@ This package empowers dired by giving it a modern UI in a unintrusive way. Emacs
 users deserve a file manager better than those popular ones on terminal such as
 [[https://github.com/ranger/ranger][ranger]], [[https://github.com/vifm/vifm][vifm]], [[https://github.com/gokcehan/lf][lf]] since Emacs is more than a terminal emulator.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package dirvish
   :after-call post-command-hook
   :bind
@@ -2207,7 +2220,7 @@ users deserve a file manager better than those popular ones on terminal such as
    ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank)
    ([remap mode-line-other-buffer] . dirvish-other-buffer)
-   :map ale-files-map
+   :map grandview-files-map
    ("b" . dirvish-roam)
    ("n" . dirvish)
    ("m" . dirvish-dired)
@@ -2250,7 +2263,7 @@ users deserve a file manager better than those popular ones on terminal such as
   :after-call dired-noselect
   :bind
   (nil
-   :map ale-files-map
+   :map grandview-files-map
    ("f" . fd-dired)))
 #+end_src
 
@@ -2259,7 +2272,7 @@ users deserve a file manager better than those popular ones on terminal such as
 :CUSTOM_ID: File_management-Useful_dired_extensions_(dired-hacks)-95bd1798
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package dired-narrow
   :after-call dired-noselect
   :bind
@@ -2306,8 +2319,8 @@ users deserve a file manager better than those popular ones on terminal such as
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/project.el"
 :CUSTOM_ID: File_management-Project_management_(project.el)-Autoload-5c95cd8c
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+project.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2542,8 +2555,8 @@ look like which can be described briefly as follows:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/org.el"
 :CUSTOM_ID: Org_mode-Org_(org.el)-Autoload-8e95a36e
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+org.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2616,8 +2629,8 @@ look like which can be described briefly as follows:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/org-id.el"
 :CUSTOM_ID: Org_mode-Identifiers_for_org_entries_(org-id.el)-Autoload-ea7d2bfa
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+org-id.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2817,7 +2830,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
   (org-roam-completion-everywhere t)
   :bind
   (nil
-   :map ale-org-map
+   :map grandview-org-map
    ("l" . org-roam-buffer-toggle)
    ("f" . org-roam-node-find)
    ("g" . org-roam-graph)
@@ -2838,8 +2851,8 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/org-tree-slide.el"
 :CUSTOM_ID: Org_mode-Slide_(org-tree-slide.el)-Autoload-7d3c6f5b
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+org-tree-slide.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2920,7 +2933,7 @@ Some number of BLANK-LINES will be shown below the header."
    :map org-tree-slide-mode-map
    ("<left>" . org-tree-slide-move-previous-tree)
    ("<right>" . org-tree-slide-move-next-tree)
-   :map ale-org-map
+   :map grandview-org-map
    ("S" . org-tree-slide-mode))
   :config
   (setq org-tree-slide-activate-message " ")
@@ -2950,7 +2963,7 @@ Some number of BLANK-LINES will be shown below the header."
 =modus-vivendi= is a built-in theme in emacs (version >= 28) created by
 Protesilaos Stavrou.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (straight-use-package `(modus-themes ,@(when (>= emacs-major-version 28) '(:type built-in))))
 (use-package modus-themes
   :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
@@ -2966,8 +2979,8 @@ Protesilaos Stavrou.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/fonts.el"
 :CUSTOM_ID: User_interface-Fonts_(fonts.el)-Autoload-fc8da162
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+fonts.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3040,7 +3053,7 @@ A list of my favorite CJK fonts.
 - =青鸟华光简报宋二=
 - =FZSuXinShiLiuKaiS-R-GB=
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (setq ale-default-font "Victor Mono")
 (setq ale-fixed-font "Sarasa Mono SC")
 (setq ale-variable-font "Sarasa Mono SC")
@@ -3060,7 +3073,7 @@ Frame settings.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Frame_(frame.el)-Autoload-ac196a91
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/frame.el"
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+frame.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3088,7 +3101,7 @@ Frame settings.
     (set-cursor-color +frame-cursor-saved-color)))
 #+end_src
 
-** Tab (+tab.el)
+** Tab (tab.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Tab_(+tab.el)-29c791c9
 :END:
@@ -3097,8 +3110,8 @@ Tabs for frequently used buffers.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/+tab.el"
 :CUSTOM_ID: User_interface-Tab_(+tab.el)-Autoload-6e0376bc
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+tab.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3404,11 +3417,11 @@ plug-in an UI for tabs."
 :CUSTOM_ID: User_interface-Tab_(+tab.el)-Config-f7f3767f
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (ale-tab-mode)
 #+end_src
 
-** Modeline (+modeline.el)
+** Modeline (mode-line.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Modeline_(+modeline.el)-e6da362f
 :END:
@@ -3431,8 +3444,8 @@ Besides, it's easy to define your own mode line segments with
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/+modeline.el"
 :CUSTOM_ID: User_interface-Modeline_(+modeline.el)-Autoload-22a39294
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+mode-line.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3504,7 +3517,7 @@ The SEGMENTs are defined by `ale-define-mode-line'."
 :CUSTOM_ID: User_interface-Modeline_(+modeline.el)-Config-75bb6088
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (setq! ale-mode-line-format
        '(:left (editing-state macro-rec modified tab) :right (position input-method)))
 (ale-modeline-mode)
@@ -3517,7 +3530,7 @@ The SEGMENTs are defined by `ale-define-mode-line'."
 
 Create a 20 pixel margin for emacs frame.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (add-to-list 'default-frame-alist '(internal-border-width . 20))
 (add-to-list 'default-frame-alist '(left-fringe . 1))
 (add-to-list 'default-frame-alist '(right-fringe . 1))
@@ -3547,14 +3560,14 @@ Emacs.  Icon Fonts allow you to propertize and format icons the same way you
 would normal text.  This enables things such as better scaling of and anti
 aliasing of the icons.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package all-the-icons)
 #+end_src
 
 Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
 style icons with image format.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package vscode-icon
   :config
   (push '("jpg" . "image") vscode-icon-file-alist)
@@ -3587,7 +3600,7 @@ matches' in the mode-line in various search modes.  This makes it
 easy to understand how many matches there are in the current buffer
 for your search query.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package anzu
   :after-call isearch-mode
   :bind
@@ -3608,7 +3621,7 @@ unlike standard isearch, cursor motion commands do not end the search.
 Moreover, the search status information in the echo area and some keybindings
 are slightly simplified.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package isearch-mb
   :after-call isearch-mode
   :config
@@ -3642,8 +3655,8 @@ code.  Do it with =M-x find-library transpose-frame=.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/writeroom-mode.el"
 :CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-Autoload-5cddd1d6
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+writeroom-mode.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3763,7 +3776,7 @@ control over the buffer list and is more powerful overall.
 
 Index based window motions.
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package ace-window
   :bind
   ("M-o" . ace-select-window)
@@ -3778,8 +3791,8 @@ Index based window motions.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/vterm.el"
 :CUSTOM_ID: Utils-Vterm_(vterm.el)-Autoload-cf3607f6
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+vterm.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4017,8 +4030,8 @@ made for this package and built-in help buffer:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/helpful.el"
 :CUSTOM_ID: Utils-Helpful_(helpful.el)-Autoload-f30f62e5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+helpful.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4101,8 +4114,8 @@ made for this package and built-in help buffer:
 :END:
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/rg.el"
 :CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-34255532
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rg.el"
 :END:
 
 The purpose of the function =ale-rg-setup= is to avoid executing
@@ -4134,7 +4147,7 @@ some deps that we don't need at startup.
   (ale-rg-setup)
   :bind
   (nil
-   :map ale-prog-map
+   :map grandview-prog-map
    ("p" . rg-project-all-files-no-ask)))
 #+end_src
 
@@ -4168,6 +4181,7 @@ regexp .etc).
 
 #+begin_src emacs-lisp
 (use-package pdf-tools
+  :if HAS-GUI
   :after-call dired-after-readin-hook minibuffer-setup-hook
   :config
   (pdf-tools-install)
@@ -4228,8 +4242,8 @@ regexp .etc).
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/murl.el"
 :CUSTOM_ID: Utils-Murl_(murl.el)-Autoload-d389a439
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+murl.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4279,7 +4293,7 @@ regexp .etc).
 
 #+begin_src emacs-lisp
 (bind-keys
- :map ale-apps-map
+ :map grandview-apps-map
  ("m" . murl-open))
 #+end_src
 
@@ -4292,7 +4306,7 @@ regexp .etc).
 (use-package fanyi
   :bind
   (nil
-   :map ale-apps-map
+   :map grandview-apps-map
    ("t" . fanyi-dwim))
   :custom
   (fanyi-providers '(fanyi-etymon-provider
@@ -4380,7 +4394,7 @@ regexp .etc).
 :CUSTOM_ID: Programming_Languages-Yaml-4456ca3a
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package yaml-mode)
 #+end_src
 
@@ -4422,7 +4436,7 @@ regexp .etc).
 :CUSTOM_ID: Programming_Languages-Bash|Zsh-016ab78c
 :END:
 
-#+begin_src emacs-lisp :tangle (ale-minimal-config)
+#+begin_src emacs-lisp
 (use-package sh-script
   :straight (:type built-in)
   :config
@@ -4486,8 +4500,8 @@ regexp .etc).
 :END:
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/lsp.el"
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-6f32ef54
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+lsp.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4561,8 +4575,8 @@ regexp .etc).
 :END:
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/conda.el"
 :CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-Autoload-f9667319
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+conda.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4690,7 +4704,7 @@ optional minor mode which can apply this command automatically on save.
     :lighter " blackFMT")
   :bind
   (nil
-   :map ale-apps-map
+   :map grandview-apps-map
    ("f" . ale-format-buffer)))
 #+end_src
 
@@ -4728,7 +4742,7 @@ optional minor mode which can apply this command automatically on save.
          (text-mode . flymake-mode))
   :bind
   (nil
-   :map ale-prog-map
+   :map grandview-prog-map
    ("N" . 'flymake-goto-next-error)
    ("P" . 'flymake-goto-prev-error)
    ("S" . 'flymake-start)))
@@ -4754,8 +4768,8 @@ prompt for a major mode instead.  Simple yet super effective!
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/ale/autoload/scratch.el"
 :CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Autoload-e9c532b8
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+scratch.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4802,7 +4816,7 @@ If called with prefix arg, prompt for a major mode for the buffer."
 
 #+begin_src emacs-lisp
 (bind-keys
- :map ale-apps-map
+ :map grandview-apps-map
  ("s" . ale-scratch))
 #+end_src
 
