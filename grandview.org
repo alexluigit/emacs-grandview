@@ -427,6 +427,7 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
+  (setq meow-keypad-start-keys '((?c . ?c) (?x . ?x)))
   (setq meow-keypad-describe-delay 0.5)
   (setq meow-select-on-change t)
   (setq meow-cursor-type-normal 'box)
@@ -438,7 +439,8 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
           (meow-change . meow-change-char)
           (ale-meow-save . ale-pulse-save-line)
           (meow-kill . meow-kill-whole-line)
-          (meow-pop-selection . ale-files-revert-buffer-no-ask)
+          (meow-pop-selection . meow-pop-grab)
+          (meow-beacon-change . meow-beacon-change-char)
           (meow-cancel . keyboard-quit)
           (meow-delete . meow-C-d)))
   (setq meow-char-thing-table
@@ -454,7 +456,8 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
           (?\] . line)
           (?d . defun)
           (?i . indent)
-          (?x . extend)))
+          (?x . extend)
+          (?. . sentence)))
   (add-to-list 'meow-mode-state-list '(helpful-mode . normal))
   (add-to-list 'meow-mode-state-list '(message-buffer-mode . normal)))
 #+end_src
@@ -1070,7 +1073,7 @@ rather than all of the =dired-*= noise.
 Consult implements a set of =consult-<thing>= commands which use
 =completing-read= to select from a list of candidates. Consult provides an
 enhanced buffer switcher =consult-buffer= and search and navigation commands
-like =consult-imenu= and =consult-line=. Searching through multiple files is
+like =consult-imenu= and =consult-line=.  Searching through multiple files is
 supported by the asynchronous =consult-grep= command. Many Consult commands
 allow previewing candidates - if a candidate is selected in the completion view,
 the buffer shows the candidate immediately.
@@ -1305,7 +1308,7 @@ in the form of Capfs (~completion-at-point-functions~).
 :CUSTOM_ID: *CORE*-*KEYBINDINGS*-5efa22da
 :END:
 
-This section contains all core keybindings of =emacs-grandview=.
+This section contains all core keybindings of =Emacs-grandview=.
 
 *** INSERT
 :PROPERTIES:
@@ -1338,21 +1341,14 @@ This section contains all core keybindings of =emacs-grandview=.
  '("8" . meow-digit-argument)
  '("9" . meow-digit-argument)
  '("<escape>" . ale-meow-escape)
- '("<backspace>" . scroll-down)
- '("'" . scroll-up)
- ;; '("%" . TODO)
- '(";" . meow-reverse)
+ '("<backspace>" . meow-pop-selection)
  '("," . meow-inner-of-thing)
  '("." . meow-bounds-of-thing)
- '("<" . beginning-of-buffer)
- '(">" . end-of-buffer)
  '("[" . meow-beginning-of-thing)
  '("]" . meow-end-of-thing)
  '("-" . negative-argument)
  '("=" . meow-query-replace)
  '("+" . meow-query-replace-regexp)
- '("\\" . meow-pop-selection)
- '("|" . meow-pop-all-selection)
  '("^" . meow-last-buffer)
  '("a" . ale-meow-insert)
  '("A" . ale-meow-insert-at-first-non-whitespace)
@@ -1366,15 +1362,16 @@ This section contains all core keybindings of =emacs-grandview=.
  '("f" . meow-find)
  '("F" . forward-sexp)
  '("g" . meow-grab)
- '("G" . meow-pop-grab)
+ '("G" . meow-sync-grab)
  '("h" . embrace-commander)
  '("i" . meow-right)
  '("I" . meow-right-expand)
  '("j" . +simple-join-line)
  '("J" . meow-join)
  '("k" . meow-kill)
- '("K" . meow-kmacro-matches)
- '("l" . meow-kmacro-lines)
+ '("K" . meow-C-k)
+ '("l" . consult-goto-line)
+ '("L" . meow-kmacro-lines)
  '("m" . meow-mark-word)
  '("M" . meow-mark-symbol)
  '("n" . meow-next)
@@ -1384,14 +1381,16 @@ This section contains all core keybindings of =emacs-grandview=.
  '("p" . meow-prev)
  '("P" . meow-open-above)
  '("q" . quit-window)
- '("r" . meow-search)
- '("s" . meow-sync-grab)
- '("S" . meow-swap-grab)
+ '("r" . meow-reverse)
+ '("R" . repeat)
+ '("s" . meow-search)
+ '("S" . meow-pop-search)
  '("t" . avy-goto-char-timer)
  '("T" . avy-resume)
  '("u" . undo)
  '("U" . undo-redo)
- '("v" . meow-visit)
+ '("v" . consult-mark)
+ '("V" . consult-global-mark)
  '("w" . meow-next-word)
  '("W" . meow-back-word)
  '("x" . ale-meow-save)
@@ -1420,6 +1419,8 @@ This section contains all core keybindings of =emacs-grandview=.
  '("?" . describe-keymap)
  '("/" . describe-symbol)
  '(";" . comment-line)
+ '("," . beginning-of-buffer)
+ '("." . end-of-buffer)
  '("a" . grandview-apps-map)
  '("e" . dired-jump)
  '("f" . grandview-files-map)
@@ -1458,14 +1459,15 @@ This section contains all core keybindings of =emacs-grandview=.
  ("C-c m" . ale-show-messages)
  ("<C-i>" . +simple-pop-local-mark-ring)
  ("C-o" . pop-global-mark)
+ ("s-n" . scroll-up-command)
+ ("s-p" . scroll-down-command)
  :map minibuffer-local-map
  ("C-u" . meow-kill-whole-line)
  ("<C-i>" . forward-char)
  ("C-o" . backward-char))
 #+end_src
 
-These are some default keybindings that will be available when the current major
-mode doesn't specify one.
+These keybindings are available when the current major mode doesn't define that key.
 
 #+begin_src emacs-lisp
 (meow-motion-overwrite-define-key
