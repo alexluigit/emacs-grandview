@@ -2243,6 +2243,9 @@ users deserve a file manager better than those popular ones on terminal such as
 
 #+begin_src emacs-lisp
 (use-package fd-dired
+  :straight (fd-dired :depth full :host github
+                      :repo "yqrashawn/fd-dired"
+                      :fork (:host github :repo "alexluigit/fd-dired"))
   :after-call dired-noselect
   :bind
   (nil
