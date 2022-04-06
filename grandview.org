@@ -397,21 +397,6 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
       (funcall (alist-get key ale-meow-fallback-key-cmd-alist #'ignore nil #'string=)))))
 
 ;;;###autoload
-(defun ale--bounds-of-tag ()
-  (meow--bounds-of-regexp "<.*>"))
-
-;;;###autoload
-(defun ale--inner-of-tag ()
-  (when-let ((pos (ale--bounds-of-tag)))
-    (save-mark-and-excursion
-      (let (ibeg iend)
-        (goto-char (car pos))
-        (setq ibeg (search-forward ">"))
-        (goto-char (cdr pos))
-        (setq iend (search-backward "<"))
-        (cons ibeg iend)))))
-
-;;;###autoload
 (defun ale-meow-insert ()
   (interactive)
   (meow--switch-state 'insert))
@@ -439,7 +424,6 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
   (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
   (advice-add 'meow-start-kmacro-or-insert-counter :around #'silent!)
   (advice-add 'meow-end-or-call-kmacro :around #'silent!)
-  (meow--thing-register 'tag #'ale--inner-of-tag #'ale--bounds-of-tag)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -470,7 +454,6 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
           (?\] . line)
           (?d . defun)
           (?i . indent)
-          (?t . tag)
           (?x . extend)))
   (add-to-list 'meow-mode-state-list '(helpful-mode . normal))
   (add-to-list 'meow-mode-state-list '(message-buffer-mode . normal)))
