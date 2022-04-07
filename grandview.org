@@ -119,6 +119,19 @@ The following section provided a CLI for restarting =Emacs-grandview=.
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
 
+ELCs=false REPOs=false RESET=false DEBUG=""
+
+while getopts "pPrd" opt; do
+  case $opt in
+    p) ELCs=true;;
+    P) REPOs=true;;
+    r) RESET=true;;
+    d) DEBUG=--debug-init;;
+  esac
+done
+shift $((OPTIND -1))
+
+emacs_cmd="emacs --daemon $DEBUG"
 notify-send "Restarting emacs..." 2>/dev/null
 emacs_pid=$(pidof emacs)
 timeout=300
@@ -129,10 +142,10 @@ while $(kill -0 $emacs_pid 2>/dev/null) && [[ $counter -lt $timeout ]]; do
   sleep 0.01
 done
 kill -9 $emacs_pid 2>/dev/null
-[[ $1 == "-r" ]] && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
-[[ $1 == "-p" ]] && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
-[[ $1 == "-P" ]] && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
-_is_ime_rime && GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs --daemon || emacs --daemon
+$RESET && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
+$ELCs && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
+$REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
+_is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd || eval $emacs_cmd
 command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
 emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
 #+end_src
