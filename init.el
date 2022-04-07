@@ -1,18 +1,13 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
-(eval-when-compile
-  (require 'cl-lib)
-  (require 'subr-x)
-  (require 'mailcap)
-  (require 'files))
 (defconst HAS-GUI (or (daemonp) (display-graphic-p)))
-(defconst INIT-DIR (file-name-directory user-init-file))
+(defconst DEBUG-INIT-P (or (getenv-internal "DEBUG") init-file-debug))
 
 (defcustom grandview-cache-dir (concat user-emacs-directory "grandview/")
   "Cache directory for grandview."
   :group 'grandview :type 'string)
 
-(defcustom grandview-org-file (concat INIT-DIR "grandview.org")
+(defcustom grandview-org-file (concat (file-name-directory user-init-file) "grandview.org")
   "Path for grandview main config .org file."
   :group 'grandview :type 'string)
 
@@ -25,7 +20,6 @@ stuttering, increase this."
 (defvar grandview--el-file (concat grandview-cache-dir "grandview.el"))
 (defvar grandview--autoload-file (concat grandview-cache-dir "autoload.el"))
 (defvar grandview--autoload-dir (concat grandview-cache-dir "autoloads/"))
-(defvar grandview-debug-p nil "Show debug info of emacs-grandview.")
 
 ;; Keymaps
 ;; `grandview-files-map': Open files/dirs or operate on files
@@ -59,11 +53,14 @@ Return the decoded text as multibyte string."
   "Do not show any messages while executing FN and ARGS."
   (let ((inhibit-message t)) (apply fn args)))
 
-(defmacro log! (&optional label &rest body)
+(defun log! (&optional label string)
   "Simple logging command.
-Optional LABEL and BODY are evaluated and echoed out."
-  (declare (indent defun))
-  `(message "GrandView: %s %s" (or ,label "default") (or ,@body "Nothing")))
+Optional LABEL and STRING are echoed out."
+  (let* ((label-str (cond ((symbolp label) (symbol-name label))
+                          ((stringp label) label)
+                          (t "GRANDVIEW")))
+         (label (propertize label-str 'face 'font-lock-builtin-face)))
+    (prog1 nil (message "%s" (format "%s: %s" label string)))))
 
 (defmacro setq! (&rest settings)
   "A stripped-down `customize-set-variable' with the syntax of `setq'.
@@ -191,23 +188,21 @@ FORCE is passed to `grandview--tangle' and
   (grandview--gen-autoload force))
 
 (defun grandview--log (format &rest args)
-  "Log to *Messages* if `grandview-debug-p' is on.
+  "Log to *Messages*.
 Does not display text in echo area, but still logs to
 *Messages*.  FORMAT and ARGS are the same arguments as `message'."
-  (when grandview-debug-p
-    (let ((inhibit-message (active-minibuffer-window))
-          (str (concat (propertize "GRANDVIEW " 'face 'font-lock-comment-face) format)))
-      (apply 'message (push str args)))))
+  (let ((inhibit-message (active-minibuffer-window))
+        (str (concat (propertize "GRANDVIEW " 'face 'font-lock-comment-face) format)))
+    (apply 'message (push str args))))
 
 (defun grandview-profiler ()
   "Init info with packages loaded and init time."
-  (when grandview-debug-p
-    (let ((package-count 0)
-          (time (emacs-init-time "%.3f"))
-          (docstr "%d packages loaded in %ss"))
-      (when (boundp 'straight--profile-cache)
-        (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
-      (run-with-timer 1 nil 'grandview--log docstr package-count time))))
+  (let ((package-count 0)
+        (time (emacs-init-time "%.3f"))
+        (docstr "%d packages loaded in %ss"))
+    (when (boundp 'straight--profile-cache)
+      (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
+    (run-with-timer 1 nil 'log! "GrandView Profiler" (format docstr package-count time))))
 
 (defvar use-package--deferred-pkgs-alist '(t))
 (defun use-package-handler/:after-call (name _keyword hooks rest state)
@@ -222,7 +217,7 @@ REST and STATE."
       (use-package-concat
        `((fset ',fn
                (lambda (&rest _)
-                 (grandview--log "Loading deferred package %s from %s" ',name ',fn)
+                 (when DEBUG-INIT-P (log! "Lazy loaded" (format "%s on command %s" ',name ',fn)))
                  (condition-case e
                      (let ((default-directory user-emacs-directory))
                        (require ',name))
@@ -262,39 +257,34 @@ REST and STATE."
               (org-forward-element)))))
     (apply fn args)))
 
-(let* ((init-dir (file-name-directory user-init-file))
-       (user-conf (concat init-dir "user.el"))
-       (bootstrap (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
-       (file-name-handler-alist nil))
-  ;; Init package manager `straight.el' and package loader `use-package.el'
+(let ((bootstrap (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
+      (file-name-handler-alist nil))
+  ;; Init package manager `straight.el'
   (setq straight-use-package-by-default t)
   (setq straight-vc-git-default-clone-depth 1)
   (setq straight-check-for-modifications '(check-on-save find-when-checking))
   (setq straight-repository-branch "develop")
-  (setq use-package-always-defer t)
   (unless (file-exists-p bootstrap)
     (with-current-buffer (url-retrieve-synchronously script 'silent 'inhibit-cookies)
       (goto-char (point-max)) (eval-print-last-sexp)))
   (load bootstrap nil 'nomessage)
+  ;; Init package loader `use-package.el'
+  (setq use-package-always-defer t)
   (straight-use-package 'use-package)
   (require 'use-package-core)
   (push :after-call use-package-deferring-keywords)
   (setq use-package-keywords (use-package-list-insert :after-call use-package-keywords :after))
   (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
-  ;; Hooks
-  (if (boundp 'after-focus-change-function)
-      (add-function :after after-focus-change-function
-                    (lambda () (unless (frame-focus-state) (garbage-collect))))
-    (add-hook 'after-focus-change-function 'garbage-collect))
-  (add-hook 'emacs-startup-hook #'grandview-profiler)
+  ;; Add hooks
+  (add-function :after after-focus-change-function (lambda () (unless (frame-focus-state) (garbage-collect))))
+  (when DEBUG-INIT-P (add-hook 'emacs-startup-hook #'grandview-profiler))
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (with-eval-after-load 'org (add-hook 'org-tab-first-hook 'org-end-of-line))
-  ;; Tangling
+  (add-hook 'org-tab-first-hook 'org-end-of-line)
+  ;; "Initiate spin!" -- Joseph Cooper
   (unless (file-exists-p grandview-cache-dir)
     (make-directory grandview--autoload-dir t)
     (grandview-tangle t))
   (load grandview--autoload-file nil t)
-  (when (file-exists-p user-conf) (load user-conf nil t))
   (load grandview--el-file nil t)
   (setq gc-cons-threshold grandview-gc-cons-threshold))

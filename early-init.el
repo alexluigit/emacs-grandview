@@ -127,13 +127,13 @@
 (put 'dired-find-alternate-file 'disabled nil)
 (setq custom-file (concat user-emacs-directory "custom.el"))
 
-;; I believe tabs, in the sense of inserting the tab character, are
-;; best suited for indentation.  While spaces are superior at
-;; precisely aligning text.  However, I understand that elisp uses its
-;; own approach, which I do not want to interfere with.  Also, Emacs
-;; tends to perform alignments by mixing tabs with spaces, which /can
-;; actually lead to misalignments/ depending on certain variables such
-;; as the size of the tab.  As such, I am disabling tabs by default.
+;; I believe tabs, in the sense of inserting the tab character, are best suited
+;; for indentation.  While spaces are superior at precisely aligning text.
+;; However, I understand that elisp uses its own approach, which I do not want
+;; to interfere with.  Also, Emacs tends to perform alignments by mixing tabs
+;; with spaces, which can actually lead to misalignments depending on certain
+;; variables such as the size of the tab.  As such, I am disabling tabs by
+;; default.
 
 ;; If there ever is a need to use different settings in other modes,
 ;; we can customise them via hooks.  This is not an issue I have
@@ -167,10 +167,16 @@
         (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
         (ale-org-id-auto . t)))
 
-;; No littering
-(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
-
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar
 (scroll-bar-mode -1)                  ; Disable scroll bar
+
+;; No littering
+(setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
+
+;; Grandview specific options
+(setq grandview-cache-dir (concat user-emacs-directory "grandview/"))
+(setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
+(setq grandview-gc-cons-threshold 134217728)
+

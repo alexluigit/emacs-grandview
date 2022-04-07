@@ -13,20 +13,18 @@
 :CUSTOM_ID: Overview-Introduction-a717df64
 :END:
 
-*Emacs-grandview* is my literate Emacs configuration which has the architecture
-looks like:
+*Emacs-grandview* is my literate Emacs configuration which has a pretty
+straightforward project structure:
 
-+ Init file:                      =early-init.el= and =init.el=
-+ User options:                   =user.el=
-+ Main config file (.org):        This file
-+ Main config file (.el):         Tangled from this file
++ Early init:              =early-init.el=
++ Init:                    =init.el=
++ Main config file (.org): This file (defaults to =grandview.org=)
 
-The elisp source blocks in this file (defaults to =grandview.org=) is tangled to a
-regular =.el= file which is then evaluated by Emacs.  Sections named *Autoload* are
-tangled to separate files upon which corresponding autoloads are generated.
-Whenever the content of this file changes, the whole tangle process is repeated
-on the execution of ~kill-emacs~ command, after that the new generated config will
-replace the old one.
+The elisp source blocks in this file is tangled to a regular =.el= file which is
+then evaluated by Emacs.  Sections named *Autoload* are tangled to separate files
+upon which corresponding autoloads are generated.  Whenever the content of this
+file changes, this tangling process is repeated on the execution of ~kill-emacs~
+command, after that the new generated config will replace the old one.
 
 ** Dependencies
 :PROPERTIES:
@@ -35,19 +33,19 @@ replace the old one.
 
 Here are the dependencies of this project.
 
-|-----------------------+-----------------------------+----------|
-| Package               | Description                 | Required |
-|-----------------------+-----------------------------+----------|
-| =fd=                    | A modern =find=               |          |
-| =rg=                    | A modern =grep=               |          |
-| =git=                   | Version control             |          |
-| =exa=                   | A modern =ls=                 | optional |
-| =noto-fonts-emoji=      | Font for emojis             | optional |
-| =words=                 | English words completion    | optional |
-| =font-victor-mono=      | Default fixed pitch font    | optional |
-| =sarasa-gothic= (font)  | Default variable pitch font | optional |
-| =xdotool=               | Automation tool for X11     | optional |
-|-----------------------+-----------------------------+----------|
+|--------------------+-----------------------------+----------|
+| Package            | Description                 | Required |
+|--------------------+-----------------------------+----------|
+| =fd=                 | A modern =find=               |          |
+| =rg=                 | A modern =grep=               |          |
+| =git=                | Version control             |          |
+| =exa=                | A modern =ls=                 | optional |
+| =noto-fonts-emoji=   | Font for emojis             | optional |
+| =words=              | English words completion    | optional |
+| =font-victor-mono= | Default fixed pitch font    | optional |
+| =ttf-sarasa-gothic=  | Default variable pitch font | optional |
+| =xdotool=            | Automation tool for X11     | optional |
+|--------------------+-----------------------------+----------|
 
 ** Installation
 :PROPERTIES:
