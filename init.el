@@ -245,6 +245,23 @@ REST and STATE."
               (org-forward-element)))))
     (apply fn args)))
 
+(defadvice! org-fill-paragraph-ad (&rest _)
+  "Let `org-fill-paragraph' works inside of src block in Org-mode."
+  :before-while #'org-fill-paragraph
+  (let* ((element (save-excursion (beginning-of-line) (org-element-at-point)))
+         (type (org-element-type element)))
+    (if (and (eq type 'src-block)
+             (> (line-beginning-position)
+                (org-element-property :post-affiliated element))
+             (< (line-beginning-position)
+                (org-with-point-at (org-element-property :end element)
+                  (skip-chars-backward " \t\n")
+                  (line-beginning-position))))
+        (progn (org-babel-do-in-edit-buffer (fill-paragraph)) nil)
+      t)))
+
+(add-hook 'org-tab-first-hook 'org-end-of-line)
+
 (let ((bootstrap (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
       (file-name-handler-alist nil))
