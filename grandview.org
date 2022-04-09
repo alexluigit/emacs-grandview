@@ -424,8 +424,6 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
   (meow-global-mode)
   :config
   (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
-  (advice-add 'meow-start-kmacro-or-insert-counter :around #'silent!)
-  (advice-add 'meow-end-or-call-kmacro :around #'silent!)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)

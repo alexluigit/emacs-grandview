@@ -2,6 +2,8 @@
 
 (defconst HAS-GUI (or (daemonp) (display-graphic-p)))
 (defconst DEBUG-INIT-P (or (getenv-internal "DEBUG") init-file-debug))
+(defconst EMACS28+ (> emacs-major-version 27))
+(defconst EMACS29+ (> emacs-major-version 28))
 
 (defcustom grandview-cache-dir (concat user-emacs-directory "grandview/")
   "Cache directory for grandview."
@@ -48,10 +50,6 @@ Return the decoded text as multibyte string."
                (insert-file-contents-literally path)
                (buffer-substring-no-properties (point-min) (point-max)))))
   (decode-coding-string str (or coding 'utf-8))))
-
-(defun silent! (fn &rest args)
-  "Do not show any messages while executing FN and ARGS."
-  (let ((inhibit-message t)) (apply fn args)))
 
 (defun log! (&optional label string)
   "Simple logging command.
@@ -187,14 +185,6 @@ FORCE is passed to `grandview--tangle' and
   (grandview--tangle force)
   (grandview--gen-autoload force))
 
-(defun grandview--log (format &rest args)
-  "Log to *Messages*.
-Does not display text in echo area, but still logs to
-*Messages*.  FORMAT and ARGS are the same arguments as `message'."
-  (let ((inhibit-message (active-minibuffer-window))
-        (str (concat (propertize "GRANDVIEW " 'face 'font-lock-comment-face) format)))
-    (apply 'message (push str args))))
-
 (defun grandview-profiler ()
   "Init info with packages loaded and init time."
   (let ((package-count 0)
@@ -204,7 +194,7 @@ Does not display text in echo area, but still logs to
       (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
     (run-with-timer 1 nil 'log! "GrandView Profiler" (format docstr package-count time))))
 
-(defvar use-package--deferred-pkgs-alist '(t))
+(defvar +use-package--deferred-pkgs '(t))
 (defun use-package-handler/:after-call (name _keyword hooks rest state)
   "Add keyword `:after-call' to `use-package'.
 The purpose of this keyword is to expand the lazy-loading
@@ -217,32 +207,30 @@ REST and STATE."
       (use-package-concat
        `((fset ',fn
                (lambda (&rest _)
-                 (when DEBUG-INIT-P (log! "Lazy loaded" (format "%s on command %s" ',name ',fn)))
+                 (when DEBUG-INIT-P (log! "Lazy loaded" (format "%s on command %s" ',name ',hooks)))
                  (condition-case e
                      (let ((default-directory user-emacs-directory))
                        (require ',name))
                    ((debug error)
                     (message "Failed to load deferred package %s: %s" ',name e)))
-                 (when-let (deferral-list (assq ',name use-package--deferred-pkgs-alist))
+                 (when-let (deferral-list (assq ',name +use-package--deferred-pkgs))
                    (dolist (hook (cdr deferral-list))
                      (advice-remove hook #',fn)
                      (remove-hook hook #',fn))
-                   (setq use-package--deferred-pkgs-alist
-                         (delq deferral-list use-package--deferred-pkgs-alist))
+                   (setq +use-package--deferred-pkgs
+                         (delq deferral-list +use-package--deferred-pkgs))
                    (unintern ',fn nil)))))
-       (let (forms)
-         (dolist (hook hooks forms)
-           (push (if (string-match-p "-\\(?:functions\\|hook\\)$" (symbol-name hook))
-                     `(add-hook ',hook #',fn)
-                   `(advice-add #',hook :before #',fn))
-                 forms)))
-       `((unless (assq ',name use-package--deferred-pkgs-alist)
-           (push '(,name) use-package--deferred-pkgs-alist))
-         (nconc (assq ',name use-package--deferred-pkgs-alist)
+       (cl-loop for hook in hooks
+                collect (if (string-match-p "-\\(?:functions\\|hook\\)$" (symbol-name hook))
+                            `(add-hook ',hook #',fn)
+                          `(advice-add #',hook :before #',fn)))
+       `((unless (assq ',name +use-package--deferred-pkgs)
+           (push '(,name) +use-package--deferred-pkgs))
+         (nconc (assq ',name +use-package--deferred-pkgs)
                 '(,@hooks)))
        (use-package-process-keywords name rest state)))))
 
-(defadvice! +org-toggle-comment (fn &rest args)
+(defadvice! org-toggle-comment-ad (fn &rest args)
   "Enhanced drop-in replacement for `org-toggle-comment'."
   :around #'org-toggle-comment
   (if (region-active-p)
@@ -276,15 +264,18 @@ REST and STATE."
   (push :after-call use-package-deferring-keywords)
   (setq use-package-keywords (use-package-list-insert :after-call use-package-keywords :after))
   (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
-  ;; Add hooks
-  (add-function :after after-focus-change-function (lambda () (unless (frame-focus-state) (garbage-collect))))
-  (when DEBUG-INIT-P (add-hook 'emacs-startup-hook #'grandview-profiler))
-  (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (add-hook 'org-tab-first-hook 'org-end-of-line)
+  ;; Load transient.el
+  (straight-use-package `(transient ,@(when EMACS28+ '(:type built-in))))
+  ;; Tangle and load Grandview
   ;; "Initiate spin!" -- Joseph Cooper
   (unless (file-exists-p grandview-cache-dir)
     (make-directory grandview--autoload-dir t)
     (grandview-tangle t))
   (load grandview--autoload-file nil t)
   (load grandview--el-file nil t)
+  (add-hook 'kill-emacs-hook #'grandview-tangle -90)
+  ;; Show profiler when debugging
+  (when DEBUG-INIT-P (add-hook 'emacs-startup-hook #'grandview-profiler))
+  ;; Setup garbage collection
+  (add-function :after after-focus-change-function (lambda () (unless (frame-focus-state) (garbage-collect))))
   (setq gc-cons-threshold grandview-gc-cons-threshold))
