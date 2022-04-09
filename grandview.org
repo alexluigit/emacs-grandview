@@ -33,19 +33,19 @@ command, after that the new generated config will replace the old one.
 
 Here are the dependencies of this project.
 
-|--------------------+-----------------------------+----------|
-| Package            | Description                 | Required |
-|--------------------+-----------------------------+----------|
-| =fd=                 | A modern =find=               |          |
-| =rg=                 | A modern =grep=               |          |
-| =git=                | Version control             |          |
-| =exa=                | A modern =ls=                 | optional |
-| =noto-fonts-emoji=   | Font for emojis             | optional |
-| =words=              | English words completion    | optional |
-| =font-victor-mono= | Default fixed pitch font    | optional |
-| =ttf-sarasa-gothic=  | Default variable pitch font | optional |
-| =xdotool=            | Automation tool for X11     | optional |
-|--------------------+-----------------------------+----------|
+|-------------------+-----------------------------+----------|
+| Package           | Description                 | Required |
+|-------------------+-----------------------------+----------|
+| =fd=                | A modern =find=               |          |
+| =rg=                | A modern =grep=               |          |
+| =git=               | Version control             |          |
+| =exa=               | A modern =ls=                 | optional |
+| =noto-fonts-emoji=  | Font for emojis             | optional |
+| =words=             | English words completion    | optional |
+| =font-victor-mono=  | Default fixed pitch font    | optional |
+| =ttf-sarasa-gothic= | Default variable pitch font | optional |
+| =xdotool=           | Automation tool for X11     | optional |
+|-------------------+-----------------------------+----------|
 
 ** Installation
 :PROPERTIES:
@@ -109,7 +109,7 @@ The following section provided a CLI for restarting =Emacs-grandview=.
 :END:
 
 #+name: grandview-cache
-#+begin_src emacs-lisp :var type="main" :tangle (concat grandview-cache-dir "tmp")
+#+begin_src emacs-lisp :var type="main" :tangle no
 (pcase type
   ("main" (format "%s" grandview-cache-dir))
   ("pkg-builds" (straight--build-dir))
@@ -205,6 +205,11 @@ Here are the 3 variant of this command.
 =simple.el= consists of a grab-bag of basic Emacs commands not specifically
 related to some major mode or to file-handling.
 
+#+begin_src emacs-lisp
+(use-package simple
+  :straight (:type built-in))
+#+end_src
+
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Editor-Autoload-cb8b46e5
@@ -212,32 +217,40 @@ related to some major mode or to file-handling.
 :END:
 
 #+begin_src emacs-lisp
-(defcustom ale-date-specifier "%F"
-  "Date specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-(defcustom ale-time-specifier "%R %z"
-  "Time specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
+;;; -*- lexical-binding: t -*-
 
 ;;;###autoload
-(defun ale-insert-date (&optional arg)
-  "Insert the current date as `ale-date-specifier'.
-With optional prefix ARG (\\[universal-argument]) also append the
-current time understood as `ale-time-specifier'.  When region is
-active, delete the highlighted text and replace it with the
-specified date."
-  (interactive "P")
-  (let* ((date ale-date-specifier)
-         (time ale-time-specifier)
-         (format (if arg (format "%s %s" date time) date)))
-    (when (use-region-p)
-      (delete-region (region-beginning) (region-end)))
-    (insert (format-time-string format))))
+(defadvice! delete-backward-char-ad (fn &rest args)
+  "Do not try to delete char when last char is read-only."
+  :around #'delete-backward-char
+  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
+
+;;;###autoload
+(defadvice! keyboard-escape-quit-ad (fn &rest args)
+  "Do not close any window when calling `keyboard-escape-quit'."
+  :around #'keyboard-escape-quit
+  (let ((buffer-quit-function #'ignore)) (apply fn args)))
+
+;;;###autoload
+(defadvice! next-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `next-error-no-select'."
+  :around #'next-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+;;;###autoload
+(defadvice! previous-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `previous-error-no-select'."
+  :around #'previous-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+;;;###autoload
+(defadvice! yank-ad (&rest _)
+  "Make `yank' behave like paste (p) command in vim."
+  :before #'yank
+  (when-let ((clip (condition-case nil (current-kill 0 t) (error ""))))
+    (set-text-properties 0 (length clip) nil clip)
+    (when (string-suffix-p "\n" clip)
+      (goto-char (line-beginning-position)))))
 
 ;;;###autoload
 (defun +simple-pop-local-mark-ring ()
@@ -260,65 +273,6 @@ Call this repeatedly will cycle all positions in `mark-ring'."
     (end-of-visual-line)
     (set-mark-command nil)
     (back-to-indentation)))
-
-;;;###autoload
-(defun ale-show-messages (&optional erase)
-  "Show *Messages* buffer in other frame.
-If ERASE is non-nil, erase the buffer before switching to it."
-  (interactive "P")
-  (when erase
-    (let ((inhibit-read-only t))
-      (with-current-buffer "*Messages*" (erase-buffer))))
-  (let ((win (get-buffer-window "*Messages*" t))
-        (after-make-frame-functions nil))
-    (if (window-live-p win)
-        (delete-frame (window-frame win))
-      (with-selected-frame (make-frame)
-        (set-window-parameter (selected-window) 'no-other-window t)
-        (switch-to-buffer "*Messages*")))))
-
-;;;###autoload
-(defadvice! +delete-backward-char-ad (fn &rest args)
-  "Do not try to delete char when last char is read-only."
-  :around #'delete-backward-char
-  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
-
-;;;###autoload
-(defadvice! +keyboard-escape-quit-ad (fn &rest args)
-  "Do not close any window when calling `keyboard-escape-quit'."
-  :around #'keyboard-escape-quit
-  (let ((buffer-quit-function #'ignore)) (apply fn args)))
-
-;;;###autoload
-(defadvice! +next-error-no-select-ad (fn &rest args)
-  "Do not open new window when calling `next-error-no-select'."
-  :around #'next-error-no-select
-  (let ((split-width-threshold nil)) (apply fn args)))
-
-;;;###autoload
-(defadvice! +previous-error-no-select-ad (fn &rest args)
-  "Do not open new window when calling `previous-error-no-select'."
-  :around #'previous-error-no-select
-  (let ((split-width-threshold nil)) (apply fn args)))
-
-;;;###autoload
-(defadvice! +yank-ad (&rest _)
-  "Make `yank' behave like paste (p) command in vim."
-  :before #'yank
-  (when-let ((clip (condition-case nil (current-kill 0 t) (error ""))))
-    (set-text-properties 0 (length clip) nil clip)
-    (when (string-suffix-p "\n" clip)
-      (goto-char (line-beginning-position)))))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Editor-Config-fc6a72a5
-:END:
-
-#+begin_src emacs-lisp
-(use-package simple
-  :straight (:type built-in))
 #+end_src
 
 *** Modal editing (meow.el)
@@ -335,86 +289,6 @@ because it can be very lengthy and should be configured separately, see
 
 If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
-**** Autoload
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Autoload-2a98f6b5
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+meow.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/meow.el --- -*- lexical-binding: t -*-
-
-(require 'meow)
-
-(defvar ale-meow-fallback-key-cmd-alist
-  '(("SPC" . consult-buffer)
-    ("/" . consult-line))
-  "Doc.")
-
-;;;###autoload
-(defadvice! +meow-query-replace-ad (&rest _)
-  "Call `meow-query-replace' and auto fill prompt with region text."
-  :before #'meow-query-replace
-  (unless (region-active-p) (meow-mark-symbol 1))
-  (call-interactively 'kill-ring-save)
-  (exchange-point-and-mark)
-  (deactivate-mark t)
-  (run-with-timer 0.05 nil 'yank))
-
-;;;###autoload
-(defadvice! +meow-insert-exit-ad (&rest _)
-  "Quit `completion-in-region-mode' after `meow-insert-exit'."
-  :after #'meow-insert-exit
-  (completion-in-region-mode -1))
-
-;;;###autoload
-(defun ale-meow-save ()
-  (interactive)
-  (save-excursion
-    (meow--with-selection-fallback
-     (meow--prepare-region-for-kill)
-     (call-interactively 'kill-ring-save))))
-
-;;;###autoload
-(defun ale-meow-escape ()
-  (interactive)
-  (cond
-   ((minibufferp)
-    (keyboard-escape-quit))
-   ((region-active-p)
-    (meow-cancel))
-   (t (call-interactively 'execute-extended-command))))
-
-;;;###autoload
-(defun ale-meow-with-key-fallback ()
-  "Execute fallback command if exists.
-If `last-input-event' is bounded to any command in current
-major-mode, call that command, otherwise call its fallback
-command defined in `ale-meow-fallback-key-cmd-alist'."
-  (interactive)
-  (let* ((key (meow--parse-input-event last-input-event))
-         (rebind-key (concat meow-motion-remap-prefix key)))
-    (if (and (key-binding (kbd rebind-key)) (not (derived-mode-p 'special-mode)))
-        (meow--execute-kbd-macro rebind-key)
-      (funcall (alist-get key ale-meow-fallback-key-cmd-alist #'ignore nil #'string=)))))
-
-;;;###autoload
-(defun ale-meow-insert ()
-  (interactive)
-  (meow--switch-state 'insert))
-
-;;;###autoload
-(defun ale-meow-insert-at-first-non-whitespace ()
-  (interactive)
-  (back-to-indentation)
-  (meow-insert))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Config-64c57594
-:END:
-
 #+begin_src emacs-lisp
 (use-package meow
   :straight (meow :type git :depth full :host github :repo "meow-edit/meow")
@@ -423,7 +297,6 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
   (setq meow-keymap nil)
   (meow-global-mode)
   :config
-  (advice-add 'meow--maybe-highlight-num-positions :override #'ignore)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -437,7 +310,7 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
         '((meow-replace . meow-yank)
           (meow-reverse . back-to-indentation)
           (meow-change . meow-change-char)
-          (ale-meow-save . ale-pulse-save-line)
+          (+meow-save . +pulse-save-line)
           (meow-kill . meow-kill-whole-line)
           (meow-pop-selection . meow-pop-grab)
           (meow-beacon-change . meow-beacon-change-char)
@@ -458,8 +331,90 @@ command defined in `ale-meow-fallback-key-cmd-alist'."
           (?i . indent)
           (?x . extend)
           (?. . sentence)))
-  (add-to-list 'meow-mode-state-list '(helpful-mode . normal))
-  (add-to-list 'meow-mode-state-list '(message-buffer-mode . normal)))
+  (appendq! meow-mode-state-list '((helpful-mode . normal)
+                                   (message-buffer-mode . normal))))
+#+end_src
+
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Modal_editing_(meow.el)-Autoload-2a98f6b5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+meow.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(defcustom +meow-fallback-key-cmd-alist
+  '(("SPC" . consult-buffer)
+    ("/" . consult-line)
+    ("q" . quit-window))
+  "A list of (KEY . CMD) pairs.
+Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
+  :group 'grandview :type 'alist)
+
+;;;###autoload
+(defadvice! meow-query-replace-ad (&rest _)
+  "Call `meow-query-replace' and auto fill prompt with region text."
+  :before #'meow-query-replace
+  (unless (region-active-p) (meow-mark-symbol 1))
+  (let ((text (buffer-substring-no-properties (region-beginning) (region-end))))
+    (exchange-point-and-mark)
+    (deactivate-mark t)
+    (run-with-timer 0.05 nil 'insert text)))
+
+;;;###autoload
+(defadvice! meow-insert-exit-ad (&rest _)
+  "Quit `completion-in-region-mode' after `meow-insert-exit'."
+  :after #'meow-insert-exit
+  (completion-in-region-mode -1))
+
+;;;###autoload
+(defadvice! meow-inhibit-highlight-num-positions-ad (&rest _)
+  "Do not highlight number positions."
+  :override #'meow--maybe-highlight-num-positions
+  (ignore))
+
+;;;###autoload
+(defun +meow-save ()
+  (interactive)
+  (save-excursion
+    (meow--with-selection-fallback
+     (meow--prepare-region-for-kill)
+     (call-interactively 'kill-ring-save))))
+
+;;;###autoload
+(defun +meow-escape ()
+  (interactive)
+  (cond
+   ((minibufferp)
+    (keyboard-escape-quit))
+   ((region-active-p)
+    (meow-cancel))
+   (t (call-interactively 'execute-extended-command))))
+
+;;;###autoload
+(defun +meow-with-key-fallback ()
+  "Execute fallback command if exists.
+If `last-input-event' is bounded to any command in current
+major-mode, call that command, otherwise call its fallback
+command defined in `+meow-fallback-key-cmd-alist'."
+  (interactive)
+  (let* ((key (meow--parse-input-event last-input-event))
+         (rebind-key (concat meow-motion-remap-prefix key)))
+    (if (and (key-binding (kbd rebind-key)) (not (derived-mode-p 'special-mode)))
+        (meow--execute-kbd-macro rebind-key)
+      (funcall (alist-get key +meow-fallback-key-cmd-alist #'ignore nil #'string=)))))
+
+;;;###autoload
+(defun +meow-insert ()
+  (interactive)
+  (meow--switch-state 'insert))
+
+;;;###autoload
+(defun +meow-insert-at-first-non-whitespace ()
+  (interactive)
+  (back-to-indentation)
+  (meow-insert))
 #+end_src
 
 *** Quick goto char (avy.el)
@@ -516,57 +471,24 @@ has been bound to =meow-inner-of-thing=.)
 :CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-bff4df22
 :END:
 
-**** Autoload
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Autoload-bdfa18e4
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+kbd.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/kbd.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defun ale-kbd-C-i-fix ()
-  "Make emacs differentiate C-i and Tab keys.
-
-For historical reason, terminal can not tell the difference between
-some key storkes. For example, `C-i' and `<tab>', `C-m' and `Return',
-etc. By default, emacs follow this convention, but it doesn't mean
-emacs are not able to tell the difference. To change this behaviour,
-we can use `input-decode-map' to give `C-i' different meaning."
-  (if HAS-GUI
-      (add-hook 'after-make-frame-functions
-                (lambda (f) (with-selected-frame f (ale-kbd--C-i-fix-GUI))))
-    (add-hook 'window-setup-hook 'ale-kbd--C-i-fix-TERM)))
-
-(defun ale-kbd--C-i-fix-GUI ()
-  "Helper for `ale-kbd-C-i-fix'."
-  (define-key input-decode-map [?\C-i] [C-i]))
-
-(defun ale-kbd--C-i-fix-TERM ()
-  "Helper for `ale-kbd-C-i-fix'."
-  (bind-keys
-   ("<f6>" . better-jumper-jump-forward)
-   :map minibuffer-local-map
-   ("<f6>" . forward-char)
-   :map meow-insert-state-keymap
-   ("<f6>" . ale-insert-ctrl-i)))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Keyboard_orientation_(kbd.el)-Config-2df5940c
-:END:
-
 For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs
-follow this convention, but it doesn't mean emacs are not able to tell the
-difference. To change this behaviour, we can use =input-decode-map= to give =C-i=
-different meaning. See =ale-kbd--C-i-fix-GUI= and =ale-kbd--C-i-fix-TERM= for more
-details.
+storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
+this convention, but it doesn't mean emacs are not able to tell the
+difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
+On terminal, we rebind =<f6>= to =C-i=, so make sure you have relevant settings in
+your terminal emulator's settings.
 
 #+begin_src emacs-lisp
-(ale-kbd-C-i-fix)
+(if HAS-GUI
+    (add-hook 'after-make-frame-functions
+              (lambda (f) (with-selected-frame f (define-key input-decode-map [?\C-i] [C-i]))))
+  (add-hook 'after-init-hook (lambda ()
+                                  (bind-keys
+                                   ("<f6>" . +simple-pop-local-mark-ring)
+                                   :map minibuffer-local-map
+                                   ("<f6>" . forward-char)
+                                   :map meow-insert-state-keymap
+                                   ("<f6>" . ale-insert-ctrl-i)))))
 #+end_src
 
 ** Core UI
@@ -579,89 +501,10 @@ details.
 :CUSTOM_ID: *CORE*-Window_placement_(window.el)-932bb9f2
 :END:
 
-**** Autoload
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Window_placement_(window.el)-Autoload-0ba61476
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+window.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/window.el --- extensions for window.el -*- lexical-binding: t; -*-
-
-(defcustom ale-quit-minor-modes '(org-tree-slide-mode view-mode)
-  "Disable these minor modes when calling `ale-quit'."
-  :type '(repeat symbol)
-  :group 'ale)
-
-;;;###autoload
-(defadvice! +quit-window-ad (&rest _)
-  "Disable some minor modes or kill current window/buffer.
-Try to quit minor modes defined in `ale-quit-minor-modes' then
-issues a `quit-window'."
-  :before #'quit-window
-  (dolist (mode ale-quit-minor-modes)
-    (when (and (boundp mode)
-               (or (derived-mode-p mode)
-                   (buffer-local-value mode (current-buffer))))
-      (apply mode '(-1)))))
-
-;;;###autoload
-(defun ale-split-window-right ()
-  (interactive)
-  (split-window-right) (other-window 1))
-
-;;;###autoload
-(defun ale-split-window-below ()
-  (interactive)
-  (split-window-below) (other-window 1))
-
-;; Inspired by Pierre Neidhardt's windower:
-;; https://gitlab.com/ambrevar/emacs-windower/-/blob/master/windower.el
-(defvar ale--windows-current nil
-  "Current window configuration.")
-
-(defvar ale-monocle-mode)
-
-;;;###autoload
-(defun ale-monocle-disable ()
-  "Set variable `ale-simple-monocle' to nil, when appropriate.
-To be hooked to `window-configuration-change-hook'."
-  (when (and ale-monocle-mode
-             (not (cl-find-if
-                   (lambda (w) (eq (window-parameter w 'window-side) 'bottom))
-                   (window-list)))
-             (not (one-window-p)))
-    (delete-other-windows)
-    (ale-monocle-mode -1)
-    (set-window-configuration ale--windows-current)))
-
-;;;###autoload
-(define-minor-mode ale-monocle-mode
-  "Toggle between multiple windows and single window.
-This is the equivalent of maximising a window.  Tiling window
-managers such as DWM, BSPWM refer to this state as 'monocle'."
-  :lighter " -M-"
-  :global nil
-  (let ((config ale--windows-current)
-        (buf (current-buffer)))
-    (if (one-window-p)
-        (when config
-          (set-window-configuration config))
-      (setq ale--windows-current (current-window-configuration))
-      (when (window-parameter nil 'window-side) (delete-window))
-      (delete-other-windows)
-      (switch-to-buffer buf))))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Window_placement_(window.el)-Config-ee22f395
-:END:
-
-The =display-buffer-alist= is intended as a rule-set for controlling
-the display of windows.  The objective is to create a more intuitive
-workflow where targeted buffer groups or types are always shown in a
-given location, on the premise that predictability improves usability.
+The =display-buffer-alist= is intended as a rule-set for controlling the display
+of windows.  The objective is to create a more intuitive workflow where targeted
+buffer groups or types are always shown in a given location, on the premise that
+predictability improves usability.
 
 For each buffer action in it we can define several functions for selecting the
 appropriate window.  These are executed in sequence, but my usage thus far
@@ -673,8 +516,6 @@ to 0 to ensure every new window will open in horizontal split.
 #+begin_src emacs-lisp
 (use-package window
   :straight (:type built-in)
-  :hook
-  (window-configuration-change . ale-monocle-disable)
   :config
   (setq display-buffer-alist
         `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
@@ -696,6 +537,58 @@ to 0 to ensure every new window will open in horizontal split.
   (setq split-width-threshold 120))
 #+end_src
 
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Window_placement_(window.el)-Autoload-0ba61476
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+window.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t; -*-
+
+;;;###autoload
+(defadvice! split-window-ad (&rest _)
+  :after #'split-window-right
+  :after #'split-window-below
+  (other-window 1))
+
+;;;###autoload
+(defun +show-messages (&optional erase)
+  "Show *Messages* buffer in other frame.
+If ERASE is non-nil, erase the buffer before switching to it."
+  (interactive "P")
+  (when erase
+    (let ((inhibit-read-only t))
+      (with-current-buffer "*Messages*" (erase-buffer))))
+  (let ((win (get-buffer-window "*Messages*" t))
+        (after-make-frame-functions nil))
+    (if (window-live-p win)
+        (delete-frame (window-frame win))
+      (with-selected-frame (make-frame)
+        (set-window-parameter (selected-window) 'no-other-window t)
+        (switch-to-buffer "*Messages*")))))
+
+(defvar +monocle--saved-window-configuration nil
+  "Last window configuration before enabling `+monocle-mode'.")
+
+;;;###autoload
+(define-minor-mode +monocle-mode
+  "Toggle between multiple windows and single window.
+This is the equivalent of maximising a window.  Tiling window
+managers such as DWM, BSPWM refer to this state as 'monocle'."
+  :global nil
+  :interactive nil
+  (let ((config +monocle--saved-window-configuration)
+        (buf (current-buffer)))
+    (if (one-window-p)
+        (when config
+          (set-window-configuration config))
+      (setq +monocle--saved-window-configuration (current-window-configuration))
+      (when (window-parameter nil 'window-side) (delete-window))
+      (delete-other-windows)
+      (switch-to-buffer buf))))
+#+end_src
+
 *** Tabs as workspaces (tab-bar.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Core_UI-Tabs_placement_(tab-bar.el)-0f58f818
@@ -708,10 +601,54 @@ to 0 to ensure every new window will open in horizontal split.
   (setq tab-bar-new-tab-choice "~/"))
 #+end_src
 
+*** Frame (frame.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Frame_(frame.el)-34e11fb3
+:END:
+
+Frame settings.
+
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Frame_(frame.el)-Autoload-ac196a91
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+frame.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(defvar +frame-cursor-saved-color
+  (frame-parameter nil 'cursor-color))
+
+(defcustom +frame-cursor-dim-color "#606060"
+  "Cursor color for `+frame-cursor-dim-mode'."
+  :group 'cursor :type 'string)
+
+;;;###autoload
+(define-minor-mode +frame-cursor-dim-mode
+  "Enable dimmed `cursor-color' for current frame."
+  :global t
+  :lighter nil
+  :group 'cursor
+  (if +frame-cursor-dim-mode
+      (progn
+        (setq-local cursor-type nil)
+        (blink-cursor-mode -1)
+        (set-cursor-color +frame-cursor-dim-color))
+    (blink-cursor-mode +1)
+    (set-cursor-color +frame-cursor-saved-color)))
+#+end_src
+
 *** Pulse line (pulse.el)
 :PROPERTIES:
 :CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-3e34bd88
 :END:
+
+#+begin_src emacs-lisp
+(if HAS-GUI
+    (add-hook 'after-make-frame-functions (lambda (f) (with-selected-frame f (+pulse-line-mode))))
+  (add-hook 'after-init-hook #'+pulse-line-mode))
+#+end_src
 
 **** Autoload
 :PROPERTIES:
@@ -720,30 +657,30 @@ to 0 to ensure every new window will open in horizontal split.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/pulse.el --- -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t -*-
 
 (require 'pulse)
 
-(defcustom ale-pulse-pulse-command-list
+(defcustom +pulse-command-list
   '(recenter-top-bottom
     reposition-window
     consult--jump-nomark
     ace-select-window)
-  "Commands that should automatically `ale-pulse-pulse-line'.
-You must restart function `ale-pulse-line-mode' for changes to
+  "Commands that should automatically `+pulse-pulse-line'.
+You must restart function `+pulse-line-mode' for changes to
 take effect."
-  :group 'ale :type '(repeat function))
+  :group 'grandview :type '(repeat function))
 
-(defface ale-pulse-line
+(defface +pulse-line-face
   '((default :extend t)
     (((class color) (min-colors 88) (background light))
      :background "#8eecf4")
     (t :inverse-video t :background "#004065"))
-  "Default face for `ale-pulse-pulse-line'."
-  :group 'ale)
+  "Default face for `+pulse-pulse-line'."
+  :group 'grandview)
 
 ;;;###autoload
-(defun ale-pulse-pulse-line (&optional face kill)
+(defun +pulse-line (&optional face kill)
   "Temporarily highlight the current line with optional FACE."
   (interactive)
   (let ((beg (if (eobp)
@@ -751,37 +688,26 @@ take effect."
                (line-beginning-position)))
         (end (line-beginning-position 2))
         (pulse-delay .05)
-        (face (or face 'ale-pulse-line)))
+        (face (or face '+pulse-line-face)))
     (pulse-momentary-highlight-region beg end face)
     (when kill (kill-ring-save beg end))))
 
 ;;;###autoload
-(defun ale-pulse-save-line ()
+(defun +pulse-save-line ()
   "Temporarily highlight the current line and copy it."
   (interactive)
-  (ale-pulse-pulse-line nil t))
+  (+pulse-line nil t))
 
 ;;;###autoload
-(define-minor-mode ale-pulse-line-mode
-  "Set up for `ale-pulse-pulse-command-list'."
+(define-minor-mode +pulse-line-mode
+  "Set up for `+pulse-command-list'."
   :init-value nil
   :global t
-  (if ale-pulse-line-mode
-      (dolist (fn ale-pulse-pulse-command-list)
-        (advice-add fn :after (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))
-    (dolist (fn ale-pulse-pulse-command-list)
-      (advice-remove fn (lambda (&rest _) (interactive) (ale-pulse-pulse-line))))))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: *CORE*-Pulse_line_(pulse.el)-Config-9c494a60
-:END:
-
-#+begin_src emacs-lisp
-(if (daemonp)
-    (add-hook 'after-make-frame-functions (lambda (f) (with-selected-frame f (ale-pulse-line-mode))))
-  (add-hook 'emacs-startup-hook #'ale-pulse-line-mode))
+  (if +pulse-line-mode
+      (dolist (fn +pulse-command-list)
+        (advice-add fn :after (lambda (&rest _) (interactive) (+pulse-line))))
+    (dolist (fn +pulse-command-list)
+      (advice-remove fn (lambda (&rest _) (interactive) (+pulse-line))))))
 #+end_src
 
 *** Transient commands (transient.el)
@@ -792,8 +718,6 @@ take effect."
 =transient.el= built-in package in emacs 28 for *transient* commands.
 
 #+begin_src emacs-lisp
-(straight-use-package `(transient ,@(when (>= emacs-major-version 28) '(:type built-in))))
-
 (use-package transient
   :config
   (setq transient-default-level 7)
@@ -813,6 +737,13 @@ take effect."
 :CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-a9e74647
 :END:
 
+#+begin_src emacs-lisp
+(use-package emacs
+  :if EMACS29+
+  :init
+  (+opacity-auto-mode))
+#+end_src
+
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Autoload-b30648ad
@@ -820,27 +751,40 @@ take effect."
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/+opacity.el --- -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t -*-
 
-(defcustom ale-opacity 80
+(defcustom +opacity-alpha-background 80
   "Default frame opacity."
-  :group 'ale
+  :group 'grandview
   :type 'integer)
 
-(defcustom ale-opacity-disabled-predicates '()
-  "A list of predicate functions in which the `ale-opacity-auto-mode' will not be turned on."
-  :group 'ale
+(defcustom +opacity-disabled-predicates '()
+  "A list of predicate functions in which the `+opacity-auto-mode' will not be turned on."
+  :group 'grandview
   :type 'hook)
 
+(defun +opacity-disable ()
+  (set-frame-parameter (selected-frame) 'alpha-background 100))
+
+(defun +opacity-default ()
+  (set-frame-parameter (selected-frame) 'alpha-background +opacity-alpha-background))
+
 ;;;###autoload
-(defun ale-opacity-set (&optional percent)
+(defun +opacity-auto ()
+  "Setup frame opacity according to current major-mode."
+  (if (seq-find 'funcall +opacity-disabled-predicates)
+      (+opacity-disable)
+    (+opacity-default)))
+
+;;;###autoload
+(defun +opacity-set (&optional percent)
   (interactive "P")
   (cond ((or (and percent (not current-prefix-arg))
              (numberp percent))
-         (setq ale-opacity (* 10 percent))
-         (set-frame-parameter (selected-frame) 'alpha-background ale-opacity))
+         (setq +opacity-alpha-background (* 10 percent))
+         (set-frame-parameter (selected-frame) 'alpha-background +opacity-alpha-background))
         ((equal current-prefix-arg '(4))
-         (ale-opacity-default))
+         (+opacity-default))
         (t
          (let ((opa (frame-parameter nil 'alpha-background))
                (low 60) (high 100))
@@ -848,39 +792,19 @@ take effect."
                (set-frame-parameter (selected-frame) 'alpha-background high)
              (set-frame-parameter (selected-frame) 'alpha-background low))))))
 
-(defun ale-opacity-disable ()
-  (set-frame-parameter (selected-frame) 'alpha-background 100))
-
-(defun ale-opacity-default ()
-  (set-frame-parameter (selected-frame) 'alpha-background ale-opacity))
-
 ;;;###autoload
-(defun ale-opacity-auto ()
-  "Setup frame opacity according to current major-mode."
-  (if (seq-find 'funcall ale-opacity-disabled-predicates)
-      (ale-opacity-disable)
-    (ale-opacity-default)))
-
-;;;###autoload
-(define-minor-mode ale-opacity-auto-mode
+(define-minor-mode +opacity-auto-mode
   "Minor mode for adjusting frame opacity."
-  :lighter " ale-auto-opacity"
-  :group 'ale
+  :group 'grandview
   :global t
-  (ale-opacity-default)
-  (if ale-opacity-auto-mode
-      (add-hook 'window-configuration-change-hook #'ale-opacity-auto)
-    (remove-hook 'window-configuration-change-hook #'ale-opacity-auto)))
+  (+opacity-default)
+  (if +opacity-auto-mode
+      (add-hook 'window-configuration-change-hook #'+opacity-auto)
+    (remove-hook 'window-configuration-change-hook #'+opacity-auto)))
 #+end_src
 
-**** Config
-:PROPERTIES:
 :CUSTOM_ID: User_interface-Automatic_opacity_adjustment_(+opacity.el)-Config-21749923
 :END:
-
-#+begin_src emacs-lisp
-(ale-opacity-auto-mode)
-#+end_src
 
 ** Completion framework
 :PROPERTIES:
@@ -931,6 +855,25 @@ What my minibuffer config does:
   (minibuffer-depth-indicate-mode 1))
 #+end_src
 
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: *CORE*-Completion_framework-Minibuffer_and_completion_functions_(minibuffer.el)-Autoload-e8139bb5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+minibuffer.el"
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +minibuffer-append-metadata (metadata candidates)
+  "Append METADATA for CANDIDATES."
+  (let ((entry (if (functionp metadata)
+                   `(metadata (annotation-function . ,metadata))
+                 `(metadata (category . ,metadata)))))
+    (lambda (string pred action)
+      (if (eq action 'metadata)
+          entry
+        (complete-with-action action candidates string pred)))))
+#+end_src
+
 *** Minibuffer history (savehist.el)
 :PROPERTIES:
 :CUSTOM_ID: Completion_framework-Minibuffer_history_(savehist.el)-f2dcd446
@@ -965,17 +908,9 @@ window as a constant value.
 
 #+begin_src emacs-lisp
 (use-package vertico
-  :straight (:host github :repo "minad/vertico" :files (:defaults "extensions/*.el"))
   :after-call pre-command-hook
   :custom-face
   (vertico-current ((t (:inherit lazy-highlight))))
-  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy)
-  :bind
-  (nil
-   :map vertico-map
-   ("RET" . vertico-directory-enter)
-   ("DEL" . vertico-directory-delete-char)
-   ("M-d" . vertico-directory-delete-word))
   :config
   (setq resize-mini-windows 'grow-only)
   (vertico-mode 1))
@@ -990,51 +925,6 @@ This package provides an =orderless= completion style that divides the pattern
 into components (space-separated by default), and matches candidates that match
 all of the components in any order.
 
-**** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Autoload-ff183b03
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+orderless.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/orderless.el --- -*- lexical-binding: t -*-
-
-(require 'pinyinlib)
-
-(defun ale-orderless-pinyin-only-initialism (pattern)
-  "Leading pinyin initialism regex generator."
-  (if (< (length pattern) 10)
-      (pinyinlib-build-regexp-string pattern t nil t)
-    pattern))
-
-;;;###autoload
-(defun ale-orderless-literal-dispatcher (pattern _index _total)
-  "Literal style dispatcher using the equals sign as a prefix."
-  (when (string-suffix-p "=" pattern)
-    `(orderless-literal . ,(substring pattern 0 -1))))
-
-;;;###autoload
-(defun ale-orderless-initialism-dispatcher (pattern _index _total)
-  "Leading initialism dispatcher using the comma sign as a prefix."
-  (when (string-prefix-p "," pattern)
-    `(orderless-strict-leading-initialism . ,(substring pattern 1))))
-
-;;;###autoload
-(defun ale-orderless-pinyin-dispatcher (pattern _index _total)
-  "Pinyin initialism dispatcher using the backtick sign as a prefix."
-  (when (string-prefix-p "`" pattern)
-    `(ale-orderless-pinyin-only-initialism . ,(substring pattern 1))))
-
-;;;###autoload
-(defun ale-orderless-without-literal-dispatcher (pattern _index _total)
-  (when (string-prefix-p "~" pattern)
-    `(orderless-without-literal . ,(substring pattern 1))))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Config-3998f123
-:END:
 
 Setup completion styles in minibuffer.
 
@@ -1046,23 +936,62 @@ this gives you =(defun dired (dirname &optional switches)= as the sole match
 rather than all of the =dired-*= noise.
 
 #+begin_src emacs-lisp
-(use-package pinyinlib)
-
 (use-package orderless
   :after-call minibuffer-setup-hook
   :config
+  (use-package pinyinlib
+    :commands pinyinlib-build-regexp-string)
   (setq completion-styles '(orderless))
   (setq orderless-component-separator #'orderless-escapable-split-on-space)
   (setq orderless-matching-styles
-        '(ale-orderless-pinyin-only-initialism
+        '(+orderless-pinyin-only-initialism
           orderless-initialism
           orderless-prefixes
           orderless-regexp))
   (setq orderless-style-dispatchers
-        '(ale-orderless-literal-dispatcher
-          ale-orderless-initialism-dispatcher
-          ale-orderless-without-literal-dispatcher
-          ale-orderless-pinyin-dispatcher)))
+        '(+orderless-literal-dispatcher
+          +orderless-initialism-dispatcher
+          +orderless-without-literal-dispatcher
+          +orderless-pinyin-dispatcher)))
+#+end_src
+
+**** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Match_candidates_made_easy_(orderless.el)-Autoload-ff183b03
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+orderless.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(defun +orderless-pinyin-only-initialism (pattern)
+  "Leading pinyin initialism regex generator."
+  (if (< (length pattern) 10)
+      (pinyinlib-build-regexp-string pattern t nil t)
+    pattern))
+
+;;;###autoload
+(defun +orderless-literal-dispatcher (pattern _index _total)
+  "Literal style dispatcher using the equals sign as a prefix."
+  (when (string-suffix-p "=" pattern)
+    `(orderless-literal . ,(substring pattern 0 -1))))
+
+;;;###autoload
+(defun +orderless-initialism-dispatcher (pattern _index _total)
+  "Leading initialism dispatcher using the comma sign as a prefix."
+  (when (string-prefix-p "," pattern)
+    `(orderless-strict-leading-initialism . ,(substring pattern 1))))
+
+;;;###autoload
+(defun +orderless-pinyin-dispatcher (pattern _index _total)
+  "Pinyin initialism dispatcher using the backtick sign as a prefix."
+  (when (string-prefix-p "`" pattern)
+    `(+orderless-pinyin-only-initialism . ,(substring pattern 1))))
+
+;;;###autoload
+(defun +orderless-without-literal-dispatcher (pattern _index _total)
+  (when (string-prefix-p "~" pattern)
+    `(orderless-without-literal . ,(substring pattern 1))))
 #+end_src
 
 *** Useful commands using completion (consult.el)
@@ -1117,99 +1046,6 @@ Selectrum, Vertico and Embark.
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">"))
-#+end_src
-
-*** Keyboard version right-click (embark.el)
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-9bcc9b5b
-:END:
-
-This package provides a sort of right-click contextual menu for
-Emacs, accessed through the `embark-act' command (which you should
-bind to a convenient key), offering you relevant actions to use on
-a target determined by the context.
-
-**** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Autoload-81b70035
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+embark.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/embark.el --- -*- lexical-binding: t -*-
-
-(autoload 'consult-grep "consult")
-(autoload 'consult-line "consult")
-(autoload 'consult-imenu "consult-imenu")
-(autoload 'consult-outline "consult")
-
-(defvar ale-embark-become-general-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "g") 'consult-grep)
-    map)
-  "General custom cross-package `embark-become' keymap.")
-
-(defvar ale-embark-become-line-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "l") 'consult-line)
-    (define-key map (kbd "i") 'consult-imenu)
-    (define-key map (kbd "s") 'consult-outline) ; as my default is 'M-s s'
-    map)
-  "Line-specific custom cross-package `embark-become' keymap.")
-
-(defvar embark-become-file+buffer-map)
-(autoload 'project-switch-to-buffer "project")
-(autoload 'project-find-file "project")
-
-(defvar ale-embark-become-file+buffer-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map embark-become-file+buffer-map)
-    (define-key map (kbd "B") 'project-switch-to-buffer)
-    (define-key map (kbd "F") 'project-find-file)
-    map)
-  "File+buffer custom cross-package `embark-become' keymap.")
-
-(defvar embark-become-keymaps)
-
-;;;###autoload
-(define-minor-mode ale-embark-keymaps
-  "Add or remove keymaps from Embark.
-This is based on the value of `ale-embark-add-keymaps'
-and is meant to keep things clean in case I ever wish to disable
-those so-called 'extras'."
-  :init-value nil
-  :global t
-  (let ((maps '(ale-embark-become-general-map
-                ale-embark-become-line-map
-                ale-embark-become-file+buffer-map)))
-    (if ale-embark-keymaps
-        (dolist (map maps)
-          (cl-pushnew map embark-become-keymaps))
-      (setq embark-become-keymaps
-            (dolist (map maps)
-              (delete map embark-become-keymaps))))))
-#+end_src
-
-**** Config
-:PROPERTIES:
-:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Config-12386c51
-:END:
-
-#+begin_src emacs-lisp
-(use-package embark
-  :after-call dired-after-readin-hook minibuffer-setup-hook
-  :bind
-  (("C-." . embark-act)
-   :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
-   :map embark-collect-mode-map ("C-." . embark-act))
-  :config
-  (use-package embark-consult :demand t)
-  (ale-embark-keymaps 1)
-  (setq embark-quit-after-action t)
-  (setq embark-action-indicator
-        (let ((act (propertize "Act" 'face 'success)))
-          (cons act (concat act " on '%s'"))))
-  (setq embark-become-indicator (propertize "Become" 'face 'warning)))
 #+end_src
 
 *** Candidate annotation (marginalia.el)
@@ -1340,7 +1176,7 @@ This section contains all core keybindings of =Emacs-grandview=.
  '("7" . meow-digit-argument)
  '("8" . meow-digit-argument)
  '("9" . meow-digit-argument)
- '("<escape>" . ale-meow-escape)
+ '("<escape>" . +meow-escape)
  '("<backspace>" . meow-pop-selection)
  '("," . meow-inner-of-thing)
  '("." . meow-bounds-of-thing)
@@ -1350,8 +1186,8 @@ This section contains all core keybindings of =Emacs-grandview=.
  '("=" . meow-query-replace)
  '("+" . meow-query-replace-regexp)
  '("^" . meow-last-buffer)
- '("a" . ale-meow-insert)
- '("A" . ale-meow-insert-at-first-non-whitespace)
+ '("a" . +meow-insert)
+ '("A" . +meow-insert-at-first-non-whitespace)
  '("b" . meow-block)
  '("B" . meow-to-block)
  '("c" . meow-change)
@@ -1380,7 +1216,7 @@ This section contains all core keybindings of =Emacs-grandview=.
  '("O" . meow-left-expand)
  '("p" . meow-prev)
  '("P" . meow-open-above)
- '("q" . quit-window)
+ '("q" . +meow-with-key-fallback)
  '("r" . meow-reverse)
  '("R" . repeat)
  '("s" . meow-search)
@@ -1393,7 +1229,7 @@ This section contains all core keybindings of =Emacs-grandview=.
  '("V" . consult-global-mark)
  '("w" . meow-next-word)
  '("W" . meow-back-word)
- '("x" . ale-meow-save)
+ '("x" . +meow-save)
  '("y" . meow-replace)
  '("Y" . meow-yank-pop)
  '("z" . meow-start-kmacro-or-insert-counter)
@@ -1409,13 +1245,13 @@ This section contains all core keybindings of =Emacs-grandview=.
 (meow-leader-define-key
  '("0" . delete-window)
  '("1" . delete-other-windows)
- '("2" . ale-split-window-below)
- '("3" . ale-split-window-right)
+ '("2" . split-window-below)
+ '("3" . split-window-right)
  '("4" . ctl-x-4-prefix)
  '("5" . ctl-x-5-prefix)
  '("8" . insert-char)
  '("9" . grandview-tab-map)
- '("SPC" . ale-meow-with-key-fallback)
+ '("SPC" . +meow-with-key-fallback)
  '("?" . describe-keymap)
  '("/" . describe-symbol)
  '(";" . comment-line)
@@ -1441,7 +1277,7 @@ This section contains all core keybindings of =Emacs-grandview=.
  ("e" . find-emacs-config)
  ("l" . find-library)
  :map grandview-apps-map
- ("o" . ale-opacity-set)
+ ("o" . +opacity-set)
  ("=" . count-words)
  ("n" . ale-tab-next)
  ("p" . ale-tab-previous))
@@ -1455,8 +1291,8 @@ This section contains all core keybindings of =Emacs-grandview=.
 #+begin_src emacs-lisp
 (bind-keys
  :map global-map
- ("M-SPC" . ale-monocle-mode) ; replaced `just-one-space'
- ("C-c m" . ale-show-messages)
+ ;; ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
+ ("C-c m" . +show-messages)
  ("<C-i>" . +simple-pop-local-mark-ring)
  ("C-o" . pop-global-mark)
  ("s-n" . scroll-up-command)
@@ -1471,8 +1307,8 @@ These keybindings are available when the current major mode doesn't define that 
 
 #+begin_src emacs-lisp
 (meow-motion-overwrite-define-key
- '("<escape>" . ale-meow-escape)
- '("/" . ale-meow-with-key-fallback))
+ '("<escape>" . +meow-escape)
+ '("/" . +meow-with-key-fallback))
 #+end_src
 
 * Text editor
@@ -1521,73 +1357,14 @@ though I find that the defaults require no further intervention from my part.
 The =fill.el= library is a tiny wrapper around some Emacs settings and modes that
 are scrattered around several files, which control (i) how paragraphs or
 comments in programming modes should be wrapped to a given column count, and
-(ii) what constitutes a sentence. I put them all together here to make things
-easier to track.
-
-=ale-fill-fill-mode= sets my desired default column width for all buffers, while
-it applies another value for programming modes (in case there is a need to
-control the two cases separately). Those values are stored in the variables
-=ale-fill-default-column= and =ale-fill-prog-mode-column= respectively. My minor
-mode also enables =auto-fill-mode= in text-mode and prog-mode buffers through the
-appropriate hooks. Disabling =ale-fill-fill-mode= will remove all those
-customisations.
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Fill_line_(fill.el)-Autoload-89360f21
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+fill.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; autoload/fill.el --- -*- lexical-binding: t -*-
-
-(defgroup ale-fill ()
-  "Tweak for filling paragraphs."
-  :group 'fill)
-
-(defcustom ale-fill-default-column 80
-  "Default width for `fill-column'."
-  :type 'integer
-  :group 'ale-fill)
-
-(defcustom ale-fill-prog-mode-column 80
-  "`prog-mode' width for `fill-column'.
-Also see `ale-fill-default-column'."
-  :type 'integer
-  :group 'ale-fill)
-
-(defun ale-fill--fill-prog ()
-  "Set local value of `fill-column' for programming modes.
-Meant to be called via `prog-mode-hook'."
-  (setq-local fill-column ale-fill-prog-mode-column))
-
-;;;###autoload
-(define-minor-mode ale-fill-fill-mode
-  "Set up fill-mode and relevant variable."
-  :init-value nil
-  :global t
-  (if ale-fill-fill-mode
-      (progn
-        (setq-default fill-column ale-fill-default-column)
-        (add-hook 'prog-mode-hook #'ale-fill--fill-prog)
-        (add-hook 'text-mode-hook #'turn-on-auto-fill))
-    (setq-default fill-column 80)
-    (remove-hook 'prog-mode-hook #'ale-fill--fill-prog)
-    (remove-hook 'text-mode-hook #'turn-on-auto-fill)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Fill_line_(fill.el)-Config-84572b08
-:END:
+(ii) what constitutes a sentence. Although ~fill-column~ variable is not defined
+in =fill.el=, I believe put them all together here make things easier to track.
 
 #+begin_src emacs-lisp
 (use-package fill
   :straight (:type built-in)
-  :init
-  (ale-fill-fill-mode 1)
-  (setq ale-fill-default-column 80)
-  (setq ale-fill-prog-mode-column 80)
+  :config
+  (setq-default fill-column 80)
   (setq colon-double-space nil)
   (setq adaptive-fill-mode t))
 #+end_src
@@ -1649,42 +1426,6 @@ sure this is a good approach."
 :PROPERTIES:
 :CUSTOM_ID: Text_editor-Input_method_(rime.el)-22bbd2ca
 :END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Input_method_(rime.el)-Autoload-18f7b6ac
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rime.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/rime.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defadvice! +rime-return-ad (fn &rest args)
-  "Make return key (commit script text) compatible with vterm."
-  :around #'rime-return
-  (interactive)
-  (if (eq major-mode 'vterm-mode)
-      (progn
-        (let ((input (rime-lib-get-input)))
-          (execute-kbd-macro (kbd "<escape>"))
-          (toggle-input-method)
-          (dotimes (i (length input))
-            (execute-kbd-macro (kbd (substring input i (+ i 1)))))
-          (toggle-input-method)))
-    (apply fn args)))
-
-;;;###autoload
-(defun ale-rime-candidate-num-fmt (num select-labels)
-  "Format for the number before each candidate."
-  (if select-labels
-      (format "%s " (nth (1- num) select-labels))
-    (format "%d. " num)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Input_method_(rime.el)-Config-bdbaffc4
-:END:
 
 #+begin_src emacs-lisp
 (use-package rime
@@ -1717,6 +1458,38 @@ sure this is a good approach."
   (setq rime-candidate-num-format-function #'ale-rime-candidate-num-fmt))
 #+end_src
 
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Text_editor-Input_method_(rime.el)-Autoload-18f7b6ac
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rime.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+;;;###autoload
+(defadvice! rime-return-ad (fn &rest args)
+  "Make return key (commit script text) compatible with vterm."
+  :around #'rime-return
+  (interactive)
+  (if (eq major-mode 'vterm-mode)
+      (progn
+        (let ((input (rime-lib-get-input)))
+          (execute-kbd-macro (kbd "<escape>"))
+          (toggle-input-method)
+          (dotimes (i (length input))
+            (execute-kbd-macro (kbd (substring input i (+ i 1)))))
+          (toggle-input-method)))
+    (apply fn args)))
+
+;;;###autoload
+(defun ale-rime-candidate-num-fmt (num select-labels)
+  "Format for the number before each candidate."
+  (if select-labels
+      (format "%s " (nth (1- num) select-labels))
+    (format "%d. " num)))
+#+end_src
+
 ** Snippet (yasnippet.el)
 :PROPERTIES:
 :CUSTOM_ID: Text_editor-Snippet_(yasnippet.el)-9ba4f212
@@ -1735,7 +1508,7 @@ sure this is a good approach."
 :CUSTOM_ID: Text_editor-Pair_insertion_(eletric.el)-93d91ccc
 :END:
 
-Emacs labels as `electric' any behaviour that involves contextual auto-insertion
+Emacs labels as =electric= any behaviour that involves contextual auto-insertion
 of characters.
 
 - Indent automatically.
@@ -1764,26 +1537,6 @@ of characters.
   hitting the "compose" key and then an angled bracket (=<= or =>=)
   followed by a quote mark.
 
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Pair_insertion_(eletric.el)-Autoload-a1e7f91e
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+eletric.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/electric.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defun ale-electric-inhibit-< ()
-  (setq-local electric-pair-inhibit-predicate
-              `(lambda (c) (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Text_editor-Pair_insertion_(eletric.el)-Config-b00ad588
-:END:
-
 #+begin_src emacs-lisp
 (use-package electric
   :config
@@ -1809,6 +1562,21 @@ of characters.
   (org-mode . ale-electric-inhibit-<)
   (minibuffer-setup . (lambda () (unless (eq this-command 'eval-expression) (electric-pair-mode 0))))
   (minibuffer-exit . (lambda () (electric-pair-mode 1))))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Text_editor-Pair_insertion_(eletric.el)-Autoload-a1e7f91e
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+eletric.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-electric-inhibit-< ()
+  (setq-local electric-pair-inhibit-predicate
+              `(lambda (c) (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
 #+end_src
 
 ** Parentheses (paren.el / rainbow-delimiters.el)
@@ -1889,147 +1657,6 @@ Summary of what these do:
 :PROPERTIES:
 :CUSTOM_ID: File_management-Find_files_(files.el)-9cfb4a15
 :END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: File_management-Find_files_(files.el)-Autoload-805c2add
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+files.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/files.el --- -*- lexical-binding: t -*-
-
-(defcustom ale-files-dotfiles-repo (getenv "DOTPATH")
-  "doc"
-  :group 'ale :type 'string)
-
-(defcustom ale-files-dir-alist
-  '(((title . "  Photos")       (path . "~/Pictures/"))
-    ((title . "  Videos")       (path . "~/Video/"))
-    ((title . "  Downloads")    (path . "~/Downloads/")))
-  "doc"
-  :group 'files :type '(repeat list))
-
-(defcustom ale-files-cmd-alist
-  '(("video/" ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
-    (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
-  "doc"
-  :group 'files :type '(alist :value-type ((choice list string) list)))
-
-;;;###autoload
-(defun +files-append-metadata (metadata candidates)
-  "Append METADATA for CANDIDATES."
-  (let ((entry (if (functionp metadata)
-                   `(metadata (annotation-function . ,metadata))
-                 `(metadata (category . ,metadata)))))
-    (lambda (string pred action)
-      (if (eq action 'metadata)
-          entry
-        (complete-with-action action candidates string pred)))))
-
-(defun +files--in-directory (dir &optional prompt)
-  "Use `fd' to list files in DIR."
-  (let* ((default-directory dir)
-         (command "fd -H -t f -0")
-         (output (shell-command-to-string command))
-         (files-raw (split-string output "\0" t))
-         (files (+files-append-metadata 'file files-raw))
-         (file (completing-read (or prompt "Open file: ") files)))
-    (find-file (concat dir "/" file))))
-
-(cl-defun +files--match-mime (file)
-  "To determine if `FILE' can be matched by `ale-files-cmd-alist'."
-  (setq file (expand-file-name file))
-  (let ((meta (with-temp-buffer
-                (call-process "file" nil t nil "-bi" file) (buffer-string))))
-    (when (or (not (string-match "charset=binary" meta))
-              (string-match "inode/x-empty" meta))
-      (cl-return-from +files--match-mime))
-    (pcase-dolist (`(,re-or-exts ,cmd) ale-files-cmd-alist)
-      (if (listp re-or-exts)
-          (let ((ext (file-name-extension file)))
-            (when (member ext re-or-exts)
-              (cl-return-from +files--match-mime cmd)))
-        (when (string-match re-or-exts meta)
-          (cl-return-from +files--match-mime cmd))))))
-
-(defun +files--open-externally (entry &optional cmd args)
-  "Open file using external shell command."
-  (let ((process-connection-type nil)
-        (entry (shell-quote-argument (expand-file-name entry))))
-    (unless (executable-find cmd)
-      (user-error (format "Install `%s' to preview %s" cmd entry)))
-    (setq args (cl-substitute entry "%f" args :test 'string=))
-    (let ((default-directory "~"))
-      (apply #'start-process "" nil "nohup" (append (list cmd) args)))))
-
-;;;###autoload
-(defadvice! +find-library-ad (fn &rest args)
-  "Always follow symlink when using `find-library'.
-Package managers like `straight.el' use symlink to manage
-package/libraries. This advice will enable user always find
-libraries's truename."
-  :around #'find-library
-  (let ((vc-follow-symlinks t)) (apply fn args)))
-
-(defadvice! +files-find-file-ad (fn file &rest args)
-  "Advisor of `find-file' that opens some types of file externally."
-  :around #'find-file
-  :around #'find-file-other-window
-  (if-let ((match (+files--match-mime file)))
-      (let ((cmd (car match))
-            (args (cdr match)))
-        (add-to-list 'recentf-list file)
-        (+files--open-externally file cmd args))
-    (apply fn file args)))
-
-;;;###autoload
-(defun +rename-file-and-buffer (name)
-  "Apply NAME to current file and rename its buffer.
-Do not try to make a new directory or anything fancy."
-  (interactive
-   (list (read-string "Rename current file: " (buffer-file-name))))
-  (let* ((file (buffer-file-name)))
-    (if (vc-registered file)
-        (vc-rename-file file name)
-      (rename-file file name))
-    (set-visited-file-name name t t)))
-
-;;;###autoload
-(defun +find-dotfiles ()
-  "Open files in dotfiles repo."
-  (interactive)
-  (unless ale-files-dotfiles-repo
-    (user-error "`ale-files-dot-repo' is undefined"))
-  (+files--in-directory ale-files-dotfiles-repo " Dotfiles: "))
-
-;;;###autoload
-(defun +find-file-sudo ()
-  "Reopen current file as root."
-  (interactive)
-  (let ((file (buffer-file-name)))
-  (find-file (if (file-writable-p file)
-                 file
-               (concat "/sudo::" file)))))
-
-;;;###autoload
-(defun +find-files-in-user-dirs ()
-  "Open files in directories defined in `ale-files-dir-alist'."
-  (interactive)
-  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ale-files-dir-alist))
-         (get-item (lambda (s field) (cl-dolist (i ale-files-dir-alist)
-                                 (when (string= s (cdr (assq 'title i)))
-                                   (cl-return (cdr (assq field i)))))))
-         (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
-         (cands (+files-append-metadata annotation cands-raw))
-         (title (completing-read "Open: " cands nil t))
-         (path (funcall get-item title 'path)))
-    (+files--in-directory path (concat title ": "))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: File_management-Find_files_(+files.el)-Config-003e8b7d
-:END:
 
 #+begin_src emacs-lisp
 (use-package files
@@ -2049,12 +1676,124 @@ Do not try to make a new directory or anything fancy."
   :bind
   (nil
    :map grandview-files-map
-   ("." . +find-dotfiles)
-   ("r" . +rename-file-and-buffer)
-   ("u" . +find-files-in-user-dirs)))
+   ("." . ale-files-find-dotfiles)
+   ("r" . ale-files-rename-file-and-buffer)
+   ("u" . ale-files-find-user-files)))
   #+end_src
 
-** Mailcap
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: File_management-Find_files_(files.el)-Autoload-805c2add
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+files.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(defcustom ale-files-dotfiles-repo (getenv "DOTPATH")
+  "Doc."
+  :group 'ale :type 'string)
+
+(defcustom ale-files-dir-alist
+  '(((title . "  Photos")       (path . "~/Pictures/"))
+    ((title . "  Videos")       (path . "~/Video/"))
+    ((title . "  Downloads")    (path . "~/Downloads/")))
+  "Doc."
+  :group 'ale :type '(repeat list))
+
+;;;###autoload
+(defcustom ale-files-cmd-alist
+  '(("video/" ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
+    (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
+  "Doc."
+  :group 'ale :type '(alist :value-type ((choice list string) list)))
+
+;;;###autoload
+(defadvice! find-file-ad (fn file &rest args)
+  "Advisor of `find-file' that opens some types of file externally."
+  :around #'find-file
+  :around #'find-file-other-window
+  (setq file (expand-file-name file))
+  (let ((meta (with-temp-buffer
+                (call-process "file" nil t nil "-bi" file) (buffer-string)))
+        (ext (file-name-extension file)))
+    (cl-loop for (re-or-exts (cmd . sh-args)) in ale-files-cmd-alist do
+             (cond ((or (and (listp re-or-exts) (member ext re-or-exts))
+                        (and (stringp re-or-exts) (string-match re-or-exts meta)))
+                    (add-to-list 'recentf-list file)
+                    (let ((process-connection-type nil)
+                          (entry (shell-quote-argument (expand-file-name file))))
+                      (unless (executable-find cmd)
+                        (user-error (format "Install `%s' to open %s" cmd entry)))
+                      (setq sh-args (cl-substitute entry "%f" sh-args :test 'string=))
+                      (let ((default-directory "~"))
+                        (apply #'start-process "" nil "nohup" (append (list cmd) sh-args)))))
+                   (t (apply fn file args))))))
+
+;;;###autoload
+(defadvice! find-library-ad (fn &rest args)
+  "Always follow symlink when using `find-library'.
+Package managers like `straight.el' use symlink to manage
+package/libraries. This advice will enable user always find
+libraries's truename."
+  :around #'find-library
+  (let ((vc-follow-symlinks t)) (apply fn args)))
+
+(defun ale-files--in-directory (dir &optional prompt)
+  "Use `fd' to list files in DIR."
+  (let* ((default-directory dir)
+         (command "fd -H -t f -0")
+         (output (shell-command-to-string command))
+         (files-raw (split-string output "\0" t))
+         (files (+minibuffer-append-metadata 'file files-raw))
+         (file (completing-read (or prompt "Open file: ") files)))
+    (find-file (concat dir "/" file))))
+
+;;;###autoload
+(defun ale-files-rename-file-and-buffer (name)
+  "Apply NAME to current file and rename its buffer.
+Do not try to make a new directory or anything fancy."
+  (interactive
+   (list (read-string "Rename current file: " (buffer-file-name))))
+  (let* ((file (buffer-file-name)))
+    (if (vc-registered file)
+        (vc-rename-file file name)
+      (rename-file file name))
+    (set-visited-file-name name t t)))
+
+;;;###autoload
+(defun ale-files-find-dotfiles ()
+  "Open files in dotfiles repo."
+  (interactive)
+  (unless ale-files-dotfiles-repo
+    (user-error "`ale-files-dot-repo' is undefined"))
+  (ale-files--in-directory ale-files-dotfiles-repo " Dotfiles: "))
+
+;;;###autoload
+(defun ale-files-sudo-find ()
+  "Reopen current file as root."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (find-file (if (file-writable-p file)
+                   file
+                 (concat "/sudo::" file)))))
+
+;;;###autoload
+(defun ale-files-find-user-files ()
+  "Open files in directories defined in `ale-files-dir-alist'."
+  (interactive)
+  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ale-files-dir-alist))
+         (get-item (lambda (s field) (cl-dolist (i ale-files-dir-alist)
+                                       (when (string= s (cdr (assq 'title i)))
+                                         (cl-return (cdr (assq field i)))))))
+         (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
+         (cands (+minibuffer-append-metadata annotation cands-raw))
+         (title (completing-read "Open: " cands nil t))
+         (path (funcall get-item title 'path)))
+    (ale-files--in-directory path (concat title ": "))))
+#+end_src
+
+** MIME media types (mailcap.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Mailcap-9b8cb1f9
 :END:
@@ -2089,6 +1828,7 @@ Keep a record of all recently opened files.
   (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
   (recentf-mode 1))
 #+end_src
+
 ** Restore file place (saveplace.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Restore_file_place_(saveplace.el)-7c8637a4
@@ -2305,6 +2045,28 @@ users deserve a file manager better than those popular ones on terminal such as
 :CUSTOM_ID: File_management-Project_management_(project.el)-6248e5d2
 :END:
 
+#+begin_src emacs-lisp
+(use-package project
+  :straight (:type built-in)
+  :config
+  (setq project-switch-commands
+        '((project-find-file "File" ?\r)
+          (ale-project-find-subdir "Subdir" ?s)
+          (project-find-regexp "Grep" ?g)
+          (project-dired "Dired" ?d)
+          (ale-project-retrieve-tag "Tag switch" ?t)
+          (ale-project-magit-status "Magit" ?m)
+          (ale-project-commit-log "Log VC" ?l)))
+  (setq ale-project-commit-log-limit 25)
+  :bind
+  (nil
+   :map project-prefix-map
+   ("l" . ale-project-commit-log)
+   ("m" . ale-project-magit-status)
+   ("s" . ale-project-find-subdir)
+   ("t" . ale-project-retrieve-tag)))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: File_management-Project_management_(project.el)-Autoload-5c95cd8c
@@ -2312,21 +2074,17 @@ users deserve a file manager better than those popular ones on terminal such as
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/project.el --- -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t -*-
 
 (require 'cl-lib)
 (require 'project)
 (require 'vc)
 
-(defgroup ale-project ()
-  "Extensions for project.el and related libraries."
-  :group 'project)
-
 (defcustom ale-project-commit-log-limit 25
   "Limit commit logs for project to N entries by default.
 A value of 0 means 'unlimited'."
   :type 'integer
-  :group 'ale-project)
+  :group 'ale)
 
 (cl-defmethod project-root ((project (head local)))
   "Project root for PROJECT with HEAD and LOCAL."
@@ -2366,7 +2124,7 @@ DIRS."
   (let* ((pr (project-current t))
          (dir (project-root pr))
          (dirs-raw (ale-project--directory-subdirs dir))
-         (subdirs (+files-append-metadata 'file dirs-raw))
+         (subdirs (+minibuffer-append-metadata 'file dirs-raw))
          (directory (completing-read "Select Project subdir: " subdirs)))
     (dired directory)))
 
@@ -2427,33 +2185,6 @@ With a universal prefix to choose project anyway."
             (display-buffer-alist '(("magit: .*" (display-buffer-same-window)))))
         (call-interactively 'magit-status))
     (project-find-file)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: File_management-Project_management_(project.el)-Config-bce27aca
-:END:
-
-#+begin_src emacs-lisp
-(use-package project
-  :straight (:type built-in)
-  :config
-  (setq project-switch-commands
-        '((project-find-file "File" ?\r)
-          (ale-project-find-subdir "Subdir" ?s)
-          (project-find-regexp "Grep" ?g)
-          (project-dired "Dired" ?d)
-          (ale-project-retrieve-tag "Tag switch" ?t)
-          (ale-project-magit-status "Magit" ?m)
-          (ale-project-commit-log "Log VC" ?l)))
-  (setq ale-project-commit-log-limit 25)
-  :bind
-  (nil
-   :map project-prefix-map
-   ("l" . ale-project-commit-log)
-   ("m" . ale-project-magit-status)
-   ("s" . ale-project-find-subdir)
-   ("t" . ale-project-retrieve-tag)))
 #+end_src
 
 ** Writable dired (wdired.el)
@@ -2541,6 +2272,32 @@ look like which can be described briefly as follows:
 + indent text according to outline structure
 + display inline images in url automatically
 
+#+begin_src emacs-lisp
+(use-package org
+  :straight (:type built-in)
+  :hook
+  (org-mode . ale-org-font-setup)
+  (org-mode . org-indent-mode)
+  :config
+  (setq org-adapt-indentation nil)
+  (setq org-hide-leading-stars t)
+  (setq org-startup-folded t)
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-ellipsis " ▾")
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+  (setq org-image-actual-width nil)
+  (setq org-display-remote-inline-images 'download)
+  :bind
+  (nil
+   :map grandview-org-map
+   ("o" . consult-org-heading)
+   :map org-mode-map
+   ("C-c S-l" . org-toggle-link-display)
+   ("C-c C-S-l" . org-insert-last-stored-link)))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Org_(org.el)-Autoload-8e95a36e
@@ -2548,7 +2305,7 @@ look like which can be described briefly as follows:
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/org.el -*- lexical-binding: t; -*-
+;;; -*- lexical-binding: t; -*-
 
 ;;;###autoload
 (defun ale-org-font-setup ()
@@ -2581,39 +2338,19 @@ look like which can be described briefly as follows:
                (apply #'elisp-get-fnsym-args-string sym-info)))))
 #+end_src
 
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Org_(org.el)-Config-ca0b4f5b
-:END:
-
-#+begin_src emacs-lisp
-(use-package org
-  :straight (:type built-in)
-  :hook
-  (org-mode . ale-org-font-setup)
-  (org-mode . org-indent-mode)
-  :config
-  (setq org-adapt-indentation nil)
-  (setq org-hide-leading-stars t)
-  (setq org-startup-folded t)
-  (setq org-confirm-babel-evaluate nil)
-  (setq org-ellipsis " ▾")
-  (setq org-agenda-start-with-log-mode t)
-  (setq org-log-done 'time)
-  (setq org-log-into-drawer t)
-  (setq org-image-actual-width nil)
-  (setq org-display-remote-inline-images 'download)
-  :bind
-  (nil
-   :map org-mode-map
-   ("C-c S-l" . org-toggle-link-display)
-   ("C-c C-S-l" . org-insert-last-stored-link)))
-#+end_src
-
 ** Identifiers for org entries (org-id.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Identifiers_for_org_entries_(org-id.el)-3ab4ce89
 :END:
+
+#+begin_src emacs-lisp
+(use-package org-id
+  :straight (:type built-in)
+  :config
+  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+  :hook
+  (org-mode . ale-org-id-update))
+#+end_src
 
 *** Autoload
 :PROPERTIES:
@@ -2711,20 +2448,6 @@ somewhere. ie, #+OPTIONS: auto-id:t"
               (when (and (eq major-mode 'org-mode)
                          (eq buffer-read-only nil))
                 (ale-org-add-ids-to-headlines-in-file)))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Identifiers_for_org_entries_(org-id.el)-Config-3343d6d4
-:END:
-
-#+begin_src emacs-lisp
-(use-package org-id
-  :straight (:type built-in)
-  :config
-  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
-  :hook
-  (org-mode . ale-org-id-update))
 #+end_src
 
 ** Literate programming (ob.el)
@@ -2847,13 +2570,36 @@ generated by Org mode (or Markdown mode) is left untouched.
   (org-roam-setup))
 #+end_src
 
-#+RESULTS:
-: org-roam-dailies-capture-today
-
 ** Slide (org-tree-slide.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Slide_(org-tree-slide.el)-bc91c920
 :END:
+
+=org-tree-slide.el= is a presentation tool using =org-mode=.
+
+#+begin_src emacs-lisp
+(use-package org-tree-slide
+  :bind
+  (nil
+   :map org-tree-slide-mode-map
+   ("<left>" . org-tree-slide-move-previous-tree)
+   ("<right>" . org-tree-slide-move-next-tree)
+   :map grandview-org-map
+   ("S" . org-tree-slide-mode))
+  :config
+  (setq org-tree-slide-activate-message " ")
+  (setq org-tree-slide-deactivate-message " ")
+  (setq org-tree-slide-modeline-display nil)
+  (setq org-tree-slide-heading-emphasis t)
+  (setq org-tree-slide-breadcrumbs
+        (propertize " ⯈ " 'display `(height ,(face-attribute 'org-level-1 :height))))
+  (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
+  (add-hook 'org-tree-slide-after-narrow-hook #'+frame-cursor-dim-mode)
+  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
+  (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
+  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
+  (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header))
+#+end_src
 
 *** Autoload
 :PROPERTIES:
@@ -2862,7 +2608,7 @@ generated by Org mode (or Markdown mode) is left untouched.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/org-tree-slide.el -*- lexical-binding: t; -*-
+;;; -*- lexical-binding: t; -*-
 
 (defcustom +org-tree-slide-text-scale 1.5
   "Text scaling for `org-tree-slide-mode'."
@@ -2913,47 +2659,16 @@ Some number of BLANK-LINES will be shown below the header."
   (cond (org-tree-slide-mode
          (when (bound-and-true-p flyspell-mode) (flyspell-mode -1))
          (text-scale-set +org-tree-slide-text-scale)
-         (ale-monocle-mode +1)
+         (+monocle-mode +1)
          (when (fboundp 'writeroom-mode) (writeroom-mode +1))
          (ignore-errors (org-latex-preview '(4))))
         (t
          (text-scale-set 0)
          (when (fboundp 'writeroom-mode) (writeroom-mode -1))
-         (ale-monocle-mode -1)
+         (+monocle-mode -1)
          (+frame-cursor-dim-mode -1)
          (org-clear-latex-preview)
          (org-mode))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Org_mode-Slide_(org-tree-slide.el)-Config-94b611b2
-:END:
-
-=org-tree-slide.el= is a presentation tool using =org-mode=.
-
-#+begin_src emacs-lisp
-(use-package org-tree-slide
-  :bind
-  (nil
-   :map org-tree-slide-mode-map
-   ("<left>" . org-tree-slide-move-previous-tree)
-   ("<right>" . org-tree-slide-move-next-tree)
-   :map grandview-org-map
-   ("S" . org-tree-slide-mode))
-  :config
-  (setq org-tree-slide-activate-message " ")
-  (setq org-tree-slide-deactivate-message " ")
-  (setq org-tree-slide-modeline-display nil)
-  (setq org-tree-slide-heading-emphasis t)
-  (setq org-tree-slide-breadcrumbs
-        (propertize " ⯈ " 'display `(height ,(face-attribute 'org-level-1 :height))))
-  (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
-  (add-hook 'org-tree-slide-after-narrow-hook #'+frame-cursor-dim-mode)
-  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
-  (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
-  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
-  (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header))
 #+end_src
 
 * User interface
@@ -2983,6 +2698,30 @@ Protesilaos Stavrou.
 :CUSTOM_ID: User_interface-Fonts_(fonts.el)-28c16e2d
 :END:
 
+Here are some recommended fonts for programming or general text editing.
+
+- =Victor Mono=
+- =Sarasa Mono SC=
+- =Fira Code Retina=
+
+A list of my favorite CJK fonts.
+
+- =LXGW WenKai Mono=
+- =HarmonyOS Sans SC Light=
+- =Smartisan Compact CNS=
+- =青鸟华光简报宋二=
+- =FZSuXinShiLiuKaiS-R-GB=
+
+#+begin_src emacs-lisp
+(setq ale-default-font "Victor Mono")
+(setq ale-fixed-font "Sarasa Mono SC")
+(setq ale-variable-font "Sarasa Mono SC")
+(setq ale-zh-font "LXGW WenKai Mono")
+(if (daemonp)
+    (add-hook 'after-make-frame-functions #'ale-font-setup)
+  (add-hook 'emacs-startup-hook #'ale-font-setup))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Fonts_(fonts.el)-Autoload-fc8da162
@@ -2990,7 +2729,7 @@ Protesilaos Stavrou.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/fonts.el --- -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t -*-
 
 (defvar ale-font-size 32)
 (defvar ale-default-font "Victor Mono")
@@ -3040,79 +2779,16 @@ Protesilaos Stavrou.
     (overlay-put ov 'face 'font-lock-comment-face)))
 #+end_src
 
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Fonts_(fonts.el)-Config-1d6e7f5b
-:END:
-
-Here are some recommended fonts for programming or general text editing.
-
-- =Victor Mono=
-- =Sarasa Mono SC=
-- =Fira Code Retina=
-
-A list of my favorite CJK fonts.
-
-- =LXGW WenKai Mono=
-- =HarmonyOS Sans SC Light=
-- =Smartisan Compact CNS=
-- =青鸟华光简报宋二=
-- =FZSuXinShiLiuKaiS-R-GB=
-
-#+begin_src emacs-lisp
-(setq ale-default-font "Victor Mono")
-(setq ale-fixed-font "Sarasa Mono SC")
-(setq ale-variable-font "Sarasa Mono SC")
-(setq ale-zh-font "LXGW WenKai Mono")
-(if (daemonp)
-    (add-hook 'after-make-frame-functions #'ale-font-setup)
-  (add-hook 'emacs-startup-hook #'ale-font-setup))
-#+end_src
-
-** Frame (frame.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Frame_(frame.el)-34e11fb3
-:END:
-
-Frame settings.
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Frame_(frame.el)-Autoload-ac196a91
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+frame.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/frame.el --- -*- lexical-binding: t -*-
-
-(defvar +frame-cursor-saved-color
-  (frame-parameter nil 'cursor-color))
-
-(defcustom +frame-cursor-dim-color "#606060"
-  "Cursor color for `+frame-cursor-dim-mode'."
-  :group 'cursor :type 'string)
-
-;;;###autoload
-(define-minor-mode +frame-cursor-dim-mode
-  "Enable dimmed `cursor-color' for current frame."
-  :global t
-  :lighter nil
-  :group 'cursor
-  (if +frame-cursor-dim-mode
-      (progn
-        (setq-local cursor-type nil)
-        (blink-cursor-mode -1)
-        (set-cursor-color +frame-cursor-dim-color))
-    (blink-cursor-mode +1)
-    (set-cursor-color +frame-cursor-saved-color)))
-#+end_src
-
 ** Tab (tab.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Tab_(+tab.el)-29c791c9
 :END:
 
 Tabs for frequently used buffers.
+
+#+begin_src emacs-lisp
+(ale-tab-mode)
+#+end_src
 
 *** Autoload
 :PROPERTIES:
@@ -3121,9 +2797,7 @@ Tabs for frequently used buffers.
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/+tab.el --- Tabs for frequently used buffers -*- lexical-binding: t -*-
-
-(require 'cl-lib)
+;;; -*- lexical-binding: t -*-
 
 (defvar ale-tab-count-freq-idle-time 1
   "Add used frequency after being idle for this much secs.")
@@ -3418,15 +3092,6 @@ plug-in an UI for tabs."
                  #'ale-tab-update-buffer-list)))
 #+end_src
 
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Tab_(+tab.el)-Config-f7f3767f
-:END:
-
-#+begin_src emacs-lisp
-(ale-tab-mode)
-#+end_src
-
 ** Modeline (mode-line.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Modeline_(+modeline.el)-e6da362f
@@ -3448,6 +3113,12 @@ Besides, it's easy to define your own mode line segments with
 ~ale-define-modeline~, and don't forget to put your newly defined segments in
 ~ale-mode-line-format~.
 
+#+begin_src emacs-lisp
+(setq! ale-mode-line-format
+       '(:left (editing-state macro-rec modified tab) :right (position input-method)))
+(ale-modeline-mode)
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Modeline_(+modeline.el)-Autoload-22a39294
@@ -3455,7 +3126,7 @@ Besides, it's easy to define your own mode line segments with
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/+modeline.el --- A minimal mode-line. -*- lexical-binding: t; -*-
+;;; -*- lexical-binding: t; -*-
 
 (defcustom ale-mode-line-format
   '(:left (editing-state macro-rec modified tab) :right (position input-method))
@@ -3516,17 +3187,6 @@ The SEGMENTs are defined by `ale-define-mode-line'."
   (if ale-modeline-mode
       (setq-default mode-line-format ale-mode-line-format)
     (setq-default mode-line-format ale-modeline--default-mode-line)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: User_interface-Modeline_(+modeline.el)-Config-75bb6088
-:END:
-
-#+begin_src emacs-lisp
-(setq! ale-mode-line-format
-       '(:left (editing-state macro-rec modified tab) :right (position input-method)))
-(ale-modeline-mode)
 #+end_src
 
 ** Frame margin (fringe.el)
@@ -3659,35 +3319,12 @@ code.  Do it with =M-x find-library transpose-frame=.
 :CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-0cf2f18a
 :END:
 
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-Autoload-5cddd1d6
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+writeroom-mode.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/writeroom-mode.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defun +visual-fill-center-text ()
-  "Centering text."
-  (interactive)
-  (setq-local visual-fill-column-width 120)
-  (setq-local visual-fill-column-center-text t)
-  (visual-fill-column-mode 1))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-Config-d542b73f
-:END:
-
 #+begin_src emacs-lisp
 (use-package writeroom-mode
   :after-call find-file-hook
   :hook
   (after-init . global-writeroom-mode)
-  (org-mode . +visual-fill-center-text)
+  (org-mode . ale-visual-fill-center-text)
   :config
   (setq writeroom-width 128
         writeroom-bottom-divider-width 0
@@ -3697,6 +3334,24 @@ code.  Do it with =M-x find-library transpose-frame=.
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
         writeroom-mode-line t))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-Autoload-5cddd1d6
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+writeroom-mode.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-visual-fill-center-text ()
+  "Centering text."
+  (interactive)
+  (setq-local visual-fill-column-width 120)
+  (setq-local visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
 #+end_src
 
 ** Key bindings hint (which-key.el)
@@ -3775,6 +3430,133 @@ control over the buffer list and is more powerful overall.
 :CUSTOM_ID: Utils-9783dd7c
 :END:
 
+** Keyboard version right-click (embark.el)
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-9bcc9b5b
+:END:
+
+This package provides a sort of right-click contextual menu for Emacs, accessed
+through the ~embark-act~ command (which you should bind to a convenient key),
+offering you relevant actions to use on a target determined by the context.
+
+#+begin_src emacs-lisp
+(use-package embark
+  :after-call dired-after-readin-hook minibuffer-setup-hook
+  :bind
+  (("C-." . embark-act)
+   :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
+   :map embark-collect-mode-map ("C-." . embark-act))
+  :config
+  (use-package embark-consult :demand t)
+  (ale-embark-keymaps 1)
+  (setq embark-quit-after-action t))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Completion_framework-Keyboard_version_right-click_(embark.el)-Autoload-81b70035
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+embark.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(autoload 'consult-grep "consult")
+(autoload 'consult-line "consult")
+(autoload 'consult-imenu "consult-imenu")
+(autoload 'consult-outline "consult")
+
+(defvar ale-embark-become-general-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "g") 'consult-grep)
+    map)
+  "General custom cross-package `embark-become' keymap.")
+
+(defvar ale-embark-become-line-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "l") 'consult-line)
+    (define-key map (kbd "i") 'consult-imenu)
+    (define-key map (kbd "s") 'consult-outline) ; as my default is 'M-s s'
+    map)
+  "Line-specific custom cross-package `embark-become' keymap.")
+
+(defvar embark-become-file+buffer-map)
+(autoload 'project-switch-to-buffer "project")
+(autoload 'project-find-file "project")
+
+(defvar ale-embark-become-file+buffer-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map embark-become-file+buffer-map)
+    (define-key map (kbd "B") 'project-switch-to-buffer)
+    (define-key map (kbd "F") 'project-find-file)
+    map)
+  "File+buffer custom cross-package `embark-become' keymap.")
+
+(defvar embark-become-keymaps)
+
+;;;###autoload
+(define-minor-mode ale-embark-keymaps
+  "Add or remove keymaps from Embark.
+This is based on the value of `ale-embark-add-keymaps'
+and is meant to keep things clean in case I ever wish to disable
+those so-called 'extras'."
+  :init-value nil
+  :global t
+  (let ((maps '(ale-embark-become-general-map
+                ale-embark-become-line-map
+                ale-embark-become-file+buffer-map)))
+    (if ale-embark-keymaps
+        (dolist (map maps)
+          (cl-pushnew map embark-become-keymaps))
+      (setq embark-become-keymaps
+            (dolist (map maps)
+              (delete map embark-become-keymaps))))))
+#+end_src
+
+** Insert current time (insert-timedate.el)
+:PROPERTIES:
+:CUSTOM_ID: Utils-Insert_current_time_(insert-timedate.el)-93ee0459
+:END:
+
+A simple command to insert current date (optionally with UTC time).
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Utils-Insert_current_time_(insert-timedate.el)-Autoload-a31d74fe
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+insert-timedate.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(defcustom ale-date-specifier "%F"
+  "Date specifier for `format-time-string'.
+Used by `ale-insert-date'."
+  :type 'string
+  :group 'ale)
+
+(defcustom ale-time-specifier "%R %z"
+  "Time specifier for `format-time-string'.
+Used by `ale-insert-date'."
+  :type 'string
+  :group 'ale)
+
+;;;###autoload
+(defun ale-insert-date (&optional arg)
+  "Insert the current date as `ale-date-specifier'.
+With optional prefix ARG (\\[universal-argument]) also append the
+current time understood as `ale-time-specifier'.  When region is
+active, delete the highlighted text and replace it with the
+specified date."
+  (interactive "P")
+  (let* ((date ale-date-specifier)
+         (time ale-time-specifier)
+         (format (if arg (format "%s %s" date time) date)))
+    (when (use-region-p)
+      (delete-region (region-beginning) (region-end)))
+    (insert (format-time-string format))))
+#+end_src
+
 ** Window motions (ace-window.el)
 :PROPERTIES:
 :CUSTOM_ID: Utils-Window_motions_(ace-window.el)-42fdc61e
@@ -3794,6 +3576,35 @@ Index based window motions.
 :PROPERTIES:
 :CUSTOM_ID: Utils-Vterm_(vterm.el)-821599f4
 :END:
+
+#+begin_src emacs-lisp
+(use-package vterm
+  :config
+  (ale-vterm-mux-mode)
+  (setq vterm-max-scrollback 5000)
+  (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
+  (set-face-attribute 'vterm-color-black nil :foreground "#111111")
+  (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
+  (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
+  :bind
+  (("M--" . ale-vterm-toggle)
+   :map vterm-mode-map
+   ("M--" . ale-vterm-toggle)
+   ("M-;" . ale-vterm-new)
+   ("M-'" . vterm-send-M-apostrophe)
+   ("M-\"" . vterm-send-M-quote)
+   ("M-/" . vterm-send-M-/)
+   ("M-." . ale-vterm-next)
+   ("M-," . ale-vterm-prev)
+   ("M-RET" . vterm-send-M-return)
+   ("s-n" . vterm-next-prompt)
+   ("s-p" . vterm-previous-prompt)
+   ("S-SPC" . nil)
+   ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
+   ("<C-i>" . vterm-send-C-i)
+   ("C-<delete>" . vterm-send-C-delete)
+   ("C-<return>" . vterm-send-F5)))
+#+end_src
 
 *** Autoload
 :PROPERTIES:
@@ -3958,40 +3769,6 @@ Used as a hook function added to `kill-buffer-hook'."
     (remove-hook 'kill-buffer-hook #'ale-vterm--kill-buffer)))
 #+end_src
 
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Utils-Vterm_(vterm.el)-Config-40fc4cd3
-:END:
-
-#+begin_src emacs-lisp
-(use-package vterm
-  :config
-  (ale-vterm-mux-mode)
-  (setq vterm-max-scrollback 5000)
-  (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
-  (set-face-attribute 'vterm-color-black nil :foreground "#111111")
-  (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
-  (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
-  :bind
-  (("M--" . ale-vterm-toggle)
-   :map vterm-mode-map
-   ("M--" . ale-vterm-toggle)
-   ("M-;" . ale-vterm-new)
-   ("M-'" . vterm-send-M-apostrophe)
-   ("M-\"" . vterm-send-M-quote)
-   ("M-/" . vterm-send-M-/)
-   ("M-." . ale-vterm-next)
-   ("M-," . ale-vterm-prev)
-   ("M-RET" . vterm-send-M-return)
-   ("s-n" . vterm-next-prompt)
-   ("s-p" . vterm-previous-prompt)
-   ("S-SPC" . nil)
-   ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
-   ("<C-i>" . vterm-send-C-i)
-   ("C-<delete>" . vterm-send-C-delete)
-   ("C-<return>" . vterm-send-F5)))
-#+end_src
-
 ** Git porcelain (magit.el)
 :PROPERTIES:
 :CUSTOM_ID: Utils-Git_porcelain_(magit.el)-0ececb89
@@ -4034,35 +3811,6 @@ made for this package and built-in help buffer:
 - open new window when invoking =helpful-visit-references=.  auto
 - focus newly opened help buffer (same behaviour as helpful.el)
 
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: Utils-Helpful_(helpful.el)-Autoload-f30f62e5
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+helpful.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/helpful.el --- -*- lexical-binding: t -*-
-
-(defvar ale-helpful-initialized nil)
-
-;;;###autoload
-(defun ale-helpful-mode-hook ()
-  ;; FIXME: A better way?
-  (setq ale-helpful-initialized nil)
-  (advice-add 'find-file :before
-              (lambda (&rest _)
-                (when (and (not ale-helpful-initialized) (derived-mode-p 'helpful-mode))
-                  (switch-to-buffer "*scratch*")
-                  (switch-to-prev-buffer)
-                  (setq ale-helpful-initialized t))))
-  (visual-line-mode))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Utils-Helpful_(helpful.el)-Config-e62e0f9f
-:END:
-
 #+begin_src emacs-lisp
 (use-package helpful
   :hook (helpful-mode . ale-helpful-mode-hook)
@@ -4077,6 +3825,30 @@ made for this package and built-in help buffer:
   :config
   (defvar read-symbol-positions-list nil)
   (setq find-function-C-source-directory "~/.cache/paru/clone/emacs-git/src/emacs-git/src"))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Utils-Helpful_(helpful.el)-Autoload-f30f62e5
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+helpful.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+(defvar ale-helpful-initialized nil)
+
+;;;###autoload
+(defun ale-helpful-mode-hook ()
+  ;; FIXME: A better way?
+  (setq ale-helpful-initialized nil)
+  (advice-add 'find-file :before
+              (lambda (&rest _)
+                (when (and (not ale-helpful-initialized) (derived-mode-p 'helpful-mode))
+                  (switch-to-buffer "*scratch*")
+                  (switch-to-prev-buffer)
+                  (setq ale-helpful-initialized t))))
+  (visual-line-mode))
 #+end_src
 
 ** Emacs Manual (info.el)
@@ -4118,6 +3890,22 @@ made for this package and built-in help buffer:
 :PROPERTIES:
 :CUSTOM_ID: Utils-Ripgrep_(rg.el)-c0a0cb18
 :END:
+
+A search package based on the ripgrep command line tool.  It allows you to
+interactively create searches, doing automatic searches based on the editing
+context, refining and modifying search results and much more.  It is also highly
+configurable to be able to fit different users' needs.
+
+#+begin_src emacs-lisp
+(use-package rg
+  :config
+  (ale-rg-setup)
+  :bind
+  (nil
+   :map grandview-prog-map
+   ("p" . rg-project-all-files-no-ask)))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-34255532
@@ -4129,7 +3917,7 @@ The purpose of the function =ale-rg-setup= is to avoid executing
 some deps that we don't need at startup.
 
 #+begin_src emacs-lisp
-;;; ale-rg.el -*- lexical-binding: t; -*-
+;;; -*- lexical-binding: t; -*-
 
 ;;;###autoload
 (defun ale-rg-setup ()
@@ -4140,21 +3928,6 @@ some deps that we don't need at startup.
     :dir project :files "all"))
 
 (provide 'ale-rg)
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Utils-Ripgrep_(rg.el)-Config-83b3d991
-:END:
-
-#+begin_src emacs-lisp
-(use-package rg
-  :config
-  (ale-rg-setup)
-  :bind
-  (nil
-   :map grandview-prog-map
-   ("p" . rg-project-all-files-no-ask)))
 #+end_src
 
 ** Writable grep (wgrep.el)
@@ -4246,6 +4019,12 @@ regexp .etc).
 :CUSTOM_ID: Utils-Murl_(murl.el)-5ad2a63e
 :END:
 
+#+begin_src emacs-lisp
+(bind-keys
+ :map grandview-apps-map
+ ("m" . murl-open))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: Utils-Murl_(murl.el)-Autoload-d389a439
@@ -4253,7 +4032,7 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/murl.el -*- lexical-binding: t; -*-
+;;; -*- lexical-binding: t; -*-
 
 (require 'json)
 
@@ -4286,21 +4065,10 @@ regexp .etc).
           (write-region (point-min) (point-max) murl-list-file)))))
   (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) (murl--playlist)))
          (annotation (lambda (s) (marginalia--documentation (murl--get-attr s 'url))))
-         (cands (+files-append-metadata annotation cands-raw))
+         (cands (+minibuffer-append-metadata annotation cands-raw))
          (title (completing-read "murls: " cands))
          (sub (murl--get-attr title 'sub)))
     (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (murl--get-attr title 'url))))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: Utils-Murl_(murl.el)-Config-116a8b64
-:END:
-
-#+begin_src emacs-lisp
-(bind-keys
- :map grandview-apps-map
- ("m" . murl-open))
 #+end_src
 
 ** Dictionary (fanyi.el)
@@ -4504,31 +4272,6 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-368adfca
 :END:
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-6f32ef54
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+lsp.el"
-:END:
-
-#+begin_src emacs-lisp
-;;; ale/autoload/lsp.el --- -*- lexical-binding: t -*-
-
-;;;###autoload
-(defun ale-lsp-pyright-import-venv ()
-  "Fix `import' resolution with projects with virtual env like conda."
-  (require 'lsp-pyright)
-  (let* ((pr-root (lsp-workspace-root))
-         (py-ver "python3.9")
-         (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
-    (setq lsp-pyright-extra-paths (vector extra-path))))
-
-(provide 'ale-lsp)
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-Config-d960a084
-:END:
 
 #+begin_src emacs-lisp
 (use-package lsp-mode
@@ -4547,6 +4290,25 @@ regexp .etc).
   (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'")
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-6f32ef54
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+lsp.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-lsp-pyright-import-venv ()
+  "Fix `import' resolution with projects with virtual env like conda."
+  (require 'lsp-pyright)
+  (let* ((pr-root (lsp-workspace-root))
+         (py-ver "python3.9")
+         (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
+    (setq lsp-pyright-extra-paths (vector extra-path))))
 #+end_src
 
 *** Extensions
@@ -4579,6 +4341,19 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-166ab711
 :END:
+
+#+begin_src emacs-lisp
+(use-package conda
+  :after-call find-file-hook
+  :config
+  (setq conda-anaconda-home "/opt/miniconda/")
+  (setq conda-env-home-directory "/opt/miniconda/")
+  (setq conda-message-on-environment-switch t)
+  (ale-conda-env-autoactivate-mode t)
+  :hook
+  (conda-postactivate . (lambda () (interactive) (jupyter-available-kernelspecs t))))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-Autoload-f9667319
@@ -4586,14 +4361,14 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/conda.el --- -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t -*-
 
 ;;;###autoload
-(defun ale-conda-env-activate-for-buffer-ad ()
+(defadvice! conda-env-activate-for-buffer-ad ()
   "Advice for `conda-env-activate-for-buffer'.
 
 Make it support local `conda-env-subdirectory' such as `./envs'."
-  (interactive)
+  :override #'conda-env-activate-for-buffer
   (if-let ((dir-local-env (bound-and-true-p conda-project-env-path)))
       (conda-env-activate dir-local-env)
     (when-let* ((filename (buffer-file-name))
@@ -4609,38 +4384,19 @@ Make it support local `conda-env-subdirectory' such as `./envs'."
             (conda-env-activate env-name)))))))
 
 ;;;###autoload
-(define-minor-mode +conda-env-autoactivate-mode
+(define-minor-mode ale-conda-env-autoactivate-mode
   "Toggle +conda-env-autoactivate mode.
 
 This mode automatically tries to activate a conda environment for the current
 buffer."
   :group 'conda
   :global t
-  (if +conda-env-autoactivate-mode
+  (if ale-conda-env-autoactivate-mode
       (progn
         (advice-add 'pop-to-buffer :after #'conda--switch-buffer-auto-activate)
         (advice-add 'switch-to-buffer :after #'conda--switch-buffer-auto-activate))
     (advice-remove 'pop-to-buffer #'conda--switch-buffer-auto-activate)
     (advice-remove 'switch-to-buffer #'conda--switch-buffer-auto-activate)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-Config-85e1c054
-:END:
-
-#+begin_src emacs-lisp
-(use-package conda
-  :after-call find-file-hook
-  :config
-  (setq conda-anaconda-home "/opt/miniconda/")
-  (setq conda-env-home-directory "/opt/miniconda/")
-  (setq conda-message-on-environment-switch t)
-  (advice-add 'conda-env-activate-for-buffer
-              :override #'ale-conda-env-activate-for-buffer-ad)
-  (+conda-env-autoactivate-mode t)
-  :hook
-  (conda-postactivate . (lambda () (interactive) (jupyter-available-kernelspecs t))))
 #+end_src
 
 ** Jupyter (jupyter.el)
@@ -4772,6 +4528,12 @@ optional minor mode which can apply this command automatically on save.
 jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) will
 prompt for a major mode instead.  Simple yet super effective!
 
+#+begin_src emacs-lisp
+(bind-keys
+ :map grandview-apps-map
+ ("s" . ale-scratch))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Autoload-e9c532b8
@@ -4779,7 +4541,7 @@ prompt for a major mode instead.  Simple yet super effective!
 :END:
 
 #+begin_src emacs-lisp
-;;; ale/autoload/scratch.el --- -*- lexical-binding: t -*-
+;;; -*- lexical-binding: t -*-
 
 (defun ale-scratch--list-modes ()
   "List known major modes."
@@ -4793,7 +4555,8 @@ prompt for a major mode instead.  Simple yet super effective!
 
 ;;;###autoload
 (defun ale-scratch (query-for-mode)
-  "Create or switch to an org-mode scratch buffer with jupyter session configured.
+  "Create or switch to an org-mode scratch buffer.
+A jupyter session is attached to the buffer.
 If called with prefix arg, prompt for a major mode for the buffer."
   (interactive "P")
   (let ((buf (get-buffer "*ALE-scratch*")))
@@ -4813,17 +4576,6 @@ If called with prefix arg, prompt for a major mode for the buffer."
           (insert "\n\n")
           (setq buf new-buf))))
     (pop-to-buffer buf)))
-#+end_src
-
-*** Config
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Config-28105b2a
-:END:
-
-#+begin_src emacs-lisp
-(bind-keys
- :map grandview-apps-map
- ("s" . ale-scratch))
 #+end_src
 
 * COPYING
