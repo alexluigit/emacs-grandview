@@ -706,6 +706,20 @@ take effect."
       (advice-remove fn (lambda (&rest _) (interactive) (+pulse-line))))))
 #+end_src
 
+** Icon library (all-the-icons.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Icon_library_(all-the-icons.el)-af370f8e
+:END:
+
+=all-the-icons= is a utility for using and formatting various Icon fonts within
+Emacs.  Icon Fonts allow you to propertize and format icons the same way you
+would normal text.  This enables things such as better scaling of and anti
+aliasing of the icons.
+
+#+begin_src emacs-lisp
+(use-package all-the-icons)
+#+end_src
+
 * *COMPLETION FRAMEWORK*
 :PROPERTIES:
 :CUSTOM_ID: *Completion_framework*-c9eb4c39
@@ -2464,7 +2478,8 @@ sure this is a good approach."
 (use-package yasnippet
   :after-call self-insert-command
   :config
-  (setq! yas-snippet-dirs `(,(expand-file-name "snippets" INIT-DIR)))
+  (setq! yas-snippet-dirs
+         (list (expand-file-name "snippets" (file-name-directory user-init-file))))
   (yas-global-mode))
 #+end_src
 
@@ -2663,8 +2678,7 @@ Protesilaos Stavrou.
 (use-package modus-themes
   :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
   :config
-  (setq! modus-themes-links '(no-underline))
-  (setq! modus-themes-mode-line '(borderless)))
+  (setq! modus-themes-links '(no-underline)))
 #+end_src
 
 ** Fonts (fonts.el)
@@ -2753,331 +2767,17 @@ A list of my favorite CJK fonts.
     (overlay-put ov 'face 'font-lock-comment-face)))
 #+end_src
 
-** Tab (tab.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Tab_(tab.el)-f9551d75
-:END:
-
-Tabs for frequently used buffers.
-
-#+begin_src emacs-lisp
-(ale-tab-mode)
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+tab.el"
-:CUSTOM_ID: User_interface_extras-Tab_(tab.el)-Autoload-80394578
-:END:
-
-#+begin_src emacs-lisp
-;;; -*- lexical-binding: t -*-
-
-(defvar ale-tab-count-freq-idle-time 1
-  "Add used frequency after being idle for this much secs.")
-
-(defvar ale-tab-visible-buffer-limit 4
-  "Max number of visible buffers in a group.")
-
-(defvar ale-tab-separator "|"
-  "A string used as separator between tabs.")
-
-(defvar ale-tab-update-hook nil
-  "Hook to run when tabs need to be redisplayed.
-You should customize this hook to run code that's needed to
-update the UI.  `ale-tab-string' can be used in the code.")
-
-(defface ale-tab-active-tab-face
-  '((((background light))
-     :background "#d5c9c0" :foreground "#282828"
-     :bold t :inherit mode-line-active)
-    (t
-     :background "#504945" :foreground "#fbf1c7"
-     :bold t :inherit mode-line-active))
-  "Face for current tab.")
-
-(defface ale-tab-inactive-tab-face
-  '((((background light))
-     :foreground "#665c54" :inherit 'mode-line-active)
-    (t
-     :foreground "#bdae93" :bold nil :inherit 'mode-line-active))
-  "Face for inactive tabs.")
-
-(defface ale-tab-separator-face
-  '((((background light))
-     :foreground "#bdae93" :bold t :inherit 'mode-line-active)
-    (t
-     :foreground "#665c54" :bold t :inherit 'mode-line-active))
-  "Face for separator.")
-
-(defface ale-tab-rest-face
-  '((t :bold t :inherit 'font-lock-comment-face))
-  "Face for current tab.")
-
-(defvar-local ale-tab-buffer-group nil)
-
-(defun ale-tab-buffer-group (&optional buffer)
-  "Return the group name of BUFFER.
-When BUFFER is nil, use current buffer."
-  (let* ((buffer (or buffer (current-buffer)))
-         (name (buffer-name buffer))
-         group)
-    (cond
-     ;; These should be hidden.
-     ((eq (aref name 0) ?\s) nil)
-     ((eq (aref name 0) ?*) nil)
-     (t "*Others*"))))
-
-(defvar ale-tab-timer nil
-  "Timer used for count buffer used frequency.")
-
-(defvar-local ale-tab-buffer-freq 0
-  "Used frequency of current buffer.")
-
-(defun ale-tab-buffer-freq (buf)
-  "Return the used frequency of buffer BUF."
-  (or (buffer-local-value 'ale-tab-buffer-freq buf)
-      0))
-
-(defun ale-tab-increase-buffer-freq ()
-  "Increase the used frequency of current buffer by 1."
-  (cl-incf ale-tab-buffer-freq))
-
-(defun ale-tab-buffer-freq-higher-p (buf1 buf2)
-  "Return t if the used frequency of BUF1 is higher than BUF2."
-  (> (ale-tab-buffer-freq buf1)
-     (ale-tab-buffer-freq buf2)))
-
-(defun ale-tab-insert-buf (buf bufs)
-  "Insert BUF into sorted BUFS.
-BUFS is sorted in the decreasing order of used frequency.  The
-insertion keeps this order.
-This is non-destructive and the list after insertion is returned."
-  (let ((freqs (mapcar #'ale-tab-buffer-freq bufs))
-        (freq (ale-tab-buffer-freq buf))
-        idx)
-    (cl-dotimes (n (length freqs))
-      (when (> freq (nth n freqs))
-        (setq idx n)
-        (cl-return nil)))
-    (if (null idx)
-        (append bufs (list buf))
-      (append (cl-subseq bufs 0 idx)
-              (list buf)
-              (cl-subseq bufs idx)))))
-
-(defun ale-tab-start-count-freq ()
-  "Start counting buffer used frequency."
-  (setq ale-tab-timer
-        (run-with-idle-timer ale-tab-count-freq-idle-time
-                             t #'ale-tab-increase-buffer-freq)))
-
-(defun ale-tab-stop-count-freq ()
-  "Stop counting buffer used frequency."
-  (cancel-timer ale-tab-timer)
-  (setq ale-tab-timer nil))
-
-(defvar ale-tab-sorted-buffer-list nil
-  "Buffer list sorted by used frequency.
-This contains all non-hidden buffers returned by `buffer-list'.
-It's updated by `ale-tab-update-buffer-list'.")
-
-(defvar ale-tab-last-active-buffer nil
-  "Last active buffer.
-Minibuffer doesn't count.  This is updated by
-`ale-tab-update-buffer-list'.")
-
-(defvar ale-tab-inhibit-resort nil
-  "Non-nil means don't resort `ale-tab-sorted-buffer-list'.")
-
-(defun ale-tab-update-buffer-list ()
-  "Update internal data when appropriate."
-  (unless (window-minibuffer-p)
-    (let ((current-buffer (current-buffer)))
-      ;; We don't update when the current buffer is not changed, and non of the
-      ;; non-hidden buffers is killed.
-      (unless (and (eq current-buffer ale-tab-last-active-buffer)
-                   (cl-every #'buffer-live-p
-                             ale-tab-sorted-buffer-list))
-        (unless ale-tab-inhibit-resort
-          (let ((bufs (buffer-list)))
-            (setq bufs (cl-remove-if-not #'ale-tab-buffer-group bufs))
-            (setq bufs (sort bufs #'ale-tab-buffer-freq-higher-p))
-            (setq ale-tab-sorted-buffer-list bufs)))
-        (run-hooks 'ale-tab-update-hook)
-        (setq ale-tab-last-active-buffer (current-buffer))))))
-
-(defun ale-tab-visible-tabs-and-remain-num ()
-  "Return the visible tabs and number of remaining tabs in a cons cell.
-When the current buffer is a hidden buffer, return nil."
-  (let* ((buf (current-buffer))
-         (group (ale-tab-buffer-group buf))
-         (counter 0)
-         tabs)
-    (when group
-      (dolist (b ale-tab-sorted-buffer-list)
-        (when (equal (ale-tab-buffer-group b) group)
-          (if (< (length tabs) ale-tab-visible-buffer-limit)
-              (push b tabs)
-            (cl-incf counter))))
-      (cons (nreverse tabs)
-            counter))))
-
-(defun ale-tab-visible-tabs ()
-  "Return the visible tabs."
-  (let* ((buf (current-buffer))
-         (group (ale-tab-buffer-group buf))
-         tabs)
-    (when group
-      (cl-dolist (b ale-tab-sorted-buffer-list)
-        (when (equal (ale-tab-buffer-group b) group)
-          (push b tabs)
-          (when (= (length tabs) ale-tab-visible-buffer-limit)
-            (cl-return))))
-      (nreverse tabs))))
-
-(defun ale-tab-string ()
-  "Return a string that shows the tabs for current buffer.
-Possible ways of using this string is to show it in the mode line
-or header line, see `mode-line-format' and `header-line-format'
-for instructions.  See \"site-lisp/toki-modeline.el\" for
-example.
-The string may look like
-    tab1 | tab2 | 2+..tab5
-\"tab1\" and \"tab2\" are the actual tabs, \"2+\" means there are
-2 more buffers in the current group that's not shown.  When the
-current buffer is one of these invisible buffers (\"tab5\" in
-this case), it is shown after the \"1+\" part.
-Notice that though \"tab5\" is shown to indicate the current
-buffer, technically it's not in the tabs, and is still considered
-\"invisible\" by `ale-tab-kill-invisible-buffers-in-group'.
-Current and non-active buffers are distinguished by faces."
-  (let* ((current-buf (current-buffer))
-         (tabs-and-remain (ale-tab-visible-tabs-and-remain-num))
-         (tabs (car tabs-and-remain))
-         (tab-visible-p (memq current-buf tabs))
-         (num (cdr tabs-and-remain))
-         (rest (unless (or (eq num 0) (null num))
-                 (propertize (concat " + " (number-to-string num) "..")
-                             'face 'ale-tab-rest-face)))
-         (get-string (lambda (buf)
-                       (if (eq buf current-buf)
-                           (propertize (concat " " (buffer-name buf) " ")
-                                       'face 'ale-tab-active-tab-face)
-                         (propertize (concat " " (buffer-name buf) " ")
-                                     'face 'ale-tab-inactive-tab-face))))
-         (separator (propertize ale-tab-separator
-                                'face 'ale-tab-separator-face)))
-    (when (and rest (not tab-visible-p))
-      (setq rest (concat rest
-                         (propertize (buffer-name current-buf)
-                                     'face 'ale-tab-active-tab-face))))
-    (if tabs
-        (string-join (nconc (mapcar get-string tabs) (when rest (list rest)))
-                     separator)
-      (propertize (concat " " (buffer-name current-buf) " ") 'face 'ale-tab-active-tab-face))))
-
-(defun ale-tab-previous ()
-  "Switch to the previous tab.
-When the current buffer is the first tab, or not in the tabs,
-switch to the last tab."
-  (interactive)
-  (let* ((buf (current-buffer))
-         (tabs (ale-tab-visible-tabs))
-         (idx (cl-position buf tabs :test #'eq))
-         (ale-tab-inhibit-resort t))
-    (cond
-     ((or (null idx) (eq idx 0))
-      (switch-to-buffer (car (last tabs))))
-     (t
-      (switch-to-buffer (nth (1- idx) tabs))))))
-
-(defun ale-tab-next ()
-  "Switch to the next tab.
-When the current buffer is the last tab, or not in the tabs,
-switch to the first tab."
-  (interactive)
-  (let* ((buf (current-buffer))
-         (tabs (ale-tab-visible-tabs))
-         (idx (cl-position buf tabs :test #'eq))
-         (ale-tab-inhibit-resort t))
-    (cond
-     ((or (null idx) (eq idx (1- (length tabs))))
-      (switch-to-buffer (car tabs)))
-     (t
-      (switch-to-buffer (nth (1+ idx) tabs))))))
-
-(defun ale-tab-kill-invisible-buffers-in-group ()
-  "Kill all buffers that's not in the tabs in current group.
-Notice when the current buffer is not in the tabs, though it may
-still be shown after the \"n+\" part in the tabs, it will be
-killed."
-  (interactive)
-  (when-let ((group (ale-tab-buffer-group (current-buffer)))
-             (tabs (ale-tab-visible-tabs)))
-    (dolist (b (buffer-list))
-      (when (and (equal (ale-tab-buffer-group b) group)
-                 (not (memq b tabs)))
-        (kill-buffer b)))))
-
-(defun ale-tab-kill-buffers-in-group ()
-  "Kill all buffers in current group."
-  (interactive)
-  (when-let ((group (ale-tab-buffer-group (current-buffer))))
-    (dolist (b (buffer-list))
-      (when (equal (ale-tab-buffer-group b) group)
-        (kill-buffer b)))))
-
-(defun ale-tab-switch-to-buffer-in-group ()
-  "Switch to a buffer in current group."
-  (interactive)
-  (when-let ((group (ale-tab-buffer-group (current-buffer))))
-    (let (bufs collection)
-      (dolist (b (buffer-list))
-        (when (equal (ale-tab-buffer-group b) group)
-          (push b bufs)))
-      (setq bufs (mapcar #'buffer-name (nreverse bufs)))
-      (setq collection
-            (lambda (str pred action)
-              (if (eq action 'metadata)
-                  '(metadata
-                    (category . buffer)
-                    (cycle-sort-function . identity)
-                    (display-sort-function . identity))
-                (complete-with-action action bufs str pred))))
-      (switch-to-buffer
-       (completing-read "Switch to: " collection nil t)))))
-
-;;;###autoload
-(define-minor-mode ale-tab-mode
-  "Minor mode for maintaining data for showing tabs.
-This mode doesn't offer an UI for showing the tabs.  See
-`ale-tab-update-hook' and `ale-tab-string' to know how to
-plug-in an UI for tabs."
-  :global t
-  (if ale-tab-mode
-      (progn
-        (ale-tab-start-count-freq)
-        (ale-tab-update-buffer-list)
-        (add-hook 'buffer-list-update-hook
-                  #'ale-tab-update-buffer-list))
-    (ale-tab-stop-count-freq)
-    (remove-hook 'buffer-list-update-hook
-                 #'ale-tab-update-buffer-list)))
-#+end_src
-
-** Modeline (mode-line.el)
+** Mode line (mode-line.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Modeline_(mode-line.el)-70f41922
 :END:
 
-=ale-modeline-mode= provides following infos in modeline:
+The following infos in modeline are provided:
 
 + Left ::
   - Meow current state (INSERT/NORMAL...)
+  - Buffer info (icon, name, modified state)
   - Macro recording state
-  - File modified state
-  - Tabs (provided by =+tab.el=)
 
 + Right ::
   - Current line / column
@@ -3088,9 +2788,9 @@ Besides, it's easy to define your own mode line segments with
 ~ale-mode-line-format~.
 
 #+begin_src emacs-lisp
-(setq! ale-mode-line-format
-       '(:left (editing-state macro-rec modified tab) :right (position input-method)))
-(ale-modeline-mode)
+(use-package emacs
+  :init
+  (ale-ml-mode))
 #+end_src
 
 *** Autoload
@@ -3102,15 +2802,15 @@ Besides, it's easy to define your own mode line segments with
 #+begin_src emacs-lisp
 ;;; -*- lexical-binding: t; -*-
 
-(defcustom ale-mode-line-format
-  '(:left (editing-state macro-rec modified tab) :right (position input-method))
+(defcustom ale-ml-format
+  '(:left (editing-state buffer-info macro-rec) :right (position input-method))
   "Mode line SEGMENTs aligned to left/right respectively.
-The SEGMENTs are defined by `ale-define-mode-line'."
+The SEGMENTs are defined by `ale-ml-define'."
   :set
   (lambda (k v)
     (cl-labels ((expand (l)
                   (cl-loop for s in l collect
-                           `(:eval (ale-mode-line--suffix ',(intern (format "ale-%s-ml" s)))))))
+                           `(:eval (ale-ml--suffix ',(intern (format "ale-%s-ml" s)))))))
       (let ((fmt-left (or (expand (plist-get v :left)) mode-line-format))
             (fmt-right (expand (plist-get v :right))))
         (set k `((:eval (let ((str-right (format-mode-line ',fmt-right)))
@@ -3120,47 +2820,77 @@ The SEGMENTs are defined by `ale-define-mode-line'."
                                                                     ,(string-width str-right)))))
                                   str-right)))))))))
 
-(defun ale-mode-line--suffix (ml-func)
+(defvar ale-ml-selected-window nil)
+
+(defun ale-ml--window-active ()
+  "Return t if mode line is in active window."
+  (unless (and (bound-and-true-p mini-frame-frame)
+               (and (frame-live-p mini-frame-frame)
+                    (frame-visible-p mini-frame-frame)))
+    (and ale-ml-selected-window (eq (ale-ml--get-current-window) ale-ml-selected-window))))
+
+(defun ale-ml--get-current-window (&optional frame)
+  "Get the current window but should exclude the child windows."
+  (if (and (fboundp 'frame-parent) (frame-parent frame))
+      (frame-selected-window (frame-parent frame))
+    (frame-selected-window frame)))
+
+(defun ale-ml-record-selected-window-h (&rest _)
+  "Update `ale-ml-selected-window' on redisplay."
+  (let ((win (ale-ml--get-current-window)))
+    (setq ale-ml-selected-window
+          (if (minibuffer-window-active-p win)
+              (minibuffer-selected-window)
+            win))))
+
+(add-hook 'pre-redisplay-functions #'ale-ml-record-selected-window-h)
+
+(defun ale-ml--suffix (ml-func)
   "If ML-FUNC return a non-empty string, append a space to it."
   (when-let (str (funcall ml-func)) (concat str " ")))
 
-(cl-defmacro ale-define-mode-line (name &optional docstr &rest body)
+(cl-defmacro ale-ml-define (name &optional docstr &rest body)
   "Define a mode line segment NAME with BODY and DOCSTR."
   (declare (indent defun) (doc-string 2))
   (let ((ml (intern (format "ale-%s-ml" name)))) `(defun ,ml () ,docstr ,@body)))
 
-(ale-define-mode-line position
+(ale-ml-define position
   (concat (propertize "l " 'face 'font-lock-keyword-face)
           (propertize "%l " 'face 'font-lock-doc-face)
           (propertize "c " 'face 'font-lock-keyword-face)
           (propertize "%c" 'face 'font-lock-doc-face)))
 
-(ale-define-mode-line editing-state (when (bound-and-true-p meow-mode) (meow-indicator)))
+(ale-ml-define editing-state (when (bound-and-true-p meow-mode) (meow-indicator)))
 
-(ale-define-mode-line macro-rec
+(ale-ml-define buffer-info
+  (concat
+   (and buffer-file-name (all-the-icons-icon-for-file
+                          buffer-file-name :height 0.75 :v-adjust 0.02))
+   " "
+   (propertize "%b"
+               'face (cond ((and buffer-file-name (buffer-modified-p))
+                            'marginalia-modified)
+                           ((ale-ml--window-active) 'bold)
+                           (t 'mode-line-inactive))
+               'mouse-face 'mode-line-highlight
+               'help-echo "Buffer name\nmouse-1: Previous buffer\nmouse-3: Next buffer"
+               'local-map mode-line-buffer-identification-keymap)))
+
+(ale-ml-define macro-rec
   (when (or defining-kbd-macro executing-kbd-macro)
     (propertize "KM" 'face 'warning)))
 
-(ale-define-mode-line modified
-  (when (not (string-match-p "\\*.*\\*" (buffer-name)))
-    (if (buffer-modified-p)
-        (propertize "●" 'face 'marginalia-modified)
-      (when (and buffer-read-only (buffer-file-name))
-        (propertize "■" 'face 'shadow)))))
+(ale-ml-define input-method (when (bound-and-true-p rime-mode) (rime-lighter)))
 
-(ale-define-mode-line tab (when (bound-and-true-p ale-tab-mode) (ale-tab-string)))
-
-(ale-define-mode-line input-method (when (bound-and-true-p rime-mode) (rime-lighter)))
-
-(defvar ale-modeline--default-mode-line mode-line-format "Store the default mode-line format")
+(defvar ale-ml--default-mode-line mode-line-format "Store the default mode-line format")
 
 ;;;###autoload
-(define-minor-mode ale-modeline-mode
-  "Toggle ale-modeline on or off."
+(define-minor-mode ale-ml-mode
+  "Toggle `ale-ml-mode' on or off."
   :global t
-  (if ale-modeline-mode
-      (setq-default mode-line-format ale-mode-line-format)
-    (setq-default mode-line-format ale-modeline--default-mode-line)))
+  (if ale-ml-mode
+      (setq-default mode-line-format ale-ml-format)
+    (setq-default mode-line-format ale-ml--default-mode-line)))
 #+end_src
 
 ** Frame margin (fringe.el)
@@ -3190,19 +2920,10 @@ need to add =--with-xinput2= in build flags to enable this feature.
   (pixel-scroll-precision-mode 1))
 #+end_src
 
-** Icons (all-the-icons.el | vscode-icon.el)
+** Vscode style icons (vscode-icon.el)
 :PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Icons_(all-the-icons.el_|_vscode-icon.el)-a73b0e25
+:CUSTOM_ID: User_interface-Vscode_style_icons_(vscode-icon.el)-0f3dbf81
 :END:
-
-=all-the-icons= is a utility for using and formatting various Icon fonts within
-Emacs.  Icon Fonts allow you to propertize and format icons the same way you
-would normal text.  This enables things such as better scaling of and anti
-aliasing of the icons.
-
-#+begin_src emacs-lisp
-(use-package all-the-icons)
-#+end_src
 
 Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
 style icons with image format.
