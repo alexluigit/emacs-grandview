@@ -4296,6 +4296,15 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 :CUSTOM_ID: About_this_file-File_local_variables-4f09d29d
 :END:
 
+#+begin_src emacs-lisp
+(defun grandview-setup-literate-file ()
+  "Setup for `grandview-org-file'."
+  (setq-local completion-at-point-functions
+              `(tempel-complete pcomplete-completions-at-point elisp-completion-at-point t))
+  (setq-local eldoc-documentation-functions '(elisp-eldoc-var-docstring ale-org-eldoc-funcall))
+  (setq-local ale-org-id-auto t))
+#+end_src
+
 Here are the local variables in this file.
 
 + ~completion-at-point-functions~: make autocompletion works in source code block
@@ -4303,7 +4312,5 @@ Here are the local variables in this file.
 + ~ale-org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
 # Local Variables:
-# completion-at-point-functions: (pcomplete-completions-at-point elisp-completion-at-point t))
-# eldoc-documentation-functions: (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
-# ale-org-id-auto: t
+# eval: (and (fboundp 'grandview-setup-literate-file) (grandview-setup-literate-file))
 # End:

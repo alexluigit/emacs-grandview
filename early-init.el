@@ -163,9 +163,7 @@
   (setq use-short-answers t))
 
 (setq safe-local-variable-values
-      '((completion-at-point-functions . (pcomplete-completions-at-point elisp-completion-at-point t))
-        (eldoc-documentation-functions . (elisp-eldoc-var-docstring ale-org-eldoc-funcall))
-        (ale-org-id-auto . t)))
+      '((eval . (and (fboundp 'grandview-setup-literate-file) (grandview-setup-literate-file)))))
 
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
