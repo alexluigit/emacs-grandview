@@ -998,16 +998,21 @@ pop-up window.
 (use-package corfu
   :after-call self-insert-command
   :custom
-  (corfu-auto t)                    ; Enable auto completion
-  (corfu-cycle t)                   ; Enable cycling for `corfu-next/previous'
-  (corfu-preselect-first nil)       ; Disable candidate preselection
+  (corfu-auto t)
+  (corfu-auto-delay 0.05)
+  (corfu-auto-prefix 2)
+  (corfu-cycle t)
+  (corfu-preselect-first nil)
+  (corfu-on-exact-match nil)
   :bind
   (nil
    :map corfu-map
    ("TAB" . corfu-next)
    ([tab] . corfu-next)
    ("S-TAB" . corfu-previous)
-   ([backtab] . corfu-previous))
+   ([backtab] . corfu-previous)
+   ("M-n" . nil)
+   ("M-p" . nil))
   :config
   (corfu-global-mode))
 
@@ -1032,6 +1037,7 @@ in the form of Capfs (~completion-at-point-functions~).
   :bind
   (nil
    :map grandview-prog-map
+   ("c" . completion-at-point) ;; capf
    ("t" . complete-tag)        ;; etags
    ("d" . cape-dabbrev)        ;; or dabbrev-completion
    ("f" . cape-file)
@@ -1232,6 +1238,8 @@ your terminal emulator's settings.
  ("C-o" . pop-global-mark)
  ("s-n" . scroll-up-command)
  ("s-p" . scroll-down-command)
+ ("M-n" . forward-paragraph)
+ ("M-p" . backward-paragraph)
  :map minibuffer-local-map
  ("C-u" . meow-kill-whole-line)
  ("<C-i>" . forward-char)
@@ -2469,19 +2477,168 @@ sure this is a good approach."
     (format "%d. " num)))
 #+end_src
 
-** Snippet (yasnippet.el)
+** Snippet (tempel.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Snippet_(yasnippet.el)-6f5ea26b
+:CUSTOM_ID: Text_editing-Snippet_(tempel.el)-79179e2c
 :END:
 
 #+begin_src emacs-lisp
-(use-package yasnippet
+(use-package tempel
   :after-call self-insert-command
-  :config
-  (setq! yas-snippet-dirs
-         (list (expand-file-name "snippets" (file-name-directory user-init-file))))
-  (yas-global-mode))
+  :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+         ("M-*" . tempel-insert))
+  :hook
+  ;; Optionally make the Tempel templates available to Abbrev,
+  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+  ;; (prog-mode . tempel-abbrev-mode)
+  ;; (tempel-global-abbrev-mode)
+  (prog-mode . ale-tempel-setup-capf)
+  (text-mode . ale-tempel-setup-capf))
 #+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Text_editing-Snippet_(tempel.el)-Autoload-3abbbd2b
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+tempel.el"
+:END:
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t -*-
+
+;;;###autoload
+(defun ale-tempel-setup-capf ()
+  ;; Add the Tempel Capf to `completion-at-point-functions'.
+  ;; `tempel-expand' only triggers on exact matches. Alternatively use
+  ;; `tempel-complete' if you want to see all matches, but then you
+  ;; should also configure `tempel-trigger-prefix', such that Tempel
+  ;; does not trigger too often when you don't expect it. NOTE: We add
+  ;; `tempel-expand' *before* the main programming mode Capf, such
+  ;; that it will be tried first.
+  (setq-local completion-at-point-functions
+              (cons #'tempel-complete completion-at-point-functions)))
+
+#+end_src
+
+*** Templates
+:PROPERTIES:
+:CUSTOM_ID: Text_editing-Snippet_(tempel.el)-Templates-d217a113
+:END:
+
+All the Tempo syntax elements are fully supported. The syntax elements are
+described in detail in the docstring of ~tempo-define-template~ in tempo.el. We
+document the important ones here:
+
+ - "string" Inserts a string literal.
+ - ~p~ Inserts an unnamed placeholder field.
+ - ~n~ Inserts a newline.
+ - ~>~ Indents with ~indent-according-to-mode~.
+ - ~r~ Inserts the current region.
+ - ~r>~ The region, but indented.
+ - ~n>~ Inserts a newline and indents.
+ - ~&~ Insert newline if there is only whitespace between line start and point.
+ - ~%~ Insert newline if there is only whitespace between point and line end.
+ - ~o~ Like ~%~ but leaves the point before newline.
+ - ~(s NAME)~ Inserts a named field.
+ - ~(p PROMPT <NAME> <NONINS>)~ Insert an optionally named field with a prompt.
+   The ~PROMPT~ is displayed directly in the buffer as default value. If ~NOINSERT~
+   is non-nil, no field is inserted. Then the minibuffer is used for prompting
+   and the value is bound to ~NAME~.
+ - ~(r PROMPT <NAME> <NOINSERT>)~ Insert region or act like ~(p ...)~.
+ - ~(r> PROMPT <NAME> <NOINSERT>)~ Act like ~(r ...)~, but indent region.
+
+Furthermore Tempel supports syntax extensions:
+
+ - ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
+ - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
+
+Use caution with templates which execute arbitrary code!
+
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
+;; -*- mode: lisp -*-
+
+fundamental-mode ;; Available everywhere
+
+(today (format-time-string "%Y-%m-%d"))
+
+prog-mode
+
+(fixme (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "FIXME ")
+(todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
+(bug (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "BUG ")
+(hack (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "HACK ")
+
+latex-mode
+
+(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}")
+(frac "\\frac{" p "}{" p "}")
+(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
+(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
+
+lisp-mode emacs-lisp-mode ;; Specify multiple modes
+
+(lambda "(lambda (" p ")" n> r> ")")
+
+emacs-lisp-mode
+
+(use "(use-package " p n> ":demand t" n> ":config" n> p ")")
+(lambda "(lambda (" p ")" n> r> ")")
+(var "(defvar " p "\n  \"" p "\")")
+(const "(defconst " p "\n  \"" p "\")")
+(custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")")
+(face "(defface " p " '((t :inherit " p "))\n  \"" p "\")")
+(group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")")
+(macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")")
+(fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
+(let "(let (" p ")" n> r> ")")
+(star "(let* (" p ")" n> r> ")")
+(rec "(letrec (" p ")" n> r> ")")
+(command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")")
+
+eshell-mode
+
+(for "for " (p "i") " in " p " { " p " }")
+(while "while { " p " } { " p " }")
+(until "until { " p " } { " p " }")
+(if "if { " p " } { " p " }")
+(if-else "if { " p " } { " p " } { " p " }")
+(unless "unless { " p " } { " p " }")
+(unless-else "unless { " p " } { " p " } { " p " }")
+
+text-mode
+
+(cut "--8<---------------cut here---------------start------------->8---" n r n
+     "--8<---------------cut here---------------end--------------->8---" n)
+(asciibox "+-" (make-string (length str) ?-) "-+" n
+          "| " (s str)                       " |" n
+          "+-" (make-string (length str) ?-) "-+" n)
+(rot13 (p "plain text" text) n "----" n (rot13 text))
+(calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
+
+rst-mode
+
+(title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
+
+java-mode
+
+(class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
+
+c-mode :condition (re-search-backward "^\\w*$" (line-beginning-position) 'noerror)
+
+(inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
+(incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
+
+org-mode
+
+(title "#+title: " p n "#+author: Alex Lu" n "#+language: en" n n)
+(quote "#+begin_quote" n> r> n> "#+end_quote")
+(example "#+begin_example" n> r> n> "#+end_example")
+(center "#+begin_center" n> r> n> "#+end_center")
+(comment "#+begin_comment" n> r> n> "#+end_comment")
+(verse "#+begin_verse" n> r> n> "#+end_verse")
+(src "#+begin_src " p n> r> n> "#+end_src")
+(elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (tempel-done))
+#+end_src
+
 
 ** Pair insertion (eletric.el)
 :PROPERTIES:
@@ -3208,50 +3365,6 @@ those so-called 'extras'."
               (delete map embark-become-keymaps))))))
 #+end_src
 
-** Insert current time (insert-timedate.el)
-:PROPERTIES:
-:CUSTOM_ID: Utils-Insert_current_time_(insert-timedate.el)-304c1705
-:END:
-
-A simple command to insert current date (optionally with UTC time).
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+insert-timedate.el"
-:CUSTOM_ID: Utils-Insert_current_time_(insert-timedate.el)-Autoload-57f1588f
-:END:
-
-#+begin_src emacs-lisp
-;;; -*- lexical-binding: t -*-
-
-(defcustom ale-date-specifier "%F"
-  "Date specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-(defcustom ale-time-specifier "%R %z"
-  "Time specifier for `format-time-string'.
-Used by `ale-insert-date'."
-  :type 'string
-  :group 'ale)
-
-;;;###autoload
-(defun ale-insert-date (&optional arg)
-  "Insert the current date as `ale-date-specifier'.
-With optional prefix ARG (\\[universal-argument]) also append the
-current time understood as `ale-time-specifier'.  When region is
-active, delete the highlighted text and replace it with the
-specified date."
-  (interactive "P")
-  (let* ((date ale-date-specifier)
-         (time ale-time-specifier)
-         (format (if arg (format "%s %s" date time) date)))
-    (when (use-region-p)
-      (delete-region (region-beginning) (region-end)))
-    (insert (format-time-string format))))
-#+end_src
-
 ** Window motions (ace-window.el)
 :PROPERTIES:
 :CUSTOM_ID: Utils-Window_motions_(ace-window.el)-95d39597
@@ -3621,8 +3734,6 @@ some deps that we don't need at startup.
   (rg-define-toggle "-A 5" (kbd "A"))
   (rg-define-search rg-project-all-files-no-ask
     :dir project :files "all"))
-
-(provide 'ale-rg)
 #+end_src
 
 ** Writable grep (wgrep.el)
