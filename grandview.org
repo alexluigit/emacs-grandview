@@ -1537,7 +1537,7 @@ users deserve a file manager better than those popular ones on terminal such as
 
 #+begin_src emacs-lisp
 (use-package dirvish
-  :after-call post-command-hook
+  :defer 0.5
   :bind
   (nil
    :map dired-mode-map
@@ -2083,7 +2083,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 #+begin_src emacs-lisp
 (use-package ob
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :hook (org-babel-after-execute . org-redisplay-inline-images)
   :config
   (use-package org-tempo
@@ -2484,6 +2484,7 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 (use-package tempel
+  :straight (tempel :host github :repo "minad/tempel")
   :after-call self-insert-command
   :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
          ("M-*" . tempel-insert))
@@ -2638,7 +2639,6 @@ org-mode
 (src "#+begin_src " p n> r> n> "#+end_src")
 (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (tempel-done))
 #+end_src
-
 
 ** Pair insertion (eletric.el)
 :PROPERTIES:
@@ -3926,7 +3926,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package ob-C
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :commands (org-babel-execute:C
              org-babel-expand:C
              org-babel-execute:cpp
@@ -3952,7 +3952,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package ob-python
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :commands (org-babel-execute:python)
   :config
   (add-to-list 'org-structure-template-alist '("py" . "src python")))
@@ -4005,7 +4005,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package ob-js
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :commands (org-babel-execute:js)
   :config
   (add-to-list 'org-structure-template-alist '("js" . "src js")))
@@ -4026,7 +4026,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package ob-shell
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :commands (org-babel-execute:bash)
   :config
   (add-to-list 'org-structure-template-alist '("sh" . "src bash")))
@@ -4049,7 +4049,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package ob-latex
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :commands (org-babel-execute:latex org-babel-expand:latex)
   :config
   (add-to-list 'org-structure-template-alist '("la" . "src latex")))
@@ -4063,7 +4063,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package ob-makefile
   :straight (:type built-in)
-  :after-call org-cycle
+  :after-call org-mode-hook
   :commands (org-babel-execute:makefile)
   :config
   (add-to-list 'org-structure-template-alist '("mk" . "src makefile")))
