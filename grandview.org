@@ -1948,15 +1948,6 @@ look like which can be described briefly as follows:
      `(org-block ((t (,@default))))
      `(org-block-begin-line ((t (:foreground "#606060" :extend t))))
      '(org-tag ((t (:inherit (shadow) :weight bold :height 0.8)))))))
-
-;;;###autoload
-(defun ale-org-eldoc-funcall (_callback &rest _ignored)
-  "Fix `elisp-eldoc-funcall' at `org-mode'."
-  (let* ((sym-info (elisp--fnsym-in-current-sexp)))
-    (when-let ((fn-sym (car sym-info)))
-      (message "%s: %s"
-               (propertize (format "%s" fn-sym) 'face 'font-lock-function-name-face)
-               (apply #'elisp-get-fnsym-args-string sym-info)))))
 #+end_src
 
 ** Identifiers for org entries (org-id.el)
@@ -4382,11 +4373,22 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 :END:
 
 #+begin_src emacs-lisp
+(defun grandview--org-eldoc-funcall (_callback &rest _ignored)
+  "Fix `elisp-eldoc-funcall' in `org-mode'."
+  (when (eq (org-element-type (org-element-at-point)) 'src-block)
+    (let* ((sym-info (elisp--fnsym-in-current-sexp))
+           (fn-sym (car sym-info)))
+      (when (fboundp fn-sym)
+        (message "%s: %s"
+                 (propertize (format "%s" fn-sym) 'face 'font-lock-function-name-face)
+                 (apply #'elisp-get-fnsym-args-string sym-info))))))
+
 (defun grandview-setup-literate-file ()
   "Setup for `grandview-org-file'."
   (delq! t completion-at-point-functions)
   (appendq! completion-at-point-functions '(elisp-completion-at-point t))
-  (setq-local eldoc-documentation-functions '(elisp-eldoc-var-docstring ale-org-eldoc-funcall))
+  (setq-local eldoc-documentation-functions
+              '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
   (setq-local ale-org-id-auto t))
 #+end_src
 
@@ -4397,5 +4399,5 @@ Here are the local variables in this file.
 + ~ale-org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
 # Local Variables:
-# eval: (and (fboundp 'grandview-setup-literate-file) (grandview-setup-literate-file))
+# eval: (ignore-errors (grandview-setup-literate-file)))
 # End:
