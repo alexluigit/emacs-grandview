@@ -765,7 +765,7 @@ What my minibuffer config does:
   :config
   (setq enable-recursive-minibuffers t)
   (setq minibuffer-eldef-shorten-default t)
-  (setq! minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+  (setq minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
   (minibuffer-depth-indicate-mode 1))
 #+end_src
 
@@ -1491,8 +1491,6 @@ inside of an Emacs buffer.  It is simply superb!
    ("I" . dired-insert-subdir)
    ("K" . dired-kill-subdir)
    ("O" . dired-find-file-other-window)
-   ("<" . beginning-of-buffer)
-   (">" . end-of-buffer)
    ("[" . dired-prev-dirline)
    ("]" . dired-next-dirline)
    ("o" . dired-up-directory)
@@ -2350,7 +2348,6 @@ in =fill.el=, I believe put them all together here make things easier to track.
   (setq-default fill-column 80)
   :hook
   (text-mode . turn-on-auto-fill)
-  (prog-mode . turn-on-auto-fill)
   :config
   (setq colon-double-space nil)
   (setq adaptive-fill-mode t))
@@ -3913,9 +3910,7 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package rust-mode
-  :hook
-  (rust-mode . (lambda () (setq indent-tabs-mode nil))))
+(use-package rust-mode)
 #+end_src
 
 ** C|C++
@@ -4137,8 +4132,9 @@ regexp .etc).
 (use-package lsp-ui
   :after-call lsp-deferred
   :config
-  (setq lsp-ui-sideline-show-code-actions nil)
   (setq lsp-ui-doc-position 'bottom)
+  (setq lsp-ui-doc-show-with-cursor t)
+  (setq lsp-ui-doc-show-with-mouse nil)
   :hook
   (lsp-mode . lsp-ui-mode))
 #+end_src
@@ -4267,28 +4263,6 @@ optional minor mode which can apply this command automatically on save.
    ("f" . ale-format-buffer)))
 #+end_src
 
-** COMMENT Indent lines (highlight-indent-guides.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Indent_lines_(highlight-indent-guides.el)-fe7c330d
-:END:
-
-#+begin_src emacs-lisp
-(use-package highlight-indent-guides
-  :hook
-  (prog-mode . (lambda ()
-                 (unless (eq major-mode 'js-mode)
-                   (highlight-indent-guides-mode))))
-  :config
-  (setq highlight-indent-guides-method 'bitmap)
-  (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line)
-  (setq highlight-indent-guides-responsive 'stack)
-  (setq highlight-indent-guides-delay 0)
-  (setq highlight-indent-guides-suppress-auto-error t)
-  (setq highlight-indent-guides-auto-stack-odd-face-perc 15)
-  (setq highlight-indent-guides-auto-stack-even-face-perc 25)
-  (setq highlight-indent-guides-auto-stack-character-face-perc 35))
-#+end_src
-
 ** Syntax checker (flymake.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Syntax_checker_(flymake.el)-6459d9de
@@ -4410,8 +4384,8 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 #+begin_src emacs-lisp
 (defun grandview-setup-literate-file ()
   "Setup for `grandview-org-file'."
-  (setq-local completion-at-point-functions
-              `(tempel-complete pcomplete-completions-at-point elisp-completion-at-point t))
+  (delq! t completion-at-point-functions)
+  (appendq! completion-at-point-functions '(elisp-completion-at-point t))
   (setq-local eldoc-documentation-functions '(elisp-eldoc-var-docstring ale-org-eldoc-funcall))
   (setq-local ale-org-id-auto t))
 #+end_src
