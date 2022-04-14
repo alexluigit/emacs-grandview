@@ -150,7 +150,13 @@ DOCSTRING and BODY are as in `defun'.
         (insert new-md5)
         (write-region (point-min) (point-max) md5-file))
       (require 'ob-tangle)
-      (org-babel-tangle-file grandview-org-file grandview--el-file))))
+      (org-babel-tangle-file grandview-org-file grandview--el-file)
+      (cl-loop for lib in (directory-files-recursively grandview--autoload-dir "\\.el$")
+               do (with-current-buffer (find-file-noselect lib)
+                    (goto-char (point-min))
+                    (insert ";;; -*- lexical-binding: t -*-\n\n")
+                    (save-buffer)
+                    (kill-this-buffer))))))
 
 (defun grandview--gen-autoload (&optional force)
   "Append `grandview--autoload-dir''s autoloads to `grandview--autoload-file'.
