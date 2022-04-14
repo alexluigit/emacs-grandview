@@ -715,11 +715,11 @@ aliasing of the icons.
 :CUSTOM_ID: *Completion_framework*-c9eb4c39
 :END:
 
-The optimal way of using Emacs is through searching and narrowing
-selection candidates.  Spend less time worrying about where things are
-on the screen and more on how fast you can bring them into focus.
-This is, of course, a matter of realigning priorities, as we still
-wish to control every aspect of the interface.
+The optimal way of using Emacs is through searching and narrowing selection
+candidates.  Spend less time worrying about where things are on the screen and
+more on how fast you can bring them into focus.  This is, of course, a matter of
+realigning priorities, as we still wish to control every aspect of the
+interface.
 
 ** Minibuffer and completion functions (minibuffer.el)
 :PROPERTIES:
@@ -2467,6 +2467,29 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 ;;;###autoload
+(defadvice! tempel-condition-ad (modes plist)
+  "Return non-nil if one of MODES matches and the PLIST condition is satisfied."
+  :override #'tempel--condition-p
+  (and
+   (cl-loop
+    for m in modes thereis
+    (or (eq m #'fundamental-mode)
+        (derived-mode-p m)
+        (when-let* (((derived-mode-p 'org-mode))
+                    (element (org-element-context))
+                    ((eq 'src-block (car-safe element))))
+          (if-let* ((lang (plist-get (cadr element) :language))
+                    (mode (org-src-get-lang-mode lang))
+                    ((fboundp mode)))
+              mode
+            #'fundamental-mode))))
+   (or (not (plist-member plist :condition))
+       (save-excursion
+         (save-restriction
+           (save-match-data
+             (eval (plist-get plist :condition) 'lexical)))))))
+
+;;;###autoload
 (defun ale-tempel-setup-capf ()
   ;; Add the Tempel Capf to `completion-at-point-functions'.
   ;; `tempel-expand' only triggers on exact matches. Alternatively use
@@ -2477,7 +2500,6 @@ sure this is a good approach."
   ;; that it will be tried first.
   (setq-local completion-at-point-functions
               (cons #'tempel-complete completion-at-point-functions)))
-
 #+end_src
 
 *** Templates
