@@ -4,11 +4,15 @@
 (setq gc-cons-threshold most-positive-fixnum)
 
 ;; Setup native compilation
-(add-to-list 'native-comp-eln-load-path "~/.cache/emacs/eln-cache/")
+(setq native-comp-eln-load-path
+      (append (list (expand-file-name "~/.cache/emacs/eln-cache/"))
+              (delete (expand-file-name "eln-cache/" user-emacs-directory)
+                      native-comp-eln-load-path)))
 (setq native-comp-async-report-warnings-errors 'silent)
 
+;; Prevent package.el loading packages prior to their init-file
 (setq package-quickstart nil)
-(setq package-enable-at-startup nil)  ; Prevent package.el loading packages prior to their init-file
+(setq package-enable-at-startup nil)
 
 ;; Disable warnings from legacy advice system. They aren't useful, and what can
 ;; we do about them, besides changing packages upstream?

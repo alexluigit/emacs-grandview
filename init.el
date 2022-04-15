@@ -213,7 +213,7 @@ REST and STATE."
       (use-package-concat
        `((fset ',fn
                (lambda (&rest _)
-                 (when DEBUG-INIT-P (log! "Lazy loaded" (format "%s on command %s" ',name ',hooks)))
+                 (when DEBUG-INIT-P (log! "Lazy loaded" (format "%s on commands %s" ',name ',hooks)))
                  (condition-case e
                      (let ((default-directory user-emacs-directory))
                        (require ',name))
