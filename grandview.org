@@ -14,7 +14,7 @@
 :CUSTOM_ID: Overview-Introduction-0a365d38
 :END:
 
-*Emacs-grandview* is my literate Emacs configuration which has a pretty
+*Emacs grandview* is my literate Emacs configuration which has a pretty
 straightforward project structure:
 
 + Early init:              =early-init.el=
@@ -27,8 +27,8 @@ upon which corresponding autoloads are generated.  Whenever the content of this
 file changes, this tangling process is repeated on the execution of ~kill-emacs~
 command, after that the new generated config will replace the old one.
 
-A section with *bold and uppercase title* means it is a core config in
-=Emacs-grandview=. Unless you know exactly what you are doing, it is *NOT*
+A section with /bold and uppercase title/ means it is a core config in
+*Grandview*. Unless you know exactly what you are doing, it is *NOT*
 recommended to comment out these sections. Since codes in other sections may
 rely on orientations in the section to work properly, so be sure to edit these
 sections with caution.
@@ -95,7 +95,7 @@ Although Emacs already provided functionalities like ~unload-feature~ and
 configurations, most of the time it's still easier to reload your Emacs
 configurations through a completely restart.
 
-The following section provided a CLI for restarting =Emacs-grandview=.
+The following section provided a CLI for restarting *Grandview*.
 
 ** CLI source
 :PROPERTIES:
@@ -182,7 +182,7 @@ only thing we can do by then is spawn a terminal call the ~rem~ (alias for
 
 Here are the available flags of this command.
 
-+ ~-r~: delete =Emacs-grandview='s cache before restarting. (re-tangle)
++ ~-r~: delete *Grandview*'s cache before restarting. (re-tangle)
 + ~-p~: delete all =.elc= build of packages before restarting. (rebuild)
 + ~-P~: delete all package repos before restarting. (re-download & rebuild)
 + ~-d~: use --debug-init flag for the daemon
@@ -1052,7 +1052,7 @@ in the form of Capfs (~completion-at-point-functions~).
 :CUSTOM_ID: *Keybindings*-36788c8a
 :END:
 
-This section contains all core keybindings of =Emacs-grandview=.
+This section contains all core keybindings of *Grandview*.
 
 ** INSERT
 :PROPERTIES:
@@ -2537,8 +2537,6 @@ Furthermore Tempel supports syntax extensions:
 Use caution with templates which execute arbitrary code!
 
 #+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
-;; -*- mode: lisp -*-
-
 fundamental-mode ;; Available everywhere
 
 (today (format-time-string "%Y-%m-%d"))
@@ -2605,7 +2603,7 @@ java-mode
 
 (class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
 
-c-mode :condition (re-search-backward "^\\w*$" (line-beginning-position) 'noerror)
+c-mode :condition (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
 (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
 (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
@@ -2620,6 +2618,11 @@ org-mode
 (verse "#+begin_verse" n> r> n> "#+end_verse")
 (src "#+begin_src " p n> r> n> "#+end_src")
 (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (tempel-done))
+
+;; Local Variables:
+;; mode: lisp-data
+;; outline-regexp: "[a-z]"
+;; End:
 #+end_src
 
 ** Pair insertion (eletric.el)
@@ -4059,23 +4062,6 @@ regexp .etc).
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 #+end_src
 
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+lsp.el"
-:CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-7b67a356
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
-(defun ale-lsp-pyright-import-venv ()
-  "Fix `import' resolution with projects with virtual env like conda."
-  (require 'lsp-pyright)
-  (let* ((pr-root (lsp-workspace-root))
-         (py-ver "python3.9")
-         (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
-    (setq lsp-pyright-extra-paths (vector extra-path))))
-#+end_src
-
 *** Extensions
 :PROPERTIES:
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-Extensions-c1cee41d
@@ -4100,6 +4086,23 @@ regexp .etc).
   (setq lsp-ui-doc-show-with-mouse nil)
   :hook
   (lsp-mode . lsp-ui-mode))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+lsp.el"
+:CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-7b67a356
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun ale-lsp-pyright-import-venv ()
+  "Fix `import' resolution with projects with virtual env like conda."
+  (require 'lsp-pyright)
+  (let* ((pr-root (lsp-workspace-root))
+         (py-ver "python3.9")
+         (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
+    (setq lsp-pyright-extra-paths (vector extra-path))))
 #+end_src
 
 ** Virturl environment (conda.el)
