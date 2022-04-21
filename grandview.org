@@ -1546,6 +1546,12 @@ users deserve a file manager better than those popular ones on terminal such as
     (when (file-directory-p file)
       `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
   (add-to-list 'dirvish-preview-dispatchers 'exa)
+  (dirvish-define-mode-line filter "Describe filters."
+    (when (bound-and-true-p dired-filter-mode)
+      (format " %s %s " (propertize "Filters:" 'face 'bold)
+              (dired-filter--describe-filters))))
+  (setq! dirvish-mode-line-format
+         '(:left (vc-info sort filter) :right (yank index)))
   (setq! dirvish-bookmarks-alist
          '(("o" "~/"                          "Home")
            ("d" "/opt/dotfiles/"              "Dotfiles")
@@ -1610,12 +1616,6 @@ users deserve a file manager better than those popular ones on terminal such as
   :config
   (setq dired-filter-show-filters nil)
   (setq dired-filter-revert 'always)
-  (dirvish-define-mode-line filter "Describe filters."
-    (when dired-filter-mode
-      (format " %s %s " (propertize "Filters:" 'face 'bold)
-              (dired-filter--describe-filters))))
-  (setq! dirvish-mode-line-format
-         '(:left (vc-info sort filter) :right (yank index)))
   :bind
   (:map dired-mode-map
         ([remap dired-omit-mode] . dired-filter-mode)))
