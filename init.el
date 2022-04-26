@@ -239,21 +239,6 @@ REST and STATE."
                 '(,@hooks)))
        (use-package-process-keywords name rest state)))))
 
-(defadvice! org-toggle-comment-ad (fn &rest args)
-  "Enhanced drop-in replacement for `org-toggle-comment'."
-  :around #'org-toggle-comment
-  (if (region-active-p)
-      (progn
-        (exchange-point-and-mark)
-        (let ((end (region-end)) last-point)
-          (while (< (point) end)
-            (setq last-point (point))
-            (apply fn args)
-            (org-forward-heading-same-level 1)
-            (when (eq last-point (point))
-              (org-forward-element)))))
-    (apply fn args)))
-
 (let ((bootstrap (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
       (file-name-handler-alist nil))

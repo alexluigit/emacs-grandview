@@ -27,31 +27,48 @@ straightforward project structure:
 :CUSTOM_ID: Overview-Introduction-User_config-c93b584e
 :END:
 
-=user.el= is the file to place your Grandview options and configuration for
-packages that are expecting further evaluation and testing. You should place
-=user.el= in the same directory as ~grandview-org-file~.
+=user.el= is the file to place your:
 
-*Grandview* has the following user options:
+1. *grandview* specfic options which include:
+   + ~grandview-cache-dir~: Cache directory for grandview
+   + ~grandview-org-file~: Path for grandview main config .org file
+   + ~grandview-gc-cons-threshold~: The default value to use for ~gc-cons-threshold~
+2. other arbitrary codes to load before loading the main config
+3. packages expecting further evaluation or testing
 
-+ ~grandview-cache-dir~: Cache directory for grandview
-+ ~grandview-org-file~: Path for grandview main config .org file
-+ ~grandview-gc-cons-threshold~: The default value to use for ~gc-cons-threshold~
+You should place =user.el= in the same directory as ~grandview-org-file~.
 
 Here is an =user.el= example (no worries, this code block won't get tangled).
 
 #+begin_src emacs-lisp :tangle no
 ;;; user.el --- Grandview private configuration -*- lexical-binding: t -*-
 
-;;; Commentary:
-;; This is the file to place your Grandview options and configuration for
-;; packages that are expecting further evaluation.
-
 ;;; Code:
 
-;;;; Grandview options
+;;;; Grandview specific options
 (setq grandview-cache-dir (concat user-emacs-directory "grandview/"))
 (setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
 (setq grandview-gc-cons-threshold 134217728)
+
+;;;; Other arbitrary codes to load before loading the main config
+(defadvice! org-toggle-comment-ad (fn &rest args)
+  "Enhanced drop-in replacement for `org-toggle-comment'.
+This allows `org-toggle-comment' to toggle comment for all same
+level entries in the active region while behaves the same when
+the region is inactive.  This is useful for debugging code blocks
+in `grandview-org-file'."
+  :around #'org-toggle-comment
+  (if (region-active-p)
+      (progn
+        (exchange-point-and-mark)
+        (let ((end (region-end)) last-point)
+          (while (< (point) end)
+            (setq last-point (point))
+            (apply fn args)
+            (org-forward-heading-same-level 1)
+            (when (eq last-point (point))
+              (org-forward-element)))))
+    (apply fn args)))
 
 ;;;; Packages need more testing to be included in the main config
 (use-package popper
@@ -1972,6 +1989,26 @@ look like which can be described briefly as follows:
 :END:
 
 #+begin_src emacs-lisp
+;;;###autoload
+(defadvice! org-toggle-comment-ad (fn &rest args)
+  "Enhanced drop-in replacement for `org-toggle-comment'.
+This allows `org-toggle-comment' to toggle comment for all same
+level entries in the active region while behaves the same when
+the region is inactive.  This is useful for debugging code blocks
+in `grandview-org-file'."
+  :around #'org-toggle-comment
+  (if (region-active-p)
+      (progn
+        (exchange-point-and-mark)
+        (let ((end (region-end)) last-point)
+          (while (< (point) end)
+            (setq last-point (point))
+            (apply fn args)
+            (org-forward-heading-same-level 1)
+            (when (eq last-point (point))
+              (org-forward-element)))))
+    (apply fn args)))
+
 ;;;###autoload
 (defadvice! org-fill-paragraph-ad (&rest _)
   "Let `org-fill-paragraph' works inside of src block in Org-mode."
