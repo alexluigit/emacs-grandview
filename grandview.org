@@ -43,8 +43,6 @@ Here is an =user.el= example (no worries, this code block won't get tangled).
 #+begin_src emacs-lisp :tangle no
 ;;; user.el --- Grandview private configuration -*- lexical-binding: t -*-
 
-;;; Code:
-
 ;;;; Grandview specific options
 (setq grandview-cache-dir (concat user-emacs-directory "grandview/"))
 (setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
@@ -1164,7 +1162,7 @@ This section contains all core keybindings of *Grandview*.
 #+begin_src emacs-lisp
 (bind-keys
  :map meow-insert-state-keymap
- ("C-u" . meow-kill-whole-line)
+ ("C-;" . meow-kill-whole-line)
  ("<C-i>" . meow-right)
  ("C-o" . meow-left))
 #+end_src
@@ -1329,7 +1327,7 @@ your terminal emulator's settings.
  ("M-n" . forward-paragraph)
  ("M-p" . backward-paragraph)
  :map minibuffer-local-map
- ("C-u" . meow-kill-whole-line)
+ ("C-;" . meow-kill-whole-line)
  ("<C-i>" . forward-char)
  ("C-o" . backward-char))
 #+end_src
@@ -3503,10 +3501,10 @@ Index based window motions.
   (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
   (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
   :bind
-  (("M--" . ale-vterm-toggle)
+  (("M-;" . ale-vterm-toggle)
    :map vterm-mode-map
-   ("M--" . ale-vterm-toggle)
-   ("M-;" . ale-vterm-new)
+   ("M-;" . ale-vterm-toggle)
+   ("M--" . ale-vterm-new)
    ("M-'" . vterm-send-M-apostrophe)
    ("M-\"" . vterm-send-M-quote)
    ("M-/" . vterm-send-M-/)
@@ -3518,6 +3516,7 @@ Index based window motions.
    ("S-SPC" . nil)
    ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
    ("<C-i>" . vterm-send-C-i)
+   ("C-;" . vterm-send-C-semicolon)
    ("C-<delete>" . vterm-send-C-delete)
    ("C-<return>" . vterm-send-F5)))
 #+end_src
@@ -3568,6 +3567,11 @@ Index based window motions.
 (defun vterm-send-C-delete ()
   (interactive)
   (vterm-send-key "<delete>" nil nil 0))
+
+;;;###autoload
+(defun vterm-send-C-semicolon ()
+  (interactive)
+  (vterm-send-key ";" nil nil 0))
 
 ;;;###autoload
 (defun vterm-send-M-return ()
