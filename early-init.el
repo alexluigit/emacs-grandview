@@ -137,10 +137,6 @@
 ;; Do not display continuation lines
 (setq-default truncate-lines t)
 
-;; Sentence settings
-(setq sentence-end-double-space t)
-(setq sentence-end-without-period nil)
-
 ;; y,n for yes,no
 (if (<= emacs-major-version 28)
     (defalias 'yes-or-no-p 'y-or-n-p)
