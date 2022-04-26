@@ -131,26 +131,6 @@
 (put 'dired-find-alternate-file 'disabled nil)
 (setq custom-file (concat user-emacs-directory "custom.el"))
 
-;; I believe tabs, in the sense of inserting the tab character, are best suited
-;; for indentation.  While spaces are superior at precisely aligning text.
-;; However, I understand that elisp uses its own approach, which I do not want
-;; to interfere with.  Also, Emacs tends to perform alignments by mixing tabs
-;; with spaces, which can actually lead to misalignments depending on certain
-;; variables such as the size of the tab.  As such, I am disabling tabs by
-;; default.
-
-;; If there ever is a need to use different settings in other modes,
-;; we can customise them via hooks.  This is not an issue I have
-;; encountered yet and am therefore refraining from solving a problem
-;; that does not affect me.
-
-;; Note that `tab-always-indent' will first do indentation and then
-;; try to complete whatever you have typed in.
-(setq-default tab-always-indent t)
-(setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
-(setq-default tab-width 2)
-(setq-default indent-tabs-mode nil)
-
 ;; Show current key strokes in echo area after 0.25s
 (setq echo-keystrokes 0.25)
 

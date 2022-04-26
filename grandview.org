@@ -317,6 +317,35 @@ Call this repeatedly will cycle all positions in `mark-ring'."
     (back-to-indentation)))
 #+end_src
 
+** Tab for Indentation (indent.el)
+:PROPERTIES:
+:CUSTOM_ID: *TEXT_EDITING*-Tab_for_Indentation-67ef1cad
+:END:
+
+I believe tabs, in the sense of inserting the tab character, are best suited for
+indentation.  While spaces are superior at precisely aligning text.  However, I
+understand that elisp uses its own approach, which I do not want to interfere
+with.  Also, Emacs tends to perform alignments by mixing tabs with spaces, which
+can actually lead to misalignments depending on certain variables such as the
+size of the tab.  As such, I am disabling tabs by default.
+
+If there ever is a need to use different settings in other modes, we can
+customise them via hooks.  This is not an issue I have encountered yet and am
+therefore refraining from solving a problem that does not affect me.
+
+Note that ~tab-always-indent~ will first do indentation and then try to complete
+whatever you have typed in.
+
+#+begin_src emacs-lisp
+(use-package indent
+  :straight (:type built-in)
+  :preface
+  (setq-default tab-always-indent t)
+  (setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
+  (setq-default tab-width 2)
+  (setq-default indent-tabs-mode nil))
+#+end_src
+
 ** Modal editing (meow.el)
 :PROPERTIES:
 :CUSTOM_ID: *Text_editing*-Modal_editing_(meow.el)-c67b850b
@@ -490,7 +519,7 @@ has been bound to =meow-inner-of-thing=.)
            :repo "cute-jumper/embrace.el"
            :fork (:host github :repo "alexluigit/embrace.el"))
   :after-call set-mark
-  :init
+  :preface
   (setq embrace-default-pairs
         '((?r . ("(" . ")"))
           (?R . ("( " . " )"))
