@@ -175,9 +175,5 @@
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/"))
 
 ;; Inhibit eval confirmation for `grandview-setup-literate-file'.
-(setq safe-local-variable-values '((eval . (ignore-errors (grandview-setup-literate-file)))))
-
-;; Grandview specific options
-(setq grandview-cache-dir (concat user-emacs-directory "grandview/"))
-(setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
-(setq grandview-gc-cons-threshold 134217728)
+(setq safe-local-variable-values
+      '((eval . (ignore-errors (grandview-setup-literate-file)))))

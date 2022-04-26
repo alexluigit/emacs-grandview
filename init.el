@@ -19,10 +19,6 @@ If you experience freezing, decrease this.  If you experience
 stuttering, increase this."
   :group 'grandview :type 'integer)
 
-(defvar grandview--el-file (concat grandview-cache-dir "grandview.el"))
-(defvar grandview--autoload-file (concat grandview-cache-dir "autoload.el"))
-(defvar grandview--autoload-dir (concat grandview-cache-dir "autoloads/"))
-
 ;; Keymaps
 ;; `grandview-files-map': Open files/dirs or operate on files
 ;; `grandview-mct-map':   'mct' is the acronym for "Minibuffer and Completions in Tandem".
@@ -116,6 +112,14 @@ DOCSTRING and BODY are as in `defun'.
   (interactive)
   (find-file grandview-org-file))
 
+(defun grandview--init-path (type)
+  "Get grandview's init path according to TYPE."
+  (pcase type
+    ('main (concat grandview-cache-dir "grandview.el"))
+    ('au-el (concat grandview-cache-dir "autoload.el"))
+    ('au-dir (concat grandview-cache-dir "autoloads/"))
+    ('user (concat (file-name-directory grandview-org-file) "user.el"))))
+
 (defun grandview--gen-tangle-path ()
   "Prepare metadata for `grandview-tangle'."
   (with-current-buffer (find-file-noselect grandview-org-file)
@@ -131,7 +135,7 @@ DOCSTRING and BODY are as in `defun'.
                        (org-up-heading-safe)
                        (let ((h (org-get-heading)))
                          (substring h (1+ (string-match "(\\(.*\\))" h)) (match-end 1)))))
-                    (tangle-path (concat ":tangle \"" grandview--autoload-dir "+" package-name "\"")))
+                    (tangle-path (concat ":tangle \"" (grandview--init-path 'au-dir) "+" package-name "\"")))
                (org-entry-put nil "header-args:emacs-lisp" tangle-path)))))))
     (save-buffer)
     (kill-this-buffer)))
@@ -143,15 +147,15 @@ DOCSTRING and BODY are as in `defun'.
          (new-md5 (secure-hash 'md5 (read-file! grandview-org-file)))
          (org-confirm-babel-evaluate nil))
     (when (or force (not (string= old-md5 new-md5)))
-      (when (file-exists-p grandview--el-file)
-        (delete-file grandview--el-file))
+      (when (file-exists-p (grandview--init-path 'main))
+        (delete-file (grandview--init-path 'main)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
         (write-region (point-min) (point-max) md5-file))
       (require 'ob-tangle)
-      (org-babel-tangle-file grandview-org-file grandview--el-file)
-      (cl-loop for lib in (directory-files-recursively grandview--autoload-dir "\\.el$")
+      (org-babel-tangle-file grandview-org-file (grandview--init-path 'main))
+      (cl-loop for lib in (directory-files-recursively (grandview--init-path 'au-dir) "\\.el$")
                do (with-current-buffer (find-file-noselect lib)
                     (goto-char (point-min))
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
@@ -159,20 +163,20 @@ DOCSTRING and BODY are as in `defun'.
                     (kill-this-buffer))))))
 
 (defun grandview--gen-autoload (&optional force)
-  "Append `grandview--autoload-dir''s autoloads to `grandview--autoload-file'.
-Only do it when FORCE or contents in `grandview--autoload-dir' changed."
+  "Generate autoload files for Grandview.
+Only do it when FORCE or contents in autoload directory changed."
   (require 'autoload)
   (let* ((autoload-md5 (concat grandview-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
                     (read-file! autoload-md5)))
-         (all-el-files (directory-files-recursively grandview--autoload-dir "\\.el$"))
+         (all-el-files (directory-files-recursively (grandview--init-path 'au-dir) "\\.el$"))
          (files-as-str (with-temp-buffer
                          (dolist (file all-el-files)
                            (insert-file-contents file))
                          (buffer-string)))
          (new-md5 (secure-hash 'md5 files-as-str)))
     (when (or force (not (string= old-md5 new-md5)))
-      (with-temp-file grandview--autoload-file
+      (with-temp-file (grandview--init-path 'au-el)
         (cl-loop with generated-autoload-file = nil
                  with inhibit-message = t
                  for file in all-el-files
@@ -185,8 +189,7 @@ Only do it when FORCE or contents in `grandview--autoload-dir' changed."
 
 (defun grandview-tangle (&optional force)
   "Tangle and generate autoloads for `grandview-org-file'.
-FORCE is passed to `grandview--tangle' and
-`grandview--gen-autoload'."
+When FORCE, ensure the tangle process and autoloads generation."
   (grandview--gen-tangle-path)
   (grandview--tangle force)
   (grandview--gen-autoload force))
@@ -270,18 +273,21 @@ REST and STATE."
   (push :after-call use-package-deferring-keywords)
   (setq use-package-keywords (use-package-list-insert :after-call use-package-keywords :after))
   (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
-  ;; Load transient.el
+  ;; Load transient.el so we can use `transient-define-prefix' immediately
   (straight-use-package `(transient ,@(when EMACS28+ '(:type built-in))))
+  ;; Load user config
+  (load (grandview--init-path 'user) nil t)
   ;; Tangle and load Grandview
   ;; "Initiate spin!" -- Joseph Cooper
   (unless (file-exists-p grandview-cache-dir)
-    (make-directory grandview--autoload-dir t)
+    (make-directory (grandview--init-path 'au-dir) t)
     (grandview-tangle t))
-  (load grandview--autoload-file nil t)
-  (load grandview--el-file nil t)
+  (load (grandview--init-path 'au-el) nil t)
+  (load (grandview--init-path 'main) nil t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   ;; Show profiler when debugging
   (when DEBUG-INIT-P (add-hook 'emacs-startup-hook #'grandview-profiler))
   ;; Setup garbage collection
-  (add-function :after after-focus-change-function (lambda () (unless (frame-focus-state) (garbage-collect))))
+  (add-function :after after-focus-change-function
+                (lambda () (unless (frame-focus-state) (garbage-collect))))
   (setq gc-cons-threshold grandview-gc-cons-threshold))

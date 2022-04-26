@@ -19,7 +19,56 @@ straightforward project structure:
 
 + Early init:              =early-init.el=
 + Init:                    =init.el=
++ User config (optional):  =user.el=
 + Main config file (.org): This file (defaults to =grandview.org=)
+
+*** User config
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-User_config-c93b584e
+:END:
+
+=user.el= is the file to place your Grandview options and configuration for
+packages that are expecting further evaluation and testing. You should place
+=user.el= in the same directory as ~grandview-org-file~.
+
+*Grandview* has the following user options:
+
++ ~grandview-cache-dir~: Cache directory for grandview
++ ~grandview-org-file~: Path for grandview main config .org file
++ ~grandview-gc-cons-threshold~: The default value to use for ~gc-cons-threshold~
+
+Here is an =user.el= example (no worries, this code block won't get tangled).
+
+#+begin_src emacs-lisp :tangle no
+;;; user.el --- Grandview private configuration -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; This is the file to place your Grandview options and configuration for
+;; packages that are expecting further evaluation.
+
+;;; Code:
+
+;;;; Grandview options
+(setq grandview-cache-dir (concat user-emacs-directory "grandview/"))
+(setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
+(setq grandview-gc-cons-threshold 134217728)
+
+;;;; Packages need more testing to be included in the main config
+(use-package popper
+  :bind (("C-`"   . popper-toggle-latest)
+         ("M-`"   . popper-cycle)
+         ("C-M-`" . popper-toggle-type))
+  :init
+  (appendq! popper-reference-buffers
+            '("Output\\*$" "\\*Async Shell Command\\*" compilation-mode))
+  (popper-mode)
+  (popper-echo-mode))
+#+end_src
+
+*** This =.org= file
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-This_=.org=_file-59a7ea61
+:END:
 
 The elisp source blocks in this file is tangled to a regular =.el= file which is
 then evaluated by Emacs.  Sections named *Autoload* are tangled to separate files
