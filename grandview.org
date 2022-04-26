@@ -156,7 +156,8 @@ The following section provided a CLI for restarting *Grandview*.
 (pcase type
   ("main" (format "%s" grandview-cache-dir))
   ("pkg-builds" (straight--build-dir))
-  ("pkg-repos" (straight--repos-dir)))
+  ("pkg-repos" (straight--repos-dir))
+  ("eln-fix" (concat (file-name-directory user-init-file) "eln-cache/")))
 #+end_src
 
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
@@ -191,6 +192,7 @@ $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 _is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd || eval $emacs_cmd
 command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
 emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
+rm -rf '<<grandview-cache(type="eln-fix")>>'
 #+end_src
 
 This script first dispatches a ~kill-emacs~ command to the living Emacs process,
@@ -2891,7 +2893,7 @@ Summary of what these do:
 Protesilaos Stavrou.
 
 #+begin_src emacs-lisp
-(straight-use-package `(modus-themes ,@(when (>= emacs-major-version 28) '(:type built-in))))
+(straight-use-package `(modus-themes ,@(when EMACS29+ '(:type built-in))))
 (use-package modus-themes
   :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
   :config
@@ -2964,7 +2966,7 @@ A list of my favorite CJK fonts.
         (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
       (dolist (charset '(kana han cjk-misc bopomofo))
         (set-fontset-font (frame-parameter nil 'font) charset zh-font))
-      (when (< emacs-major-version 28)
+      (unless EMACS28+
         (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))))
 
 ;;;###autoload
