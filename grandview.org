@@ -99,9 +99,20 @@ recommended to comment out these sections. Since codes in other sections may
 rely on orientations in the section to work properly, so be sure to edit these
 sections with caution.
 
-** Dependencies
+** Installation
 :PROPERTIES:
-:CUSTOM_ID: Overview-Dependencies-0f4439dd
+:CUSTOM_ID: Overview-Installation-e1935e0a
+:END:
+
+Make sure to backup your own emacs config before installation.
+
+#+begin_src shell :tangle no
+cp -r ~/.emacs.d ~/.emacs.d.bak
+#+end_src
+
+*** Dependencies
+:PROPERTIES:
+:CUSTOM_ID: Overview-Installation-Dependencies-423bdf47
 :END:
 
 Here are the dependencies of this project.
@@ -120,16 +131,10 @@ Here are the dependencies of this project.
 | =xdotool=           | Automation tool for X11     | optional |
 |-------------------+-----------------------------+----------|
 
-** Installation
+*** Tangling
 :PROPERTIES:
-:CUSTOM_ID: Overview-Installation-e1935e0a
+:CUSTOM_ID: Overview-Installation-Tangling-2622c756
 :END:
-
-Make sure to backup your own emacs config before installation.
-
-#+begin_src shell :tangle no
-cp -r ~/.emacs.d ~/.emacs.d.bak
-#+end_src
 
 Clone the repo and tangle the config.
 
