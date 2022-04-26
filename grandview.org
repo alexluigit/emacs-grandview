@@ -1610,6 +1610,7 @@ users deserve a file manager better than those popular ones on terminal such as
    ("b"   . dirvish-roam)
    ("M-a" . dirvish-mark-actions-menu)
    ("M-s" . dirvish-setup-menu)
+   ([remap dired-sort-toggle-or-edit] . dirvish-sort-by-criteria)
    ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank)
    ([remap mode-line-other-buffer] . dirvish-other-buffer)
@@ -1648,8 +1649,7 @@ users deserve a file manager better than those popular ones on terminal such as
          (append '(vc-diff) dirvish-preview-dispatchers))
   (setq! dirvish-side-mode-line-format
          '(:left (vc-info sort filter) :right (index)))
-  (setq dirvish-debug-p t)
-  (setq dirvish-trash-dir-alist '(("/mnt/HDD/" . ".Trash/files"))))
+  (setq dirvish-debug-p t))
 #+end_src
 
 ** A fd procelain (fd-dired.el)
