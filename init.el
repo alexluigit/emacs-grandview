@@ -36,26 +36,6 @@ stuttering, increase this."
     (defalias 'grandview-project-map project-prefix-map)
   (define-prefix-command 'grandview-project-map))
 
-(defun read-file! (path &optional coding)
-  "Read text with PATH, using CODING.
-CODING defaults to `utf-8'.
-Return the decoded text as multibyte string."
-  (let ((str (with-temp-buffer
-               (set-buffer-multibyte nil)
-               (setq buffer-file-coding-system 'binary)
-               (insert-file-contents-literally path)
-               (buffer-substring-no-properties (point-min) (point-max)))))
-  (decode-coding-string str (or coding 'utf-8))))
-
-(defun log! (&optional label string)
-  "Simple logging command.
-Optional LABEL and STRING are echoed out."
-  (let* ((label-str (cond ((symbolp label) (symbol-name label))
-                          ((stringp label) label)
-                          (t "GRANDVIEW")))
-         (label (propertize label-str 'face 'font-lock-builtin-face)))
-    (prog1 nil (message "%s" (format "%s: %s" label string)))))
-
 (defmacro setq! (&rest settings)
   "A stripped-down `customize-set-variable' with the syntax of `setq'.
 
@@ -107,10 +87,23 @@ DOCSTRING and BODY are as in `defun'.
          (dolist (target (cdr targets))
            (advice-add target (car targets) #',symbol))))))
 
-(defun find-emacs-config ()
-  "Edit `grandview-org-file'."
-  (interactive)
-  (find-file grandview-org-file))
+(defun grandview--readfile (path)
+  "Return the decoded text in PATH as multibyte string."
+  (let ((str (with-temp-buffer
+               (set-buffer-multibyte nil)
+               (setq buffer-file-coding-system 'binary)
+               (insert-file-contents-literally path)
+               (buffer-substring-no-properties (point-min) (point-max)))))
+  (decode-coding-string str 'utf-8)))
+
+(defun grandview--log (&optional label string)
+  "Simple logging command.
+Optional LABEL and STRING are echoed out."
+  (let* ((label-str (cond ((symbolp label) (symbol-name label))
+                          ((stringp label) label)
+                          (t "GRANDVIEW")))
+         (label (propertize label-str 'face 'font-lock-builtin-face)))
+    (prog1 nil (message "%s" (format "%s: %s" label string)))))
 
 (defun grandview--init-path (type)
   "Get grandview's init path according to TYPE."
@@ -143,8 +136,8 @@ DOCSTRING and BODY are as in `defun'.
 (defun grandview--tangle (&optional force)
   "Tangle `grandview-org-file' when FORCE or its md5 changed."
   (let* ((md5-file (concat grandview-cache-dir "init.md5"))
-         (old-md5 (when (file-exists-p md5-file) (read-file! md5-file)))
-         (new-md5 (secure-hash 'md5 (read-file! grandview-org-file)))
+         (old-md5 (when (file-exists-p md5-file) (grandview--readfile md5-file)))
+         (new-md5 (secure-hash 'md5 (grandview--readfile grandview-org-file)))
          (org-confirm-babel-evaluate nil))
     (when (or force (not (string= old-md5 new-md5)))
       (when (file-exists-p (grandview--init-path 'main))
@@ -168,7 +161,7 @@ Only do it when FORCE or contents in autoload directory changed."
   (require 'autoload)
   (let* ((autoload-md5 (concat grandview-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
-                    (read-file! autoload-md5)))
+                    (grandview--readfile autoload-md5)))
          (all-el-files (directory-files-recursively (grandview--init-path 'au-dir) "\\.el$"))
          (files-as-str (with-temp-buffer
                          (dolist (file all-el-files)
@@ -187,6 +180,11 @@ Only do it when FORCE or contents in autoload directory changed."
         (insert new-md5)
         (write-region (point-min) (point-max) autoload-md5)))))
 
+(defun grandview-config ()
+  "Edit `grandview-org-file'."
+  (interactive)
+  (find-file grandview-org-file))
+
 (defun grandview-tangle (&optional force)
   "Tangle and generate autoloads for `grandview-org-file'.
 When FORCE, ensure the tangle process and autoloads generation."
@@ -201,7 +199,7 @@ When FORCE, ensure the tangle process and autoloads generation."
         (docstr "%d packages loaded in %ss"))
     (when (boundp 'straight--profile-cache)
       (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
-    (run-with-timer 1 nil 'log! "GrandView Profiler" (format docstr package-count time))))
+    (run-with-timer 1 nil 'grandview--log "GrandView Profiler" (format docstr package-count time))))
 
 (defvar +use-package--deferred-pkgs '(t))
 (defun use-package-handler/:after-call (name _keyword hooks rest state)
@@ -216,7 +214,7 @@ REST and STATE."
       (use-package-concat
        `((fset ',fn
                (lambda (&rest _)
-                 (when DEBUG-INIT-P (log! "Lazy loaded" (format "%s on commands %s" ',name ',hooks)))
+                 (when DEBUG-INIT-P (grandview--log "Lazy loaded" (format "%s on commands %s" ',name ',hooks)))
                  (condition-case e
                      (let ((default-directory user-emacs-directory))
                        (require ',name))
@@ -239,14 +237,14 @@ REST and STATE."
                 '(,@hooks)))
        (use-package-process-keywords name rest state)))))
 
-(let ((bootstrap (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+(let ((bootstrap (locate-user-emacs-file "straight/repos/straight.el/bootstrap.el"))
       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
       (file-name-handler-alist nil))
   ;; Init package manager `straight.el'
-  (setq straight-use-package-by-default t)
-  (setq straight-vc-git-default-clone-depth 1)
-  (setq straight-check-for-modifications '(check-on-save find-when-checking))
-  (setq straight-repository-branch "develop")
+  (setq straight-use-package-by-default t
+        straight-vc-git-default-clone-depth 1
+        straight-check-for-modifications '(check-on-save find-when-checking)
+        straight-repository-branch "develop")
   (unless (file-exists-p bootstrap)
     (with-current-buffer (url-retrieve-synchronously script 'silent 'inhibit-cookies)
       (goto-char (point-max)) (eval-print-last-sexp)))
@@ -275,4 +273,5 @@ REST and STATE."
   ;; Setup garbage collection
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))
-  (setq gc-cons-threshold grandview-gc-cons-threshold))
+  (setq gc-cons-threshold grandview-gc-cons-threshold
+        gc-cons-percentage 0.1))

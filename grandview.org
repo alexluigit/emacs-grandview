@@ -44,17 +44,17 @@ Here is an =user.el= example (no worries, this code block won't get tangled).
 ;;; user.el --- Grandview private configuration -*- lexical-binding: t -*-
 
 ;;;; Grandview specific options
-(setq grandview-cache-dir (concat user-emacs-directory "grandview/"))
+(setq grandview-cache-dir (locate-user-emacs-file "grandview/"))
 (setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
 (setq grandview-gc-cons-threshold 134217728)
 
 ;;;; Other arbitrary codes to load before loading the main config
-(defadvice! org-toggle-comment-ad (fn &rest args)
-  "Enhanced drop-in replacement for `org-toggle-comment'.
-This allows `org-toggle-comment' to toggle comment for all same
-level entries in the active region while behaves the same when
-the region is inactive.  This is useful for debugging code blocks
-in `grandview-org-file'."
+(defadvice! org-toggle-comment-ad (&rest args)
+  "Drop-in replacement for `org-toggle-comment'.
+This allows `org-toggle-comment' to toggle comment for all the
+entries with the same level in the active region while behaves
+the same when the region is inactive.  This is useful for
+debugging code blocks in a org config file."
   :around #'org-toggle-comment
   (if (region-active-p)
       (progn
@@ -62,11 +62,11 @@ in `grandview-org-file'."
         (let ((end (region-end)) last-point)
           (while (< (point) end)
             (setq last-point (point))
-            (apply fn args)
+            (apply args)
             (org-forward-heading-same-level 1)
             (when (eq last-point (point))
               (org-forward-element)))))
-    (apply fn args)))
+    (apply args)))
 
 ;;;; Packages need more testing to be included in the main config
 (use-package popper
@@ -88,14 +88,14 @@ in `grandview-org-file'."
 The elisp source blocks in this file is tangled to a regular =.el= file which is
 then evaluated by Emacs.  Sections named *Autoload* are tangled to separate files
 upon which corresponding autoloads are generated.  Whenever the content of this
-file changes, this tangling process is repeated on the execution of ~kill-emacs~
-command, after that the new generated config will replace the old one.
+file changes, this tangling process is fired up on the execution of ~kill-emacs~
+command, after that the old config is replaced by the newly generated one.
 
 A section with /bold and uppercase title/ means it is a core config in
-*Grandview*. Unless you know exactly what you are doing, it is *NOT*
-recommended to comment out these sections. Since codes in other sections may
-rely on orientations in the section to work properly, so be sure to edit these
-sections with caution.
+*Grandview*. Unless you know exactly what you are doing, it is *NOT* recommended to
+comment out these sections. Since codes in other sections may rely on
+orientations in the section to work properly, so be sure to edit these sections
+with caution.
 
 ** Installation
 :PROPERTIES:
@@ -176,8 +176,7 @@ The following section provided a CLI for restarting *Grandview*.
 (pcase type
   ("main" (format "%s" grandview-cache-dir))
   ("pkg-builds" (straight--build-dir))
-  ("pkg-repos" (straight--repos-dir))
-  ("eln-fix" (concat (file-name-directory user-init-file) "eln-cache/")))
+  ("pkg-repos" (straight--repos-dir)))
 #+end_src
 
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
@@ -211,8 +210,7 @@ $ELCs && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
 $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 _is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd || eval $emacs_cmd
 command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
-emacsclient -cne '(delete-file "~/nohup.out")' >/dev/null 2>&1
-rm -rf '<<grandview-cache(type="eln-fix")>>'
+emacsclient -cne '(delete-file "~/nohup.out")'
 #+end_src
 
 This script first dispatches a ~kill-emacs~ command to the living Emacs process,
@@ -273,7 +271,10 @@ related to some major mode or to file-handling.
 
 #+begin_src emacs-lisp
 (use-package simple
-  :straight (:type built-in))
+  :straight (:type built-in)
+  :config
+  ;; added in Emacs 28.1
+  (setq next-error-message-highlight t))
 #+end_src
 
 *** Autoload
@@ -395,6 +396,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
           (?x . extend)
           (?. . sentence)))
   (appendq! meow-mode-state-list '((helpful-mode . normal)
+                                   (Man-mode . normal)
                                    (message-buffer-mode . normal))))
 #+end_src
 
@@ -561,6 +563,48 @@ whatever you have typed in.
 :CUSTOM_ID: *User_interface*-c85993d8
 :END:
 
+** Basics
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Basics-cf25db16
+:END:
+
+Show current key strokes in echo area after 0.25s
+
+Disable bidirectional text scanning for a modest performance boost. I've set
+this to ~nil~ in the past, but the ~bidi-display-reordering~'s docs say that is an
+undefined state and suggest the value ~left-to-right~ to be just as good.
+
+Do not display continuation lines
+Do not disable the ~erase-buffer~ command
+
+By default, page scrolling should keep the point at the same visual
+position, rather than force it to the top or bottom of the
+viewport.  This eliminates the friction of guessing where the point
+has warped to.
+
+As for per-line scrolling, I dislike the default behaviour of
+visually re-centring the point: it is too aggressive as a standard
+mode of interaction.  With the following setq-default, the point
+will stay at the top/bottom of the screen while moving in that
+direction (use =C-l= to reposition it).
+
+#+begin_src emacs-lisp
+(setq-default bidi-display-reordering 'left-to-right)
+(setq-default bidi-paragraph-direction 'left-to-right)
+;; (setq bidi-inhibit-bpa t)  ; Emacs 27 only
+(setq-default truncate-lines t)
+(setq echo-keystrokes 0.25)
+(setq scroll-conservatively 101)
+(setq scroll-up-aggressively 0.01)
+(setq scroll-down-aggressively 0.01)
+(setq auto-window-vscroll nil)
+(setq scroll-step 1)
+(setq scroll-margin 1)
+(setq hscroll-step 1)
+(setq hscroll-margin 1)
+(put 'erase-buffer 'disabled nil)
+#+end_src
+
 ** Window placement (window.el)
 :PROPERTIES:
 :CUSTOM_ID: *User_interface*-Window_placement_(window.el)-905aceb8
@@ -575,13 +619,15 @@ For each buffer action in it we can define several functions for selecting the
 appropriate window.  These are executed in sequence, but my usage thus far
 suggests that a simpler method is just as effective for my case.
 
-Additionally, I've set =split-height-threshold= to nil and =split-width-threshold=
-to 0 to ensure every new window will open in horizontal split.
+Disable ~cursor-in-non-selected-windows~ and ~highlight-nonselected-windows~ reduces
+rendering/line scan work for Emacs in non-focused windows.
 
 #+begin_src emacs-lisp
 (use-package window
   :straight (:type built-in)
   :config
+  (setq-default cursor-in-non-selected-windows nil)
+  (setq highlight-nonselected-windows nil)
   (setq display-buffer-alist
         `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
            (display-buffer-in-side-window)
@@ -639,8 +685,7 @@ If ERASE is non-nil, erase the buffer before switching to it."
   "Toggle between multiple windows and single window.
 This is the equivalent of maximising a window.  Tiling window
 managers such as DWM, BSPWM refer to this state as 'monocle'."
-  :global nil
-  :interactive nil
+  :global t
   (let ((config +monocle--saved-window-configuration)
         (buf (current-buffer)))
     (if (one-window-p)
@@ -1251,6 +1296,7 @@ This section contains all core keybindings of *Grandview*.
 
 #+begin_src emacs-lisp
 (meow-leader-define-key
+ '("SPC" . +meow-with-key-fallback)
  '("0" . delete-window)
  '("1" . delete-other-windows)
  '("2" . split-window-below)
@@ -1259,7 +1305,6 @@ This section contains all core keybindings of *Grandview*.
  '("5" . ctl-x-5-prefix)
  '("8" . insert-char)
  '("9" . grandview-tab-map)
- '("SPC" . +meow-with-key-fallback)
  '("?" . describe-keymap)
  '("/" . describe-symbol)
  '(";" . comment-line)
@@ -1267,24 +1312,26 @@ This section contains all core keybindings of *Grandview*.
  '("." . end-of-buffer)
  '("a" . grandview-apps-map)
  '("e" . dired-jump)
- '("f" . grandview-files-map)
  '("E" . eval-expression)
+ '("f" . grandview-files-map)
  '("i" . list-buffers)
  '("k" . kill-this-buffer)
  '("n" . ale-project-find-file)
  '("o" . grandview-org-map)
+ '("p" . grandview-prog-map)
  '("P" . grandview-project-map)
  '("r" . grandview-reg-map)
+ '("s" . save-buffer)
  '("t" . grandview-mct-map)
- '("p" . grandview-prog-map)
- '("w" . save-buffer)
- '("z" . window-toggle-side-windows))
+ ;; '("w" . grandview-window-map)
+ ;; '("z" . window-toggle-side-windows)
+ )
 
 (bind-keys
  :map grandview-files-map
- ("e" . find-emacs-config)
- ("l" . find-library)
+ ("e" . grandview-config)
  :map grandview-apps-map
+ ("d" . toggle-debug-on-error)
  ("o" . +frame-opacity-set)
  ("=" . count-words)
  ("n" . ale-tab-next)
@@ -1318,7 +1365,7 @@ your terminal emulator's settings.
 #+begin_src emacs-lisp
 (bind-keys
  :map global-map
- ;; ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
+ ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
  ("C-c m" . +show-messages)
  ("<C-i>" . +simple-pop-local-mark-ring)
  ("C-o" . pop-global-mark)
@@ -1370,7 +1417,10 @@ These keybindings are available when the current major mode doesn't define that 
    :map grandview-files-map
    ("." . ale-files-find-dotfiles)
    ("r" . ale-files-rename-file-and-buffer)
-   ("u" . ale-files-find-user-files)))
+   ("u" . ale-files-find-user-files))
+  :preface
+  (setq auto-save-default nil)
+  (setq make-backup-files nil))
   #+end_src
 
 *** Autoload
@@ -1419,15 +1469,6 @@ These keybindings are available when the current major mode doesn't define that 
                       (let ((default-directory "~"))
                         (apply #'start-process "" nil "nohup" (append (list cmd) sh-args)))))
                    (t (apply fn file args))))))
-
-;;;###autoload
-(defadvice! find-library-ad (fn &rest args)
-  "Always follow symlink when using `find-library'.
-Package managers like `straight.el' use symlink to manage
-package/libraries. This advice will enable user always find
-libraries's truename."
-  :around #'find-library
-  (let ((vc-follow-symlinks t)) (apply fn args)))
 
 (defun ale-files--in-directory (dir &optional prompt)
   "Use `fd' to list files in DIR."
@@ -1481,6 +1522,27 @@ Do not try to make a new directory or anything fancy."
          (title (completing-read "Open: " cands nil t))
          (path (funcall get-item title 'path)))
     (ale-files--in-directory path (concat title ": "))))
+#+end_src
+
+** Find libraries (find-func.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Find_libraries_(find-func.el)-032214e2
+:END:
+
+This packages provides the ~find-library~ command which allows us browsing the
+source code of Emacs efficiently, want to have to look on =dired.el=? Just ~M-x
+find-library RET dired~. Even better, we can introspect the C code of Emwacs
+itself as long as the ~find-function-C-source-directory~ is set properly.
+
+#+begin_src emacs-lisp
+(use-package find-func
+  :config
+  (setq find-function-C-source-directory
+        "~/.cache/paru/clone/emacs-git/src/emacs-git/src")
+  :bind
+  (nil
+   :map grandview-files-map
+   ("l" . find-library)))
 #+end_src
 
 ** MIME media types (mailcap.el)
@@ -1590,7 +1652,8 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
   (setq dired-dwim-target t)
-  (setq dired-listing-switches "-AGhlv --group-directories-first --time-style=long-iso"))
+  (setq dired-listing-switches
+        "-g --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group"))
 
 (use-package dired-x
   :straight (:type built-in)
@@ -1630,9 +1693,10 @@ users deserve a file manager better than those popular ones on terminal such as
    ("b"   . dirvish-roam)
    ("M-a" . dirvish-mark-actions-menu)
    ("M-s" . dirvish-setup-menu)
-   ([remap dired-sort-toggle-or-edit] . dirvish-sort-by-criteria)
+   ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
+   ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
    ([remap dired-summary] . dirvish-dispatch)
-   ([remap dired-do-copy] . dirvish-yank)
+   ([remap dired-do-copy] . dirvish-yank-menu)
    ([remap mode-line-other-buffer] . dirvish-other-buffer)
    :map grandview-files-map
    ("b" . dirvish-roam)
@@ -1857,7 +1921,7 @@ Basically switches to a new branch or tag."
   "Run `magit-status' on project."
   (interactive)
   (let* ((pr (project-current t))
-         (dir (cdr pr)))
+         (dir (project-root pr)))
     (magit-status dir)))
 
 ;;;###autoload
@@ -1894,7 +1958,7 @@ With a universal prefix to choose project anyway."
 (use-package tramp
   :straight (:type built-in)
   :config
-  (setq tramp-auto-save-directory (concat user-emacs-directory "tramp/"))
+  (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
   (setq! tramp-use-ssh-controlmaster-options nil))
 #+end_src
@@ -1993,12 +2057,12 @@ look like which can be described briefly as follows:
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defadvice! org-toggle-comment-ad (fn &rest args)
-  "Enhanced drop-in replacement for `org-toggle-comment'.
-This allows `org-toggle-comment' to toggle comment for all same
-level entries in the active region while behaves the same when
-the region is inactive.  This is useful for debugging code blocks
-in `grandview-org-file'."
+(defadvice! org-toggle-comment-ad (&rest args)
+  "Drop-in replacement for `org-toggle-comment'.
+This allows `org-toggle-comment' to toggle comment for all the
+entries with the same level in the active region while behaves
+the same when the region is inactive.  This is useful for
+debugging code blocks in a org config file."
   :around #'org-toggle-comment
   (if (region-active-p)
       (progn
@@ -2010,7 +2074,7 @@ in `grandview-org-file'."
             (org-forward-heading-same-level 1)
             (when (eq last-point (point))
               (org-forward-element)))))
-    (apply fn args)))
+    (apply args)))
 
 ;;;###autoload
 (defadvice! org-fill-paragraph-ad (&rest _)
@@ -2919,13 +2983,16 @@ Summary of what these do:
 :CUSTOM_ID: *User_interface*-Transient_commands_(transient.el)-2b4c6824
 :END:
 
-=transient.el= built-in package in emacs 28 for *transient* commands.
+=transient.el= implements support for powerful keyboard-driven menus.  Such menus
+can be used as simple visual command dispatchers.  More complex menus take
+advantage of infix arguments, which are somewhat similar to prefix arguments,
+but are more flexible and discoverable.  This package is in-built with Emacs 28.
 
 #+begin_src emacs-lisp
 (use-package transient
   :config
   (setq transient-default-level 7)
-  (setq transient-show-popup -0.5)
+  (setq transient-show-popup -0.2)
   (transient-bind-q-to-quit)
   (setq transient-display-buffer-action '(display-buffer-below-selected))
   :bind
@@ -2948,6 +3015,8 @@ Protesilaos Stavrou.
 (straight-use-package `(modus-themes ,@(when EMACS29+ '(:type built-in))))
 (use-package modus-themes
   :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
+  :custom-face
+  (header-line ((t (:height 1.05 :inherit (mode-line)))))
   :config
   (setq! modus-themes-links '(no-underline)))
 #+end_src
@@ -3618,7 +3687,7 @@ project root directory as `default-directory'."
       (delete-window)
     (let* ((display-buffer-alist (ale-vterm--get-win-params))
            (buf (nth ale-vterm-index ale-vterm-buffers))
-           (pr-root (or (cdr-safe (project-current)) default-directory))
+           (pr-root (or (project-root (project-current)) default-directory))
            (default-directory (if project-root pr-root default-directory))
            (index (if buf (ale-vterm--get-index buf) 0)))
       (add-to-list 'ale-vterm-buffers (vterm index))
@@ -3731,7 +3800,6 @@ made for this package and built-in help buffer:
 
 #+begin_src emacs-lisp
 (use-package helpful
-  :hook (helpful-mode . ale-helpful-mode-hook)
   :bind
   (("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
    ([remap describe-function] . #'helpful-callable)
@@ -3739,10 +3807,7 @@ made for this package and built-in help buffer:
    ([remap describe-key] . #'helpful-key)
    :map helpful-mode-map
    ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
-   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t))))
-  :config
-  (defvar read-symbol-positions-list nil)
-  (setq find-function-C-source-directory "~/.cache/paru/clone/emacs-git/src/emacs-git/src"))
+   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
 #+end_src
 
 *** Autoload
@@ -4195,7 +4260,7 @@ regexp .etc).
   (setq lsp-signature-auto-activate t)
   (setq lsp-signature-function 'lsp-signature-posframe)
   (setq lsp-signature-doc-lines 20)
-  (setq lsp-server-install-dir (expand-file-name (concat user-emacs-directory "lsp")))
+  (setq lsp-server-install-dir (expand-file-name (locate-user-emacs-file "lsp")))
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'")
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
 #+end_src
