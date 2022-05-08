@@ -36,50 +36,6 @@ straightforward project structure:
 2. other arbitrary codes to load before loading the main config
 3. packages expecting further evaluation or testing
 
-You should place =user.el= in the same directory as ~grandview-org-file~.
-
-Here is an =user.el= example (no worries, this code block won't get tangled).
-
-#+begin_src emacs-lisp :tangle no
-;;; user.el --- Grandview private configuration -*- lexical-binding: t -*-
-
-;;;; Grandview specific options
-(setq grandview-cache-dir (locate-user-emacs-file "grandview/"))
-(setq grandview-org-file (concat (file-name-directory user-init-file) "grandview.org"))
-(setq grandview-gc-cons-threshold 134217728)
-
-;;;; Other arbitrary codes to load before loading the main config
-(defadvice! org-toggle-comment-ad (&rest args)
-  "Drop-in replacement for `org-toggle-comment'.
-This allows `org-toggle-comment' to toggle comment for all the
-entries with the same level in the active region while behaves
-the same when the region is inactive.  This is useful for
-debugging code blocks in a org config file."
-  :around #'org-toggle-comment
-  (if (region-active-p)
-      (progn
-        (exchange-point-and-mark)
-        (let ((end (region-end)) last-point)
-          (while (< (point) end)
-            (setq last-point (point))
-            (apply args)
-            (org-forward-heading-same-level 1)
-            (when (eq last-point (point))
-              (org-forward-element)))))
-    (apply args)))
-
-;;;; Packages need more testing to be included in the main config
-(use-package popper
-  :bind (("C-`"   . popper-toggle-latest)
-         ("M-`"   . popper-cycle)
-         ("C-M-`" . popper-toggle-type))
-  :init
-  (appendq! popper-reference-buffers
-            '("Output\\*$" "\\*Async Shell Command\\*" compilation-mode))
-  (popper-mode)
-  (popper-echo-mode))
-#+end_src
-
 *** This =.org= file
 :PROPERTIES:
 :CUSTOM_ID: Overview-Introduction-This_=.org=_file-59a7ea61
@@ -272,6 +228,10 @@ related to some major mode or to file-handling.
 #+begin_src emacs-lisp
 (use-package simple
   :straight (:type built-in)
+  :bind
+  (nil
+   :map messages-buffer-mode-map
+   ("SPC" . nil))
   :config
   ;; added in Emacs 28.1
   (setq next-error-message-highlight t))
@@ -438,6 +398,21 @@ Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
   (ignore))
 
 ;;;###autoload
+(defadvice! meow--save-origin-cmds-ad (&rest _)
+  "Save original sub keymaps as well."
+  :override #'meow--save-origin-commands
+  (cl-loop
+   for key-code being the key-codes of meow-motion-state-keymap do
+   (ignore-errors
+     (let* ((key (meow--parse-input-event key-code))
+            (cmd-or-kmap (key-binding (kbd key))))
+       (when (or (and (commandp cmd-or-kmap)
+                      (not (equal cmd-or-kmap 'undefined)))
+                 (keymapp cmd-or-kmap))
+         (let ((rebind-key (concat meow-motion-remap-prefix key)))
+           (local-set-key (kbd rebind-key) cmd-or-kmap)))))))
+
+;;;###autoload
 (defun +meow-save ()
   (interactive)
   (save-excursion
@@ -464,7 +439,7 @@ command defined in `+meow-fallback-key-cmd-alist'."
   (interactive)
   (let* ((key (meow--parse-input-event last-input-event))
          (rebind-key (concat meow-motion-remap-prefix key)))
-    (if (and (key-binding (kbd rebind-key)) (not (derived-mode-p 'special-mode)))
+    (if (key-binding (kbd rebind-key))
         (meow--execute-kbd-macro rebind-key)
       (funcall (alist-get key +meow-fallback-key-cmd-alist #'ignore nil #'string=)))))
 
@@ -591,7 +566,7 @@ direction (use =C-l= to reposition it).
 #+begin_src emacs-lisp
 (setq-default bidi-display-reordering 'left-to-right)
 (setq-default bidi-paragraph-direction 'left-to-right)
-;; (setq bidi-inhibit-bpa t)  ; Emacs 27 only
+(setq bidi-inhibit-bpa t)  ; Emacs 27 only
 (setq-default truncate-lines t)
 (setq echo-keystrokes 0.25)
 (setq scroll-conservatively 101)
@@ -1145,7 +1120,7 @@ pop-up window.
    ("M-n" . nil)
    ("M-p" . nil))
   :config
-  (corfu-global-mode))
+  (global-corfu-mode))
 
 (use-package corfu-doc
   :hook
@@ -1321,15 +1296,13 @@ This section contains all core keybindings of *Grandview*.
  '("p" . grandview-prog-map)
  '("P" . grandview-project-map)
  '("r" . grandview-reg-map)
- '("s" . save-buffer)
  '("t" . grandview-mct-map)
- ;; '("w" . grandview-window-map)
- ;; '("z" . window-toggle-side-windows)
- )
+ '("w" . save-buffer)
+ '("z" . window-toggle-side-windows))
 
 (bind-keys
  :map grandview-files-map
- ("e" . grandview-config)
+ ("g" . grandview-config)
  :map grandview-apps-map
  ("d" . toggle-debug-on-error)
  ("o" . +frame-opacity-set)
@@ -1392,7 +1365,7 @@ These keybindings are available when the current major mode doesn't define that 
 :CUSTOM_ID: File_management-28279792
 :END:
 
-** Find files (files.el)
+** File/Directory handling functions (files.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Find_files_(files.el)-9a84d0e0
 :END:
@@ -1401,6 +1374,7 @@ These keybindings are available when the current major mode doesn't define that 
 (use-package files
   :straight (:type built-in)
   :config
+  (auto-save-visited-mode)
   (setq ale-files-dir-alist
         '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
           ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
@@ -1660,6 +1634,7 @@ inside of an Emacs buffer.  It is simply superb!
   :after dired
   :init
   (setq! dired-bind-info nil)
+  (setq! dired-bind-man nil)
   :config
   (setq dired-omit-files
         (concat dired-omit-files "\\|^\\..*$")))
@@ -1693,16 +1668,20 @@ users deserve a file manager better than those popular ones on terminal such as
    ("b"   . dirvish-roam)
    ("M-a" . dirvish-mark-actions-menu)
    ("M-s" . dirvish-setup-menu)
+   ("M-n" . dirvish-go-forward-history)
+   ("M-p" . dirvish-go-backward-history)
+   ([remap dired-omit-mode] . dirvish-filter-menu)
    ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
    ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
    ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank-menu)
    ([remap mode-line-other-buffer] . dirvish-other-buffer)
+   :map mode-specific-map
+   ("e" . dirvish-dwim)
    :map grandview-files-map
-   ("b" . dirvish-roam)
-   ("n" . dirvish)
-   ("m" . dirvish-dired)
-   ("t" . dirvish-side))
+   ("e" . dirvish)
+   ("n" . dirvish-side)
+   ("b" . dirvish-roam))
   :config
   (dirvish-override-dired-mode)
   (dirvish-peek-mode)
@@ -1713,11 +1692,16 @@ users deserve a file manager better than those popular ones on terminal such as
   (add-to-list 'dirvish-preview-dispatchers 'exa)
   (dirvish-define-mode-line filter "Describe filters."
     (when (bound-and-true-p dired-filter-mode)
-      (format " %s %s " (propertize "Filters:" 'face 'bold)
-              (dired-filter--describe-filters))))
+      (propertize (format " %s " (dired-filter--describe-filters))
+                  'face 'dired-filter-group-header)))
+  (setq! dirvish-mode-line-position 'parent-panes)
   (setq! dirvish-mode-line-format
-         '(:left (vc-info sort filter) :right (yank index)))
-  (setq! dirvish-bookmarks-alist
+         '(:left
+           (sort file-time " " file-size symlink)
+           :right
+           (filter yank index)))
+  (setq! dirvish-header-line-format '(:left (path) :right (vc-info)))
+  (setq! dirvish-menu-bookmarks
          '(("o" "~/"                          "Home")
            ("d" "/opt/dotfiles/"              "Dotfiles")
            ("u" "~/.cache/emacs/"             "Emacs cache")
@@ -1726,13 +1710,13 @@ users deserve a file manager better than those popular ones on terminal such as
            ("w" "~/Pictures/wallpaper/"       "Wallpaper")
            ("m" "/mnt/"                       "Drives")
            ("t" "~/.local/share/Trash/files/" "Trash")))
-  (setq! dirvish-attributes '(expanded-state all-the-icons file-size))
+  (setq! dirvish-attributes '(expanded-state all-the-icons))
   (setq! dirvish-all-the-icons-height 0.8)
   (setq! dirvish-side-attributes (append '(vc-state git-msg) dirvish-attributes))
   (setq! dirvish-side-preview-dispatchers
          (append '(vc-diff) dirvish-preview-dispatchers))
-  (setq! dirvish-side-mode-line-format
-         '(:left (vc-info sort filter) :right (index)))
+  (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
+  (setq! dirvish-side-mode-line-format '(:left (sort filter) :right (index)))
   (setq dirvish-debug-p t))
 #+end_src
 
@@ -1743,9 +1727,6 @@ users deserve a file manager better than those popular ones on terminal such as
 
 #+begin_src emacs-lisp
 (use-package fd-dired
-  :straight (fd-dired :depth full :host github
-                      :repo "yqrashawn/fd-dired"
-                      :fork (:host github :repo "alexluigit/fd-dired"))
   :after-call dired-noselect
   :bind
   (nil
@@ -1777,12 +1758,11 @@ users deserve a file manager better than those popular ones on terminal such as
 
 (use-package dired-filter
   :after-call dired-noselect
+  :init
+  (setq! dired-filter-prefix nil)
   :config
   (setq dired-filter-show-filters nil)
-  (setq dired-filter-revert 'always)
-  :bind
-  (:map dired-mode-map
-        ([remap dired-omit-mode] . dired-filter-mode)))
+  (setq dired-filter-revert 'always))
 
 (use-package dired-collapse
   :after-call dired-noselect
@@ -1961,33 +1941,6 @@ With a universal prefix to choose project anyway."
   (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
   (setq! tramp-use-ssh-controlmaster-options nil))
-#+end_src
-
-** Trash (trashed.el)
-:PROPERTIES:
-:CUSTOM_ID: File_management-Trash_(trashed.el)-2fc7b6ae
-:END:
-
-=trashed= applies the principles of =dired= to the management of the user's
-filesystem trash.  Use =C-h m= to see the docs and keybindings for its
-major mode.
-
-Basically, its interaction model is as follows:
-
-- =m= to mark for some deferred action, such as =D= to delete, =R= to restore.
-- =t= to toggle the status of all items as marked.  Use this without marks to =m=
-  (mark) all items, then call a deferred action to operate on them.
-- =d= to mark for permanent deletion.
-- =r= to mark for restoration.
-- =x= to execute these special marks.
-
-#+begin_src emacs-lisp
-(use-package trashed
-  :config
-  (setq trashed-action-confirmer 'y-or-n-p)
-  (setq trashed-use-header-line t)
-  (setq trashed-sort-key '("Date deleted" . t))
-  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 #+end_src
 
 * Org mode
@@ -2443,6 +2396,16 @@ Some number of BLANK-LINES will be shown below the header."
          (org-mode))))
 #+end_src
 
+** COMMENT Org exporter backend for Hugo (ox-hugo.el)
+:PROPERTIES:
+:CUSTOM_ID: Org_mode-Org_exporter_backend_for_Hugo_(ox-hugo.el)-5ebd8b86
+:END:
+
+#+begin_src emacs-lisp
+(use-package ox-hugo
+  :config)
+#+end_src
+
 * Text editing
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-d41696e6
@@ -2758,6 +2721,7 @@ lisp-mode emacs-lisp-mode ;; Specify multiple modes
 emacs-lisp-mode
 
 (use "(use-package " p n> ":demand t" n> ":config" n> p ")")
+(cond "(cond (" p ")" n> "()" n> "()" ")")
 (lambda "(lambda (" p ")" n> r> ")")
 (var "(defvar " p "\n  \"" p "\")")
 (const "(defconst " p "\n  \"" p "\")")
@@ -3014,9 +2978,7 @@ Protesilaos Stavrou.
 #+begin_src emacs-lisp
 (straight-use-package `(modus-themes ,@(when EMACS29+ '(:type built-in))))
 (use-package modus-themes
-  :hook (emacs-startup . (lambda () (load-theme 'modus-vivendi t)))
-  :custom-face
-  (header-line ((t (:height 1.05 :inherit (mode-line)))))
+  :hook (after-init . (lambda () (load-theme 'modus-vivendi t)))
   :config
   (setq! modus-themes-links '(no-underline)))
 #+end_src
@@ -3041,6 +3003,7 @@ A list of my favorite CJK fonts.
 - =FZSuXinShiLiuKaiS-R-GB=
 
 #+begin_src emacs-lisp
+(setq ale-font-size 140)
 (setq ale-default-font "Victor Mono")
 (setq ale-fixed-font "Sarasa Mono SC")
 (setq ale-variable-font "Sarasa Mono SC")
@@ -3057,7 +3020,7 @@ A list of my favorite CJK fonts.
 :END:
 
 #+begin_src emacs-lisp
-(defvar ale-font-size 32)
+(defvar ale-font-size 140)
 (defvar ale-default-font "Victor Mono")
 (defvar ale-fixed-font "Sarasa Mono SC")
 (defvar ale-variable-font "Sarasa Mono SC")
@@ -3080,9 +3043,9 @@ A list of my favorite CJK fonts.
                (zh-font (font-spec :family ale-zh-font)))
       (custom-theme-set-faces
        'user
-       `(default ((t (:font ,(font-spec :family default :size ale-font-size)))))
-       `(fixed-pitch ((t (:font ,(font-spec :family fixed-pitch :size ale-font-size)))))
-       `(variable-pitch ((t (:font ,(font-spec :family variable-pitch :size ale-font-size))))))
+       `(default ((t (:font ,(font-spec :family default) :height ,ale-font-size))))
+       `(fixed-pitch ((t (:font ,(font-spec :family fixed-pitch) :height ,ale-font-size))))
+       `(variable-pitch ((t (:font ,(font-spec :family variable-pitch) :height ,ale-font-size)))))
       (unless (equal zh-font (font-spec :family variable-pitch))
         (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
       (dolist (charset '(kana han cjk-misc bopomofo))
@@ -3394,9 +3357,28 @@ code.  Do it with =M-x find-library transpose-frame=.
   (which-key-mode 1 ))
 #+end_src
 
+** Hunk indicator (git-gutter.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface_extras-Hunk_indicator_(git-gutter.el)-644ef61a
+:END:
+
+#+begin_src emacs-lisp
+(use-package git-gutter
+  :config
+  (custom-set-variables
+   '(git-gutter:modified-sign "⏽")
+   '(git-gutter:added-sign "⏽")
+   '(git-gutter:deleted-sign "⏽")))
+#+end_src
+
+* Utils
+:PROPERTIES:
+:CUSTOM_ID: Utils-8191d3b4
+:END:
+
 ** Buffer list (ibuffer.el)
 :PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Buffer_list_(ibuffer.el)-9e9fe2fe
+:CUSTOM_ID: Utils-Buffer_list_(ibuffer.el)-593ca20f
 :END:
 
 =ibuffer.el= ships with Emacs and it provides a drop-in replacement for
@@ -3425,7 +3407,7 @@ control over the buffer list and is more powerful overall.
   (setq ibuffer-default-sorting-mode 'filename/process)
   (setq ibuffer-use-header-line t)
   (setq ibuffer-default-shrink-to-minimum-size nil)
-  (setq ibuffer-never-show-predicates '("^ \\*.*"))
+  ;; (setq ibuffer-never-show-predicates '("^ \\*.*"))
   (setq ibuffer-formats
         '((mark modified read-only locked " "
                 (name 30 30 :left :elide)
@@ -3439,25 +3421,6 @@ control over the buffer list and is more powerful overall.
   (setq ibuffer-old-time 48)
   (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
 #+end_src
-
-** Hunk indicator (git-gutter.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Hunk_indicator_(git-gutter.el)-644ef61a
-:END:
-
-#+begin_src emacs-lisp
-(use-package git-gutter
-  :config
-  (custom-set-variables
-   '(git-gutter:modified-sign "⏽")
-   '(git-gutter:added-sign "⏽")
-   '(git-gutter:deleted-sign "⏽")))
-#+end_src
-
-* Utils
-:PROPERTIES:
-:CUSTOM_ID: Utils-8191d3b4
-:END:
 
 ** Keyboard version right-click (embark.el)
 :PROPERTIES:
@@ -3687,7 +3650,7 @@ project root directory as `default-directory'."
       (delete-window)
     (let* ((display-buffer-alist (ale-vterm--get-win-params))
            (buf (nth ale-vterm-index ale-vterm-buffers))
-           (pr-root (or (project-root (project-current)) default-directory))
+           (pr-root (or (ignore-errors (project-root (project-current))) default-directory))
            (default-directory (if project-root pr-root default-directory))
            (index (if buf (ale-vterm--get-index buf) 0)))
       (add-to-list 'ale-vterm-buffers (vterm index))
