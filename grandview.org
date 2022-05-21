@@ -1782,6 +1782,7 @@ users deserve a file manager better than those popular ones on terminal such as
   :bind
   (nil
    :map dired-mode-map
+   ("TAB" . dirvish-toggle-subtree)
    ("r"   . dirvish-goto-bookmark)
    ("M-f" . dirvish-toggle-fullscreen)
    ("SPC" . dirvish-show-history)
@@ -1817,10 +1818,7 @@ users deserve a file manager better than those popular ones on terminal such as
                   'face 'dired-filter-group-header)))
   (setq! dirvish-mode-line-position 'parent-panes)
   (setq! dirvish-mode-line-format
-         '(:left
-           (sort file-time " " file-size symlink)
-           :right
-           (filter yank index)))
+         '(:left (sort file-time " " file-size symlink) :right (filter yank index)))
   (setq! dirvish-header-line-format '(:left (path) :right (vc-info)))
   (setq! dirvish-menu-bookmarks
          '(("o" "~/"                          "Home")
@@ -1834,8 +1832,7 @@ users deserve a file manager better than those popular ones on terminal such as
   (setq! dirvish-attributes '(expanded-state all-the-icons))
   (setq! dirvish-all-the-icons-height 0.8)
   (setq! dirvish-side-attributes (append '(vc-state git-msg) dirvish-attributes))
-  (setq! dirvish-side-preview-dispatchers
-         (append '(vc-diff) dirvish-preview-dispatchers))
+  (setq! dirvish-side-preview-dispatchers (append '(vc-diff) dirvish-preview-dispatchers))
   (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
   (setq! dirvish-side-mode-line-format '(:left (sort filter) :right (index)))
   (setq dirvish-debug-p t))
@@ -1867,15 +1864,6 @@ users deserve a file manager better than those popular ones on terminal such as
   (nil
    :map dired-mode-map
    ("N" . dired-narrow)))
-
-(use-package dired-subtree
-  :after-call dired-noselect
-  :config
-  (setq dired-subtree-use-backgrounds nil)
-  :bind
-  (nil
-   :map dired-mode-map
-   ("TAB" . dired-subtree-toggle)))
 
 (use-package dired-filter
   :after-call dired-noselect
