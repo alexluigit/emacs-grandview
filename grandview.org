@@ -4501,17 +4501,6 @@ optional minor mode which can apply this command automatically on save.
 
 #+begin_src emacs-lisp
 (use-package reformatter
-  :init
-  (defun ale-format-buffer ()
-    (interactive)
-    (let* ((mode-name (string-remove-suffix "-mode" (format "%s" major-mode)))
-           (func-name (intern (format "%s-format-buffer" mode-name))))
-      (if (functionp func-name)
-          (funcall func-name)
-        (user-error
-         (format
-          "No available formatter for %s. Use `reformatter-define' to create it."
-          major-mode)))))
   :config
   (reformatter-define lua-format
     :program "stylua"
@@ -4525,6 +4514,26 @@ optional minor mode which can apply this command automatically on save.
   (nil
    :map grandview-apps-map
    ("f" . ale-format-buffer)))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Formatter_(reformatter.el)-Autoload-a38e5186
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+reformatter.el"
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun ale-format-buffer ()
+  (interactive)
+  (let* ((mode-name (string-remove-suffix "-mode" (format "%s" major-mode)))
+         (func-name (intern (format "%s-format-buffer" mode-name))))
+    (if (functionp func-name)
+        (funcall func-name)
+      (user-error
+       (format
+        "No available formatter for %s. Use `reformatter-define' to create it."
+        major-mode)))))
 #+end_src
 
 ** Syntax checker (flymake.el)
