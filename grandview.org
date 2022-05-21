@@ -53,6 +53,35 @@ comment out these sections. Since codes in other sections may rely on
 orientations in the section to work properly, so be sure to edit these sections
 with caution.
 
+*** Screenshots
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-36873671
+:END:
+
+**** File manager
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-File_manager-b2a4921d
+:END:
+[[https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png][https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png]]
+
+**** IDE
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-IDE-093ea33d
+:END:
+[[https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png][https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png]]
+
+**** Org-mode
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-Org-mode-7fb34810
+:END:
+[[https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png][https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png]]
+
+**** Lightning fast startup
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-Lightning_fast_startup-0c29acd2
+:END:
+[[https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png][https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png]]
+
 ** Installation
 :PROPERTIES:
 :CUSTOM_ID: Overview-Installation-e1935e0a
