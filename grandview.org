@@ -4313,6 +4313,25 @@ regexp .etc).
 :CUSTOM_ID: DevTools-f401ccff
 :END:
 
+** COMMENT LSP (lsp-bridge.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-LSP_(lsp-bridge.el)-abaaeb07
+:END:
+
+#+begin_src emacs-lisp
+(use-package epc)
+
+(use-package lsp-bridge
+  :defer 1
+  :straight (lsp-bridge
+             :host github :repo "manateelazycat/lsp-bridge"
+             :files (:defaults "*.py"))
+  :config
+  (require 'lsp-bridge-icon)
+  (require 'lsp-bridge-orderless)
+  (global-lsp-bridge-mode))
+#+end_src
+
 ** LSP (lsp.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-9884b2d1
@@ -4329,12 +4348,14 @@ regexp .etc).
          . lsp-deferred)
   :config
   (setq lsp-eldoc-hook nil)
+  (setq lsp-enable-snippet nil)
   (setq lsp-signature-auto-activate t)
   (setq lsp-signature-function 'lsp-signature-posframe)
   (setq lsp-signature-doc-lines 20)
   (setq lsp-server-install-dir (expand-file-name (locate-user-emacs-file "lsp")))
-  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'")
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols)))
+  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-lua-completion-keyword-snippet "Disable")
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'"))
 #+end_src
 
 *** Extensions
@@ -4345,7 +4366,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package lsp-tailwindcss
   :after (lsp-mode web-mode)
-  :config
+  :preface
   (setq lsp-tailwindcss-add-on-mode t))
 
 (use-package lsp-pyright
@@ -4371,6 +4392,16 @@ regexp .etc).
 
 #+begin_src emacs-lisp
 ;;;###autoload
+(defadvice! ale-lsp-volar--vue-project-p (workspace-root)
+  "Make 'lsp-volar' support nuxt project."
+  :override #'lsp-volar--vue-project-p
+  (when-let* ((package-json (f-join workspace-root "package.json"))
+              (exist (f-file-p package-json))
+              (config (json-read-file package-json))
+              (dependencies (alist-get 'dependencies config)))
+    (or (alist-get 'vue dependencies) (alist-get 'nuxt dependencies))))
+
+;;;###autoload
 (defun ale-lsp-pyright-import-venv ()
   "Fix `import' resolution with projects with virtual env like conda."
   (require 'lsp-pyright)
@@ -4392,9 +4423,15 @@ regexp .etc).
   (setq conda-anaconda-home "/opt/miniconda/")
   (setq conda-env-home-directory "/opt/miniconda/")
   (setq conda-message-on-environment-switch t)
-  (ale-conda-env-autoactivate-mode t)
+  :bind
+  (nil
+   :map grandview-prog-map
+   ("C" . ale-conda-activate-for-buffer))
   :hook
-  (conda-postactivate . (lambda () (interactive) (jupyter-available-kernelspecs t))))
+  (conda-postactivate . (lambda ()
+                          (interactive)
+                          (require 'jupyter)
+                          (jupyter-available-kernelspecs t))))
 #+end_src
 
 *** Autoload
@@ -4405,36 +4442,25 @@ regexp .etc).
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defadvice! conda-env-activate-for-buffer-ad ()
-  "Advice for `conda-env-activate-for-buffer'.
-Make it support local `conda-env-subdirectory' such as `./envs'."
-  :override #'conda-env-activate-for-buffer
-  (if-let ((dir-local-env (bound-and-true-p conda-project-env-path)))
-      (conda-env-activate dir-local-env)
-    (when-let* ((filename (buffer-file-name))
-                (yml-file (conda--find-env-yml (f-dirname filename)))
-                (yml-path (f-dirname yml-file))
-                (prefix-env (concat yml-path "/" conda-env-subdirectory "/")))
-      (if (file-exists-p prefix-env)
-          (unless (string= prefix-env (or conda-env-current-name ""))
-            (conda-env-activate-path prefix-env))
-        (when-let ((env-name (conda-env-name-to-dir
-                              (conda--get-name-from-env-yml yml-file))))
-          (unless (string= env-name (or conda-env-current-name ""))
-            (conda-env-activate env-name)))))))
-
-;;;###autoload
-(define-minor-mode ale-conda-env-autoactivate-mode
-  "Toggle ale-conda-env-autoactivate mode.
-This activates conda environments on buffer switching."
-  :group 'conda
-  :global t
-  (if ale-conda-env-autoactivate-mode
-      (progn
-        (advice-add 'pop-to-buffer :after #'conda--switch-buffer-auto-activate)
-        (advice-add 'switch-to-buffer :after #'conda--switch-buffer-auto-activate))
-    (advice-remove 'pop-to-buffer #'conda--switch-buffer-auto-activate)
-    (advice-remove 'switch-to-buffer #'conda--switch-buffer-auto-activate)))
+(defun ale-conda-activate-for-buffer ()
+  "Enhanced `conda-env-activate-for-buffer'.
+It support local `conda-env-subdirectory' such as `./envs'."
+  (interactive)
+  (let* ((filename (buffer-file-name))
+         (yml-file (and filename (conda--find-env-yml (f-dirname filename))))
+         (yml-path (and yml-file (f-dirname yml-file)))
+         (prefix-env (concat yml-path "/" conda-env-subdirectory "/")))
+    (cond ((or (null filename) (null yml-file))
+           (conda-env-activate "base"))
+          ((bound-and-true-p conda-project-env-path)
+           (conda-env-activate conda-project-env-path))
+          ((file-exists-p prefix-env)
+           (unless (string= prefix-env (or conda-env-current-name ""))
+             (conda-env-activate-path prefix-env)))
+          (t
+           (let ((env-name (conda-env-name-to-dir (conda--get-name-from-env-yml yml-file))))
+             (when (and env-name (not (equal env-name conda-env-current-name)))
+               (conda-env-activate env-name)))))))
 #+end_src
 
 ** Jupyter (jupyter.el)
