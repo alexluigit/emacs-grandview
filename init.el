@@ -21,14 +21,16 @@ stuttering, increase this."
 
 ;; Keymaps
 ;; `grandview-files-map': Open files/dirs or operate on files
-;; `grandview-mct-map':   'mct' is the acronym for "Minibuffer and Completions in Tandem".
+;; `grandview-mct-map':   'mct' is the acronym for "Minibuffer and Completions in Tandem"
 ;; `grandview-prog-map':  Programming related commands
 ;; `grandview-org-map':   Shortcuts for org related commands
+;; `grandview-win-map':   Commands related to window manipulation
 ;; `grandview-apps-map':  Useful utils such as format buffer, set frame opacity, etc.
 (define-prefix-command 'grandview-files-map)
 (define-prefix-command 'grandview-mct-map)
 (define-prefix-command 'grandview-prog-map)
 (define-prefix-command 'grandview-org-map)
+(define-prefix-command 'grandview-win-map)
 (define-prefix-command 'grandview-apps-map)
 (defalias 'grandview-tab-map tab-prefix-map)
 (defalias 'grandview-reg-map ctl-x-r-map)
@@ -86,6 +88,25 @@ DOCSTRING and BODY are as in `defun'.
        (dolist (targets (list ,@(nreverse where-alist)))
          (dolist (target (cdr targets))
            (advice-add target (car targets) #',symbol))))))
+
+(defadvice! org-toggle-comment-ad (fn &rest args)
+  "Drop-in replacement for `org-toggle-comment'.
+This allows `org-toggle-comment' to toggle comment for all the
+entries with the same level in the active region while behaves
+the same when the region is inactive.  This is useful for
+debugging code blocks in a org config file."
+  :around #'org-toggle-comment
+  (if (region-active-p)
+      (progn
+        (exchange-point-and-mark)
+        (let ((end (region-end)) last-point)
+          (while (< (point) end)
+            (setq last-point (point))
+            (apply fn args)
+            (org-forward-heading-same-level 1)
+            (when (eq last-point (point))
+              (org-forward-element)))))
+    (apply fn args)))
 
 (defun grandview--readfile (path)
   "Return the decoded text in PATH as multibyte string."

@@ -689,12 +689,6 @@ rendering/line scan work for Emacs in non-focused windows.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defadvice! split-window-ad (&rest _)
-  :after #'split-window-right
-  :after #'split-window-below
-  (other-window 1))
-
-;;;###autoload
 (defun +show-messages (&optional erase)
   "Show *Messages* buffer in other frame.
 If ERASE is non-nil, erase the buffer before switching to it."
@@ -885,7 +879,9 @@ would normal text.  This enables things such as better scaling of and anti
 aliasing of the icons.
 
 #+begin_src emacs-lisp
-(use-package all-the-icons)
+(use-package all-the-icons
+  :config
+  (assoc-delete-all "bookmark" all-the-icons-regexp-icon-alist #'equal))
 #+end_src
 
 * *COMPLETION FRAMEWORK*
@@ -1102,11 +1098,12 @@ Selectrum, Vertico and Embark.
    ("/" . consult-line)
    :map grandview-mct-map
    ("/" . consult-line-multi)
+   ("b" . consult-bookmark)
    ("e" . consult-compile-error)
    ("r" . consult-ripgrep)
    ("k" . consult-keep-lines)
    ("i" . consult-imenu-multi)
-   ("f" . consult-focus-lines)
+   ("n" . consult-focus-lines) ; narrow
    ("o" . consult-outline)
    ("R" . consult-register)
    ("y" . consult-yank-from-kill-ring)
@@ -1115,7 +1112,6 @@ Selectrum, Vertico and Embark.
    ("C" . consult-mode-command))
   :config
   (advice-add #'register-preview :override #'consult-register-window)
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
   (setq xref-show-xrefs-function #'consult-xref)
@@ -1329,11 +1325,12 @@ This section contains all core keybindings of *Grandview*.
 :END:
 
 #+begin_src emacs-lisp
-(bind-keys
- :map meow-insert-state-keymap
- ("C-;" . meow-kill-whole-line)
- ("<C-i>" . meow-right)
- ("C-o" . meow-left))
+(when (featurep 'meow)
+  (bind-keys
+   :map meow-insert-state-keymap
+   ("C-;" . meow-kill-whole-line)
+   ("<C-i>" . meow-right)
+   ("C-o" . meow-left)))
 #+end_src
 
 ** NORMAL
@@ -1342,75 +1339,76 @@ This section contains all core keybindings of *Grandview*.
 :END:
 
 #+begin_src emacs-lisp
-(meow-normal-define-key
- '("0" . meow-digit-argument)
- '("1" . meow-digit-argument)
- '("2" . meow-digit-argument)
- '("3" . meow-digit-argument)
- '("4" . meow-digit-argument)
- '("5" . meow-digit-argument)
- '("6" . meow-digit-argument)
- '("7" . meow-digit-argument)
- '("8" . meow-digit-argument)
- '("9" . meow-digit-argument)
- '("<escape>" . +meow-escape)
- '("<backspace>" . meow-pop-selection)
- '("," . meow-inner-of-thing)
- '("." . meow-bounds-of-thing)
- '("[" . meow-beginning-of-thing)
- '("]" . meow-end-of-thing)
- '("-" . negative-argument)
- '("=" . meow-query-replace)
- '("+" . meow-query-replace-regexp)
- '("^" . meow-last-buffer)
- '("a" . +meow-insert)
- '("A" . +meow-insert-at-first-non-whitespace)
- '("b" . meow-block)
- '("B" . meow-to-block)
- '("c" . meow-change)
- '("C" . meow-change-save)
- '("d" . meow-delete)
- '("e" . meow-line)
- '("E" . +simple-mark-inner-line)
- '("f" . meow-find)
- '("F" . forward-sexp)
- '("g" . meow-grab)
- '("G" . meow-sync-grab)
- '("h" . embrace-commander)
- '("i" . meow-right)
- '("I" . meow-right-expand)
- '("j" . +simple-join-line)
- '("J" . meow-join)
- '("k" . meow-kill)
- '("K" . meow-C-k)
- '("l" . consult-goto-line)
- '("L" . meow-kmacro-lines)
- '("m" . meow-mark-word)
- '("M" . meow-mark-symbol)
- '("n" . meow-next)
- '("N" . meow-open-below)
- '("o" . meow-left)
- '("O" . meow-left-expand)
- '("p" . meow-prev)
- '("P" . meow-open-above)
- '("q" . +meow-with-key-fallback)
- '("r" . meow-reverse)
- '("R" . repeat)
- '("s" . meow-search)
- '("S" . meow-pop-search)
- '("t" . avy-goto-char-timer)
- '("T" . avy-resume)
- '("u" . undo)
- '("U" . undo-redo)
- '("v" . consult-mark)
- '("V" . consult-global-mark)
- '("w" . meow-next-word)
- '("W" . meow-back-word)
- '("x" . +meow-save)
- '("y" . meow-replace)
- '("Y" . meow-yank-pop)
- '("z" . meow-start-kmacro-or-insert-counter)
- '("Z" . meow-end-or-call-kmacro))
+(when (featurep 'meow)
+  (meow-normal-define-key
+   '("0" . meow-digit-argument)
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("<escape>" . +meow-escape)
+   '("<backspace>" . meow-pop-selection)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("-" . negative-argument)
+   '("=" . meow-query-replace)
+   '("+" . meow-query-replace-regexp)
+   '("^" . meow-last-buffer)
+   '("a" . +meow-insert)
+   '("A" . +meow-insert-at-first-non-whitespace)
+   '("b" . meow-block)
+   '("B" . meow-to-block)
+   '("c" . meow-change)
+   '("C" . meow-change-save)
+   '("d" . meow-delete)
+   '("e" . meow-line)
+   '("E" . +simple-mark-inner-line)
+   '("f" . meow-find)
+   '("F" . forward-sexp)
+   '("g" . meow-grab)
+   '("G" . meow-sync-grab)
+   '("h" . embrace-commander)
+   '("i" . meow-right)
+   '("I" . meow-right-expand)
+   '("j" . +simple-join-line)
+   '("J" . meow-join)
+   '("k" . meow-kill)
+   '("K" . meow-C-k)
+   '("l" . consult-goto-line)
+   '("L" . meow-kmacro-lines)
+   '("m" . meow-mark-word)
+   '("M" . meow-mark-symbol)
+   '("n" . meow-next)
+   '("N" . meow-open-below)
+   '("o" . meow-left)
+   '("O" . meow-left-expand)
+   '("p" . meow-prev)
+   '("P" . meow-open-above)
+   '("q" . +meow-with-key-fallback)
+   '("r" . meow-reverse)
+   '("R" . repeat)
+   '("s" . meow-search)
+   '("S" . meow-pop-search)
+   '("t" . avy-goto-char-timer)
+   '("T" . avy-resume)
+   '("u" . undo)
+   '("U" . undo-redo)
+   '("v" . consult-mark)
+   '("V" . consult-global-mark)
+   '("w" . meow-next-word)
+   '("W" . meow-back-word)
+   '("x" . +meow-save)
+   '("y" . meow-replace)
+   '("Y" . meow-yank-pop)
+   '("z" . meow-start-kmacro-or-insert-counter)
+   '("Z" . meow-end-or-call-kmacro)))
 #+end_src
 
 ** LEADER
@@ -1419,39 +1417,42 @@ This section contains all core keybindings of *Grandview*.
 :END:
 
 #+begin_src emacs-lisp
-(meow-leader-define-key
- '("SPC" . +meow-with-key-fallback)
- '("0" . delete-window)
- '("1" . delete-other-windows)
- '("2" . split-window-below)
- '("3" . split-window-right)
- '("4" . ctl-x-4-prefix)
- '("5" . ctl-x-5-prefix)
- '("8" . insert-char)
- '("9" . grandview-tab-map)
- '("?" . describe-keymap)
- '("/" . describe-symbol)
- '(";" . comment-line)
- '("," . beginning-of-buffer)
- '("." . end-of-buffer)
- '("a" . grandview-apps-map)
- '("e" . dired-jump)
- '("E" . eval-expression)
- '("f" . grandview-files-map)
- '("i" . list-buffers)
- '("k" . kill-this-buffer)
- '("n" . ale-project-find-file)
- '("o" . grandview-org-map)
- '("p" . grandview-prog-map)
- '("P" . grandview-project-map)
- '("r" . grandview-reg-map)
- '("t" . grandview-mct-map)
- '("w" . save-buffer)
- '("z" . window-toggle-side-windows))
+(when (featurep 'meow)
+  (meow-leader-define-key
+   '("SPC" . +meow-with-key-fallback)
+   '("0" . delete-window)
+   '("1" . delete-other-windows)
+   '("2" . split-window-below)
+   '("3" . split-window-right)
+   '("4" . ctl-x-4-prefix)
+   '("5" . ctl-x-5-prefix)
+   '("8" . insert-char)
+   '("9" . grandview-tab-map)
+   '("?" . describe-keymap)
+   '("/" . describe-symbol)
+   '(";" . comment-line)
+   '("," . beginning-of-buffer)
+   '("." . end-of-buffer)
+   '("a" . grandview-apps-map)
+   '("e" . dired-jump)
+   '("E" . eval-expression)
+   '("f" . grandview-files-map)
+   '("i" . list-buffers)
+   '("k" . kill-this-buffer)
+   '("n" . ale-project-find-file)
+   '("o" . grandview-org-map)
+   '("p" . grandview-prog-map)
+   '("P" . grandview-project-map)
+   '("r" . grandview-reg-map)
+   '("t" . grandview-mct-map)
+   '("w" . grandview-win-map)
+   '("z" . window-toggle-side-windows)))
 
 (bind-keys
  :map grandview-files-map
  ("g" . grandview-config)
+ :map grandview-win-map
+ ("m" . +show-messages)
  :map grandview-apps-map
  ("d" . toggle-debug-on-error)
  ("o" . +frame-opacity-set)
@@ -1489,7 +1490,6 @@ your terminal emulator's settings.
  :map global-map
  ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
  ("M-u"   . +toggle-letter-case)
- ("C-c m" . +show-messages)
  ("<C-i>" . +simple-pop-local-mark-ring)
  ("C-o" . pop-global-mark)
  ("s-n" . scroll-up-command)
@@ -1505,9 +1505,10 @@ your terminal emulator's settings.
 These keybindings are available when the current major mode doesn't define that key.
 
 #+begin_src emacs-lisp
-(meow-motion-overwrite-define-key
- '("<escape>" . +meow-escape)
- '("/" . +meow-with-key-fallback))
+(when (featurep 'meow)
+  (meow-motion-overwrite-define-key
+   '("<escape>" . +meow-escape)
+   '("/" . +meow-with-key-fallback)))
 #+end_src
 
 * File management
@@ -1564,35 +1565,6 @@ These keybindings are available when the current major mode doesn't define that 
     ((title . "  Downloads")    (path . "~/Downloads/")))
   "Doc."
   :group 'ale :type '(repeat list))
-
-;;;###autoload
-(defcustom ale-files-cmd-alist
-  '(("video/" ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f"))
-    (("rm" "rmvb") ("floatwin" "-c" "mpv:emacs-mpv" "mpv" "--x11-name=emacs-mpv" "%f")))
-  "Doc."
-  :group 'ale :type '(alist :value-type ((choice list string) list)))
-
-;;;###autoload
-(defadvice! find-file-ad (fn file &rest args)
-  "Advisor of `find-file' that opens some types of file externally."
-  :around #'find-file
-  :around #'find-file-other-window
-  (setq file (expand-file-name file))
-  (let ((meta (with-temp-buffer
-                (call-process "file" nil t nil "-bi" file) (buffer-string)))
-        (ext (file-name-extension file)))
-    (cl-loop for (re-or-exts (cmd . sh-args)) in ale-files-cmd-alist do
-             (cond ((or (and (listp re-or-exts) (member ext re-or-exts))
-                        (and (stringp re-or-exts) (string-match re-or-exts meta)))
-                    (add-to-list 'recentf-list file)
-                    (let ((process-connection-type nil)
-                          (entry (shell-quote-argument (expand-file-name file))))
-                      (unless (executable-find cmd)
-                        (user-error (format "Install `%s' to open %s" cmd entry)))
-                      (setq sh-args (cl-substitute entry "%f" sh-args :test 'string=))
-                      (let ((default-directory "~"))
-                        (apply #'start-process "" nil "nohup" (append (list cmd) sh-args)))))
-                   (t (apply fn file args))))))
 
 (defun ale-files--in-directory (dir &optional prompt)
   "Use `fd' to list files in DIR."
@@ -1770,7 +1742,9 @@ inside of an Emacs buffer.  It is simply superb!
    ("y" . dired-do-copy)
    ("." . dired-omit-mode))
   :config
-  (setq dired-kill-when-opening-new-dired-buffer t) ;; added in emacs 28
+  (setq dired-mouse-drag-files t)
+  (setq mouse-drag-and-drop-region-cross-program t) ;; added in Emacs 29
+  (setq dired-kill-when-opening-new-dired-buffer t) ;; added in Emacs 28
   (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
@@ -1810,29 +1784,31 @@ users deserve a file manager better than those popular ones on terminal such as
   :defer 0.5
   :bind
   (nil
+   :map grandview-files-map
+   ("f" . dirvish-fd)
    :map dired-mode-map
+   ("SPC" . dirvish-history-jump)
+   ("M-n" . dirvish-history-go-forward)
+   ("M-p" . dirvish-history-go-backward)
+   ("^"   . dirvish-history-last)
    ("TAB" . dirvish-toggle-subtree)
-   ("r"   . dirvish-goto-bookmark)
-   ("M-f" . dirvish-toggle-fullscreen)
-   ("SPC" . dirvish-show-history)
+   ("r"   . dirvish-bookmark-goto)
+   ("*"   . dirvish-mark-menu)
    ("f"   . dirvish-file-info-menu)
-   ("b"   . dirvish-roam)
-   ("M-a" . dirvish-mark-actions-menu)
+   ("b"   . dirvish-fd-roam)
+   ("M-f" . dirvish-toggle-fullscreen)
    ("M-s" . dirvish-setup-menu)
-   ("M-n" . dirvish-go-forward-history)
-   ("M-p" . dirvish-go-backward-history)
    ([remap dired-omit-mode] . dirvish-filter-menu)
    ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
    ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
    ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank-menu)
-   ([remap mode-line-other-buffer] . dirvish-other-buffer)
    :map mode-specific-map
    ("e" . dirvish-dwim)
    :map grandview-files-map
    ("e" . dirvish)
    ("n" . dirvish-side)
-   ("b" . dirvish-roam))
+   ("b" . dirvish-fd-roam))
   :config
   (dirvish-override-dired-mode)
   (dirvish-peek-mode)
@@ -1841,59 +1817,38 @@ users deserve a file manager better than those popular ones on terminal such as
     (when (file-directory-p file)
       `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
   (add-to-list 'dirvish-preview-dispatchers 'exa)
-  (dirvish-define-mode-line filter "Describe filters."
-    (when (bound-and-true-p dired-filter-mode)
-      (propertize (format " %s " (dired-filter--describe-filters))
-                  'face 'dired-filter-group-header)))
-  (setq! dirvish-mode-line-position 'parent-panes)
   (setq! dirvish-mode-line-format
-         '(:left (sort file-time " " file-size symlink) :right (filter yank index)))
-  (setq! dirvish-header-line-format '(:left (path) :right (vc-info)))
-  (setq! dirvish-menu-bookmarks
-         '(("o" "~/"                          "Home")
-           ("d" "/opt/dotfiles/"              "Dotfiles")
-           ("u" "~/.cache/emacs/"             "Emacs cache")
-           ("p" "~/Code/"                     "Code")
-           ("n" "~/Downloads/"                "Downloads")
-           ("w" "~/Pictures/wallpaper/"       "Wallpaper")
-           ("m" "/mnt/"                       "Drives")
+         '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  (setq! dirvish-header-line-format '(:left (path) :right (vc-info free-space)))
+  (setq! dirvish-bookmark-entries
+         '(("o" "~/"                                "Home")
+           ("d" "/opt/dotfiles/"                    "Dotfiles")
+           ("u" "~/.cache/emacs/"                   "Emacs cache")
+           ("p" "~/Code/"                           "Code")
+           ("n" "~/Downloads/"                      "Downloads")
+           ("w" "~/Pictures/wallpaper/"             "Wallpaper")
+           ("m" "/mnt/"                             "Drives")
+           ("r" "FD####~/Documents/####\\\\.org$"   "All org files in ~/Documents")
            ("t" "~/.local/share/Trash/files/" "Trash")))
-  (setq! dirvish-attributes '(expanded-state all-the-icons))
+  (setq! dirvish-open-with-programs
+        '(("video/"      . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))
+          ("audio/"      . ("mpv" "%f"))
+          (("rm" "rmvb") . ("mpv" "%f"))))
+  (setq! dirvish-attributes '(vc-state subtree-state all-the-icons collapse))
   (setq! dirvish-all-the-icons-height 0.8)
   (setq! dirvish-side-attributes (append '(vc-state git-msg) dirvish-attributes))
   (setq! dirvish-side-preview-dispatchers (append '(vc-diff) dirvish-preview-dispatchers))
+  (setq! dirvish-side-display-alist '((side . left) (slot . -1) (window-width . 0.24)))
   (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
-  (setq! dirvish-side-mode-line-format '(:left (sort filter) :right (index)))
-  (setq dirvish-debug-p t))
+  (setq! dirvish-side-mode-line-format '(:left (sort omit) :right (index))))
 #+end_src
 
-** A fd procelain (fd-dired.el)
-:PROPERTIES:
-:CUSTOM_ID: File_management-A_fd_procelain_(fd-dired.el)-91a28a9e
-:END:
-
-#+begin_src emacs-lisp
-(use-package fd-dired
-  :after-call dired-noselect
-  :bind
-  (nil
-   :map grandview-files-map
-   ("f" . fd-dired)))
-#+end_src
-
-** Useful dired extensions (dired-hacks)
+** COMMENT Useful dired extensions (dired-hacks)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Useful_dired_extensions_(dired-hacks)-269806df
 :END:
 
 #+begin_src emacs-lisp
-(use-package dired-narrow
-  :after-call dired-noselect
-  :bind
-  (nil
-   :map dired-mode-map
-   ("N" . dired-narrow)))
-
 (use-package dired-filter
   :after-call dired-noselect
   :init
@@ -1901,13 +1856,6 @@ users deserve a file manager better than those popular ones on terminal such as
   :config
   (setq dired-filter-show-filters nil)
   (setq dired-filter-revert 'always))
-
-(use-package dired-collapse
-  :after-call dired-noselect
-  :bind
-  (nil
-   :map dired-mode-map
-   ("M-c" . dired-collapse-mode)))
 #+end_src
 
 ** Project management (project.el)
@@ -2075,7 +2023,12 @@ With a universal prefix to choose project anyway."
 #+begin_src emacs-lisp
 (use-package tramp
   :straight (:type built-in)
+  :after-call (find-file-hook dired-after-readin-hook)
   :config
+  (add-to-list 'tramp-connection-properties
+               (list (regexp-quote "/ssh:alex:")
+                     "direct-async-process" t))
+  (setq tramp-verbose 0)
   (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
   (setq! tramp-use-ssh-controlmaster-options nil))
@@ -2147,26 +2100,6 @@ look like which can be described briefly as follows:
 :END:
 
 #+begin_src emacs-lisp
-;;;###autoload
-(defadvice! org-toggle-comment-ad (&rest args)
-  "Drop-in replacement for `org-toggle-comment'.
-This allows `org-toggle-comment' to toggle comment for all the
-entries with the same level in the active region while behaves
-the same when the region is inactive.  This is useful for
-debugging code blocks in a org config file."
-  :around #'org-toggle-comment
-  (if (region-active-p)
-      (progn
-        (exchange-point-and-mark)
-        (let ((end (region-end)) last-point)
-          (while (< (point) end)
-            (setq last-point (point))
-            (apply fn args)
-            (org-forward-heading-same-level 1)
-            (when (eq last-point (point))
-              (org-forward-element)))))
-    (apply args)))
-
 ;;;###autoload
 (defadvice! org-fill-paragraph-ad (&rest _)
   "Let `org-fill-paragraph' works inside of src block in Org-mode."
@@ -3240,7 +3173,7 @@ Besides, it's easy to define your own mode line segments with
 
 #+begin_src emacs-lisp
 (defcustom ale-ml-format
-  '(:left (editing-state buffer-info macro-rec) :right (position input-method))
+  '(:left (bar editing-state buffer-info macro-rec) :right (position input-method))
   "Mode line SEGMENTs aligned to left/right respectively.
 The SEGMENTs are defined by `ale-ml-define'."
   :set
@@ -3256,6 +3189,9 @@ The SEGMENTs are defined by `ale-ml-define'."
                                               `((space :align-to (- (+ right right-fringe right-margin)
                                                                     ,(string-width str-right)))))
                                   str-right)))))))))
+
+(defcustom ale-ml-height 25
+  "Doc.")
 
 (defvar ale-ml-selected-window nil)
 
@@ -3290,6 +3226,16 @@ The SEGMENTs are defined by `ale-ml-define'."
   "Define a mode line segment NAME with BODY and DOCSTR."
   (declare (indent defun) (doc-string 2))
   (let ((ml (intern (format "ale-%s-ml" name)))) `(defun ,ml () ,docstr ,@body)))
+
+(ale-ml-define bar
+  (when (and (display-graphic-p) (image-type-available-p 'pbm))
+    (propertize
+     " " 'display
+     (ignore-errors
+       (create-image
+        (concat (format "P1\n%i %i\n" 2 ale-ml-height)
+                (make-string (* 2 ale-ml-height) ?1) "\n")
+        'pbm t :foreground "None" :ascent 'center)))))
 
 (ale-ml-define position
   (concat (propertize "l " 'face 'font-lock-keyword-face)
@@ -3484,7 +3430,7 @@ code.  Do it with =M-x find-library transpose-frame=.
   (visual-fill-column-mode 1))
 #+end_src
 
-** COMMENT Key bindings hint (which-key.el)
+** Key bindings hint (which-key.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Key_bindings_hint_(which-key.el)-2c4b84b2
 :END:
@@ -3503,10 +3449,11 @@ code.  Do it with =M-x find-library transpose-frame=.
 #+begin_src emacs-lisp
 (use-package git-gutter
   :config
-  (custom-set-variables
-   '(git-gutter:modified-sign "⏽")
-   '(git-gutter:added-sign "⏽")
-   '(git-gutter:deleted-sign "⏽")))
+  ;; (custom-set-variables
+  ;;  '(git-gutter:modified-sign "⏽")
+  ;;  '(git-gutter:added-sign "⏽")
+  ;;  '(git-gutter:deleted-sign "⏽"))
+  )
 #+end_src
 
 * Utils
