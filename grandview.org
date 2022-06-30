@@ -587,7 +587,6 @@ whatever you have typed in.
   :preface
   (setq-default tab-always-indent t)
   (setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
-  (setq-default tab-width 2)
   (setq-default indent-tabs-mode nil))
 #+end_src
 
@@ -1530,7 +1529,7 @@ These keybindings are available when the current major mode doesn't define that 
         '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
           ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
           ((title . "  Books")        (path . "/mnt/HDD/Book"))
-          ((title . "輸  Videos")       (path . "/mnt/HDD/Video"))
+          ((title . "  Videos")       (path . "/mnt/HDD/Video"))
           ((title . "  Notes")        (path . "~/Documents/notes"))
           ((title . "  Photos")       (path . "~/Pictures"))
           ((title . "  Downloads")    (path . "~/Downloads"))))
@@ -1745,7 +1744,6 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-mouse-drag-files t)
   (setq mouse-drag-and-drop-region-cross-program t) ;; added in Emacs 29
   (setq dired-kill-when-opening-new-dired-buffer t) ;; added in Emacs 28
-  (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
@@ -1760,6 +1758,7 @@ inside of an Emacs buffer.  It is simply superb!
   (setq! dired-bind-info nil)
   (setq! dired-bind-man nil)
   :config
+  (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-omit-files
         (concat dired-omit-files "\\|^\\..*$")))
 
@@ -1782,6 +1781,7 @@ users deserve a file manager better than those popular ones on terminal such as
 #+begin_src emacs-lisp
 (use-package dirvish
   :defer 0.5
+  :hook (dirvish-setup . dirvish-emerge-mode)
   :bind
   (nil
    :map grandview-files-map
@@ -1792,13 +1792,14 @@ users deserve a file manager better than those popular ones on terminal such as
    ("M-p" . dirvish-history-go-backward)
    ("^"   . dirvish-history-last)
    ("TAB" . dirvish-toggle-subtree)
-   ("r"   . dirvish-bookmark-goto)
+   ("r"   . dirvish-bookmark-jump)
    ("*"   . dirvish-mark-menu)
    ("f"   . dirvish-file-info-menu)
    ("b"   . dirvish-fd-roam)
+   ("E"   . dirvish-emerge-menu)
+   ("N"   . dirvish-narrow)
    ("M-f" . dirvish-toggle-fullscreen)
    ("M-s" . dirvish-setup-menu)
-   ([remap dired-omit-mode] . dirvish-filter-menu)
    ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
    ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
    ([remap dired-summary] . dirvish-dispatch)
@@ -1831,31 +1832,15 @@ users deserve a file manager better than those popular ones on terminal such as
            ("r" "FD####~/Documents/####\\\\.org$"   "All org files in ~/Documents")
            ("t" "~/.local/share/Trash/files/" "Trash")))
   (setq! dirvish-open-with-programs
-        '(("video/"      . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))
-          ("audio/"      . ("mpv" "%f"))
-          (("rm" "rmvb") . ("mpv" "%f"))))
-  (setq! dirvish-attributes '(vc-state subtree-state all-the-icons collapse))
+         `((,dirvish-video-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))
+           (,dirvish-audio-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))))
+  (setq! dirvish-attributes '(vc-state file-size git-msg subtree-state all-the-icons collapse))
   (setq! dirvish-all-the-icons-height 0.8)
-  (setq! dirvish-side-attributes (append '(vc-state git-msg) dirvish-attributes))
+  (setq! dirvish-side-attributes dirvish-attributes)
   (setq! dirvish-side-preview-dispatchers (append '(vc-diff) dirvish-preview-dispatchers))
-  (setq! dirvish-side-display-alist '((side . left) (slot . -1) (window-width . 0.24)))
+  (setq! dirvish-side-display-alist '((side . left) (slot . -1) (window-width . 0.2)))
   (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
   (setq! dirvish-side-mode-line-format '(:left (sort omit) :right (index))))
-#+end_src
-
-** COMMENT Useful dired extensions (dired-hacks)
-:PROPERTIES:
-:CUSTOM_ID: File_management-Useful_dired_extensions_(dired-hacks)-269806df
-:END:
-
-#+begin_src emacs-lisp
-(use-package dired-filter
-  :after-call dired-noselect
-  :init
-  (setq! dired-filter-prefix nil)
-  :config
-  (setq dired-filter-show-filters nil)
-  (setq dired-filter-revert 'always))
 #+end_src
 
 ** Project management (project.el)
