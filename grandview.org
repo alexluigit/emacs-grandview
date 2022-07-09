@@ -1887,6 +1887,7 @@ A value of 0 means 'unlimited'."
   :type 'integer
   :group 'ale)
 
+;;;###autoload
 (cl-defmethod project-root ((project (head local)))
   "Project root for PROJECT with HEAD and LOCAL."
   (if (< emacs-major-version 29)
@@ -3266,10 +3267,13 @@ The SEGMENTs are defined by `ale-ml-define'."
 :CUSTOM_ID: User_interface_extras-Frame_margin_(fringe.el)-ef1b50cd
 :END:
 
-Create a 20 pixel margin for emacs frame.
++ Redefine word wrap arrow at fringe
++ Create a 20 pixel margin for emacs frame
 
 #+begin_src emacs-lisp
-(add-to-list 'default-frame-alist '(internal-border-width . 20))
+(define-fringe-bitmap 'right-curly-arrow  [])
+(define-fringe-bitmap 'left-curly-arrow  [])
+(add-to-list 'default-frame-alist '(internal-border-width . 10))
 (add-to-list 'default-frame-alist '(left-fringe . 1))
 (add-to-list 'default-frame-alist '(right-fringe . 1))
 (fringe-mode '(1 . 1))
@@ -3603,9 +3607,9 @@ Index based window motions.
   (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
   (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
   :bind
-  (("M-;" . ale-vterm-toggle)
+  (("M-`" . ale-vterm-toggle)
    :map vterm-mode-map
-   ("M-;" . ale-vterm-toggle)
+   ("M-`" . ale-vterm-toggle)
    ("M--" . ale-vterm-new)
    ("M-'" . vterm-send-M-apostrophe)
    ("M-\"" . vterm-send-M-quote)
@@ -3633,7 +3637,7 @@ Index based window motions.
 (require 'vterm)
 
 (defcustom ale-vterm-position-alist
-  '((always . ((window-height . 0.4) (side . bottom))))
+  '((always . ((window-height . 0.2) (side . bottom))))
   "doc")
 
 (defcustom ale-vterm-kill-whole-line-cmd
