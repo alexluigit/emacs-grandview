@@ -24,13 +24,13 @@ stuttering, increase this."
 ;; `grandview-mct-map':   'mct' is the acronym for "Minibuffer and Completions in Tandem"
 ;; `grandview-prog-map':  Programming related commands
 ;; `grandview-org-map':   Shortcuts for org related commands
-;; `grandview-win-map':   Commands related to window manipulation
+;; `grandview-window/workspaces-map':   Commands related to windows/workspaces
 ;; `grandview-apps-map':  Useful utils such as format buffer, set frame opacity, etc.
 (define-prefix-command 'grandview-files-map)
 (define-prefix-command 'grandview-mct-map)
 (define-prefix-command 'grandview-prog-map)
 (define-prefix-command 'grandview-org-map)
-(define-prefix-command 'grandview-win-map)
+(define-prefix-command 'grandview-window/workspaces-map)
 (define-prefix-command 'grandview-apps-map)
 (defalias 'grandview-tab-map tab-prefix-map)
 (defalias 'grandview-reg-map ctl-x-r-map)

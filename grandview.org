@@ -1444,13 +1444,14 @@ This section contains all core keybindings of *Grandview*.
    '("P" . grandview-project-map)
    '("r" . grandview-reg-map)
    '("t" . grandview-mct-map)
-   '("w" . grandview-win-map)
+   '("w" . grandview-window/workspaces-map)
    '("z" . window-toggle-side-windows)))
 
 (bind-keys
  :map grandview-files-map
+ ("w" . save-buffer) ; [SPC x s] in Colemak is painful to press
  ("g" . grandview-config)
- :map grandview-win-map
+ :map grandview-window/workspaces-map
  ("m" . +show-messages)
  :map grandview-apps-map
  ("d" . toggle-debug-on-error)
@@ -1640,25 +1641,6 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
    ("l" . find-library)))
 #+end_src
 
-** MIME media types (mailcap.el)
-:PROPERTIES:
-:CUSTOM_ID: File_management-MIME_media_types_(mailcap.el)-04aebd2f
-:END:
-
-Provides configuration of MIME media types via the usual mailcap mechanism (RFC
-1524).  Deals with mime.types similarly.
-
-#+begin_src emacs-lisp
-(use-package mailcap
-  :after-call find-file-noselect
-  :config
-  (mailcap-parse-mimetypes)
-  (cl-dolist (mt '((".ape" . "audio/ape")
-                   (".rmvb" . "video/rm")
-                   (".f4v" . "video/f4v")))
-    (add-to-list 'mailcap-mime-extensions mt)))
-#+end_src
-
 ** Recent files (recentf.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Recent_files_(recentf.el)-ef26c355
@@ -1672,7 +1654,6 @@ Keep a record of all recently opened files.
   :after-call find-file-hook dirvish
   :config
   (setq recentf-max-saved-items 100)
-  (add-to-list 'recentf-exclude (lambda (f) (not (string= (file-truename f) f))))
   (recentf-mode 1))
 #+end_src
 
@@ -1727,7 +1708,8 @@ inside of an Emacs buffer.  It is simply superb!
   (nil
    :map dired-mode-map
    ("/" . dired-goto-file)
-   ("a" . dired-create-empty-file)
+   ("." . dired-create-empty-file)
+   ("+" . dired-create-directory)
    ("i" . wdired-change-to-wdired-mode)
    ("I" . dired-insert-subdir)
    ("K" . dired-kill-subdir)
@@ -1738,12 +1720,11 @@ inside of an Emacs buffer.  It is simply superb!
    ("^" . mode-line-other-buffer)
    ("x" . dired-do-delete)
    ("X" . dired-do-flagged-delete)
-   ("y" . dired-do-copy)
-   ("." . dired-omit-mode))
+   ("y" . dired-do-copy))
   :config
-  (setq dired-mouse-drag-files t)
-  (setq mouse-drag-and-drop-region-cross-program t) ;; added in Emacs 29
-  (setq dired-kill-when-opening-new-dired-buffer t) ;; added in Emacs 28
+  (setq dired-mouse-drag-files t) ; added in Emacs 29
+  (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
+  (setq dired-kill-when-opening-new-dired-buffer t) ; added in Emacs 28
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
@@ -1786,42 +1767,43 @@ users deserve a file manager better than those popular ones on terminal such as
   (nil
    :map grandview-files-map
    ("f" . dirvish-fd)
-   :map dired-mode-map
-   ("SPC" . dirvish-history-jump)
+   :map dirvish-mode-map
+   ("SPC" . consult-buffer)
    ("M-n" . dirvish-history-go-forward)
    ("M-p" . dirvish-history-go-backward)
+   ("h"   . dirvish-history-jump)
    ("^"   . dirvish-history-last)
-   ("TAB" . dirvish-toggle-subtree)
-   ("r"   . dirvish-bookmark-jump)
-   ("*"   . dirvish-mark-menu)
+   ("TAB" . dirvish-subtree-toggle)
+   ("a"   . dirvish-quick-access)
    ("f"   . dirvish-file-info-menu)
-   ("b"   . dirvish-fd-roam)
-   ("E"   . dirvish-emerge-menu)
+   ("*"   . dirvish-mark-menu)
    ("N"   . dirvish-narrow)
-   ("M-f" . dirvish-toggle-fullscreen)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-f" . dirvish-layout-toggle)
    ("M-s" . dirvish-setup-menu)
+   ("M-j" . dirvish-fd-jump)
    ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
    ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
-   ([remap dired-summary] . dirvish-dispatch)
    ([remap dired-do-copy] . dirvish-yank-menu)
    :map mode-specific-map
    ("e" . dirvish-dwim)
    :map grandview-files-map
    ("e" . dirvish)
    ("n" . dirvish-side)
-   ("b" . dirvish-fd-roam))
+   ("b" . dirvish-fd-jump))
   :config
   (dirvish-override-dired-mode)
   (dirvish-peek-mode)
   (dirvish-define-preview exa (file)
     "Use `exa' to generate directory preview."
+    :require ("exa")
     (when (file-directory-p file)
       `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
   (add-to-list 'dirvish-preview-dispatchers 'exa)
   (setq! dirvish-mode-line-format
-         '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
-  (setq! dirvish-header-line-format '(:left (path) :right (vc-info free-space)))
-  (setq! dirvish-bookmark-entries
+         '(:left (sort file-time " " file-size symlink) :right (vc-info yank index)))
+  (setq! dirvish-header-line-format '(:left (path) :right (free-space)))
+  (setq! dirvish-quick-access-entries
          '(("o" "~/"                                "Home")
            ("d" "/opt/dotfiles/"                    "Dotfiles")
            ("u" "~/.cache/emacs/"                   "Emacs cache")
@@ -1829,7 +1811,7 @@ users deserve a file manager better than those popular ones on terminal such as
            ("n" "~/Downloads/"                      "Downloads")
            ("w" "~/Pictures/wallpaper/"             "Wallpaper")
            ("m" "/mnt/"                             "Drives")
-           ("r" "FD####~/Documents/####\\\\.org$"   "All org files in ~/Documents")
+           ("a" "FD####~/Documents/####\\\\.org$"   "All org files in ~/Documents")
            ("t" "~/.local/share/Trash/files/" "Trash")))
   (setq! dirvish-open-with-programs
          `((,dirvish-video-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))
@@ -1855,7 +1837,6 @@ users deserve a file manager better than those popular ones on terminal such as
   (setq project-switch-commands
         '((project-find-file "File" ?\r)
           (ale-project-find-subdir "Subdir" ?s)
-          (project-find-regexp "Grep" ?g)
           (project-dired "Dired" ?d)
           (ale-project-retrieve-tag "Tag switch" ?t)
           (ale-project-magit-status "Magit" ?m)
