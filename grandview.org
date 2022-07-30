@@ -4627,8 +4627,6 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 
 (defun grandview-setup-literate-file ()
   "Setup for `grandview-org-file'."
-  (delq! t completion-at-point-functions)
-  (appendq! completion-at-point-functions '(elisp-completion-at-point t))
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
   (setq-local ale-org-id-auto t))
@@ -4636,7 +4634,6 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 
 Here are the local variables in this file.
 
-+ ~completion-at-point-functions~: make autocompletion works in source code block
 + ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
 + ~ale-org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
