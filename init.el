@@ -20,19 +20,18 @@ stuttering, increase this."
   :group 'grandview :type 'integer)
 
 ;; Keymaps
-;; `grandview-files-map': Open files/dirs or operate on files
-;; `grandview-mct-map':   'mct' is the acronym for "Minibuffer and Completions in Tandem"
-;; `grandview-prog-map':  Programming related commands
-;; `grandview-org-map':   Shortcuts for org related commands
-;; `grandview-window/workspaces-map':   Commands related to windows/workspaces
-;; `grandview-apps-map':  Useful utils such as format buffer, set frame opacity, etc.
+;; `grandview-files-map':    Open files/dirs or operations on files
+;; `grandview-mct-map':      'mct' is the acronym for "Minibuffer and Completions in Tandem"
+;; `grandview-prog-map':     Programming related commands
+;; `grandview-org-map':      Shortcuts for org related commands
+;; `grandview-win/tabs-map': Commands related to windows/workspaces
+;; `grandview-apps-map':     Useful utils such as format buffer, set frame opacity, etc.
 (define-prefix-command 'grandview-files-map)
 (define-prefix-command 'grandview-mct-map)
 (define-prefix-command 'grandview-prog-map)
 (define-prefix-command 'grandview-org-map)
-(define-prefix-command 'grandview-window/workspaces-map)
 (define-prefix-command 'grandview-apps-map)
-(defalias 'grandview-tab-map tab-prefix-map)
+(defalias 'grandview-win/tabs-map tab-prefix-map)
 (defalias 'grandview-reg-map ctl-x-r-map)
 (if (boundp 'project-prefix-map)
     (defalias 'grandview-project-map project-prefix-map)
@@ -277,7 +276,7 @@ REST and STATE."
   (push :after-call use-package-deferring-keywords)
   (setq use-package-keywords (use-package-list-insert :after-call use-package-keywords :after))
   (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
-  ;; Load transient.el so we can use `transient-define-prefix' immediately
+  ;; Load transient.el so that we can use `transient-define-prefix' immediately
   (straight-use-package `(transient ,@(when EMACS28+ '(:type built-in))))
   ;; Load user config
   (load (grandview--init-path 'user) nil t)

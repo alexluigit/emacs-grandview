@@ -1444,19 +1444,18 @@ This section contains all core keybindings of *Grandview*.
    '("P" . grandview-project-map)
    '("r" . grandview-reg-map)
    '("t" . grandview-mct-map)
-   '("w" . grandview-window/workspaces-map)
+   '("w" . grandview-win/tabs-map)
    '("z" . window-toggle-side-windows)))
 
 (bind-keys
  :map grandview-files-map
  ("w" . save-buffer) ; [SPC x s] in Colemak is painful to press
  ("g" . grandview-config)
- :map grandview-window/workspaces-map
- ("m" . +show-messages)
  :map grandview-apps-map
  ("d" . toggle-debug-on-error)
  ("o" . +frame-opacity-set)
  ("=" . count-words)
+ ("m" . +show-messages)
  ("n" . ale-tab-next)
  ("p" . ale-tab-previous))
 #+end_src
@@ -4017,7 +4016,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (bind-keys
  :map grandview-apps-map
- ("m" . murl-open))
+ ("l" . murl-open)) ; "l" for live streaming
 #+end_src
 
 *** Autoload
