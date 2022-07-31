@@ -2227,11 +2227,6 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
   :after-call org-mode-hook
   :hook (org-babel-after-execute . org-redisplay-inline-images)
   :config
-  (use-package org-tempo
-    :straight (:type built-in)
-    :after-call post-self-insert-hook
-    :config
-    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp")))
   (setq org-babel-default-header-args:sh    '((:results . "output replace"))
         org-babel-default-header-args:bash  '((:results . "output replace"))
         org-babel-default-header-args:shell '((:results . "output replace"))))
@@ -2814,7 +2809,13 @@ org-mode
 (comment "#+begin_comment" n> r> n> "#+end_comment")
 (verse "#+begin_verse" n> r> n> "#+end_verse")
 (src "#+begin_src " p n> r> n> "#+end_src")
-(elisp "#+begin_src emacs-lisp" n> r> n "#+end_src" :post (tempel-done))
+(elisp "#+begin_src emacs-lisp" n> r> n "#+end_src")
+(cc "#+begin_src C" n> r> n "#+end_src")
+(cpp "#+begin_src cpp" n> r> n "#+end_src")
+(python "#+begin_src python" n> r> n "#+end_src")
+(js "#+begin_src js" n> r> n "#+end_src")
+(bash "#+begin_src bash" n> r> n "#+end_src")
+(latex "#+begin_src latex" n> r> n "#+end_src")
 
 ;; Local Variables:
 ;; mode: lisp-data
@@ -4114,10 +4115,7 @@ regexp .etc).
   :commands (org-babel-execute:C
              org-babel-expand:C
              org-babel-execute:cpp
-             org-babel-expand:cpp)
-  :config
-  (add-to-list 'org-structure-template-alist '("cc" . "src C"))
-  (add-to-list 'org-structure-template-alist '("cp" . "src cpp")))
+             org-babel-expand:cpp))
 #+end_src
 
 ** Python
@@ -4137,9 +4135,7 @@ regexp .etc).
 (use-package ob-python
   :straight (:type built-in)
   :after-call org-mode-hook
-  :commands (org-babel-execute:python)
-  :config
-  (add-to-list 'org-structure-template-alist '("py" . "src python")))
+  :commands (org-babel-execute:python))
 #+end_src
 
 ** Lua
@@ -4190,9 +4186,7 @@ regexp .etc).
 (use-package ob-js
   :straight (:type built-in)
   :after-call org-mode-hook
-  :commands (org-babel-execute:js)
-  :config
-  (add-to-list 'org-structure-template-alist '("js" . "src js")))
+  :commands (org-babel-execute:js))
 #+end_src
 
 ** Bash|Zsh
@@ -4211,9 +4205,7 @@ regexp .etc).
 (use-package ob-shell
   :straight (:type built-in)
   :after-call org-mode-hook
-  :commands (org-babel-execute:bash)
-  :config
-  (add-to-list 'org-structure-template-alist '("sh" . "src bash")))
+  :commands (org-babel-execute:bash))
 #+end_src
 
 ** HTML
@@ -4234,9 +4226,7 @@ regexp .etc).
 (use-package ob-latex
   :straight (:type built-in)
   :after-call org-mode-hook
-  :commands (org-babel-execute:latex org-babel-expand:latex)
-  :config
-  (add-to-list 'org-structure-template-alist '("la" . "src latex")))
+  :commands (org-babel-execute:latex org-babel-expand:latex))
 #+end_src
 
 ** Makefile
@@ -4248,9 +4238,7 @@ regexp .etc).
 (use-package ob-makefile
   :straight (:type built-in)
   :after-call org-mode-hook
-  :commands (org-babel-execute:makefile)
-  :config
-  (add-to-list 'org-structure-template-alist '("mk" . "src makefile")))
+  :commands (org-babel-execute:makefile))
 #+end_src
 
 * DevTools
