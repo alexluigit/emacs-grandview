@@ -255,15 +255,9 @@ Here are the available flags of this command.
 related to some major mode or to file-handling.
 
 #+begin_src emacs-lisp
-(use-package simple
-  :straight (:type built-in)
-  :bind
-  (nil
-   :map messages-buffer-mode-map
-   ("SPC" . nil))
-  :config
-  ;; added in Emacs 28.1
-  (setq next-error-message-highlight t))
+(once '(:packages simple)
+  (bind-key "SPC" nil messages-buffer-mode-map)
+  (setq next-error-message-highlight t)) ; added in Emacs 28.1
 #+end_src
 
 *** Autoload
@@ -373,12 +367,12 @@ because it can be very lengthy and should be configured separately, see
 If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
 #+begin_src emacs-lisp
-(use-package meow
-  :demand t
-  :init
-  (setq meow-keymap nil)
-  (meow-global-mode)
-  :config
+(straight-use-package 'meow)
+(require 'meow)
+
+(setq meow-keymap nil)
+(meow-global-mode)
+(once '(:before self-insert-command)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -399,20 +393,9 @@ If you want to know more about meow or modal editing in general, check out [[htt
           (meow-cancel . keyboard-quit)
           (meow-delete . meow-C-d)))
   (setq meow-char-thing-table
-        '((?r . round)
-          (?b . square) ;; `b' for bracket
-          (?c . curly)
-          (?s . string)
-          (?e . symbol)
-          (?w . window)
-          (?B . buffer)
-          (?p . paragraph)
-          (?\[ . line)
-          (?\] . line)
-          (?d . defun)
-          (?i . indent)
-          (?x . extend)
-          (?. . sentence)))
+        '((?r . round) (?b . square) (?c . curly) (?s . string) (?e . symbol)
+          (?w . window) (?B . buffer) (?p . paragraph) (?\[ . line) (?\] . line)
+          (?d . defun) (?i . indent) (?x . extend) (?. . sentence)))
   (appendq! meow-mode-state-list '((helpful-mode . normal)
                                    (Man-mode . normal)
                                    (message-buffer-mode . normal))))
@@ -521,11 +504,11 @@ command defined in `+meow-fallback-key-cmd-alist'."
 Jump to any visible text.
 
 #+begin_src emacs-lisp
-(use-package avy
-  :config
-  (setq avy-timeout-seconds 0.3)
-  (setq avy-all-windows nil)
-  (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
+(straight-use-package 'avy)
+
+(setq avy-timeout-seconds 0.3)
+(setq avy-all-windows nil)
+(setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
 #+end_src
 
 ** Symbol pairs (embrace.el)
@@ -541,25 +524,22 @@ keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
 has been bound to =meow-inner-of-thing=.)
 
 #+begin_src emacs-lisp
-(use-package embrace
-  :straight
-  (embrace :type git :depth full :host github
-           :repo "cute-jumper/embrace.el"
-           :fork (:host github :repo "alexluigit/embrace.el"))
-  :after-call set-mark
-  :preface
-  (setq embrace-default-pairs
-        '((?r . ("(" . ")"))
-          (?R . ("( " . " )"))
-          (?c . ("{" . "}"))
-          (?C . ("{ " . " }"))
-          (?\[ . ("[" . "]"))
-          (?\] . ("[ " . " ]"))
-          (?a . ("<" . ">"))
-          (?A . ("< " . " >"))
-          (?s . ("\"" . "\""))
-          (?\' . ("\'" . "\'"))
-          (?` . ("`" . "`")))))
+(straight-use-package
+ '(embrace :type git :host github :repo "cute-jumper/embrace.el"
+           :fork (:host github :repo "alexluigit/embrace.el")))
+
+(setq embrace-default-pairs
+      '((?r . ("(" . ")"))
+        (?R . ("( " . " )"))
+        (?c . ("{" . "}"))
+        (?C . ("{ " . " }"))
+        (?\[ . ("[" . "]"))
+        (?\] . ("[ " . " ]"))
+        (?a . ("<" . ">"))
+        (?A . ("< " . " >"))
+        (?s . ("\"" . "\""))
+        (?\' . ("\'" . "\'"))
+        (?` . ("`" . "`"))))
 #+end_src
 
 ** Tab for Indentation (indent.el)
@@ -582,12 +562,9 @@ Note that ~tab-always-indent~ will first do indentation and then try to complete
 whatever you have typed in.
 
 #+begin_src emacs-lisp
-(use-package indent
-  :straight (:type built-in)
-  :preface
-  (setq-default tab-always-indent t)
-  (setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
-  (setq-default indent-tabs-mode nil))
+(setq-default tab-always-indent t)
+(setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
+(setq-default indent-tabs-mode nil)
 #+end_src
 
 * *USER INTERFACE*
@@ -637,6 +614,95 @@ direction (use =C-l= to reposition it).
 (put 'erase-buffer 'disabled nil)
 #+end_src
 
+** Theme
+:PROPERTIES:
+:CUSTOM_ID: User_interface_extras-Theme-35a328fb
+:END:
+
+=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
+Protesilaos Stavrou.
+
+#+begin_src emacs-lisp
+(straight-use-package `(modus-themes ,@(when EMACS29+ '(:type built-in))))
+
+(once '(:hooks after-init-hook)
+  (setq! modus-themes-links '(no-underline))
+  (load-theme 'modus-vivendi t))
+#+end_src
+
+** Fonts (fonts.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-073ed5c4
+:END:
+
+Here are some recommended fonts for programming or general text editing.
+
+- =Victor Mono=
+- =Sarasa Mono SC=
+- =Fira Code Retina=
+
+A list of my favorite CJK fonts.
+
+- =LXGW WenKai Mono=
+- =HarmonyOS Sans SC Light=
+- =Smartisan Compact CNS=
+- =青鸟华光简报宋二=
+- =FZSuXinShiLiuKaiS-R-GB=
+
+#+begin_src emacs-lisp
+(setq +font-size 140)
+(setq +default-font "Victor Mono")
+(setq +fixed-font "Sarasa Mono SC")
+(setq +variable-font "Sarasa Mono SC")
+(setq +CJK-font "LXGW WenKai Mono")
+
+(add-hook 'after-make-frame-functions #'+font-setup)
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+fonts.el"
+:CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-Autoload-647703e6
+:END:
+
+#+begin_src emacs-lisp
+(defvar +font-size 140)
+(defvar +default-font "Victor Mono")
+(defvar +fixed-font "Sarasa Mono SC")
+(defvar +variable-font "Sarasa Mono SC")
+(defvar +CJK-font "LXGW WenKai Mono")
+
+;;;###autoload
+(defun +font-setup (&optional frame)
+  "Setup default/fixed-pitch/variable-pitch/zh-font."
+  (custom-theme-set-faces
+   'user
+   '(font-lock-keyword-face ((t (:slant italic))))
+   '(font-lock-variable-name-face ((t (:weight demibold))))
+   '(font-lock-function-name-face ((t (:weight demibold))))
+   `(default ((t (:font ,(font-spec :family +default-font) :height ,+font-size))))
+   `(fixed-pitch ((t (:font ,(font-spec :family +fixed-font) :height ,+font-size))))
+   `(variable-pitch ((t (:font ,(font-spec :family +variable-font) :height ,+font-size)))))
+  (dolist (charset '(kana han cjk-misc bopomofo))
+    (set-fontset-font t charset (font-spec :family +CJK-font)))
+  (unless EMACS28+
+    (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))
+
+;;;###autoload
+(defun +font-cn-set-title (beg end)
+  (interactive "r")
+  (remove-overlays beg end)
+  (let ((ov (make-overlay beg end)))
+    (overlay-put ov 'display '(height 1.5))))
+
+;;;###autoload
+(defun +font-cn-set-quote (beg end)
+  (interactive "r")
+  (remove-overlays beg end)
+  (let ((ov (make-overlay beg end)))
+    (overlay-put ov 'face 'font-lock-comment-face)))
+#+end_src
+
 ** Window placement (window.el)
 :PROPERTIES:
 :CUSTOM_ID: *User_interface*-Window_placement_(window.el)-905aceb8
@@ -655,9 +721,7 @@ Disable ~cursor-in-non-selected-windows~ and ~highlight-nonselected-windows~ red
 rendering/line scan work for Emacs in non-focused windows.
 
 #+begin_src emacs-lisp
-(use-package window
-  :straight (:type built-in)
-  :config
+(once '(:hooks window-configuration-change-hook)
   (setq-default cursor-in-non-selected-windows nil)
   (setq highlight-nonselected-windows nil)
   (setq display-buffer-alist
@@ -731,9 +795,8 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
 Adjust frame parameters such as opacity dynamically.
 
 #+begin_src emacs-lisp
-(use-package emacs
-  :if EMACS29+
-  :hook (window-configuration-change . +frame-opacity-auto))
+(when EMACS29+
+  (add-hook 'window-configuration-change-hook #'+frame-opacity-auto))
 #+end_src
 
 *** Autoload
@@ -878,8 +941,9 @@ would normal text.  This enables things such as better scaling of and anti
 aliasing of the icons.
 
 #+begin_src emacs-lisp
-(use-package all-the-icons
-  :config
+(straight-use-package 'all-the-icons)
+
+(once '(:packages all-the-icons)
   (assoc-delete-all "bookmark" all-the-icons-regexp-icon-alist #'equal))
 #+end_src
 
@@ -923,13 +987,10 @@ What my minibuffer config does:
   edit is in progress.
 
 #+begin_src emacs-lisp
-(use-package minibuffer
-  :straight (:type built-in)
-  :config
-  (setq enable-recursive-minibuffers t)
-  (setq minibuffer-eldef-shorten-default t)
-  (setq minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
-  (minibuffer-depth-indicate-mode 1))
+(setq enable-recursive-minibuffers t)
+(setq minibuffer-eldef-shorten-default t)
+(setq minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+(minibuffer-depth-indicate-mode 1)
 #+end_src
 
 *** Autoload
@@ -959,10 +1020,7 @@ What my minibuffer config does:
 Keeps a record of actions involving the minibuffer.
 
 #+begin_src emacs-lisp
-(use-package savehist
-  :straight (:type built-in)
-  :after-call minibuffer-setup-hook
-  :config
+(once '(:hooks minibuffer-setup-hook)
   (setq savehist-file (locate-user-emacs-file "savehist"))
   (setq history-length 10000)
   (setq history-delete-duplicates t)
@@ -984,13 +1042,12 @@ Here I just modified face for current candidate and make height of vertico
 window as a constant value.
 
 #+begin_src emacs-lisp
-(use-package vertico
-  :after-call pre-command-hook
-  :custom-face
-  (vertico-current ((t (:inherit lazy-highlight))))
-  :config
+  (straight-use-package 'vertico)
+
+  (once '(:hooks pre-command-hook)
+  (vertico-mode 1)
   (setq resize-mini-windows 'grow-only)
-  (vertico-mode 1))
+  (custom-theme-set-faces 'user '(vertico-current ((t (:inherit lazy-highlight))))))
 #+end_src
 
 ** Match candidates made easy (orderless.el)
@@ -1002,7 +1059,6 @@ This package provides an =orderless= completion style that divides the pattern
 into components (space-separated by default), and matches candidates that match
 all of the components in any order.
 
-
 Setup completion styles in minibuffer.
 
 Not that we have set =orderless-component-separator= to the function
@@ -1013,23 +1069,22 @@ this gives you =(defun dired (dirname &optional switches)= as the sole match
 rather than all of the =dired-*= noise.
 
 #+begin_src emacs-lisp
-(use-package orderless
-  :after-call minibuffer-setup-hook
-  :config
-  (use-package pinyinlib
-    :commands pinyinlib-build-regexp-string)
-  (setq completion-styles '(orderless))
-  (setq orderless-component-separator #'orderless-escapable-split-on-space)
-  (setq orderless-matching-styles
-        '(+orderless-pinyin-only-initialism
-          orderless-initialism
-          orderless-prefixes
-          orderless-regexp))
-  (setq orderless-style-dispatchers
-        '(+orderless-literal-dispatcher
-          +orderless-initialism-dispatcher
-          +orderless-without-literal-dispatcher
-          +orderless-pinyin-dispatcher)))
+(straight-use-package 'pinyinlib)
+(straight-use-package 'orderless)
+
+(autoload 'pinyinlib-build-regexp-string "pinyinlib")
+(setq completion-styles '(orderless))
+(setq orderless-component-separator #'orderless-escapable-split-on-space)
+(setq orderless-matching-styles
+      '(+orderless-pinyin-only-initialism
+        orderless-initialism
+        orderless-prefixes
+        orderless-regexp))
+(setq orderless-style-dispatchers
+      '(+orderless-literal-dispatcher
+        +orderless-initialism-dispatcher
+        +orderless-without-literal-dispatcher
+        +orderless-pinyin-dispatcher))
 #+end_src
 
 *** Autoload
@@ -1087,29 +1142,10 @@ The Consult commands are compatible with completion systems based on the Emacs
 Selectrum, Vertico and Embark.
 
 #+begin_src emacs-lisp
-(use-package consult
-  :after-call minibuffer-setup-hook
-  :init
+(straight-use-package 'consult)
+
+(once '(:packages vertico)
   (setq completion-in-region-function #'consult-completion-in-region)
-  :bind
-  (nil
-   :map meow-normal-state-keymap
-   ("/" . consult-line)
-   :map grandview-mct-map
-   ("/" . consult-line-multi)
-   ("b" . consult-bookmark)
-   ("e" . consult-compile-error)
-   ("r" . consult-ripgrep)
-   ("k" . consult-keep-lines)
-   ("i" . consult-imenu-multi)
-   ("n" . consult-focus-lines) ; narrow
-   ("o" . consult-outline)
-   ("R" . consult-register)
-   ("y" . consult-yank-from-kill-ring)
-   ("m" . consult-minor-mode-menu)
-   ("c" . consult-complex-command)
-   ("C" . consult-mode-command))
-  :config
   (advice-add #'register-preview :override #'consult-register-window)
   (setq register-preview-delay 0.2)
   (setq register-preview-function #'consult-register-format)
@@ -1120,7 +1156,24 @@ Selectrum, Vertico and Embark.
   (setq consult-async-min-input 3)
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
-  (setq consult-narrow-key ">"))
+  (setq consult-narrow-key ">")
+  (bind-keys :map grandview-mct-map
+             ("/" . consult-line-multi)
+             ("b" . consult-bookmark)
+             ("e" . consult-compile-error)
+             ("r" . consult-ripgrep)
+             ("k" . consult-keep-lines)
+             ("i" . consult-imenu-multi)
+             ("n" . consult-focus-lines) ; narrow
+             ("o" . consult-outline)
+             ("R" . consult-register)
+             ("y" . consult-yank-from-kill-ring)
+             ("m" . consult-minor-mode-menu)
+             ("c" . consult-complex-command)
+             ("C" . consult-mode-command)))
+
+(once '(:packages meow)
+  (bind-key "/" 'consult-line meow-normal-state-keymap))
 #+end_src
 
 ** Candidate annotation (marginalia.el)
@@ -1133,9 +1186,9 @@ that provides annotations to completion candidates.  It is meant to be
 framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
 
 #+begin_src emacs-lisp
-(use-package marginalia
-  :after-call minibuffer-setup-hook
-  :config
+(straight-use-package 'marginalia)
+
+(once '(:packages vertico)
   (marginalia-mode)
   (setq marginalia-align 'left))
 #+end_src
@@ -1157,32 +1210,26 @@ In addition, thanks to the snippet from @smallzhan in this [[https://emacs-china
 all-the-icons integration for corfu.
 
 #+begin_src emacs-lisp
-(use-package corfu
-  :straight (:files (:defaults "extensions/*.el"))
-  :after-call post-self-insert-hook
-  :custom
-  (corfu-auto t)
-  (corfu-auto-delay 0.05)
-  (corfu-auto-prefix 2)
-  (corfu-cycle t)
-  (corfu-preselect-first nil)
-  (corfu-on-exact-match nil)
-  :bind
-  (nil
-   :map corfu-map
-   ("TAB" . corfu-next)
-   ([tab] . corfu-next)
-   ("S-TAB" . corfu-previous)
-   ([backtab] . corfu-previous)
-   ("M-n" . nil)
-   ("M-p" . nil))
-  :config
-  (add-to-list 'corfu-margin-formatters #'+corfu-icons-margin-formatter)
-  (global-corfu-mode))
+(straight-use-package 'corfu)
+(straight-use-package 'corfu-doc)
 
-(use-package corfu-doc
-  :hook
-  (corfu-mode . corfu-doc-mode))
+(once '(:before self-insert-command)
+  (add-hook 'corfu-mode-hook 'corfu-doc-mode)
+  (setq! corfu-auto t)
+  (setq! corfu-auto-delay 0.05)
+  (setq! corfu-auto-prefix 2)
+  (setq! corfu-cycle t)
+  (setq! corfu-preselect-first nil)
+  (setq! corfu-on-exact-match nil)
+  (global-corfu-mode)
+  (add-to-list 'corfu-margin-formatters #'+corfu-icons-margin-formatter)
+  (bind-keys :map corfu-map
+             ("TAB" . corfu-next)
+             ([tab] . corfu-next)
+             ("S-TAB" . corfu-previous)
+             ([backtab] . corfu-previous)
+             ("M-n" . nil)
+             ("M-p" . nil)))
 #+end_src
 
 *** Autoload
@@ -1266,9 +1313,9 @@ info node `(elisp)Programmed Completion').  To use, add this
 function to the relevant margin-formatters list."
   (when-let ((kind-func (+corfu-icons--metadata-get metadata "company-kind")))
     (lambda (cand)
-	    (if-let ((kind (funcall kind-func cand)))
-	        (+corfu-icons-formatted kind)
-	      (+corfu-icons-formatted t)))))
+            (if-let ((kind (funcall kind-func cand)))
+                (+corfu-icons-formatted kind)
+              (+corfu-icons-formatted t)))))
 #+end_src
 
 ** Completion at point Extensions (cape.el)
@@ -1280,35 +1327,31 @@ Let your completions fly! This package provides additional completion backends
 in the form of Capfs (~completion-at-point-functions~).
 
 #+begin_src emacs-lisp
-(use-package cape
-  :after-call post-self-insert-hook
-  :custom
-  (cape-dict-file "/usr/share/dict/words")
-  :bind
-  (nil
-   :map grandview-prog-map
-   ("c" . completion-at-point) ;; capf
-   ("t" . complete-tag)        ;; etags
-   ("d" . cape-dabbrev)        ;; or dabbrev-completion
-   ("f" . cape-file)
-   ("k" . cape-keyword)
-   ("s" . cape-symbol)
-   ("a" . cape-abbrev)
-   ("i" . cape-ispell)
-   ("l" . cape-line)
-   ("w" . cape-dict)
-   ("\\" . cape-tex)
-   ("_" . cape-tex)
-   ("^" . cape-tex)
-   ("&" . cape-sgml)
-   ("r" . cape-rfc1345))
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+(straight-use-package 'cape)
+
+(once '(:before self-insert-command)
+  (setq! cape-dict-file "/usr/share/dict/words")
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-keyword)
   (add-to-list 'completion-at-point-functions #'cape-ispell)
-  (add-to-list 'completion-at-point-functions #'cape-dict))
+  (add-to-list 'completion-at-point-functions #'cape-dict)
+  (bind-keys :map grandview-prog-map
+             ("c" . completion-at-point) ; capf
+             ("t" . complete-tag)        ; etags
+             ("d" . cape-dabbrev)        ; or dabbrev-completion
+             ("f" . cape-file)
+             ("k" . cape-keyword)
+             ("s" . cape-symbol)
+             ("a" . cape-abbrev)
+             ("i" . cape-ispell)
+             ("l" . cape-line)
+             ("w" . cape-dict)
+             ("\\" . cape-tex)
+             ("_" . cape-tex)
+             ("^" . cape-tex)
+             ("&" . cape-sgml)
+             ("r" . cape-rfc1345)))
 #+end_src
 
 * Keybindings
@@ -1324,12 +1367,11 @@ This section contains all core keybindings of *Grandview*.
 :END:
 
 #+begin_src emacs-lisp
-(when (featurep 'meow)
-  (bind-keys
-   :map meow-insert-state-keymap
-   ("C-;" . meow-kill-whole-line)
-   ("<C-i>" . meow-right)
-   ("C-o" . meow-left)))
+(once '(:packages meow)
+  (bind-keys :map meow-insert-state-keymap
+             ("C-;" . meow-kill-whole-line)
+             ("<C-i>" . meow-right)
+             ("C-o" . meow-left)))
 #+end_src
 
 ** NORMAL
@@ -1338,7 +1380,7 @@ This section contains all core keybindings of *Grandview*.
 :END:
 
 #+begin_src emacs-lisp
-(when (featurep 'meow)
+(once '(:packages meow)
   (meow-normal-define-key
    '("0" . meow-digit-argument)
    '("1" . meow-digit-argument)
@@ -1416,7 +1458,7 @@ This section contains all core keybindings of *Grandview*.
 :END:
 
 #+begin_src emacs-lisp
-(when (featurep 'meow)
+(once '(:packages meow)
   (meow-leader-define-key
    '("SPC" . +meow-with-key-fallback)
    '("0" . delete-window)
@@ -1447,17 +1489,16 @@ This section contains all core keybindings of *Grandview*.
    '("w" . grandview-win/tabs-map)
    '("z" . window-toggle-side-windows)))
 
-(bind-keys
- :map grandview-files-map
- ("w" . save-buffer) ; [SPC x s] in Colemak is painful to press
- ("g" . grandview-config)
- :map grandview-apps-map
- ("d" . toggle-debug-on-error)
- ("o" . +frame-opacity-set)
- ("=" . count-words)
- ("m" . +show-messages)
- ("n" . ale-tab-next)
- ("p" . ale-tab-previous))
+(bind-keys :map grandview-files-map
+           ("w" . save-buffer) ; [SPC x s] in Colemak is painful to press
+           ("g" . grandview-config)
+           :map grandview-apps-map
+           ("d" . toggle-debug-on-error)
+           ("o" . +frame-opacity-set)
+           ("=" . count-words)
+           ("m" . +show-messages)
+           ("n" . ale-tab-next)
+           ("p" . ale-tab-previous))
 #+end_src
 
 ** GLOBAL
@@ -1476,29 +1517,28 @@ your terminal emulator's settings.
 (if HAS-GUI
     (add-hook 'after-make-frame-functions
               (lambda (f) (with-selected-frame f (define-key input-decode-map [?\C-i] [C-i]))))
-  (bind-keys
-   ("<f6>" . +simple-pop-local-mark-ring)
-   :map minibuffer-local-map
-   ("<f6>" . forward-char)
-   :map meow-insert-state-keymap
-   ("<f6>" . meow-right)))
+  (bind-keys ("<f6>" . +simple-pop-local-mark-ring)
+             :map minibuffer-local-map
+             ("<f6>" . forward-char)
+             :map meow-insert-state-keymap
+             ("<f6>" . meow-right)))
 #+end_src
 
 #+begin_src emacs-lisp
-(bind-keys
- :map global-map
- ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
- ("M-u"   . +toggle-letter-case)
- ("<C-i>" . +simple-pop-local-mark-ring)
- ("C-o" . pop-global-mark)
- ("s-n" . scroll-up-command)
- ("s-p" . scroll-down-command)
- ("M-n" . forward-paragraph)
- ("M-p" . backward-paragraph)
- :map minibuffer-local-map
- ("C-;" . meow-kill-whole-line)
- ("<C-i>" . forward-char)
- ("C-o" . backward-char))
+(bind-keys :map global-map
+           ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
+           ("M-u"   . +toggle-letter-case)
+           ("<C-i>" . +simple-pop-local-mark-ring)
+           ("C-o" . pop-global-mark)
+           ("s-n" . scroll-up-command)
+           ("s-p" . scroll-down-command)
+           ("M-o" . other-window)
+           ("M-n" . forward-paragraph)
+           ("M-p" . backward-paragraph)
+           :map minibuffer-local-map
+           ("C-;" . meow-kill-whole-line)
+           ("<C-i>" . forward-char)
+           ("C-o" . backward-char))
 #+end_src
 
 These keybindings are available when the current major mode doesn't define that key.
@@ -1520,32 +1560,29 @@ These keybindings are available when the current major mode doesn't define that 
 :CUSTOM_ID: File_management-Find_files_(files.el)-9a84d0e0
 :END:
 
++ Save modified buffers automatically
+
 #+begin_src emacs-lisp
-(use-package files
-  :straight (:type built-in)
-  :config
-  (auto-save-visited-mode)
-  (setq ale-files-dir-alist
-        '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
-          ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
-          ((title . "  Books")        (path . "/mnt/HDD/Book"))
-          ((title . "  Videos")       (path . "/mnt/HDD/Video"))
-          ((title . "  Notes")        (path . "~/Documents/notes"))
-          ((title . "  Photos")       (path . "~/Pictures"))
-          ((title . "  Downloads")    (path . "~/Downloads"))))
-  (setq confirm-kill-processes nil)
-  (setq large-file-warning-threshold 50000000)
-  (setq permanently-enabled-local-variables '(lexical-binding encoding))
-  :bind
-  (nil
-   :map grandview-files-map
-   ("." . ale-files-find-dotfiles)
-   ("r" . ale-files-rename-file-and-buffer)
-   ("u" . ale-files-find-user-files))
-  :preface
-  (setq auto-save-default nil)
-  (setq make-backup-files nil))
-  #+end_src
+(setq large-file-warning-threshold 50000000)
+(setq permanently-enabled-local-variables '(lexical-binding encoding))
+(setq auto-save-default nil)
+(setq ale-files-dir-alist
+      '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
+        ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
+        ((title . "  Books")        (path . "/mnt/HDD/Book"))
+        ((title . "  Videos")       (path . "/mnt/HDD/Video"))
+        ((title . "  Notes")        (path . "~/Documents/notes"))
+        ((title . "  Photos")       (path . "~/Pictures"))
+        ((title . "  Downloads")    (path . "~/Downloads"))))
+(setq confirm-kill-processes nil)
+(auto-save-visited-mode)
+
+(bind-keys
+ :map grandview-files-map
+ ("." . ale-files-find-dotfiles)
+ ("r" . ale-files-rename-file-and-buffer)
+ ("u" . ale-files-find-user-files))
+#+end_src
 
 *** Autoload
 :PROPERTIES:
@@ -1630,14 +1667,12 @@ find-library RET dired~. Even better, we can introspect the C code of Emwacs
 itself as long as the ~find-function-C-source-directory~ is set properly.
 
 #+begin_src emacs-lisp
-(use-package find-func
-  :config
-  (setq find-function-C-source-directory
-        "~/.cache/paru/clone/emacs-git/src/emacs-git/src")
-  :bind
-  (nil
-   :map grandview-files-map
-   ("l" . find-library)))
+(straight-use-package 'find-func)
+
+(setq find-function-C-source-directory
+      "~/.cache/paru/clone/emacs-git/src/emacs-git/src")
+(bind-keys :map grandview-files-map
+           ("l" . find-library))
 #+end_src
 
 ** Recent files (recentf.el)
@@ -1648,10 +1683,9 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 Keep a record of all recently opened files.
 
 #+begin_src emacs-lisp
-(use-package recentf
-  :straight (:type built-in)
-  :after-call find-file-hook dirvish
-  :config
+(straight-use-package '(recentf :type built-in))
+
+(once '(:before after-find-file)
   (setq recentf-max-saved-items 100)
   (recentf-mode 1))
 #+end_src
@@ -1666,10 +1700,9 @@ be a subtle reminder of what you were doing the last time you
 visited that file, allowing you to pick up from there.
 
 #+begin_src emacs-lisp
-(use-package saveplace
-  :straight (:type built-in)
-  :after-call find-file-hook
-  :config
+(straight-use-package '(saveplace :type built-in))
+
+(once '(:hooks find-file-hook)
   (setq save-place-file (locate-user-emacs-file "saveplace"))
   (setq save-place-forget-unreadable-files t)
   (save-place-mode 1))
@@ -1684,10 +1717,9 @@ changes.  A change can happen externally or by some other tool
 inside of Emacs (e.g. kill a Magit diff).
 
 #+begin_src emacs-lisp
-(use-package autorevert
-  :straight (:type built-in)
-  :after-call post-self-insert-hook
-  :config
+(straight-use-package '(autorevert :type built-in))
+
+(once '(:hooks find-file-hook)
   (setq auto-revert-verbose t)
   (global-auto-revert-mode))
 #+end_src
@@ -1701,26 +1733,15 @@ inside of Emacs (e.g. kill a Magit diff).
 inside of an Emacs buffer.  It is simply superb!
 
 #+begin_src emacs-lisp
-(use-package dired
-  :straight (:type built-in)
-  :bind
-  (nil
-   :map dired-mode-map
-   ("/" . dired-goto-file)
-   ("." . dired-create-empty-file)
-   ("+" . dired-create-directory)
-   ("i" . wdired-change-to-wdired-mode)
-   ("I" . dired-insert-subdir)
-   ("K" . dired-kill-subdir)
-   ("O" . dired-find-file-other-window)
-   ("[" . dired-prev-dirline)
-   ("]" . dired-next-dirline)
-   ("o" . dired-up-directory)
-   ("^" . mode-line-other-buffer)
-   ("x" . dired-do-delete)
-   ("X" . dired-do-flagged-delete)
-   ("y" . dired-do-copy))
-  :config
+(straight-use-package '(dired :type built-in))
+(straight-use-package '(dired-x :type built-in))
+(straight-use-package '(dired-aux :type built-in))
+(straight-use-package '(wdired :type built-in))
+
+(setq dired-listing-switches
+      "-g --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
+
+(once '(:before dired-noselect dired-jump dirvish-curr)
   (setq dired-mouse-drag-files t) ; added in Emacs 29
   (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
   (setq dired-kill-when-opening-new-dired-buffer t) ; added in Emacs 28
@@ -1728,28 +1749,33 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
   (setq dired-dwim-target t)
-  (setq dired-listing-switches
-        "-g --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group"))
-
-(use-package dired-x
-  :straight (:type built-in)
-  :after dired
-  :init
   (setq! dired-bind-info nil)
   (setq! dired-bind-man nil)
-  :config
   (setq dired-clean-confirm-killing-deleted-buffers nil)
-  (setq dired-omit-files
-        (concat dired-omit-files "\\|^\\..*$")))
+  (setq dired-do-revert-buffer t)
+  (setq wdired-allow-to-change-permissions t)
+  (setq wdired-create-parent-directories t)
+  (bind-keys :map dired-mode-map
+             ("/" . dired-goto-file)
+             ("." . dired-create-empty-file)
+             ("+" . dired-create-directory)
+             ("i" . wdired-change-to-wdired-mode)
+             ("I" . dired-insert-subdir)
+             ("K" . dired-kill-subdir)
+             ("O" . dired-find-file-other-window)
+             ("[" . dired-prev-dirline)
+             ("]" . dired-next-dirline)
+             ("o" . dired-up-directory)
+             ("^" . mode-line-other-buffer)
+             ("x" . dired-do-delete)
+             ("X" . dired-do-flagged-delete)
+             ("y" . dired-do-copy)))
 
-(use-package dired-aux
-  :straight (:type built-in)
-  :after dired
-  :config
-  (setq dired-do-revert-buffer t))
+(with-eval-after-load 'dired-x
+  (setq dired-omit-files (concat dired-omit-files "\\|^\\..*$")))
 #+end_src
 
-** A better dired (dirvish.el)
+** A polished dired with batteries included (dirvish.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-A_better_dired_(dirvish.el)-cff45a67
 :END:
@@ -1759,38 +1785,9 @@ users deserve a file manager better than those popular ones on terminal such as
 [[https://github.com/ranger/ranger][ranger]], [[https://github.com/vifm/vifm][vifm]], [[https://github.com/gokcehan/lf][lf]] since Emacs is more than a terminal emulator.
 
 #+begin_src emacs-lisp
-(use-package dirvish
-  :defer 0.5
-  :hook (dirvish-setup . dirvish-emerge-mode)
-  :bind
-  (nil
-   :map grandview-files-map
-   ("f" . dirvish-fd)
-   :map dirvish-mode-map
-   ("SPC" . consult-buffer)
-   ("M-n" . dirvish-history-go-forward)
-   ("M-p" . dirvish-history-go-backward)
-   ("h"   . dirvish-history-jump)
-   ("^"   . dirvish-history-last)
-   ("TAB" . dirvish-subtree-toggle)
-   ("a"   . dirvish-quick-access)
-   ("f"   . dirvish-file-info-menu)
-   ("*"   . dirvish-mark-menu)
-   ("N"   . dirvish-narrow)
-   ("M-e" . dirvish-emerge-menu)
-   ("M-f" . dirvish-layout-toggle)
-   ("M-s" . dirvish-setup-menu)
-   ("M-j" . dirvish-fd-jump)
-   ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
-   ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
-   ([remap dired-do-copy] . dirvish-yank-menu)
-   :map mode-specific-map
-   ("e" . dirvish-dwim)
-   :map grandview-files-map
-   ("e" . dirvish)
-   ("n" . dirvish-side)
-   ("b" . dirvish-fd-jump))
-  :config
+(straight-use-package 'dirvish)
+
+(once '(:hooks pre-command-hook)
   (dirvish-override-dired-mode)
   (dirvish-peek-mode)
   (dirvish-define-preview exa (file)
@@ -1798,7 +1795,7 @@ users deserve a file manager better than those popular ones on terminal such as
     :require ("exa")
     (when (file-directory-p file)
       `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
-  (add-to-list 'dirvish-preview-dispatchers 'exa)
+  (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
   (setq! dirvish-mode-line-format
          '(:left (sort file-time " " file-size symlink) :right (vc-info yank index)))
   (setq! dirvish-header-line-format '(:left (path) :right (free-space)))
@@ -1816,12 +1813,39 @@ users deserve a file manager better than those popular ones on terminal such as
          `((,dirvish-video-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))
            (,dirvish-audio-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))))
   (setq! dirvish-attributes '(vc-state file-size git-msg subtree-state all-the-icons collapse))
+  (setq! dirvish-preview-dispatchers '(exa image gif video audio epub archive pdf))
   (setq! dirvish-all-the-icons-height 0.8)
   (setq! dirvish-side-attributes dirvish-attributes)
   (setq! dirvish-side-preview-dispatchers (append '(vc-diff) dirvish-preview-dispatchers))
   (setq! dirvish-side-display-alist '((side . left) (slot . -1) (window-width . 0.2)))
   (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
-  (setq! dirvish-side-mode-line-format '(:left (sort omit) :right (index))))
+  (setq! dirvish-side-mode-line-format '(:left (sort omit) :right (index)))
+  (bind-keys :map 'dirvish-mode-map
+             ("SPC" . consult-buffer)
+             ("M-n" . dirvish-history-go-forward)
+             ("M-p" . dirvish-history-go-backward)
+             ("h"   . dirvish-history-jump)
+             ("^"   . dirvish-history-last)
+             ("TAB" . dirvish-subtree-toggle)
+             ("a"   . dirvish-quick-access)
+             ("f"   . dirvish-file-info-menu)
+             ("v"   . dirvish-vc-menu)
+             ("*"   . dirvish-mark-menu)
+             ("N"   . dirvish-narrow)
+             ("M-e" . dirvish-emerge-menu)
+             ("M-t" . dirvish-layout-toggle)
+             ("M-s" . dirvish-setup-menu)
+             ("M-j" . dirvish-fd-jump)
+             ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
+             ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
+             ([remap dired-do-copy] . dirvish-yank-menu)
+             :map mode-specific-map
+             ("e" . dirvish-dwim)
+             :map grandview-files-map
+             ("e" . dirvish)
+             ("f" . dirvish-fd)
+             ("n" . dirvish-side)
+             ("b" . dirvish-fd-jump)))
 #+end_src
 
 ** Project management (project.el)
@@ -1830,24 +1854,22 @@ users deserve a file manager better than those popular ones on terminal such as
 :END:
 
 #+begin_src emacs-lisp
-(use-package project
-  :straight (:type built-in)
-  :config
-  (setq project-switch-commands
-        '((project-find-file "File" ?\r)
-          (ale-project-find-subdir "Subdir" ?s)
-          (project-dired "Dired" ?d)
-          (ale-project-retrieve-tag "Tag switch" ?t)
-          (ale-project-magit-status "Magit" ?m)
-          (ale-project-commit-log "Log VC" ?l)))
-  (setq ale-project-commit-log-limit 25)
-  :bind
-  (nil
-   :map project-prefix-map
-   ("l" . ale-project-commit-log)
-   ("m" . ale-project-magit-status)
-   ("s" . ale-project-find-subdir)
-   ("t" . ale-project-retrieve-tag)))
+(straight-use-package '(project :type built-in))
+
+(setq project-switch-commands
+      '((project-find-file "File" ?\r)
+        (ale-project-find-subdir "Subdir" ?s)
+        (project-dired "Dired" ?d)
+        (ale-project-retrieve-tag "Tag switch" ?t)
+        (ale-project-magit-status "Magit" ?m)
+        (ale-project-commit-log "Log VC" ?l)))
+(setq ale-project-commit-log-limit 25)
+
+(bind-keys :map project-prefix-map
+           ("l" . ale-project-commit-log)
+           ("m" . ale-project-magit-status)
+           ("s" . ale-project-find-subdir)
+           ("t" . ale-project-retrieve-tag))
 #+end_src
 
 *** Autoload
@@ -1969,31 +1991,17 @@ With a universal prefix to choose project anyway."
     (project-find-file)))
 #+end_src
 
-** Writable dired (wdired.el)
-:PROPERTIES:
-:CUSTOM_ID: File_management-Writable_dired_(wdired.el)-9c842c42
-:END:
-
-#+begin_src emacs-lisp
-(use-package wdired
-  :config
-  (setq wdired-allow-to-change-permissions t)
-  (setq wdired-create-parent-directories t))
-#+end_src
-
 ** Working with remote files (tramp.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Working_with_remote_files_(tramp.el)-c1834af3
 :END:
 
 #+begin_src emacs-lisp
-(use-package tramp
-  :straight (:type built-in)
-  :after-call (find-file-hook dired-after-readin-hook)
-  :config
+(straight-use-package '(tramp :type built-in))
+
+(once '(:packages dirvish)
   (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "/ssh:alex:")
-                     "direct-async-process" t))
+               (list (regexp-quote "/ssh:alex:") "direct-async-process" t))
   (setq tramp-verbose 0)
   (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
@@ -2033,13 +2041,12 @@ look like which can be described briefly as follows:
 + display inline images in url automatically
 
 #+begin_src emacs-lisp
-(use-package org
-  :straight (:type built-in)
-  :hook
-  (org-mode . ale-org-font-setup)
-  (org-mode . org-indent-mode)
-  (org-tab-first . org-end-of-line)
-  :config
+(straight-use-package '(org :type built-in))
+
+(once '(:packages org)
+  (add-hook 'org-mode-hook '+org-font-setup)
+  (add-hook 'org-mode-hook 'org-indent-mode)
+  (add-hook 'org-tab-first-hook 'org-end-of-line)
   (setq org-adapt-indentation nil)
   (setq org-hide-leading-stars t)
   (setq org-startup-folded t)
@@ -2050,13 +2057,9 @@ look like which can be described briefly as follows:
   (setq org-log-into-drawer t)
   (setq org-image-actual-width nil)
   (setq org-display-remote-inline-images 'download)
-  :bind
-  (nil
-   :map grandview-org-map
-   ("o" . consult-org-heading)
-   :map org-mode-map
-   ("C-c S-l" . org-toggle-link-display)
-   ("C-c C-S-l" . org-insert-last-stored-link)))
+  (bind-keys :map grandview-org-map ("o" . consult-org-heading)
+             :map org-mode-map
+             ("C-c l" . org-insert-last-stored-link)))
 #+end_src
 
 *** Autoload
@@ -2066,6 +2069,8 @@ look like which can be described briefly as follows:
 :END:
 
 #+begin_src emacs-lisp
+(require 'org-faces)
+
 ;;;###autoload
 (defadvice! org-fill-paragraph-ad (&rest _)
   "Let `org-fill-paragraph' works inside of src block in Org-mode."
@@ -2083,12 +2088,11 @@ look like which can be described briefly as follows:
       t)))
 
 ;;;###autoload
-(defun ale-org-font-setup ()
+(defun +org-font-setup ()
   "Setup variable-pitch fonts for org-mode."
-  (interactive)
   (variable-pitch-mode)
-  (let ((variable-pitch `(:font ,ale-variable-font))
-        (default `(:font ,ale-default-font)))
+  (let ((variable-pitch `(:font ,+variable-font))
+        (default `(:font ,+default-font)))
     (custom-theme-set-faces
      'user
      `(org-level-1 ((t (,@variable-pitch :height 1.5))))
@@ -2110,12 +2114,10 @@ look like which can be described briefly as follows:
 :END:
 
 #+begin_src emacs-lisp
-(use-package org-id
-  :straight (:type built-in)
-  :config
-  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
-  :hook
-  (org-mode . ale-org-id-update))
+(straight-use-package '(org-id :type built-in))
+
+(add-hook 'org-mode-hook 'ale-org-id-update)
+(setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
 #+end_src
 
 *** Autoload
@@ -2222,11 +2224,24 @@ somewhere. ie, #+OPTIONS: auto-id:t"
 Thanks to https://blog.d46.us/advanced-emacs-startup
 
 #+begin_src emacs-lisp
-(use-package ob
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :hook (org-babel-after-execute . org-redisplay-inline-images)
-  :config
+(straight-use-package '(ob :type built-in))
+(straight-use-package '(ob-C :type built-in))
+(straight-use-package '(ob-js :type built-in))
+(straight-use-package '(ob-shell :type built-in))
+(straight-use-package '(ob-latex :type built-in))
+(straight-use-package '(ob-makefile :type built-in))
+
+(once '(:packages org)
+  (autoload 'org-babel-execute:C "ob-C")
+  (autoload 'org-babel-expand:C "ob-C")
+  (autoload 'org-babel-execute:cpp "ob-C")
+  (autoload 'org-babel-expand:cpp "ob-C")
+  (autoload 'org-babel-execute:python "ob-python")
+  (autoload 'org-babel-execute:js "ob-js")
+  (autoload 'org-babel-execute:bash "ob-shell")
+  (autoload 'org-babel-expand:latex "ob-latex")
+  (autoload 'org-babel-execute:latex "ob-latex")
+  (autoload 'org-babel-execute:makefile "ob-makefile")
   (setq org-babel-default-header-args:sh    '((:results . "output replace"))
         org-babel-default-header-args:bash  '((:results . "output replace"))
         org-babel-default-header-args:shell '((:results . "output replace"))))
@@ -2238,13 +2253,12 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 :END:
 
 #+begin_src emacs-lisp
-(use-package org-src
-  :straight (:type built-in)
-  :after-call org-mode
-  :config
-  (push '("conf-unix" . conf-unix) org-src-lang-modes)
+(straight-use-package '(org-src :type built-in))
+
+(once '(:packages org-src)
   (setq org-edit-src-content-indentation 0)
-  (setq org-src-window-setup 'split-window-right))
+  (setq org-src-window-setup 'split-window-right)
+  (push '("conf-unix" . conf-unix) org-src-lang-modes))
 #+end_src
 
 ** Reveal invisible org elements (org-appear.el)
@@ -2253,11 +2267,11 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 :END:
 
 #+begin_src emacs-lisp
-(use-package org-appear
-  :hook (org-mode . org-appear-mode)
-  :config
-  (setq org-appear-autolinks t)
-  (setq org-hide-emphasis-markers t))
+(straight-use-package 'org-appear)
+
+(add-hook 'org-mode-hook 'org-appear-mode)
+(setq org-appear-autolinks t)
+(setq org-hide-emphasis-markers t)
 #+end_src
 
 ** Modern org style (org-modern.el)
@@ -2266,10 +2280,10 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 :END:
 
 #+begin_src emacs-lisp
-(use-package org-modern
-  :hook
-  ((org-mode . org-modern-mode)
-   (org-agenda-finalize . org-modern-agenda)))
+(straight-use-package 'org-modern)
+
+(add-hook 'org-mode-hook 'org-modern-mode)
+(add-hook 'org-agenda-finalize-hook 'org-modern-agenda)
 #+end_src
 
 ** Visual alignment (valign.el)
@@ -2283,11 +2297,10 @@ font, CJK characters and images.  In the meantime, the text-based alignment
 generated by Org mode (or Markdown mode) is left untouched.
 
 #+begin_src emacs-lisp
-(use-package valign
-  :after-call org-mode-hook
-  :hook (org-mode . valign-mode)
-  :config
-  (setq valign-fancy-bar t))
+(straight-use-package 'valign)
+
+(add-hook 'org-mode-hook 'valign-mode)
+(setq valign-fancy-bar t)
 #+end_src
 
 ** Habit (org-habit.el)
@@ -2296,37 +2309,34 @@ generated by Org mode (or Markdown mode) is left untouched.
 :END:
 
 #+begin_src emacs-lisp
-(use-package org-habit
-  :straight (:type built-in)
-  :config
-  (add-to-list 'org-modules 'org-habit)
+(straight-use-package '(org-habit :type built-in))
+
+(once '(:packages org)
+  (appendq! org-modules '(org-habit))
   (setq org-habit-graph-column 60))
 #+end_src
 
-** Wiki (org-roam.el)
+** Notebook (org-roam.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Wiki_(org-roam.el)-acf43c6a
 :END:
 
 #+begin_src emacs-lisp
-(use-package org-roam
-  :init
-  (setq org-id-link-to-org-use-id t)
-  (setq org-roam-v2-ack t)
-  :custom
-  (org-roam-directory (file-truename "~/Documents/roam"))
-  (org-roam-completion-everywhere t)
-  :bind
-  (nil
-   :map grandview-org-map
-   ("l" . org-roam-buffer-toggle)
-   ("f" . org-roam-node-find)
-   ("g" . org-roam-graph)
-   ("i" . org-roam-node-insert)
-   ("c" . org-roam-capture)
-   ("j" . org-roam-dailies-capture-today))
-  :config
-  (org-roam-setup))
+(straight-use-package 'org-roam)
+
+(once '(:hooks pre-command-hook)
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (setq! org-roam-directory (file-truename "~/Documents/roam"))
+  (setq! org-roam-completion-everywhere t)
+  (autoload 'org-roam-buffer-toggle "org-roam-mode")
+  (bind-keys :map grandview-org-map
+             ("l" . org-roam-buffer-toggle)
+             ("f" . org-roam-node-find)
+             ("g" . org-roam-graph)
+             ("i" . org-roam-node-insert)
+             ("c" . org-roam-capture)
+             ("j" . org-roam-dailies-capture-today))
+  (org-roam-db-autosync-mode))
 #+end_src
 
 ** Slide (org-tree-slide.el)
@@ -2337,15 +2347,11 @@ generated by Org mode (or Markdown mode) is left untouched.
 =org-tree-slide.el= is a presentation tool using =org-mode=.
 
 #+begin_src emacs-lisp
-(use-package org-tree-slide
-  :bind
-  (nil
-   :map org-tree-slide-mode-map
-   ("<left>" . org-tree-slide-move-previous-tree)
-   ("<right>" . org-tree-slide-move-next-tree)
-   :map grandview-org-map
-   ("S" . org-tree-slide-mode))
-  :config
+(straight-use-package 'org-tree-slide)
+
+(bind-key "S" 'org-tree-slide-mode grandview-org-map)
+
+(once '(:packages org-tree-slide)
   (setq org-tree-slide-activate-message " ")
   (setq org-tree-slide-deactivate-message " ")
   (setq org-tree-slide-modeline-display nil)
@@ -2357,7 +2363,10 @@ generated by Org mode (or Markdown mode) is left untouched.
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
-  (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header))
+  (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header)
+  (bind-keys :map 'org-tree-slide-mode-map
+             ("<left>" . org-tree-slide-move-previous-tree)
+             ("<right>" . org-tree-slide-move-next-tree)))
 #+end_src
 
 *** Autoload
@@ -2434,28 +2443,13 @@ Some number of BLANK-LINES will be shown below the header."
 :END:
 
 #+begin_src emacs-lisp
-(use-package ox-hugo
-  :config)
+(straight-use-package ox-hugo)
 #+end_src
 
 * Text editing
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-d41696e6
 :END:
-
-** COMMENT Line numbers (display-line-numbers.el)
-:PROPERTIES:
-:CUSTOM_ID: Text_editing_extras-Line_numbers_(display-line-numbers.el)-783b4a83
-:END:
-
-Display line numbers when programming.
-
-#+begin_src emacs-lisp
-(use-package display-line-numbers
-  :straight (:type built-in)
-  :hook
-  (prog-mode . display-line-numbers-mode))
-#+end_src
 
 ** Long line text (so-long.el)
 :PROPERTIES:
@@ -2469,11 +2463,9 @@ configurable: M-x find-library so-long covers several customisation options,
 though I find that the defaults require no further intervention from my part.
 
 #+begin_src emacs-lisp
-(use-package so-long
-  :after-call find-file-hook
-  :straight (:type built-in)
-  :config
-  (global-so-long-mode))
+(straight-use-package '(so-long :type built-in))
+
+(once '(:hooks find-file-hook) (global-so-long-mode))
 #+end_src
 
 ** Fill line (fill.el)
@@ -2494,21 +2486,15 @@ because processors know how to handle spacing. We do this to make phrases easier
 to tell apart, but also to render unambiguous commands like forward-sentence.
 
 #+begin_src emacs-lisp
-(use-package fill
-  :straight (:type built-in)
-  :init
-  (setq-default fill-column 80)
-  :hook
-  (text-mode . turn-on-auto-fill)
-  :config
-  (setq colon-double-space nil)
-  (setq adaptive-fill-mode t))
+(straight-use-package '(fill :type built-in))
 
-(use-package paragraphs
-  :straight (:type built-in)
-  :preface
-  (setq sentence-end-double-space t)
-  (setq sentence-end-without-period nil))
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+(setq-default fill-column 80)
+(setq colon-double-space nil)
+(setq adaptive-fill-mode t)
+(setq sentence-end-double-space t)
+(setq sentence-end-without-period nil)
 #+end_src
 
 ** Cross reference (xref.el)
@@ -2519,11 +2505,10 @@ to tell apart, but also to render unambiguous commands like forward-sentence.
 *xref* provides helpful commands for code navigation and discovery.
 
 #+begin_src emacs-lisp
-(use-package xref
-  :straight (:type built-in)
-  :config
-  (setq xref-file-name-display 'project-relative)
-  (setq xref-search-program 'ripgrep))
+(straight-use-package '(fill :type built-in))
+
+(setq xref-file-name-display 'project-relative)
+(setq xref-search-program 'ripgrep)
 #+end_src
 
 ** Interactive diff, patch, or merge conflict (ediff.el)
@@ -2540,28 +2525,38 @@ difference regions from one buffer to another (and recover old differences if
 you change your mind).
 
 #+begin_src emacs-lisp
-(use-package ediff
-  :config
-  (setq ediff-keep-variants nil)
-  (setq ediff-make-buffers-readonly-at-startup nil)
-  (setq ediff-merge-revisions-with-ancestor t)
-  (setq ediff-show-clashes-only t)
-  (setq ediff-split-window-function 'split-window-horizontally)
-  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-  ;; Tweak those for safer identification and removal
-  (setq ediff-combination-pattern
-        '("<<<<<<< ale-ediff-combine Variant A" A
-          ">>>>>>> ale-ediff-combine Variant B" B
-          "####### ale-ediff-combine Ancestor" Ancestor
-          "======= ale-ediff-combine End"))
-  (defun ale-ediff-flush-combination-pattern ()
-    "Remove my custom `ediff-combination-pattern' markers.
+(straight-use-package '(ediff :type built-in))
+
+(setq ediff-keep-variants nil)
+(setq ediff-make-buffers-readonly-at-startup nil)
+(setq ediff-merge-revisions-with-ancestor t)
+(setq ediff-show-clashes-only t)
+(setq ediff-split-window-function 'split-window-horizontally)
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+;; Tweak those for safer identification and removal
+(setq ediff-combination-pattern
+      '("<<<<<<< ale-ediff-combine Variant A" A
+        ">>>>>>> ale-ediff-combine Variant B" B
+        "####### ale-ediff-combine Ancestor" Ancestor
+        "======= ale-ediff-combine End"))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Text_editing-Interactive_diff,_patch,_or_merge_conflict_(ediff.el)-Autoload-d752df39
+:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+ediff.el"
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +ediff-flush-combination-pattern ()
+  "Remove my custom `ediff-combination-pattern' markers.
 This is a quick-and-dirty way to get rid of the markers that are
 left behind by `smerge-ediff' when combining the output of two
 diffs.  While this could be automated via a hook, I am not yet
 sure this is a good approach."
-    (interactive)
-    (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil)))
+  (interactive)
+  (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil))
 #+end_src
 
 ** Input method (rime.el)
@@ -2570,23 +2565,10 @@ sure this is a good approach."
 :END:
 
 #+begin_src emacs-lisp
-(use-package rime
-  :after-call post-self-insert-hook
-  :custom-face
-  (rime-preedit-face ((t (:inherit lazy-highlight))))
-  :bind
-  (("S-SPC" . toggle-input-method)
-   :map rime-active-mode-map
-   ("C-`" . rime-send-keybinding)
-   ("C-k" . rime-send-keybinding)
-   ("<C-i>" . rime-send-keybinding)
-   ("C-o" . rime-send-keybinding)
-   ("C-a" . rime-send-keybinding)
-   ("C-e" . rime-send-keybinding)
-   ("<escape>" . (lambda () (interactive) (execute-kbd-macro (kbd "C-g"))))
-   ([tab] . rime-send-keybinding))
-  :config
-  (setq default-input-method "rime")
+(straight-use-package 'rime)
+
+(setq default-input-method "rime")
+(once '(:packages rime)
   (setq rime-disable-predicates '(meow-normal-mode-p
                                   meow-motion-mode-p
                                   meow-keypad-mode-p
@@ -2597,7 +2579,18 @@ sure this is a good approach."
   (setq rime-posframe-style 'vertical)
   (setq rime-posframe-properties '(:internal-border-width 10 :lines-truncate t))
   (setq rime-title "ㄓ")
-  (setq rime-candidate-num-format-function #'ale-rime-candidate-num-fmt))
+  (setq rime-candidate-num-format-function #'ale-rime-candidate-num-fmt)
+
+  (custom-theme-set-faces 'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
+  (bind-keys :map rime-active-mode-map
+             ("C-`" . rime-send-keybinding)
+             ("C-k" . rime-send-keybinding)
+             ("<C-i>" . rime-send-keybinding)
+             ("C-o" . rime-send-keybinding)
+             ("C-a" . rime-send-keybinding)
+             ("C-e" . rime-send-keybinding)
+             ("<escape>" . (lambda () (interactive) (execute-kbd-macro (kbd "C-g"))))
+             ([tab] . rime-send-keybinding)))
 #+end_src
 
 *** Autoload
@@ -2636,18 +2629,10 @@ sure this is a good approach."
 :END:
 
 #+begin_src emacs-lisp
-(use-package tempel
-  :straight (tempel :host github :repo "minad/tempel")
-  :after-call post-self-insert-hook
-  :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
-         ("M-*" . tempel-insert))
-  :hook
-  ;; Optionally make the Tempel templates available to Abbrev,
-  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-  ;; (prog-mode . tempel-abbrev-mode)
-  ;; (tempel-global-abbrev-mode)
-  (prog-mode . ale-tempel-setup-capf)
-  (text-mode . ale-tempel-setup-capf))
+(straight-use-package 'tempel)
+
+(add-hook 'prog-mode-hook '+tempel-setup-capf)
+(add-hook 'text-mode-hook '+tempel-setup-capf)
 #+end_src
 
 *** Autoload
@@ -2681,7 +2666,7 @@ sure this is a good approach."
              (eval (plist-get plist :condition) 'lexical)))))))
 
 ;;;###autoload
-(defun ale-tempel-setup-capf ()
+(defun +tempel-setup-capf ()
   ;; Add the Tempel Capf to `completion-at-point-functions'.
   ;; `tempel-expand' only triggers on exact matches. Alternatively use
   ;; `tempel-complete' if you want to see all matches, but then you
@@ -2858,30 +2843,28 @@ of characters.
   followed by a quote mark.
 
 #+begin_src emacs-lisp
-(use-package electric
-  :config
-  (advice-add 'electric-pair-post-self-insert-function :around
-              (lambda (fn &rest args) (let ((mark-active nil)) (apply fn args))))
-  (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
-  (setq electric-pair-preserve-balance t)
-  (setq electric-pair-pairs
-        '((8216 . 8217)
-          (8220 . 8221)
-          (171 . 187)))
-  (setq electric-pair-skip-self 'electric-pair-default-skip-self)
-  (setq electric-pair-skip-whitespace nil)
-  (setq electric-pair-skip-whitespace-chars '(9 10 32))
-  (setq electric-quote-context-sensitive t)
-  (setq electric-quote-paragraph t)
-  (setq electric-quote-string nil)
-  (setq electric-quote-replace-double t)
-  (electric-indent-mode 1)
-  (electric-pair-mode 1)
-  (electric-quote-mode -1)
-  :hook
-  (org-mode . ale-electric-inhibit-<)
-  (minibuffer-setup . (lambda () (unless (eq this-command 'eval-expression) (electric-pair-mode 0))))
-  (minibuffer-exit . (lambda () (electric-pair-mode 1))))
+(straight-use-package '(electric :type built-in))
+
+(add-hook 'org-mode-hook '+electric-inhibit-<)
+(add-hook 'minibuffer-setup-hook (lambda () (unless (eq this-command 'eval-expression) (electric-pair-mode 0))))
+(add-hook 'minibuffer-exit-hook (lambda () (electric-pair-mode 1)))
+
+(setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
+(setq electric-pair-preserve-balance t)
+(setq electric-pair-pairs
+      '((8216 . 8217)
+        (8220 . 8221)
+        (171 . 187)))
+(setq electric-pair-skip-self 'electric-pair-default-skip-self)
+(setq electric-pair-skip-whitespace nil)
+(setq electric-pair-skip-whitespace-chars '(9 10 32))
+(setq electric-quote-context-sensitive t)
+(setq electric-quote-paragraph t)
+(setq electric-quote-string nil)
+(setq electric-quote-replace-double t)
+(electric-indent-mode 1)
+(electric-pair-mode 1)
+(electric-quote-mode -1)
 #+end_src
 
 *** Autoload
@@ -2892,7 +2875,13 @@ of characters.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun ale-electric-inhibit-< ()
+(defadvice! electric-pair-post-self-insert-a (fn &rest args)
+  "Doc."
+  :around #'electric-pair-post-self-insert-function
+  (let ((mark-active nil)) (apply fn args)))
+
+;;;###autoload
+(defun +electric-inhibit-< ()
   (setq-local electric-pair-inhibit-predicate
               `(lambda (c) (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
 #+end_src
@@ -2924,17 +2913,14 @@ Summary of what these do:
 - Use rainbow color for delimiters
 
 #+begin_src emacs-lisp
-(use-package paren
-  :straight (:type built-in)
-  :config
-  (setq show-paren-style 'parenthesis)
-  (setq show-paren-when-point-in-periphery nil)
-  (setq show-paren-when-point-inside-paren nil)
-  (show-paren-mode))
+(straight-use-package 'rainbow-delimiters)
 
-(use-package rainbow-delimiters
-  :hook
-  (prog-mode . rainbow-delimiters-mode))
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+
+(setq show-paren-style 'parenthesis)
+(setq show-paren-when-point-in-periphery nil)
+(setq show-paren-when-point-inside-paren nil)
+(show-paren-mode)
 #+end_src
 
 ** Prettify symbols (prog-mode.el)
@@ -2943,33 +2929,32 @@ Summary of what these do:
 :END:
 
 #+begin_src emacs-lisp
-(use-package prog-mode
-  :straight nil
-  :hook (prog-mode . prettify-symbols-mode)
-  :config
-  (setq-default prettify-symbols-alist
-                '(("lambda" . ?λ)
-                  ("<-" . ?←)
-                  ("->" . ?→)
-                  ("->>" . ?↠)
-                  ("=>" . ?⇒)
-                  ("/=" . ?≠)
-                  ("!=" . ?≠)
-                  ("==" . ?≡)
-                  ("<=" . ?≤)
-                  (">=" . ?≥)
-                  ("=<<" . (?= (Br . Bl) ?≪))
-                  (">>=" . (?≫ (Br . Bl) ?=))
-                  ("<=<" . ?↢)
-                  (">=>" . ?↣)))
-  (setq prettify-symbols-unprettify-at-point 'right-edge))
+(add-hook 'prog-mode-hook 'prettify-symbols-mode)
+
+(setq-default prettify-symbols-alist
+              '(("lambda" . ?λ)
+                ("<-" . ?←)
+                ("->" . ?→)
+                ("->>" . ?↠)
+                ("=>" . ?⇒)
+                ("/=" . ?≠)
+                ("!=" . ?≠)
+                ("==" . ?≡)
+                ("<=" . ?≤)
+                (">=" . ?≥)
+                ("=<<" . (?= (Br . Bl) ?≪))
+                (">>=" . (?≫ (Br . Bl) ?=))
+                ("<=<" . ?↢)
+                (">=>" . ?↣)))
+(setq prettify-symbols-unprettify-at-point 'right-edge)
 #+end_src
+
 * User interface
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-9ff97526
 :END:
 
-** Tabs as workspaces (tab-bar.el)
+** COMMENT Tabs as workspaces (tab-bar.el)
 :PROPERTIES:
 :CUSTOM_ID: *User_interface*-Tabs_as_workspaces_(tab-bar.el)-a66cb3df
 :END:
@@ -2980,130 +2965,27 @@ Summary of what these do:
   :config
   (setq tab-bar-new-tab-choice "~/"))
 #+end_src
+
 ** Transient commands (transient.el)
 :PROPERTIES:
-:CUSTOM_ID: *User_interface*-Transient_commands_(transient.el)-2b4c6824
+:CUSTOM_ID: User_interface-Transient_commands_(transient.el)-0bc5bb81
 :END:
 
 =transient.el= implements support for powerful keyboard-driven menus.  Such menus
 can be used as simple visual command dispatchers.  More complex menus take
 advantage of infix arguments, which are somewhat similar to prefix arguments,
-but are more flexible and discoverable.  This package is in-built with Emacs 28.
+but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
 
 #+begin_src emacs-lisp
-(use-package transient
-  :config
+(once '(:packages transient)
   (setq transient-default-level 7)
   (setq transient-show-popup -0.2)
   (transient-bind-q-to-quit)
   (setq transient-display-buffer-action '(display-buffer-below-selected))
-  :bind
-  (nil
-   :map transient-map
-   ("<escape>" . transient-quit-all)
-   :map transient-sticky-map
-   ("ESC" . transient-quit-all)))
-#+end_src
-
-** Theme
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Theme-35a328fb
-:END:
-
-=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
-Protesilaos Stavrou.
-
-#+begin_src emacs-lisp
-(straight-use-package `(modus-themes ,@(when EMACS29+ '(:type built-in))))
-(use-package modus-themes
-  :hook (after-init . (lambda () (load-theme 'modus-vivendi t)))
-  :config
-  (setq! modus-themes-links '(no-underline)))
-#+end_src
-
-** Fonts (fonts.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-073ed5c4
-:END:
-
-Here are some recommended fonts for programming or general text editing.
-
-- =Victor Mono=
-- =Sarasa Mono SC=
-- =Fira Code Retina=
-
-A list of my favorite CJK fonts.
-
-- =LXGW WenKai Mono=
-- =HarmonyOS Sans SC Light=
-- =Smartisan Compact CNS=
-- =青鸟华光简报宋二=
-- =FZSuXinShiLiuKaiS-R-GB=
-
-#+begin_src emacs-lisp
-(setq ale-font-size 140)
-(setq ale-default-font "Victor Mono")
-(setq ale-fixed-font "Sarasa Mono SC")
-(setq ale-variable-font "Sarasa Mono SC")
-(setq ale-zh-font "LXGW WenKai Mono")
-(if (daemonp)
-    (add-hook 'after-make-frame-functions #'ale-font-setup)
-  (add-hook 'emacs-startup-hook #'ale-font-setup))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+fonts.el"
-:CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-Autoload-647703e6
-:END:
-
-#+begin_src emacs-lisp
-(defvar ale-font-size 140)
-(defvar ale-default-font "Victor Mono")
-(defvar ale-fixed-font "Sarasa Mono SC")
-(defvar ale-variable-font "Sarasa Mono SC")
-(defvar ale-zh-font "LXGW WenKai Mono")
-(defvar ale-zh-font-scale 1.0)
-
-;;;###autoload
-(defun ale-font-setup (&optional frame)
-  "Setup default/fixed-pitch/variable-pitch/zh-font."
-  (interactive)
-  (with-selected-frame (or frame (selected-frame))
-    (custom-theme-set-faces
-     'user
-     '(font-lock-keyword-face ((t (:slant italic))))
-     '(font-lock-variable-name-face ((t (:weight demibold))))
-     '(font-lock-function-name-face ((t (:weight demibold)))))
-    (when-let ((default ale-default-font)
-               (fixed-pitch ale-fixed-font)
-               (variable-pitch ale-variable-font)
-               (zh-font (font-spec :family ale-zh-font)))
-      (custom-theme-set-faces
-       'user
-       `(default ((t (:font ,(font-spec :family default) :height ,ale-font-size))))
-       `(fixed-pitch ((t (:font ,(font-spec :family fixed-pitch) :height ,ale-font-size))))
-       `(variable-pitch ((t (:font ,(font-spec :family variable-pitch) :height ,ale-font-size)))))
-      (unless (equal zh-font (font-spec :family variable-pitch))
-        (setq face-font-rescale-alist (list (cons zh-font ale-zh-font-scale))))
-      (dolist (charset '(kana han cjk-misc bopomofo))
-        (set-fontset-font (frame-parameter nil 'font) charset zh-font))
-      (unless EMACS28+
-        (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))))
-
-;;;###autoload
-(defun ale-font-cn-set-title (beg end)
-  (interactive "r")
-  (remove-overlays beg end)
-  (let ((ov (make-overlay beg end)))
-    (overlay-put ov 'display '(height 1.5))))
-
-;;;###autoload
-(defun ale-font-cn-set-quote (beg end)
-  (interactive "r")
-  (remove-overlays beg end)
-  (let ((ov (make-overlay beg end)))
-    (overlay-put ov 'face 'font-lock-comment-face)))
+  (bind-keys :map transient-map
+             ("<escape>" . transient-quit-all)
+             :map transient-sticky-map
+             ("ESC" . transient-quit-all)))
 #+end_src
 
 ** Mode line (mode-line.el)
@@ -3127,9 +3009,7 @@ Besides, it's easy to define your own mode line segments with
 ~ale-mode-line-format~.
 
 #+begin_src emacs-lisp
-(use-package emacs
-  :init
-  (ale-ml-mode))
+(ale-ml-mode)
 #+end_src
 
 *** Autoload
@@ -3273,7 +3153,7 @@ need to add =--with-xinput2= in build flags to enable this feature.
   (pixel-scroll-precision-mode 1))
 #+end_src
 
-** Vscode style icons (vscode-icon.el)
+** VSCode style icons (vscode-icon.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Vscode_style_icons_(vscode-icon.el)-0f3dbf81
 :END:
@@ -3282,8 +3162,9 @@ Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VS
 style icons with image format.
 
 #+begin_src emacs-lisp
-(use-package vscode-icon
-  :config
+(straight-use-package 'vscode-icon)
+
+(once '(:packages vscode-icon)
   (push '("jpg" . "image") vscode-icon-file-alist)
   (push '("7z" . "zip") vscode-icon-file-alist)
   (push '("mkv" . "video") vscode-icon-file-alist)
@@ -3298,9 +3179,10 @@ style icons with image format.
 Additional syntax highlighting in dired buffer.
 
 #+begin_src emacs-lisp
-(use-package diredfl
-  :hook (dired-mode . diredfl-mode)
-  :config
+(straight-use-package 'diredfl)
+
+(add-hook 'dired-mode-hook 'diredfl-mode)
+(once '(:packages diredfl)
   (set-face-attribute 'diredfl-dir-name nil :bold t))
 #+end_src
 
@@ -3315,13 +3197,12 @@ easy to understand how many matches there are in the current buffer
 for your search query.
 
 #+begin_src emacs-lisp
-(use-package anzu
-  :after-call isearch-mode
-  :bind
-  ([remap query-replace] . anzu-query-replace)
-  ([remap query-replace-regexp] . anzu-query-replace-regexp)
-  :config
-  (global-anzu-mode +1))
+(straight-use-package 'anzu)
+
+(once '(:hooks pre-command-hook)
+  (global-anzu-mode)
+  (bind-key [remap query-replace] 'anzu-query-replace)
+  (bind-key [remap query-replace-regexp] 'anzu-query-replace-regexp))
 #+end_src
 
 ** Alternative isearch UI (isearch-mb.el)
@@ -3336,16 +3217,15 @@ Moreover, the search status information in the echo area and some keybindings
 are slightly simplified.
 
 #+begin_src emacs-lisp
-(use-package isearch-mb
-  :after-call isearch-mode
-  :config
-  (isearch-mb-mode)
+(straight-use-package 'isearch-mb)
+
+(isearch-mb-mode)
+
+(once '(:packages isearch-mb)
   (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
   (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
-  :bind
-  (nil
-   :map isearch-mb-minibuffer-map
-   ([remap previous-matching-history-element] . consult-isearch-history)))
+  (bind-keys :map isearch-mb-minibuffer-map
+             ([remap previous-matching-history-element] . consult-isearch-history)))
 #+end_src
 
 ** Window position (transpose-frame.el)
@@ -3359,7 +3239,7 @@ strongly encourage you to read the "Commentary" section in the source
 code.  Do it with =M-x find-library transpose-frame=.
 
 #+begin_src emacs-lisp
-(use-package transpose-frame)
+(straight-use-package 'transpose-frame)
 #+end_src
 
 ** Distraction-free writing (writeroom-mode.el)
@@ -3368,12 +3248,9 @@ code.  Do it with =M-x find-library transpose-frame=.
 :END:
 
 #+begin_src emacs-lisp
-(use-package writeroom-mode
-  :after-call find-file-hook
-  :hook
-  (after-init . global-writeroom-mode)
-  (org-mode . ale-visual-fill-center-text)
-  :config
+(straight-use-package 'writeroom-mode)
+
+(once '(:hooks find-file-hook)
   (setq writeroom-width 128
         writeroom-bottom-divider-width 0
         writeroom-fringes-outside-margins t
@@ -3381,7 +3258,9 @@ code.  Do it with =M-x find-library transpose-frame=.
         writeroom-major-modes '(text-mode prog-mode conf-mode special-mode Info-mode)
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
-        writeroom-mode-line t))
+        writeroom-mode-line t)
+  (global-writeroom-mode)
+  (add-hook 'org-mode-hook #'+visual-fill-center-text))
 #+end_src
 
 *** Autoload
@@ -3392,7 +3271,7 @@ code.  Do it with =M-x find-library transpose-frame=.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun ale-visual-fill-center-text ()
+(defun +visual-fill-center-text ()
   "Centering text."
   (interactive)
   (setq-local visual-fill-column-width 120)
@@ -3406,9 +3285,9 @@ code.  Do it with =M-x find-library transpose-frame=.
 :END:
 
 #+begin_src emacs-lisp
-(use-package which-key
-  :init
-  (which-key-mode 1 ))
+(straight-use-package 'which-key)
+
+(once '(:before pre-command-hook) (which-key-mode))
 #+end_src
 
 ** Hunk indicator (git-gutter.el)
@@ -3417,13 +3296,11 @@ code.  Do it with =M-x find-library transpose-frame=.
 :END:
 
 #+begin_src emacs-lisp
-(use-package git-gutter
-  :config
-  ;; (custom-set-variables
-  ;;  '(git-gutter:modified-sign "⏽")
-  ;;  '(git-gutter:added-sign "⏽")
-  ;;  '(git-gutter:deleted-sign "⏽"))
-  )
+(straight-use-package 'git-gutter)
+
+(setq! git-gutter:modified-sign "⏽"
+       git-gutter:added-sign "⏽"
+       git-gutter:deleted-sign "⏽")
 #+end_src
 
 * Utils
@@ -3441,19 +3318,12 @@ code.  Do it with =M-x find-library transpose-frame=.
 control over the buffer list and is more powerful overall.
 
 #+begin_src emacs-lisp
-(use-package ibuffer
-  :init
-  (advice-add 'list-buffers :override 'ibuffer)
-  :bind
-  (nil
-   :map ibuffer-mode-map
-   ("M-o" . nil)
-   ("* f" . ibuffer-mark-by-file-name-regexp)
-   ("* g" . ibuffer-mark-by-content-regexp)
-   ("* n" . ibuffer-mark-by-name-regexp)
-   ("s n" . ibuffer-do-sort-by-alphabetic)
-   ("/ g" . ibuffer-filter-by-content))
-  :config
+(straight-use-package '(ibuffer :type built-in))
+
+(advice-add 'list-buffers :override 'ibuffer)
+(once '(:packages ibuffer)
+  (add-hook 'ibuffer-mode-hook
+            (lambda () (hl-line-mode) (ibuffer-update 0)))
   (setq ibuffer-expert t)
   (setq ibuffer-display-summary nil)
   (setq ibuffer-use-other-window nil)
@@ -3474,7 +3344,13 @@ control over the buffer list and is more powerful overall.
           (mark " " (name 16 -1) " " filename)))
   (setq ibuffer-saved-filter-groups nil)
   (setq ibuffer-old-time 48)
-  (add-hook 'ibuffer-mode-hook (lambda () (interactive) (hl-line-mode) (ibuffer-update 0))))
+  (bind-keys :map ibuffer-mode-map
+             ("M-o" . nil)
+             ("* f" . ibuffer-mark-by-file-name-regexp)
+             ("* g" . ibuffer-mark-by-content-regexp)
+             ("* n" . ibuffer-mark-by-name-regexp)
+             ("s n" . ibuffer-do-sort-by-alphabetic)
+             ("/ g" . ibuffer-filter-by-content)))
 #+end_src
 
 ** Keyboard version right-click (embark.el)
@@ -3487,75 +3363,15 @@ through the ~embark-act~ command (which you should bind to a convenient key),
 offering you relevant actions to use on a target determined by the context.
 
 #+begin_src emacs-lisp
-(use-package embark
-  :after-call dired-after-readin-hook minibuffer-setup-hook
-  :bind
-  (("C-." . embark-act)
-   :map minibuffer-local-map ("C-." . embark-act) ("C-," . embark-become)
-   :map embark-collect-mode-map ("C-." . embark-act))
-  :config
-  (use-package embark-consult :demand t)
-  (ale-embark-keymaps 1)
-  (setq embark-quit-after-action t))
-#+end_src
+(straight-use-package 'embark)
 
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+embark.el"
-:CUSTOM_ID: Utils-Keyboard_version_right-click_(embark.el)-Autoload-8c065286
-:END:
-
-#+begin_src emacs-lisp
-(autoload 'consult-grep "consult")
-(autoload 'consult-line "consult")
-(autoload 'consult-imenu "consult-imenu")
-(autoload 'consult-outline "consult")
-
-(defvar ale-embark-become-general-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "g") 'consult-grep)
-    map)
-  "General custom cross-package `embark-become' keymap.")
-
-(defvar ale-embark-become-line-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "l") 'consult-line)
-    (define-key map (kbd "i") 'consult-imenu)
-    (define-key map (kbd "s") 'consult-outline) ; as my default is 'M-s s'
-    map)
-  "Line-specific custom cross-package `embark-become' keymap.")
-
-(defvar embark-become-file+buffer-map)
-(autoload 'project-switch-to-buffer "project")
-(autoload 'project-find-file "project")
-
-(defvar ale-embark-become-file+buffer-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map embark-become-file+buffer-map)
-    (define-key map (kbd "B") 'project-switch-to-buffer)
-    (define-key map (kbd "F") 'project-find-file)
-    map)
-  "File+buffer custom cross-package `embark-become' keymap.")
-
-(defvar embark-become-keymaps)
-
-;;;###autoload
-(define-minor-mode ale-embark-keymaps
-  "Add or remove keymaps from Embark.
-This is based on the value of `ale-embark-add-keymaps'
-and is meant to keep things clean in case I ever wish to disable
-those so-called 'extras'."
-  :init-value nil
-  :global t
-  (let ((maps '(ale-embark-become-general-map
-                ale-embark-become-line-map
-                ale-embark-become-file+buffer-map)))
-    (if ale-embark-keymaps
-        (dolist (map maps)
-          (cl-pushnew map embark-become-keymaps))
-      (setq embark-become-keymaps
-            (dolist (map maps)
-              (delete map embark-become-keymaps))))))
+(once '(:hooks pre-command-hook)
+  (setq embark-quit-after-action t)
+  (bind-keys :map global-map
+             ("C-." . embark-act)
+             :map minibuffer-local-map
+             ("C-." . embark-act)
+             ("C-," . embark-become)))
 #+end_src
 
 ** Window motions (ace-window.el)
@@ -3566,11 +3382,10 @@ those so-called 'extras'."
 Index based window motions.
 
 #+begin_src emacs-lisp
-(use-package ace-window
-  :bind
-  ("M-o" . ace-select-window)
-  :config
-  (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o)))
+(straight-use-package 'ace-window)
+
+(setq aw-keys '(?a ?s ?t ?n ?e ?o))
+(bind-key "M-O" 'ace-select-window)
 #+end_src
 
 ** Vterm (vterm.el)
@@ -3579,33 +3394,32 @@ Index based window motions.
 :END:
 
 #+begin_src emacs-lisp
-(use-package vterm
-  :config
+(straight-use-package 'vterm)
+
+(bind-key "M-`" 'ale-vterm-toggle)
+
+(once '(:packages vterm)
   (ale-vterm-mux-mode)
   (setq vterm-max-scrollback 5000)
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
   (set-face-attribute 'vterm-color-black nil :foreground "#111111")
-  (advice-add 'meow-insert-exit :around #'ale-vterm-escape-advisor)
-  (advice-add 'meow-kill-whole-line :around #'ale-vterm-kill-whole-line-advisor)
-  :bind
-  (("M-`" . ale-vterm-toggle)
-   :map vterm-mode-map
-   ("M-`" . ale-vterm-toggle)
-   ("M--" . ale-vterm-new)
-   ("M-'" . vterm-send-M-apostrophe)
-   ("M-\"" . vterm-send-M-quote)
-   ("M-/" . vterm-send-M-/)
-   ("M-." . ale-vterm-next)
-   ("M-," . ale-vterm-prev)
-   ("M-RET" . vterm-send-M-return)
-   ("s-n" . vterm-next-prompt)
-   ("s-p" . vterm-previous-prompt)
-   ("S-SPC" . nil)
-   ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
-   ("<C-i>" . vterm-send-C-i)
-   ("C-;" . vterm-send-C-semicolon)
-   ("C-<delete>" . vterm-send-C-delete)
-   ("C-<return>" . vterm-send-F5)))
+  (bind-keys :map vterm-mode-map
+             ("M-`" . ale-vterm-toggle)
+             ("M--" . ale-vterm-new)
+             ("M-'" . vterm-send-M-apostrophe)
+             ("M-\"" . vterm-send-M-quote)
+             ("M-/" . vterm-send-M-/)
+             ("M-." . ale-vterm-next)
+             ("M-," . ale-vterm-prev)
+             ("M-RET" . vterm-send-M-return)
+             ("s-n" . vterm-next-prompt)
+             ("s-p" . vterm-previous-prompt)
+             ("S-SPC" . nil)
+             ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
+             ("<C-i>" . vterm-send-C-i)
+             ("C-;" . vterm-send-C-semicolon)
+             ("C-<delete>" . vterm-send-C-delete)
+             ("C-<return>" . vterm-send-F5)))
 #+end_src
 
 *** Autoload
@@ -3633,13 +3447,15 @@ Index based window motions.
   "The index of current vterm buffer.")
 
 ;;;###autoload
-(defun ale-vterm-escape-advisor (fn &rest args)
+(defadvice! ale-vterm-escape-a (fn &rest args)
+  :around #'meow-insert-exit
   (if (derived-mode-p 'vterm-mode)
       (vterm-send-escape)
     (apply fn args)))
 
 ;;;###autoload
-(defun ale-vterm-kill-whole-line-advisor (fn &rest args)
+(defadvice! ale-vterm-kill-whole-line-a (fn &rest args)
+  :around #'meow-kill-whole-line
   (if (derived-mode-p 'vterm-mode)
       (funcall ale-vterm-kill-whole-line-cmd)
     (apply fn args)))
@@ -3780,28 +3596,22 @@ Used as a hook function added to `kill-buffer-hook'."
 :END:
 
 #+begin_src emacs-lisp
-(use-package magit
-  :config
+(straight-use-package 'magit)
+
+(bind-key "C-M-g" 'magit-status-here)
+(once '(:packages magit)
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 68)
   (setq git-commit-known-pseudo-headers
-        '("Signed-off-by"
-          "Acked-by"
-          "Modified-by"
-          "Cc"
-          "Suggested-by"
-          "Reported-by"
-          "Tested-by"
-          "Reviewed-by"))
+        '("Signed-off-by" "Acked-by" "Modified-by" "Cc"
+          "Suggested-by" "Reported-by" "Tested-by" "Reviewed-by"))
   (setq git-commit-style-convention-checks
-        '(non-empty-second-line
-          overlong-summary-line))
+        '(non-empty-second-line overlong-summary-line))
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
-  :bind (("C-M-g" . magit-status-here)
-         :map magit-diff-section-base-map
-         ("<C-return>" . magit-diff-visit-file-other-window)))
+  (bind-keys :map magit-diff-section-base-map
+             ("<C-return>" . magit-diff-visit-file-other-window)))
 #+end_src
 
 ** Helpful (helpful.el)
@@ -3817,37 +3627,18 @@ made for this package and built-in help buffer:
 - focus newly opened help buffer (same behaviour as helpful.el)
 
 #+begin_src emacs-lisp
-(use-package helpful
-  :bind
-  (("C-h K" . #'describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
-   ([remap describe-function] . #'helpful-callable)
-   ([remap describe-symbol] . #'helpful-symbol)
-   ([remap describe-key] . #'helpful-key)
-   :map helpful-mode-map
-   ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
-   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
-#+end_src
+(straight-use-package 'helpful)
 
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+helpful.el"
-:CUSTOM_ID: Utils-Helpful_(helpful.el)-Autoload-95c06568
-:END:
+(bind-keys :map global-map
+           ("C-h K" . describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
+           ([remap describe-function] . helpful-callable)
+           ([remap describe-symbol] . helpful-symbol)
+           ([remap describe-key] . helpful-key))
 
-#+begin_src emacs-lisp
-(defvar ale-helpful-initialized nil)
-
-;;;###autoload
-(defun ale-helpful-mode-hook ()
-  ;; FIXME: A better way?
-  (setq ale-helpful-initialized nil)
-  (advice-add 'find-file :before
-              (lambda (&rest _)
-                (when (and (not ale-helpful-initialized) (derived-mode-p 'helpful-mode))
-                  (switch-to-buffer "*scratch*")
-                  (switch-to-prev-buffer)
-                  (setq ale-helpful-initialized t))))
-  (visual-line-mode))
+(once '(:packages helpful)
+  (bind-keys :map helpful-mode-map
+             ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
+             ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
 #+end_src
 
 ** Emacs Manual (info.el)
@@ -3856,17 +3647,16 @@ made for this package and built-in help buffer:
 :END:
 
 #+begin_src emacs-lisp
-(use-package info
-  :straight (:type built-in)
-  :bind
-  (nil
-   :map Info-mode-map
-   ("n" . next-line)
-   ("p" . previous-line)
-   ("C-n" . Info-next)
-   ("C-p" . Info-prev)
-   ("M-n" . forward-paragraph)
-   ("M-p" . backward-paragraph)))
+(straight-use-package '(info :type built-in))
+
+(once '(:packages info)
+  (bind-keys :map Info-mode-map
+             ("n" . next-line)
+             ("p" . previous-line)
+             ("C-n" . Info-next)
+             ("C-p" . Info-prev)
+             ("M-n" . forward-paragraph)
+             ("M-p" . backward-paragraph)))
 #+end_src
 
 ** Man page (man.el)
@@ -3875,14 +3665,11 @@ made for this package and built-in help buffer:
 :END:
 
 #+begin_src emacs-lisp
-(use-package man
-  :straight (:type built-in)
-  :bind
-  (nil
-   :map Man-mode-map
-   ("q" . kill-this-buffer))
-  :config
-  (setq Man-notify-method 'newframe))
+(straight-use-package '(man :type built-in))
+
+(setq Man-notify-method 'newframe)
+(once '(:packages man)
+  (bind-keys :map Man-mode-map ("q" . kill-this-buffer)))
 #+end_src
 
 ** Ripgrep (rg.el)
@@ -3895,29 +3682,36 @@ interactively create searches, doing automatic searches based on the editing
 context, refining and modifying search results and much more.  It is also highly
 configurable to be able to fit different users' needs.
 
+Some additions I've added to rg transient:
+
++ =C= key to toggle =--context 3= flag
+  show 3 lines of text before and after the keyword
++ =A= key to toggle =-A 5= flag
+  like =--context=, but only show text after the keyword
++ press =SPC p p= to search in current project, no ask for confirmation
+
+
 #+begin_src emacs-lisp
-(use-package rg
-  :config
-  (ale-rg-setup)
-  :bind
-  (nil
-   :map grandview-prog-map
-   ("p" . rg-project-all-files-no-ask)))
+(straight-use-package 'rg)
+
+(once '(:hooks find-file-hook)
+  (+rg-setup) ; for lazy loading
+  (bind-key "p" 'rg-project-all-files-no-ask grandview-prog-map))
 #+end_src
 
 *** Autoload
 :PROPERTIES:
+:CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-c1d779af
 :header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rg.el"
-:CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-31851a46
 :END:
 
-The purpose of the function =ale-rg-setup= is to avoid executing
-=rg-define-toggle/search= directly in =use-package=, because this macro introduces
-some deps that we don't need at startup.
+The purpose of wrapping =rg-define-toggle/search= is to avoid executing them
+immediately, because these macros introduce dependencies that we don't need at
+startup.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun ale-rg-setup ()
+(defun +rg-setup ()
   "Define toggles in `rg-mode'."
   (rg-define-toggle "--context 3" (kbd "C"))
   (rg-define-toggle "-A 5" (kbd "A"))
@@ -3937,15 +3731,14 @@ power of Emacs' editing capabilities (e.g. keyboard macros, query and replace a
 regexp .etc).
 
 #+begin_src emacs-lisp
-(use-package wgrep
-  :config
+(straight-use-package 'wgrep)
+
+(once '(:packages wgrep)
   (setq wgrep-auto-save-buffer t)
   (setq wgrep-change-readonly-file t)
-  :bind
-  (nil
-   :map wgrep-mode-map
-   ("M-n" . next-error-no-select)
-   ("M-p" . previous-error-no-select)))
+  (bind-keys :map wgrep-mode-map
+             ("M-n" . next-error-no-select)
+             ("M-p" . previous-error-no-select)))
 #+end_src
 
 ** Pdf reader (pdf-tools.el)
@@ -3954,29 +3747,24 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package pdf-tools
-  :if HAS-GUI
-  :after-call dired-after-readin-hook minibuffer-setup-hook
-  :config
-  (pdf-tools-install)
+(straight-use-package 'pdf-tools)
+
+(once '(:hooks find-file-hook)
+  (pdf-tools-install))
+
+(once '(:packages pdf-tools)
   (setq-default pdf-view-display-size 'fit-page)
-  ;; automatically annotate highlights
-  (setq pdf-annot-activate-created-annotations t)
-  ;; turn off cua so copy works
-  (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0)))
-  ;; more fine-grained zooming
-  (setq pdf-view-resize-factor 1.1)
-  ;; keyboard shortcuts
-  :bind
-  (nil
-   :map pdf-view-mode-map
-   ("C-s" . isearch-forward)
-   ("h" . pdf-annot-add-highlight-markup-annotation)
-   ("t" . 'pdf-annot-add-text-annotation)
-   ("D" . 'pdf-annot-delete)))
+  (setq pdf-annot-activate-created-annotations t) ; automatically annotate highlights
+  (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0))) ; turn off cua so copy works
+  (setq pdf-view-resize-factor 1.1) ; more fine-grained zooming
+  (bind-keys :map pdf-view-mode-map
+             ("C-s" . isearch-forward)
+             ("h" . pdf-annot-add-highlight-markup-annotation)
+             ("t" . 'pdf-annot-add-text-annotation)
+             ("D" . 'pdf-annot-delete)))
 #+end_src
 
-** Epub reader (nov.el)
+** COMMENT Epub reader (nov.el)
 :PROPERTIES:
 :CUSTOM_ID: Utils-Epub_reader_(nov.el)-cd2820eb
 :END:
@@ -4070,14 +3858,11 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package fanyi
-  :bind
-  (nil
-   :map grandview-apps-map
-   ("t" . fanyi-dwim))
-  :custom
-  (fanyi-providers '(fanyi-etymon-provider
-                     fanyi-longman-provider)))
+(straight-use-package 'fanyi)
+
+(bind-key "t" 'fanyi-dwim grandview-apps-map)
+(once '(:packages fanyi)
+  (setq! fanyi-providers '(fanyi-etymon-provider fanyi-longman-provider)))
 #+end_src
 
 ** Forges (forge.el)
@@ -4086,7 +3871,7 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package forge)
+(straight-use-package 'forge)
 #+end_src
 
 * Programming Languages
@@ -4100,22 +3885,7 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package rust-mode)
-#+end_src
-
-** C|C++
-:PROPERTIES:
-:CUSTOM_ID: Programming_Languages-C|C++-c3d54f99
-:END:
-
-#+begin_src emacs-lisp
-(use-package ob-C
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :commands (org-babel-execute:C
-             org-babel-expand:C
-             org-babel-execute:cpp
-             org-babel-expand:cpp))
+(straight-use-package 'rust-mode)
 #+end_src
 
 ** Python
@@ -4124,18 +3894,10 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package python
-  :straight (:type built-in)
-  :config
-  (setq python-indent-offset 4)
-  (setq python-indent-guess-indent-offset-verbose nil))
-#+end_src
+(straight-use-package '(python :type built-in))
 
-#+begin_src emacs-lisp
-(use-package ob-python
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :commands (org-babel-execute:python))
+(setq python-indent-offset 4)
+(setq python-indent-guess-indent-offset-verbose nil)
 #+end_src
 
 ** Lua
@@ -4144,9 +3906,9 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package lua-mode
-  :config
-  (setq lua-indent-level 2))
+(straight-use-package 'lua-mode)
+
+(setq lua-indent-level 2)
 #+end_src
 
 ** Yaml
@@ -4155,7 +3917,7 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package yaml-mode)
+(straight-use-package 'yaml-mode)
 #+end_src
 
 ** JavaScript
@@ -4164,29 +3926,20 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package js
-  :straight (:type built-in)
-  :config
-  (setq js-indent-level 2))
+(straight-use-package '(js :type built-in))
+(straight-use-package 'web-mode)
 
-(use-package web-mode
-  :config
-  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
-  :hook
-  (web-mode . (lambda ()
-                (emmet-mode)
-                (setq web-mode-markup-indent-offset 2)
-                (setq web-mode-code-indent-offset 2)
-                (setq web-mode-script-padding 0)))
-  :mode (("\\.vue\\'" . web-mode)
-         ("\\.jsx?$" . web-mode)))
-#+end_src
+(add-hook 'web-mode-hook
+          (lambda ()
+            (emmet-mode)
+            (setq web-mode-markup-indent-offset 2)
+            (setq web-mode-code-indent-offset 2)
+            (setq web-mode-script-padding 0)))
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx?$" . web-mode))
 
-#+begin_src emacs-lisp
-(use-package ob-js
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :commands (org-babel-execute:js))
+(setq js-indent-level 2)
+(setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
 #+end_src
 
 ** Bash|Zsh
@@ -4195,17 +3948,9 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package sh-script
-  :straight (:type built-in)
-  :config
-  (setq sh-basic-offset 2))
-#+end_src
+(straight-use-package '(sh-script :type built-in))
 
-#+begin_src emacs-lisp
-(use-package ob-shell
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :commands (org-babel-execute:bash))
+(setq sh-basic-offset 2)
 #+end_src
 
 ** HTML
@@ -4214,31 +3959,7 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package emmet-mode)
-#+end_src
-
-** LaTeX
-:PROPERTIES:
-:CUSTOM_ID: Programming_Languages-LaTeX-3bbb21dc
-:END:
-
-#+begin_src emacs-lisp
-(use-package ob-latex
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :commands (org-babel-execute:latex org-babel-expand:latex))
-#+end_src
-
-** Makefile
-:PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Makefile-f838823c
-:END:
-
-#+begin_src emacs-lisp
-(use-package ob-makefile
-  :straight (:type built-in)
-  :after-call org-mode-hook
-  :commands (org-babel-execute:makefile))
+(straight-use-package 'emmet-mode)
 #+end_src
 
 * DevTools
@@ -4246,40 +3967,18 @@ regexp .etc).
 :CUSTOM_ID: DevTools-f401ccff
 :END:
 
-** COMMENT LSP (lsp-bridge.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-LSP_(lsp-bridge.el)-abaaeb07
-:END:
-
-#+begin_src emacs-lisp
-(use-package epc)
-
-(use-package lsp-bridge
-  :defer 1
-  :straight (lsp-bridge
-             :host github :repo "manateelazycat/lsp-bridge"
-             :files (:defaults "*.py"))
-  :config
-  (require 'lsp-bridge-icon)
-  (require 'lsp-bridge-orderless)
-  (global-lsp-bridge-mode))
-#+end_src
-
 ** LSP (lsp.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-9884b2d1
 :END:
 
 #+begin_src emacs-lisp
-(use-package lsp-mode
-  :hook ((sh-mode
-          lua-mode
-          python-mode
-          web-mode
-          typescript-mode
-          rust-mode)
-         . lsp-deferred)
-  :config
+(straight-use-package 'lsp-mode)
+
+(dolist (lang '(sh lua python web typescript rust))
+  (add-hook (intern (format "%s-mode-hook" lang)) 'lsp-deferred))
+
+(once '(:packages lsp-mode)
   (setq lsp-eldoc-hook nil)
   (setq lsp-enable-snippet nil)
   (setq lsp-signature-auto-activate t)
@@ -4297,24 +3996,18 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package lsp-tailwindcss
-  :after (lsp-mode web-mode)
-  :preface
-  (setq lsp-tailwindcss-add-on-mode t))
+(straight-use-package 'lsp-tailwindcss)
+(straight-use-package 'lsp-pyright)
+(straight-use-package 'lsp-ui)
 
-(use-package lsp-pyright
-  :hook (python-mode . ale-lsp-pyright-import-venv)
-  :config
-  (when (executable-find "python3")
-    (setq lsp-pyright-python-executable-cmd "python3")))
-
-(use-package lsp-ui
-  :config
-  (setq lsp-ui-doc-position 'bottom)
-  (setq lsp-ui-doc-show-with-cursor t)
-  (setq lsp-ui-doc-show-with-mouse nil)
-  :hook
-  (lsp-mode . lsp-ui-mode))
+(add-hook 'python-mode-hook 'ale-lsp-pyright-import-venv)
+(add-hook 'lsp-mode-hook 'lsp-ui-mode)
+(setq lsp-tailwindcss-add-on-mode t)
+(when (executable-find "python3")
+  (setq lsp-pyright-python-executable-cmd "python3"))
+(setq lsp-ui-doc-position 'bottom)
+(setq lsp-ui-doc-show-with-cursor t)
+(setq lsp-ui-doc-show-with-mouse nil)
 #+end_src
 
 *** Autoload
@@ -4350,21 +4043,14 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package conda
-  :after-call find-file-hook
-  :config
-  (setq conda-anaconda-home "/opt/miniconda/")
-  (setq conda-env-home-directory "/opt/miniconda/")
-  (setq conda-message-on-environment-switch t)
-  :bind
-  (nil
-   :map grandview-prog-map
-   ("C" . ale-conda-activate-for-buffer))
-  :hook
-  (conda-postactivate . (lambda ()
-                          (interactive)
-                          (require 'jupyter)
-                          (jupyter-available-kernelspecs t))))
+(straight-use-package 'conda)
+
+(setq conda-anaconda-home "/opt/miniconda/")
+(setq conda-env-home-directory "/opt/miniconda/")
+(setq conda-message-on-environment-switch t)
+(bind-key "C" 'ale-conda-activate-for-buffer grandview-prog-map)
+(add-hook 'conda-postactivate-hook
+          (lambda () (require 'jupyter) (jupyter-available-kernelspecs t)))
 #+end_src
 
 *** Autoload
@@ -4402,8 +4088,9 @@ It support local `conda-env-subdirectory' such as `./envs'."
 :END:
 
 #+begin_src emacs-lisp
-(use-package jupyter
-  :config
+(straight-use-package 'jupyter)
+
+(once '(:packages jupyter)
   ;; See https://github.com/nnicandro/emacs-jupyter/issues/380.
   (defun jupyter-ansi-color-apply-on-region (begin end)
     (ansi-color-apply-on-region begin end t))
@@ -4418,9 +4105,8 @@ It support local `conda-env-subdirectory' such as `./envs'."
 :END:
 
 #+begin_src emacs-lisp
-(use-package rainbow-mode
-  :hook
-  (prog-mode . rainbow-mode))
+(straight-use-package 'rainbow-mode)
+(add-hook 'prog-mode-hook 'rainbow-mode)
 #+end_src
 
 ** Formatter (reformatter.el)
@@ -4433,8 +4119,10 @@ to reformat the current buffer using a command-line program, together with an
 optional minor mode which can apply this command automatically on save.
 
 #+begin_src emacs-lisp
-(use-package reformatter
-  :config
+(straight-use-package 'reformatter)
+
+(bind-key "f" '+format-buffer grandview-apps-map)
+(once '(:packages reformatter)
   (reformatter-define lua-format
     :program "stylua"
     :args '("--indent-width" "2" "-")
@@ -4442,11 +4130,7 @@ optional minor mode which can apply this command automatically on save.
   (reformatter-define python-format
     :program "black"
     :args '("-")
-    :lighter " blackFMT")
-  :bind
-  (nil
-   :map grandview-apps-map
-   ("f" . ale-format-buffer)))
+    :lighter " blackFMT"))
 #+end_src
 
 *** Autoload
@@ -4457,7 +4141,7 @@ optional minor mode which can apply this command automatically on save.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun ale-format-buffer ()
+(defun +format-buffer ()
   (interactive)
   (let* ((mode-name (string-remove-suffix "-mode" (format "%s" major-mode)))
          (func-name (intern (format "%s-format-buffer" mode-name))))
@@ -4475,16 +4159,14 @@ optional minor mode which can apply this command automatically on save.
 :END:
 
 #+begin_src emacs-lisp
-(use-package flymake
-  :straight (:type built-in)
-  :hook ((prog-mode . ale-flymake-enable)
-         (text-mode . flymake-mode))
-  :bind
-  (nil
-   :map grandview-prog-map
-   ("N" . 'flymake-goto-next-error)
-   ("P" . 'flymake-goto-prev-error)
-   ("S" . 'flymake-start)))
+(straight-use-package '(flymake :type built-in))
+
+(add-hook 'prog-mode-hook '+flymake-enable)
+(add-hook 'text-mode-hook 'flymake-mode)
+(bind-keys :map grandview-prog-map
+           ("N" . 'flymake-goto-next-error)
+           ("P" . 'flymake-goto-prev-error)
+           ("S" . 'flymake-start))
 #+end_src
 
 *** Autoload
@@ -4495,7 +4177,7 @@ optional minor mode which can apply this command automatically on save.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun ale-flymake-enable ()
+(defun +flymake-enable ()
   "Inhibit `flymake-mode' under certain circumstances."
   (unless (or (equal default-directory
                      (or (file-name-directory grandview-org-file)
@@ -4510,7 +4192,7 @@ optional minor mode which can apply this command automatically on save.
 :END:
 
 #+begin_src emacs-lisp
-(use-package restclient)
+(straight-use-package 'restclient)
 #+end_src
 
 ** Scratch buffers (scratch.el)
@@ -4523,9 +4205,8 @@ jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) 
 prompt for a major mode instead.  Simple yet super effective!
 
 #+begin_src emacs-lisp
-(bind-keys
- :map grandview-apps-map
- ("s" . ale-scratch))
+(bind-keys :map grandview-apps-map
+           ("s" . ale-scratch))
 #+end_src
 
 *** Autoload

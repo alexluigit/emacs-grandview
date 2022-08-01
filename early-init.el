@@ -31,6 +31,7 @@
  select-active-regions 'only ; Emacs hangs when large selections contain mixed line endings.
  auto-save-list-file-prefix nil ; Disable auto-save/lockfiles
  create-lockfiles nil
+ make-backup-files nil
  vc-follow-symlinks t ; Do not ask about symlink following
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file

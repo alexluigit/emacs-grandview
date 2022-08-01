@@ -221,42 +221,6 @@ When FORCE, ensure the tangle process and autoloads generation."
       (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
     (run-with-timer 1 nil 'grandview--log "GrandView Profiler" (format docstr package-count time))))
 
-(defvar +use-package--deferred-pkgs '(t))
-(defun use-package-handler/:after-call (name _keyword hooks rest state)
-  "Add keyword `:after-call' to `use-package'.
-The purpose of this keyword is to expand the lazy-loading
-capabilities of `use-package'.  Consult `use-package-concat' and
-`use-package-process-keywords' for documentations of NAME, HOOKS,
-REST and STATE."
-  (if (plist-get state :demand)
-      (use-package-process-keywords name rest state)
-    (let ((fn (make-symbol (format "grandview--after-call-%s-h" name))))
-      (use-package-concat
-       `((fset ',fn
-               (lambda (&rest _)
-                 (when DEBUG-INIT-P (grandview--log "Lazy loaded" (format "%s on commands %s" ',name ',hooks)))
-                 (condition-case e
-                     (let ((default-directory user-emacs-directory))
-                       (require ',name))
-                   ((debug error)
-                    (message "Failed to load deferred package %s: %s" ',name e)))
-                 (when-let (deferral-list (assq ',name +use-package--deferred-pkgs))
-                   (dolist (hook (cdr deferral-list))
-                     (advice-remove hook #',fn)
-                     (remove-hook hook #',fn))
-                   (setq +use-package--deferred-pkgs
-                         (delq deferral-list +use-package--deferred-pkgs))
-                   (unintern ',fn nil)))))
-       (cl-loop for hook in hooks
-                collect (if (string-match-p "-\\(?:functions\\|hook\\)$" (symbol-name hook))
-                            `(add-hook ',hook #',fn)
-                          `(advice-add #',hook :before #',fn)))
-       `((unless (assq ',name +use-package--deferred-pkgs)
-           (push '(,name) +use-package--deferred-pkgs))
-         (nconc (assq ',name +use-package--deferred-pkgs)
-                '(,@hooks)))
-       (use-package-process-keywords name rest state)))))
-
 (let ((bootstrap (locate-user-emacs-file "straight/repos/straight.el/bootstrap.el"))
       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
       (file-name-handler-alist nil))
@@ -269,15 +233,9 @@ REST and STATE."
     (with-current-buffer (url-retrieve-synchronously script 'silent 'inhibit-cookies)
       (goto-char (point-max)) (eval-print-last-sexp)))
   (load bootstrap nil 'nomessage)
-  ;; Init package loader `use-package.el'
-  (setq use-package-always-defer t)
-  (straight-use-package 'use-package)
-  (require 'use-package-core)
-  (push :after-call use-package-deferring-keywords)
-  (setq use-package-keywords (use-package-list-insert :after-call use-package-keywords :after))
-  (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
-  ;; Load transient.el so that we can use `transient-define-prefix' immediately
-  (straight-use-package `(transient ,@(when EMACS28+ '(:type built-in))))
+  (straight-use-package 'bind-key) ; for `bind-keys' macro
+  (straight-use-package '(once :type git :host github :repo "emacs-magus/once"))
+  (straight-use-package `(transient ,@(when EMACS28+ '(:type built-in)))) ; use inbuilt version
   ;; Load user config
   (load (grandview--init-path 'user) nil t)
   ;; Tangle and load Grandview
@@ -289,7 +247,7 @@ REST and STATE."
   (load (grandview--init-path 'main) nil t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   ;; Show profiler when debugging
-  (when DEBUG-INIT-P (add-hook 'emacs-startup-hook #'grandview-profiler))
+  (when DEBUG-INIT-P (grandview-profiler))
   ;; Setup garbage collection
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))
