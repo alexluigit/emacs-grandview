@@ -193,7 +193,8 @@ kill -9 $emacs_pid 2>/dev/null
 $RESET && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
 $ELCs && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
 $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
-_is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd || eval $emacs_cmd
+_is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd \
+    || eval $emacs_cmd
 command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
 emacsclient -cne '(delete-file "~/nohup.out")'
 #+end_src
@@ -362,7 +363,7 @@ only focus on bringing the goodness of modal editing to vanilla emacs.
 
 You may noticed that I didn't include any keybindings of meow here, that's
 because it can be very lengthy and should be configured separately, see
-[[#*CORE*-Keybindings-ed05256f][Keybindings]] for details.
+[[#*Keybindings*-36788c8a][Keybindings]] for details.
 
 If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
@@ -691,7 +692,8 @@ A list of my favorite CJK fonts.
    '(font-lock-function-name-face ((t (:weight demibold))))
    `(default ((t (:font ,(font-spec :family +default-font) :height ,+font-size))))
    `(fixed-pitch ((t (:font ,(font-spec :family +fixed-font) :height ,+font-size))))
-   `(variable-pitch ((t (:font ,(font-spec :family +variable-font) :height ,+font-size)))))
+   `(variable-pitch ((t (:font ,(font-spec :family +variable-font)
+                               :height ,+font-size)))))
   (dolist (charset '(kana han cjk-misc bopomofo))
     (set-fontset-font t charset (font-spec :family +CJK-font)))
   (unless EMACS28+
@@ -734,7 +736,7 @@ rendering/line scan work for Emacs in non-focused windows.
   (setq-default cursor-in-non-selected-windows nil)
   (setq highlight-nonselected-windows nil)
   (setq display-buffer-alist
-        `(("\\*\\(Flymake\\|Messages\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
+        `(("\\*\\(Flymake\\|Backtrace\\|Warnings\\|Compile-Log\\|Custom\\)\\*"
            (display-buffer-in-side-window)
            (window-height . 0.2)
            (side . top))
@@ -827,17 +829,10 @@ Adjust frame parameters such as opacity dynamically.
   :group 'grandview
   :type 'integer)
 
-(defcustom +frame-opacity-disabled-predicates '()
-  "A list of predicate functions in which the `+frame-opacity-auto-mode' will not be turned on."
-  :group 'grandview
-  :type 'hook)
-
 ;;;###autoload
 (defun +frame-opacity-auto ()
   "Setup frame opacity according to current major-mode."
-  (if (seq-find 'funcall +frame-opacity-disabled-predicates)
-      (set-frame-parameter (selected-frame) 'alpha-background 100)
-    (set-frame-parameter (selected-frame) 'alpha-background +frame-opacity-alpha-background)))
+  (set-frame-parameter nil 'alpha-background +frame-opacity-alpha-background))
 
 ;;;###autoload
 (defun +frame-opacity-set (&optional percent)
@@ -845,9 +840,9 @@ Adjust frame parameters such as opacity dynamically.
   (cond ((or (and percent (not current-prefix-arg))
              (numberp percent))
          (setq +frame-opacity-alpha-background (* 10 percent))
-         (set-frame-parameter (selected-frame) 'alpha-background +frame-opacity-alpha-background))
+         (set-frame-parameter nil 'alpha-background +frame-opacity-alpha-background))
         ((equal current-prefix-arg '(4))
-         (set-frame-parameter (selected-frame) 'alpha-background +frame-opacity-alpha-background))
+         (set-frame-parameter nil 'alpha-background +frame-opacity-alpha-background))
         (t
          (let ((opa (frame-parameter nil 'alpha-background))
                (low 60) (high 100))
@@ -929,7 +924,8 @@ What my minibuffer config does:
 #+begin_src emacs-lisp
 (setq enable-recursive-minibuffers t)
 (setq minibuffer-eldef-shorten-default t)
-(setq minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+(setq minibuffer-prompt-properties
+      '(read-only t cursor-intangible t face minibuffer-prompt))
 (minibuffer-depth-indicate-mode 1)
 #+end_src
 
@@ -1091,7 +1087,6 @@ Selectrum, Vertico and Embark.
   (setq register-preview-function #'consult-register-format)
   (setq xref-show-xrefs-function #'consult-xref)
   (setq xref-show-definitions-function #'consult-xref)
-  (setq consult-project-root-function #'ale-consult-project-root)
   (setq consult-line-numbers-widen t)
   (setq consult-async-min-input 3)
   (setq consult-async-input-debounce 0.5)
@@ -1420,7 +1415,7 @@ This section contains all core keybindings of *Grandview*.
    '("f" . grandview-files-map)
    '("i" . list-buffers)
    '("k" . kill-this-buffer)
-   '("n" . ale-project-find-file)
+   '("n" . +project-find-file)
    '("o" . grandview-org-map)
    '("p" . grandview-prog-map)
    '("P" . grandview-project-map)
@@ -1437,8 +1432,8 @@ This section contains all core keybindings of *Grandview*.
            ("o" . +frame-opacity-set)
            ("=" . count-words)
            ("m" . +show-messages)
-           ("n" . ale-tab-next)
-           ("p" . ale-tab-previous))
+           ("n" . +tab-next)
+           ("p" . +tab-previous))
 #+end_src
 
 ** GLOBAL
@@ -1456,7 +1451,8 @@ your terminal emulator's settings.
 #+begin_src emacs-lisp
 (if HAS-GUI
     (add-hook 'after-make-frame-functions
-              (lambda (f) (with-selected-frame f (define-key input-decode-map [?\C-i] [C-i]))))
+              (lambda (f) (with-selected-frame f
+                            (define-key input-decode-map [?\C-i] [C-i]))))
   (bind-keys ("<f6>" . +simple-pop-local-mark-ring)
              :map minibuffer-local-map
              ("<f6>" . forward-char)
@@ -1467,6 +1463,7 @@ your terminal emulator's settings.
 #+begin_src emacs-lisp
 (bind-keys :map global-map
            ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
+           ("S-SPC" . toggle-input-method)
            ("M-u"   . +toggle-letter-case)
            ("<C-i>" . +simple-pop-local-mark-ring)
            ("C-o" . pop-global-mark)
@@ -1501,12 +1498,17 @@ These keybindings are available when the current major mode doesn't define that 
 :END:
 
 + Save modified buffers automatically
++ Utilities:
+  - ~+files-find-dotfiles~
+  - ~+files-sudo-find~
+  - ~+files-rename-file-and-buffer~
+  - ~+files-find-user-files~
 
 #+begin_src emacs-lisp
 (setq large-file-warning-threshold 50000000)
 (setq permanently-enabled-local-variables '(lexical-binding encoding))
 (setq auto-save-default nil)
-(setq ale-files-dir-alist
+(setq +files-user-dirs-alist
       '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
         ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
         ((title . "  Books")        (path . "/mnt/HDD/Book"))
@@ -1519,9 +1521,10 @@ These keybindings are available when the current major mode doesn't define that 
 
 (bind-keys
  :map grandview-files-map
- ("." . ale-files-find-dotfiles)
- ("r" . ale-files-rename-file-and-buffer)
- ("u" . ale-files-find-user-files))
+ ("." . +files-find-dotfiles)
+ ("s" . +files-sudo-find)
+ ("r" . +files-rename-file-and-buffer)
+ ("u" . +files-find-user-files))
 #+end_src
 
 *** Autoload
@@ -1531,18 +1534,18 @@ These keybindings are available when the current major mode doesn't define that 
 :END:
 
 #+begin_src emacs-lisp
-(defcustom ale-files-dotfiles-repo (getenv "DOTPATH")
+(defcustom +files-dotfiles-repo (getenv "DOTPATH")
   "Doc."
-  :group 'ale :type 'string)
+  :group 'grandview :type 'string)
 
-(defcustom ale-files-dir-alist
+(defcustom +files-user-dirs-alist
   '(((title . "  Photos")       (path . "~/Pictures/"))
     ((title . "  Videos")       (path . "~/Video/"))
     ((title . "  Downloads")    (path . "~/Downloads/")))
   "Doc."
-  :group 'ale :type '(repeat list))
+  :group 'grandview :type '(repeat list))
 
-(defun ale-files--in-directory (dir &optional prompt)
+(defun +files--in-directory (dir &optional prompt)
   "Use `fd' to list files in DIR."
   (let* ((default-directory dir)
          (command "fd -H -t f -0")
@@ -1553,7 +1556,7 @@ These keybindings are available when the current major mode doesn't define that 
     (find-file (concat dir "/" file))))
 
 ;;;###autoload
-(defun ale-files-rename-file-and-buffer (name)
+(defun +files-rename-file-and-buffer (name)
   "Apply NAME to current file and rename its buffer.
 Do not try to make a new directory or anything fancy."
   (interactive
@@ -1565,15 +1568,15 @@ Do not try to make a new directory or anything fancy."
     (set-visited-file-name name t t)))
 
 ;;;###autoload
-(defun ale-files-find-dotfiles ()
+(defun +files-find-dotfiles ()
   "Open files in dotfiles repo."
   (interactive)
-  (unless ale-files-dotfiles-repo
-    (user-error "`ale-files-dotfiles-repo' is undefined"))
-  (ale-files--in-directory ale-files-dotfiles-repo " Dotfiles: "))
+  (unless +files-dotfiles-repo
+    (user-error "`+files-dotfiles-repo' is undefined"))
+  (+files--in-directory +files-dotfiles-repo " Dotfiles: "))
 
 ;;;###autoload
-(defun ale-files-sudo-find ()
+(defun +files-sudo-find ()
   "Reopen current file as root."
   (interactive)
   (let ((file (buffer-file-name)))
@@ -1582,18 +1585,21 @@ Do not try to make a new directory or anything fancy."
                  (concat "/sudo::" file)))))
 
 ;;;###autoload
-(defun ale-files-find-user-files ()
-  "Open files in directories defined in `ale-files-dir-alist'."
+(defun +files-find-user-files ()
+  "Open files in directories defined in `+files-user-dirs-alist'."
   (interactive)
-  (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) ale-files-dir-alist))
-         (get-item (lambda (s field) (cl-dolist (i ale-files-dir-alist)
-                                       (when (string= s (cdr (assq 'title i)))
-                                         (cl-return (cdr (assq field i)))))))
-         (annotation (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
+  (let* ((cands-raw
+          (mapcar (lambda (i) (cdr (assq 'title i))) +files-user-dirs-alist))
+         (get-item (lambda (s field)
+                     (cl-dolist (i +files-user-dirs-alist)
+                       (when (string= s (cdr (assq 'title i)))
+                         (cl-return (cdr (assq field i)))))))
+         (annotation
+          (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
          (cands (+minibuffer-append-metadata annotation cands-raw))
          (title (completing-read "Open: " cands nil t))
          (path (funcall get-item title 'path)))
-    (ale-files--in-directory path (concat title ": "))))
+    (+files--in-directory path (concat title ": "))))
 #+end_src
 
 ** Find libraries (find-func.el)
@@ -1749,15 +1755,16 @@ users deserve a file manager better than those popular ones on terminal such as
            ("m" "/mnt/"                             "Drives")
            ("a" "FD####~/Documents/####\\\\.org$"   "All org files in ~/Documents")
            ("t" "~/.local/share/Trash/files/" "Trash")))
-  (setq! dirvish-open-with-programs
-         `((,dirvish-video-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))
-           (,dirvish-audio-exts . ("tdrop" "-h" "25%" "-w" "25%" "-x" "1000" "-y" "1000" "mpv" "%f"))))
-  (setq! dirvish-attributes '(vc-state file-size git-msg subtree-state all-the-icons collapse))
-  (setq! dirvish-preview-dispatchers '(exa image gif video audio epub archive pdf))
+  (setq! dirvish-attributes
+         '(vc-state file-size git-msg subtree-state all-the-icons collapse))
+  (setq! dirvish-preview-dispatchers
+         '(exa image gif video audio epub archive pdf))
   (setq! dirvish-all-the-icons-height 0.8)
   (setq! dirvish-side-attributes dirvish-attributes)
-  (setq! dirvish-side-preview-dispatchers (append '(vc-diff) dirvish-preview-dispatchers))
-  (setq! dirvish-side-display-alist '((side . left) (slot . -1) (window-width . 0.2)))
+  (setq! dirvish-side-preview-dispatchers
+         (append '(vc-diff) dirvish-preview-dispatchers))
+  (setq! dirvish-side-display-alist
+         '((side . left) (slot . -1) (window-width . 0.2)))
   (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
   (setq! dirvish-side-mode-line-format '(:left (sort omit) :right (index)))
   (bind-keys :map 'dirvish-mode-map
@@ -1798,18 +1805,18 @@ users deserve a file manager better than those popular ones on terminal such as
 
 (setq project-switch-commands
       '((project-find-file "File" ?\r)
-        (ale-project-find-subdir "Subdir" ?s)
+        (+project-find-subdir "Subdir" ?s)
         (project-dired "Dired" ?d)
-        (ale-project-retrieve-tag "Tag switch" ?t)
-        (ale-project-magit-status "Magit" ?m)
-        (ale-project-commit-log "Log VC" ?l)))
-(setq ale-project-commit-log-limit 25)
+        (+project-retrieve-tag "Tag switch" ?t)
+        (+project-magit-status "Magit" ?m)
+        (+project-commit-log "Log VC" ?l)))
+(setq +project-commit-log-limit 25)
 
 (bind-keys :map project-prefix-map
-           ("l" . ale-project-commit-log)
-           ("m" . ale-project-magit-status)
-           ("s" . ale-project-find-subdir)
-           ("t" . ale-project-retrieve-tag))
+           ("l" . +project-commit-log)
+           ("m" . +project-magit-status)
+           ("s" . +project-find-subdir)
+           ("t" . +project-retrieve-tag))
 #+end_src
 
 *** Autoload
@@ -1823,7 +1830,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (require 'project)
 (require 'vc)
 
-(defcustom ale-project-commit-log-limit 25
+(defcustom +project-commit-log-limit 25
   "Limit commit logs for project to N entries by default.
 A value of 0 means 'unlimited'."
   :type 'integer
@@ -1838,7 +1845,7 @@ A value of 0 means 'unlimited'."
 
 ;; Copied from Manuel Uberti and tweaked accordingly:
 ;; <https://www.manueluberti.eu/emacs/2020/11/14/extending-project/>.
-(defun ale-project--project-files-in-directory (dir)
+(defun +project--project-files-in-directory (dir)
   "Use `fd' to list files in DIR."
   (unless (executable-find "fd")
     (error "Cannot find 'fd' command is shell environment $PATH"))
@@ -1852,41 +1859,41 @@ A value of 0 means 'unlimited'."
   "Override `project-files' to use `fd' in local projects.
 Project root for PROJECT with HEAD and VC, plus optional
 DIRS."
-  (mapcan #'ale-project--project-files-in-directory
+  (mapcan #'+project--project-files-in-directory
           (or dirs (list (project-root project)))))
 
-(defun ale-project--directory-subdirs (dir)
+(defun +project--directory-subdirs (dir)
   "Return list of subdirectories in DIR."
   (cl-remove-if (lambda (x) (string-match-p "\\.git" x))
                 (cl-remove-if-not (lambda (x) (file-directory-p x))
                                   (directory-files-recursively dir ".*" t t))))
 
 ;;;###autoload
-(defun ale-project-find-subdir ()
+(defun +project-find-subdir ()
   "Find subdirectories in the current project, using completion."
   (interactive)
   (let* ((pr (project-current t))
          (dir (project-root pr))
-         (dirs-raw (ale-project--directory-subdirs dir))
+         (dirs-raw (+project--directory-subdirs dir))
          (subdirs (+minibuffer-append-metadata 'file dirs-raw))
          (directory (completing-read "Select Project subdir: " subdirs)))
     (dired directory)))
 
 ;;;###autoload
-(defun ale-project-commit-log (&optional arg)
+(defun +project-commit-log (&optional arg)
   "Print commit log for the current project.
 With optional prefix ARG (\\[universal-argument]) shows expanded
 commit messages and corresponding diffs.
 
 The log is limited to the integer specified by
-`ale-project-commit-log-limit'.  A value of 0 means
+`+project-commit-log-limit'.  A value of 0 means
 'unlimited'."
   (interactive "P")
   (let* ((pr (project-current t))
          (dir (cdr pr))
          (default-directory dir) ; otherwise fails at spontaneous M-x calls
          (backend (vc-responsible-backend dir))
-         (num ale-project-commit-log-limit)
+         (num +project-commit-log-limit)
          (int (if (numberp num) num (error "%s is not a number" n)))
          (limit (if (= int 0) t int))
          (diffs (if arg 'with-diff nil))
@@ -1894,7 +1901,7 @@ The log is limited to the integer specified by
     (vc-print-log-internal backend (list dir) nil nil limit diffs)))
 
 ;;;###autoload
-(defun ale-project-retrieve-tag ()
+(defun +project-retrieve-tag ()
   "Run `vc-retrieve-tag' on project and switch to the root dir.
 Basically switches to a new branch or tag."
   (interactive)
@@ -1911,7 +1918,7 @@ Basically switches to a new branch or tag."
 (autoload 'magit-status "magit")
 
 ;;;###autoload
-(defun ale-project-magit-status ()
+(defun +project-magit-status ()
   "Run `magit-status' on project."
   (interactive)
   (let* ((pr (project-current t))
@@ -1919,7 +1926,7 @@ Basically switches to a new branch or tag."
     (magit-status dir)))
 
 ;;;###autoload
-(defun ale-project-find-file (&optional force)
+(defun +project-find-file (&optional force)
   "Same as `project-find-file' except using magit for project
 choosing.
 With a universal prefix to choose project anyway."
@@ -2056,7 +2063,7 @@ look like which can be described briefly as follows:
 #+begin_src emacs-lisp
 (straight-use-package '(org-id :type built-in))
 
-(add-hook 'org-mode-hook 'ale-org-id-update)
+(add-hook 'org-mode-hook '+org-id-update)
 (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
 #+end_src
 
@@ -2069,9 +2076,9 @@ look like which can be described briefly as follows:
 #+begin_src emacs-lisp
 (require 'org-id)
 
-(defvar-local ale-org-id-auto nil)
+(defvar-local +org-id-auto nil)
 
-(defun ale-org-id-new (&optional prefix)
+(defun +org-id-new (&optional prefix)
   "Create a new globally unique ID.
 
 An ID consists of two parts separated by a colon:
@@ -2097,42 +2104,40 @@ one. So a typical ID could look like \"Org-4nd91V40HI\"."
       (let* ((etime (org-reverse-string (org-id-time-to-b36)))
              (postfix (when org-id-include-domain
                         (require 'message)
-                        (concat "@"
-                                (message-make-fqdn)))))
+                        (concat "@" (message-make-fqdn)))))
         (setq unique (concat etime postfix))))
      (t (error "Invalid `org-id-method'")))
     (concat prefix (car (split-string unique "-")))))
 
 ;;;###autoload
-(defun ale-org-custom-id-get (&optional pom create prefix)
+(defun +org-custom-id-get (&optional pom create prefix)
   "Get the CUSTOM_ID property of the entry at point-or-marker POM.
 
 If POM is nil, refer to the entry at point. If the entry does not
 have an CUSTOM_ID, the function returns nil. However, when CREATE
 is non nil, create a CUSTOM_ID if none is present already. PREFIX
-will be passed through to `ale-org-id-new'. In any case, the
+will be passed through to `+org-id-new'. In any case, the
 CUSTOM_ID of the entry is returned."
   (interactive)
   (org-with-point-at pom
-    (let* ((orgpath (mapconcat #'identity (org-get-outline-path) "-"))
+    (let* ((path (mapconcat #'identity (org-get-outline-path) "-"))
+           (h-str (concat (unless (equal path "") (concat path "-"))
+                          (org-get-heading t t t t)))
            (heading (replace-regexp-in-string
                      "/\\|~\\|\\[\\|\\]" ""
-                     (replace-regexp-in-string
-                      "[[:space:]]+" "_" (if (string= orgpath "")
-                                             (org-get-heading t t t t)
-                                           (concat orgpath "-" (org-get-heading t t t t))))))
+                     (replace-regexp-in-string "[[:space:]]+" "_" h-str)))
            (id (org-entry-get nil "CUSTOM_ID")))
       (cond
        ((and id (stringp id) (string-match "\\S-" id))
         id)
-       (create (setq id (ale-org-id-new (concat prefix heading)))
+       (create (setq id (+org-id-new (concat prefix heading)))
                (org-entry-put pom "CUSTOM_ID" id)
-               (org-id-add-location id
-                                    (buffer-file-name (buffer-base-buffer)))
+               (org-id-add-location
+                id (buffer-file-name (buffer-base-buffer)))
                id)))))
 
 ;;;###autoload
-(defun ale-org-add-ids-to-headlines-in-file (&optional force)
+(defun +org-add-ids-to-headlines-in-file (&optional force)
   "Add CUSTOM_ID properties to all headlines in the current file
 which do not already have one.
 
@@ -2142,18 +2147,18 @@ somewhere. ie, #+OPTIONS: auto-id:t"
   (save-excursion
     (widen)
     (goto-char (point-min))
-    (when ale-org-id-auto
+    (when +org-id-auto
       (when force
         (org-map-entries (lambda () (org-entry-delete nil "CUSTOM_ID"))))
-      (org-map-entries (lambda () (ale-org-custom-id-get (point) 'create))))))
+      (org-map-entries (lambda () (+org-custom-id-get (point) 'create))))))
 
 ;;;###autoload
-(defun ale-org-id-update ()
+(defun +org-id-update ()
   (add-hook 'before-save-hook
             (lambda ()
               (when (and (eq major-mode 'org-mode)
                          (eq buffer-read-only nil))
-                (ale-org-add-ids-to-headlines-in-file)))))
+                (+org-add-ids-to-headlines-in-file)))))
 #+end_src
 
 ** Literate programming (ob.el)
@@ -2265,7 +2270,8 @@ generated by Org mode (or Markdown mode) is left untouched.
 (straight-use-package 'org-roam)
 
 (once '(:hooks pre-command-hook)
-  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (setq org-roam-node-display-template
+        (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (setq! org-roam-directory (file-truename "~/Documents/roam"))
   (setq! org-roam-completion-everywhere t)
   (autoload 'org-roam-buffer-toggle "org-roam-mode")
@@ -2297,13 +2303,13 @@ generated by Org mode (or Markdown mode) is left untouched.
   (setq org-tree-slide-modeline-display nil)
   (setq org-tree-slide-heading-emphasis t)
   (setq org-tree-slide-breadcrumbs
-        (propertize " ⯈ " 'display `(height ,(face-attribute 'org-level-1 :height))))
+        (propertize " ⯈ " 'display
+                    `(height ,(face-attribute 'org-level-1 :height))))
   (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
   (add-hook 'org-tree-slide-after-narrow-hook #'+frame-cursor-dim-mode)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
-  (advice-add 'org-tree-slide--set-slide-header :override '+org-tree-slide--simple-header)
   (bind-keys :map 'org-tree-slide-mode-map
              ("<left>" . org-tree-slide-move-previous-tree)
              ("<right>" . org-tree-slide-move-next-tree)))
@@ -2322,18 +2328,21 @@ generated by Org mode (or Markdown mode) is left untouched.
   :type 'number)
 
 (defcustom +org-tree-hide-elements
-  '("^[[:space:]]*\\(#\\+\\)\\(\\(?:BEGIN\\|END\\|ATTR\\)[^[:space:]]+\\).*" ; src block
-    "^\\(\\*+\\)"                                                            ; leading stars
-    "\\(^:PROPERTIES:\\(.*\n\\)+?:END:\\)")                                  ; :PROPERTIES:.*:END:
+  '(;; src block
+    "^[[:space:]]*\\(#\\+\\)\\(\\(?:BEGIN\\|END\\|ATTR\\)[^[:space:]]+\\).*"
+    ;; leading stars
+    "^\\(\\*+\\)"
+    ;; :PROPERTIES:.*:END:
+    "\\(^:PROPERTIES:\\(.*\n\\)+?:END:\\)")
   "Regexps of org elements to hide in `org-tree-slide-mode'."
   :group 'org-tree-slide
   :type '(repeat string))
 
 ;;;###autoload
-(defun +org-tree-slide--simple-header (blank-lines)
+(defadvice! +org-tree-slide-simple-header-a (blank-lines)
   "Set the header with overlay.
-
 Some number of BLANK-LINES will be shown below the header."
+  :override #'org-tree-slide--set-slide-header
   (org-tree-slide--hide-slide-header)
   (setq org-tree-slide--header-overlay
         (make-overlay (point-min) (+ 1 (point-min))))
@@ -2357,7 +2366,8 @@ Some number of BLANK-LINES will be shown below the header."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward reg nil t)
-        (org-flag-region (match-beginning 1) (match-end 0) org-tree-slide-mode t)))))
+        (org-flag-region (match-beginning 1)
+                         (match-end 0) org-tree-slide-mode t)))))
 
 ;;;###autoload
 (defun +org-tree-slide-prettify-slide-h ()
@@ -2475,10 +2485,10 @@ you change your mind).
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 ;; Tweak those for safer identification and removal
 (setq ediff-combination-pattern
-      '("<<<<<<< ale-ediff-combine Variant A" A
-        ">>>>>>> ale-ediff-combine Variant B" B
-        "####### ale-ediff-combine Ancestor" Ancestor
-        "======= ale-ediff-combine End"))
+      '("<<<<<<< grandv-ediff-combine Variant A" A
+        ">>>>>>> grandv-ediff-combine Variant B" B
+        "####### grandv-ediff-combine Ancestor" Ancestor
+        "======= grandv-ediff-combine End"))
 #+end_src
 
 *** Autoload
@@ -2496,7 +2506,7 @@ left behind by `smerge-ediff' when combining the output of two
 diffs.  While this could be automated via a hook, I am not yet
 sure this is a good approach."
   (interactive)
-  (flush-lines ".*ale-ediff.*" (point-min) (point-max) nil))
+  (flush-lines ".*grandv-ediff.*" (point-min) (point-max) nil))
 #+end_src
 
 ** Input method (rime.el)
@@ -2519,9 +2529,9 @@ sure this is a good approach."
   (setq rime-posframe-style 'vertical)
   (setq rime-posframe-properties '(:internal-border-width 10 :lines-truncate t))
   (setq rime-title "ㄓ")
-  (setq rime-candidate-num-format-function #'ale-rime-candidate-num-fmt)
-
-  (custom-theme-set-faces 'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
+  (setq rime-candidate-num-format-function #'+rime-candidate-num-fmt)
+  (custom-theme-set-faces
+   'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
   (bind-keys :map rime-active-mode-map
              ("C-`" . rime-send-keybinding)
              ("C-k" . rime-send-keybinding)
@@ -2541,7 +2551,7 @@ sure this is a good approach."
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defadvice! rime-return-ad (fn &rest args)
+(defadvice! rime-return-a (fn &rest args)
   "Make return key (commit script text) compatible with vterm."
   :around #'rime-return
   (interactive)
@@ -2556,7 +2566,7 @@ sure this is a good approach."
     (apply fn args)))
 
 ;;;###autoload
-(defun ale-rime-candidate-num-fmt (num select-labels)
+(defun +rime-candidate-num-fmt (num select-labels)
   "Format for the number before each candidate."
   (if select-labels
       (format "%s " (nth (1- num) select-labels))
@@ -2677,7 +2687,7 @@ lisp-mode emacs-lisp-mode ;; Specify multiple modes
 
 emacs-lisp-mode
 
-(use "(use-package " p n> ":demand t" n> ":config" n> p ")")
+(use "(straight-use-package '" p ")")
 (cond "(cond (" p ")" n> "()" n> "()" ")")
 (lambda "(lambda (" p ")" n> r> ")")
 (var "(defvar " p "\n  \"" p "\")")
@@ -2786,7 +2796,9 @@ of characters.
 (straight-use-package '(electric :type built-in))
 
 (add-hook 'org-mode-hook '+electric-inhibit-<)
-(add-hook 'minibuffer-setup-hook (lambda () (unless (eq this-command 'eval-expression) (electric-pair-mode 0))))
+(add-hook 'minibuffer-setup-hook
+          (lambda () (unless (eq this-command 'eval-expression)
+                       (electric-pair-mode 0))))
 (add-hook 'minibuffer-exit-hook (lambda () (electric-pair-mode 1)))
 
 (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
@@ -2823,7 +2835,9 @@ of characters.
 ;;;###autoload
 (defun +electric-inhibit-< ()
   (setq-local electric-pair-inhibit-predicate
-              `(lambda (c) (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c)))))
+              `(lambda (c)
+                 (if (char-equal c ?<) t
+                   (,electric-pair-inhibit-predicate c)))))
 #+end_src
 
 ** Parentheses (paren.el / rainbow-delimiters.el)
@@ -2918,6 +2932,7 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
 
 #+begin_src emacs-lisp
 (once '(:packages transient)
+  (setq transient-enable-popup-navigation nil)
   (setq transient-default-level 7)
   (setq transient-show-popup -0.2)
   (transient-bind-q-to-quit)
@@ -2945,11 +2960,11 @@ The following infos in modeline are provided:
   - Input method
 
 Besides, it's easy to define your own mode line segments with
-~ale-define-modeline~, and don't forget to put your newly defined segments in
-~ale-mode-line-format~.
+~+mode-line-define-segment~, and don't forget to put your newly defined segments
+in ~+mode-line-format~.
 
 #+begin_src emacs-lisp
-(ale-ml-mode)
+(+mode-line-mode)
 #+end_src
 
 *** Autoload
@@ -2959,80 +2974,91 @@ Besides, it's easy to define your own mode line segments with
 :END:
 
 #+begin_src emacs-lisp
-(defcustom ale-ml-format
-  '(:left (bar editing-state buffer-info macro-rec) :right (position input-method))
-  "Mode line SEGMENTs aligned to left/right respectively.
-The SEGMENTs are defined by `ale-ml-define'."
-  :set
-  (lambda (k v)
-    (cl-labels ((expand (l)
-                  (cl-loop for s in l collect
-                           `(:eval (ale-ml--suffix ',(intern (format "ale-%s-ml" s)))))))
-      (let ((fmt-left (or (expand (plist-get v :left)) mode-line-format))
-            (fmt-right (expand (plist-get v :right))))
-        (set k `((:eval (let ((str-right (format-mode-line ',fmt-right)))
-                          (concat (format-mode-line ',fmt-left)
-                                  (propertize " " 'display
-                                              `((space :align-to (- (+ right right-fringe right-margin)
-                                                                    ,(string-width str-right)))))
-                                  str-right)))))))))
+(defun +mode-line--fmt-setter (k fmt)
+  "Setter for `+mode-line-format'."
+  (cl-labels ((expand (l)
+                (cl-loop for s in l collect
+                         `(:eval (+mode-line--suffix
+                                  ',(intern (format "+mode-line-%s-seg" s)))))))
+    (let ((fmt-left (or (expand (plist-get fmt :left)) mode-line-format))
+          (fmt-right (expand (plist-get fmt :right))))
+      (set k `((:eval
+                (let* ((str-right (format-mode-line ',fmt-right))
+                       (spec `((space :align-to
+                                      (- (+ right right-fringe right-margin)
+                                         ,(string-width str-right))))))
+                  (concat (format-mode-line ',fmt-left)
+                          (propertize " " 'display spec)
+                          str-right))))))))
 
-(defcustom ale-ml-height 25
+(defcustom +mode-line-format
+  '(:left
+    (bar editing-state buffer-info macro-rec)
+    :right
+    (position input-method))
+  "Mode line SEGMENTs aligned to left/right respectively.
+The SEGMENTs are defined by `+mode-line-define'."
+  :set #'+mode-line--fmt-setter)
+
+(defcustom +mode-line-height 25
   "Doc.")
 
-(defvar ale-ml-selected-window nil)
+(defvar +mode-line-selected-window nil)
 
-(defun ale-ml--window-active ()
+(defun +mode-line--window-active ()
   "Return t if mode line is in active window."
   (unless (and (bound-and-true-p mini-frame-frame)
                (and (frame-live-p mini-frame-frame)
                     (frame-visible-p mini-frame-frame)))
-    (and ale-ml-selected-window (eq (ale-ml--get-current-window) ale-ml-selected-window))))
+    (and +mode-line-selected-window
+         (eq (+mode-line--get-current-window) +mode-line-selected-window))))
 
-(defun ale-ml--get-current-window (&optional frame)
+(defun +mode-line--get-current-window (&optional frame)
   "Get the current window but should exclude the child windows."
   (if (and (fboundp 'frame-parent) (frame-parent frame))
       (frame-selected-window (frame-parent frame))
     (frame-selected-window frame)))
 
-(defun ale-ml-record-selected-window-h (&rest _)
-  "Update `ale-ml-selected-window' on redisplay."
-  (let ((win (ale-ml--get-current-window)))
-    (setq ale-ml-selected-window
+(defun +mode-line-record-selected-window-h (&rest _)
+  "Update `+mode-line-selected-window' on redisplay."
+  (let ((win (+mode-line--get-current-window)))
+    (setq +mode-line-selected-window
           (if (minibuffer-window-active-p win)
               (minibuffer-selected-window)
             win))))
 
-(add-hook 'pre-redisplay-functions #'ale-ml-record-selected-window-h)
+(add-hook 'pre-redisplay-functions #'+mode-line-record-selected-window-h)
 
-(defun ale-ml--suffix (ml-func)
+(defun +mode-line--suffix (ml-func)
   "If ML-FUNC return a non-empty string, append a space to it."
   (when-let (str (funcall ml-func)) (concat str " ")))
 
-(cl-defmacro ale-ml-define (name &optional docstr &rest body)
+(cl-defmacro +mode-line-define (name &optional docstr &rest body)
   "Define a mode line segment NAME with BODY and DOCSTR."
   (declare (indent defun) (doc-string 2))
-  (let ((ml (intern (format "ale-%s-ml" name)))) `(defun ,ml () ,docstr ,@body)))
+  (let ((ml (intern (format "+mode-line-%s-seg" name))))
+    `(defun ,ml () ,docstr ,@body)))
 
-(ale-ml-define bar
+(+mode-line-define bar
   (when (and (display-graphic-p) (image-type-available-p 'pbm))
     (propertize
      " " 'display
      (ignore-errors
        (create-image
-        (concat (format "P1\n%i %i\n" 2 ale-ml-height)
-                (make-string (* 2 ale-ml-height) ?1) "\n")
+        (concat (format "P1\n%i %i\n" 2 +mode-line-height)
+                (make-string (* 2 +mode-line-height) ?1) "\n")
         'pbm t :foreground "None" :ascent 'center)))))
 
-(ale-ml-define position
+(+mode-line-define position
   (concat (propertize "l " 'face 'font-lock-keyword-face)
           (propertize "%l " 'face 'font-lock-doc-face)
           (propertize "c " 'face 'font-lock-keyword-face)
           (propertize "%c" 'face 'font-lock-doc-face)))
 
-(ale-ml-define editing-state (when (bound-and-true-p meow-mode) (meow-indicator)))
+(+mode-line-define editing-state
+  (when (bound-and-true-p meow-mode) (meow-indicator)))
 
-(ale-ml-define buffer-info
+(+mode-line-define buffer-info
   (concat
    (and buffer-file-name (all-the-icons-icon-for-file
                           buffer-file-name :height 0.75 :v-adjust 0.02))
@@ -3040,27 +3066,30 @@ The SEGMENTs are defined by `ale-ml-define'."
    (propertize "%b"
                'face (cond ((and buffer-file-name (buffer-modified-p))
                             'marginalia-modified)
-                           ((ale-ml--window-active) 'bold)
+                           ((+mode-line--window-active) 'bold)
                            (t 'mode-line-inactive))
                'mouse-face 'mode-line-highlight
-               'help-echo "Buffer name\nmouse-1: Previous buffer\nmouse-3: Next buffer"
+               'help-echo
+               "Buffer name\nmouse-1: Previous buffer\nmouse-3: Next buffer"
                'local-map mode-line-buffer-identification-keymap)))
 
-(ale-ml-define macro-rec
+(+mode-line-define macro-rec
   (when (or defining-kbd-macro executing-kbd-macro)
     (propertize "KM" 'face 'warning)))
 
-(ale-ml-define input-method (when (bound-and-true-p rime-mode) (rime-lighter)))
+(+mode-line-define input-method
+  (when (bound-and-true-p rime-mode) (rime-lighter)))
 
-(defvar ale-ml--default-mode-line mode-line-format "Store the default mode-line format")
+(defvar +mode-line--default-mode-line mode-line-format
+  "Store the default mode-line format")
 
 ;;;###autoload
-(define-minor-mode ale-ml-mode
-  "Toggle `ale-ml-mode' on or off."
+(define-minor-mode +mode-line-mode
+  "Toggle `+mode-line-mode' on or off."
   :global t
-  (if ale-ml-mode
-      (setq-default mode-line-format ale-ml-format)
-    (setq-default mode-line-format ale-ml--default-mode-line)))
+  (if +mode-line-mode
+      (setq-default mode-line-format +mode-line-format)
+    (setq-default mode-line-format +mode-line--default-mode-line)))
 #+end_src
 
 ** Frame margin (fringe.el)
@@ -3351,26 +3380,27 @@ Index based window motions.
 #+begin_src emacs-lisp
 (straight-use-package 'vterm)
 
-(bind-key "M-`" 'ale-vterm-toggle)
+(bind-key "M-`" '+vterm-toggle)
 
 (once '(:packages vterm)
-  (ale-vterm-mux-mode)
+  (+vterm-mux-mode)
   (setq vterm-max-scrollback 5000)
   (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
   (set-face-attribute 'vterm-color-black nil :foreground "#111111")
   (bind-keys :map vterm-mode-map
-             ("M-`" . ale-vterm-toggle)
-             ("M--" . ale-vterm-new)
+             ("M-`" . +vterm-toggle)
+             ("M--" . +vterm-new)
              ("M-'" . vterm-send-M-apostrophe)
              ("M-\"" . vterm-send-M-quote)
              ("M-/" . vterm-send-M-/)
-             ("M-." . ale-vterm-next)
-             ("M-," . ale-vterm-prev)
+             ("M-." . +vterm-next)
+             ("M-," . +vterm-prev)
              ("M-RET" . vterm-send-M-return)
              ("s-n" . vterm-next-prompt)
              ("s-p" . vterm-previous-prompt)
              ("S-SPC" . nil)
-             ("S-<escape>" . (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
+             ("S-<escape>" .
+              (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
              ("<C-i>" . vterm-send-C-i)
              ("C-;" . vterm-send-C-semicolon)
              ("C-<delete>" . vterm-send-C-delete)
@@ -3386,36 +3416,36 @@ Index based window motions.
 #+begin_src emacs-lisp
 (require 'vterm)
 
-(defcustom ale-vterm-position-alist
+(defcustom +vterm-position-alist
   '((always . ((window-height . 0.2) (side . bottom))))
   "doc")
 
-(defcustom ale-vterm-kill-whole-line-cmd
+(defcustom +vterm-kill-whole-line-cmd
   'vterm-send-C-u
   "Command for kill whole line in vterm buffer."
   :type 'symbol :group 'vterm)
 
-(defvar ale-vterm-buffers nil
+(defvar +vterm-buffers nil
   "The list of non-dedicated vterm buffers.")
 
-(defvar ale-vterm-index 0
+(defvar +vterm-index 0
   "The index of current vterm buffer.")
 
 ;;;###autoload
-(defadvice! ale-vterm-escape-a (fn &rest args)
+(defadvice! +vterm-escape-a (fn &rest args)
   :around #'meow-insert-exit
   (if (derived-mode-p 'vterm-mode)
       (vterm-send-escape)
     (apply fn args)))
 
 ;;;###autoload
-(defadvice! ale-vterm-kill-whole-line-a (fn &rest args)
+(defadvice! +vterm-kill-whole-line-a (fn &rest args)
   :around #'meow-kill-whole-line
   (if (derived-mode-p 'vterm-mode)
-      (funcall ale-vterm-kill-whole-line-cmd)
+      (funcall +vterm-kill-whole-line-cmd)
     (apply fn args)))
 
-(defun ale-vterm--disable-side-window (fn &rest args)
+(defun +vterm--disable-side-window (fn &rest args)
   "Prevent vterm size adjust break selection."
   (unless (and (region-active-p)
                (derived-mode-p 'vterm-mode))
@@ -3457,39 +3487,41 @@ Index based window motions.
   (interactive)
   (vterm-send-key "\"" nil 0 nil))
 
-(defun ale-vterm--get-win-params ()
-  "Parse `ale-vterm-position-alist' to get vterm display parameters."
+(defun +vterm--get-win-params ()
+  "Parse `+vterm-position-alist' to get vterm display parameters."
   `(("^\\*vterm.*"
      (display-buffer-in-side-window)
      (window-parameters . ((mode-line-format . none)))
-     ,@(cl-loop for (pred . pos) in ale-vterm-position-alist
+     ,@(cl-loop for (pred . pos) in +vterm-position-alist
                 when (funcall pred)
                 return pos))))
 
 ;;;###autoload
-(defun ale-vterm-toggle (&optional project-root)
+(defun +vterm-toggle (&optional project-root)
   "Toggle vterm.
 If called with prefix argument, create a new vterm buffer with
 project root directory as `default-directory'."
   (interactive "P")
   (if (eq major-mode 'vterm-mode)
       (delete-window)
-    (let* ((display-buffer-alist (ale-vterm--get-win-params))
-           (buf (nth ale-vterm-index ale-vterm-buffers))
-           (pr-root (or (ignore-errors (project-root (project-current))) default-directory))
+    (let* ((display-buffer-alist (+vterm--get-win-params))
+           (buf (nth +vterm-index +vterm-buffers))
+           (pr-root (or (ignore-errors
+                          (project-root (project-current)))
+                        default-directory))
            (default-directory (if project-root pr-root default-directory))
-           (index (if buf (ale-vterm--get-index buf) 0)))
-      (add-to-list 'ale-vterm-buffers (vterm index))
-      (ale-vterm--insert))))
+           (index (if buf (+vterm--get-index buf) 0)))
+      (add-to-list '+vterm-buffers (vterm index))
+      (+vterm--insert))))
 
-(defun ale-vterm--get-index (buf)
+(defun +vterm--get-index (buf)
   (let* ((name (buffer-name buf)))
     (string-match "\\*vterm\\*\<\\([0-9]+\\)\>" name)
     (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
 
 (declare-function meow-insert "meow-command")
 (declare-function evil-insert-state "evil")
-(defun ale-vterm--insert ()
+(defun +vterm--insert ()
   (cond
    ((featurep 'meow)
     (meow-insert))
@@ -3497,52 +3529,53 @@ project root directory as `default-directory'."
     (evil-insert-state))))
 
 ;;;###autoload
-(defun ale-vterm-new ()
+(defun +vterm-new ()
   "Create new vterm buffer."
   (interactive)
-  (let ((new-index (1+ (ale-vterm--get-index (car ale-vterm-buffers))))
-        (display-buffer-alist (ale-vterm--get-win-params)))
-    (add-to-list 'ale-vterm-buffers (vterm new-index))
-    (ale-vterm--insert)))
+  (let ((new-index (1+ (+vterm--get-index (car +vterm-buffers))))
+        (display-buffer-alist (+vterm--get-win-params)))
+    (add-to-list '+vterm-buffers (vterm new-index))
+    (+vterm--insert)))
 
 ;;;###autoload
-(defun ale-vterm-next (&optional arg)
+(defun +vterm-next (&optional arg)
   "Select next vterm buffer.
 Create new one if no vterm buffer exists."
   (interactive "P")
-  (let* ((curr-index (cl-position (current-buffer) ale-vterm-buffers))
+  (let* ((curr-index (cl-position (current-buffer) +vterm-buffers))
          (new-index (+ curr-index (or arg -1)))
-         (buf (nth new-index ale-vterm-buffers)))
+         (buf (nth new-index +vterm-buffers)))
     (when buf
       (switch-to-buffer buf)
-      (setq ale-vterm-index new-index))))
+      (setq +vterm-index new-index))))
 
 ;;;###autoload
-(defun ale-vterm-prev (&optional arg)
+(defun +vterm-prev (&optional arg)
   "Select previous vterm buffer."
   (interactive "p")
-  (ale-vterm-next arg))
+  (+vterm-next arg))
 
-(defun ale-vterm--kill-buffer ()
-  "Remove killed buffer from `ale-vterm-buffers'.
+(defun +vterm--kill-buffer ()
+  "Remove killed buffer from `+vterm-buffers'.
 
 Used as a hook function added to `kill-buffer-hook'."
   (let* ((buf (current-buffer))
          (name (buffer-name buf)))
     (when (string-prefix-p "*vterm" name)
-      (delq! buf ale-vterm-buffers))))
+      (delq! buf +vterm-buffers))))
 
 ;;;###autoload
-(define-minor-mode ale-vterm-mux-mode
+(define-minor-mode +vterm-mux-mode
   "Show/hide multiple vterm windows under control."
   :global t
   :group 'vterm
-  (if ale-vterm-mux-mode
+  (if +vterm-mux-mode
       (progn
-        (advice-add 'display-buffer-in-side-window :around 'ale-vterm--disable-side-window)
-        (add-hook 'kill-buffer-hook #'ale-vterm--kill-buffer))
-    (advice-remove 'display-buffer-in-side-window 'ale-vterm--disable-side-window)
-    (remove-hook 'kill-buffer-hook #'ale-vterm--kill-buffer)))
+        (advice-add
+         'display-buffer-in-side-window :around '+vterm--disable-side-window)
+        (add-hook 'kill-buffer-hook #'+vterm--kill-buffer))
+    (advice-remove 'display-buffer-in-side-window '+vterm--disable-side-window)
+    (remove-hook 'kill-buffer-hook #'+vterm--kill-buffer)))
 #+end_src
 
 ** Git porcelain (magit.el)
@@ -3738,7 +3771,7 @@ regexp .etc).
 (use-package nov
   :init
   (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (add-hook 'nov-mode-hook 'ale-nov-setup)
+  (add-hook 'nov-mode-hook '+nov-setup)
   :config
   (advice-add 'nov-render-title :override #'ignore)
   (setq nov-shr-rendering-functions '((img . nov-render-img)
@@ -3747,7 +3780,7 @@ regexp .etc).
   (setq nov-shr-rendering-functions
         (append nov-shr-rendering-functions
                 shr-external-rendering-functions))
-  (defun ale-nov-setup ()
+  (defun +nov-setup ()
     (require 'shrface)
     (shrface-mode)))
 #+end_src
@@ -3790,7 +3823,8 @@ regexp .etc).
     (let* ((clip (condition-case nil (current-kill 0 t) (error ""))))
       (set-text-properties 0 (length clip) nil clip)
       (when-let* ((is-url (string-prefix-p "http" clip))
-                  (json (shell-command-to-string (concat "murl -P 1088 json '" clip "'")))
+                  (json (shell-command-to-string
+                         (concat "murl -P 1088 json '" clip "'")))
                   (valid (string-prefix-p "{" json))
                   (obj (json-read-from-string json))
                   (playlist (murl--playlist)))
@@ -3800,11 +3834,13 @@ regexp .etc).
           (json-pretty-print-buffer)
           (write-region (point-min) (point-max) murl-list-file)))))
   (let* ((cands-raw (mapcar (lambda (i) (cdr (assq 'title i))) (murl--playlist)))
-         (annotation (lambda (s) (marginalia--documentation (murl--get-attr s 'url))))
+         (annotation (lambda (s) (marginalia--documentation
+                                  (murl--get-attr s 'url))))
          (cands (+minibuffer-append-metadata annotation cands-raw))
          (title (completing-read "murls: " cands))
          (sub (murl--get-attr title 'sub)))
-    (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub (murl--get-attr title 'url))))
+    (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub
+                  (murl--get-attr title 'url))))
 #+end_src
 
 ** Dictionary (fanyi.el)
@@ -3955,7 +3991,7 @@ regexp .etc).
 (straight-use-package 'lsp-pyright)
 (straight-use-package 'lsp-ui)
 
-(add-hook 'python-mode-hook 'ale-lsp-pyright-import-venv)
+(add-hook 'python-mode-hook '+lsp-pyright-import-venv)
 (add-hook 'lsp-mode-hook 'lsp-ui-mode)
 (setq lsp-tailwindcss-add-on-mode t)
 (when (executable-find "python3")
@@ -3973,7 +4009,7 @@ regexp .etc).
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defadvice! ale-lsp-volar--vue-project-p (workspace-root)
+(defadvice! +lsp-volar--vue-project-p (workspace-root)
   "Make 'lsp-volar' support nuxt project."
   :override #'lsp-volar--vue-project-p
   (when-let* ((package-json (f-join workspace-root "package.json"))
@@ -3983,7 +4019,7 @@ regexp .etc).
     (or (alist-get 'vue dependencies) (alist-get 'nuxt dependencies))))
 
 ;;;###autoload
-(defun ale-lsp-pyright-import-venv ()
+(defun +lsp-pyright-import-venv ()
   "Fix `import' resolution with projects with virtual env like conda."
   (require 'lsp-pyright)
   (let* ((pr-root (lsp-workspace-root))
@@ -4003,7 +4039,7 @@ regexp .etc).
 (setq conda-anaconda-home "/opt/miniconda/")
 (setq conda-env-home-directory "/opt/miniconda/")
 (setq conda-message-on-environment-switch t)
-(bind-key "C" 'ale-conda-activate-for-buffer grandview-prog-map)
+(bind-key "C" '+conda-activate-for-buffer grandview-prog-map)
 (add-hook 'conda-postactivate-hook
           (lambda () (require 'jupyter) (jupyter-available-kernelspecs t)))
 #+end_src
@@ -4016,7 +4052,7 @@ regexp .etc).
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun ale-conda-activate-for-buffer ()
+(defun +conda-activate-for-buffer ()
   "Enhanced `conda-env-activate-for-buffer'.
 It support local `conda-env-subdirectory' such as `./envs'."
   (interactive)
@@ -4032,7 +4068,8 @@ It support local `conda-env-subdirectory' such as `./envs'."
            (unless (string= prefix-env (or conda-env-current-name ""))
              (conda-env-activate-path prefix-env)))
           (t
-           (let ((env-name (conda-env-name-to-dir (conda--get-name-from-env-yml yml-file))))
+           (let ((env-name (conda-env-name-to-dir
+                            (conda--get-name-from-env-yml yml-file))))
              (when (and env-name (not (equal env-name conda-env-current-name)))
                (conda-env-activate env-name)))))))
 #+end_src
@@ -4051,7 +4088,8 @@ It support local `conda-env-subdirectory' such as `./envs'."
     (ansi-color-apply-on-region begin end t))
   (require 'ob-jupyter)
   (org-babel-jupyter-override-src-block "python")
-  (setq org-babel-default-header-args:python '((:async . "yes") (:kernel . "python3"))))
+  (setq org-babel-default-header-args:python
+        '((:async . "yes") (:kernel . "python3"))))
 #+end_src
 
 ** Colorizer (rainbow-mode.el)
@@ -4155,13 +4193,13 @@ optional minor mode which can apply this command automatically on save.
 :CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-362d86c2
 :END:
 
-=ale-scratch= produces a org-mode buffer with right header-args for current
+=+scratch= command produces a org-mode buffer with right header-args for current
 jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) will
 prompt for a major mode instead.  Simple yet super effective!
 
 #+begin_src emacs-lisp
 (bind-keys :map grandview-apps-map
-           ("s" . ale-scratch))
+           ("s" . +scratch))
 #+end_src
 
 *** Autoload
@@ -4171,7 +4209,7 @@ prompt for a major mode instead.  Simple yet super effective!
 :END:
 
 #+begin_src emacs-lisp
-(defun ale-scratch--list-modes ()
+(defun +scratch--list-modes ()
   "List known major modes."
   (cl-loop for sym the symbols of obarray
            for name = (symbol-name sym)
@@ -4182,20 +4220,22 @@ prompt for a major mode instead.  Simple yet super effective!
            collect (substring name 0 -5)))
 
 ;;;###autoload
-(defun ale-scratch (query-for-mode)
+(defun +scratch (query-for-mode)
   "Create or switch to an org-mode scratch buffer.
 A jupyter session is attached to the buffer.
 If called with prefix arg, prompt for a major mode for the buffer."
   (interactive "P")
-  (let ((buf (get-buffer "*ALE-scratch*")))
+  (let ((buf (get-buffer "*Grandview-scratch*")))
     (unless buf
-      (let* ((new-buf (generate-new-buffer "*ALE-scratch*"))
+      (let* ((new-buf (generate-new-buffer "*Grandview-scratch*"))
              (jpt-session (or (bound-and-true-p conda-env-current-name) "base"))
-             (text (concat "#+PROPERTY: header-args:python :session " jpt-session))
+             (text (concat "#+PROPERTY: header-args:python :session "
+                           jpt-session))
              (mode "org"))
         (with-current-buffer new-buf
           (when query-for-mode
-            (setq mode (completing-read "Mode: " (ale-scratch--list-modes) nil t nil nil))
+            (setq mode (completing-read
+                        "Mode: " (+scratch--list-modes) nil t nil nil))
             (setq text (format "Scratch buffer for: %s" mode)))
           (insert text)
           (funcall (intern (concat mode "-mode")))
@@ -4253,13 +4293,13 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
   "Setup for `grandview-org-file'."
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
-  (setq-local ale-org-id-auto t))
+  (setq-local +org-id-auto t))
 #+end_src
 
 Here are the local variables in this file.
 
 + ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
-+ ~ale-org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
++ ~+org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
 # Local Variables:
 # eval: (ignore-errors (grandview-setup-literate-file)))

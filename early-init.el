@@ -29,9 +29,9 @@
  redisplay-skip-fontification-on-input t ; Inhibits it for better scrolling performance.
  command-line-x-option-alist nil ; Remove irreleant command line options for faster startup
  select-active-regions 'only ; Emacs hangs when large selections contain mixed line endings.
- auto-save-list-file-prefix nil ; Disable auto-save/lockfiles
- create-lockfiles nil
- make-backup-files nil
+ auto-save-list-file-prefix nil ; Disable auto-save
+ create-lockfiles nil ; Disable lockfiles
+ make-backup-files nil ; Disable backup files
  vc-follow-symlinks t ; Do not ask about symlink following
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
