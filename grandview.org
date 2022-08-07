@@ -386,7 +386,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
         '((meow-replace . meow-yank)
           (meow-reverse . back-to-indentation)
           (meow-change . meow-change-char)
-          (+meow-save . +pulse-save-line)
+          (+meow-save . +meow-save-line)
           (meow-kill . meow-kill-whole-line)
           (meow-pop-selection . meow-pop-grab)
           (meow-beacon-change . meow-beacon-change-char)
@@ -452,6 +452,15 @@ Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
                  (keymapp cmd-or-kmap))
          (let ((rebind-key (concat meow-motion-remap-prefix key)))
            (local-set-key (kbd rebind-key) cmd-or-kmap)))))))
+
+(defun +meow-save-line ()
+  "Fallback command for `+meow-save'."
+  (interactive)
+  (let ((beg (if (eobp)
+                 (line-beginning-position 0)
+               (line-beginning-position)))
+        (end (line-beginning-position 2)))
+    (kill-ring-save beg end)))
 
 ;;;###autoload
 (defun +meow-save ()
@@ -859,75 +868,6 @@ Adjust frame parameters such as opacity dynamically.
         (set-cursor-color +frame-cursor-dim-color))
     (blink-cursor-mode +1)
     (set-cursor-color +frame-cursor-saved-color)))
-#+end_src
-
-** Pulse line (pulse.el)
-:PROPERTIES:
-:CUSTOM_ID: *User_interface*-Pulse_line_(pulse.el)-ecdf8963
-:END:
-
-#+begin_src emacs-lisp
-(if HAS-GUI
-    (add-hook 'after-make-frame-functions (lambda (f) (with-selected-frame f (+pulse-line-mode))))
-  (+pulse-line-mode))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+pulse.el"
-:CUSTOM_ID: *User_interface*-Pulse_line_(pulse.el)-Autoload-b150df72
-:END:
-
-#+begin_src emacs-lisp
-(require 'pulse)
-
-(defcustom +pulse-command-list
-  '(recenter-top-bottom
-    reposition-window
-    consult--jump-nomark
-    ace-select-window)
-  "Commands that should automatically `+pulse-pulse-line'.
-You must restart function `+pulse-line-mode' for changes to
-take effect."
-  :group 'grandview :type '(repeat function))
-
-(defface +pulse-line-face
-  '((default :extend t)
-    (((class color) (min-colors 88) (background light))
-     :background "#8eecf4")
-    (t :inverse-video t :background "#004065"))
-  "Default face for `+pulse-pulse-line'."
-  :group 'grandview)
-
-;;;###autoload
-(defun +pulse-line (&optional face kill)
-  "Temporarily highlight the current line with optional FACE."
-  (interactive)
-  (let ((beg (if (eobp)
-                 (line-beginning-position 0)
-               (line-beginning-position)))
-        (end (line-beginning-position 2))
-        (pulse-delay .05)
-        (face (or face '+pulse-line-face)))
-    (pulse-momentary-highlight-region beg end face)
-    (when kill (kill-ring-save beg end))))
-
-;;;###autoload
-(defun +pulse-save-line ()
-  "Temporarily highlight the current line and copy it."
-  (interactive)
-  (+pulse-line nil t))
-
-;;;###autoload
-(define-minor-mode +pulse-line-mode
-  "Set up for `+pulse-command-list'."
-  :init-value nil
-  :global t
-  (if +pulse-line-mode
-      (dolist (fn +pulse-command-list)
-        (advice-add fn :after (lambda (&rest _) (interactive) (+pulse-line))))
-    (dolist (fn +pulse-command-list)
-      (advice-remove fn (lambda (&rest _) (interactive) (+pulse-line))))))
 #+end_src
 
 ** Icon library (all-the-icons.el)
@@ -3151,6 +3091,21 @@ need to add =--with-xinput2= in build flags to enable this feature.
 #+begin_src emacs-lisp
 (when (boundp 'pixel-scroll-precision-mode)
   (pixel-scroll-precision-mode 1))
+#+end_src
+
+** Pulse highlight on demand or after select functions (pulsar.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Pulse_highlight_on_demand_or_after_select_functions_(pulsar.el)-3d92b459
+:END:
+
+Another great package from Prot!
+
+#+begin_src emacs-lisp
+(straight-use-package 'pulsar)
+
+(pulsar-global-mode)
+(once '(:packages pulsar)
+  (push '+meow-save pulsar-pulse-functions))
 #+end_src
 
 ** VSCode style icons (vscode-icon.el)
