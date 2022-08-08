@@ -10,7 +10,6 @@
 
 (setq
  gc-cons-threshold most-positive-fixnum ; Inhibit garbage collection during startup
- gc-cons-percentage 0.6
  package-quickstart nil ; Prevent package.el loading packages prior to their init-file
  package-enable-at-startup nil
  ad-redefinition-action 'accept ; Disable warnings from legacy advice system

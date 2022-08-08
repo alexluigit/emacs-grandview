@@ -26,16 +26,20 @@ stuttering, increase this."
 ;; `grandview-org-map':      Shortcuts for org related commands
 ;; `grandview-win/tabs-map': Commands related to windows/workspaces
 ;; `grandview-apps-map':     Useful utils such as format buffer, set frame opacity, etc.
+;; `grandview-reg/rect-map': Keymap for subcommands of \\`C-x r'.
+;; `grandview-project-map':  Project commands.
 (define-prefix-command 'grandview-files-map)
 (define-prefix-command 'grandview-mct-map)
 (define-prefix-command 'grandview-prog-map)
 (define-prefix-command 'grandview-org-map)
 (define-prefix-command 'grandview-apps-map)
+(define-prefix-command 'grandview-win/tabs-map)
+(define-prefix-command 'grandview-reg-map)
+(define-prefix-command 'grandview-project-map)
 (defalias 'grandview-win/tabs-map tab-prefix-map)
 (defalias 'grandview-reg-map ctl-x-r-map)
-(if (boundp 'project-prefix-map)
-    (defalias 'grandview-project-map project-prefix-map)
-  (define-prefix-command 'grandview-project-map))
+(when (boundp 'project-prefix-map)
+  (defalias 'grandview-project-map project-prefix-map))
 
 (defmacro setq! (&rest settings)
   "A stripped-down `customize-set-variable' with the syntax of `setq'.
@@ -213,7 +217,7 @@ When FORCE, ensure the tangle process and autoloads generation."
   (grandview--gen-autoload force))
 
 (defun grandview-profiler ()
-  "Init info with packages loaded and init time."
+  "Profile init time."
   (let ((package-count 0)
         (time (emacs-init-time "%.3f"))
         (docstr "%d packages loaded in %ss"))
@@ -251,5 +255,4 @@ When FORCE, ensure the tangle process and autoloads generation."
   ;; Setup garbage collection
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))
-  (setq gc-cons-threshold grandview-gc-cons-threshold
-        gc-cons-percentage 0.1))
+  (setq gc-cons-threshold grandview-gc-cons-threshold))

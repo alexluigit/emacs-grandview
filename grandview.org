@@ -373,7 +373,9 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
 (setq meow-keymap nil)
 (meow-global-mode)
+
 (once '(:before self-insert-command)
+  (+meow-setup-fallback-keys)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -395,7 +397,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
           (meow-delete . meow-C-d)))
   (setq meow-char-thing-table
         '((?r . round) (?b . square) (?c . curly) (?s . string) (?e . symbol)
-          (?w . window) (?B . buffer) (?p . paragraph) (?\[ . line) (?\] . line)
+          (?w . window) (?B . buffer) (?p . paragraph) (?< . line) (?> . line)
           (?d . defun) (?i . indent) (?x . extend) (?. . sentence)))
   (appendq! meow-mode-state-list '((helpful-mode . normal)
                                    (Man-mode . normal)
@@ -409,13 +411,31 @@ If you want to know more about meow or modal editing in general, check out [[htt
 :END:
 
 #+begin_src emacs-lisp
+(defun +meow--define-fallback-keys (key-cmds)
+  "Define fallback keys for KEY-CMDS."
+  (cl-loop for (key . cmd) in key-cmds do
+           (unless (equal key "SPC")
+             (meow-normal-define-key
+              `(,key . ,cmd))
+             (meow-motion-overwrite-define-key
+              `(,key . +meow-with-key-fallback)))))
+
 (defcustom +meow-fallback-key-cmd-alist
   '(("SPC" . consult-buffer)
-    ("/" . consult-line)
-    ("q" . quit-window))
+    ("`"   . previous-window-any-frame)
+    ("\\"  . next-window-any-frame)
+    ("["   . backward-paragraph)
+    ("]"   . forward-paragraph)
+    ("/"   . consult-line)
+    ("q"   . quit-window))
   "A list of (KEY . CMD) pairs.
 Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
-  :group 'grandview :type 'alist)
+  :group 'grandview :type 'alist
+  :set (lambda (k v) (set k v) (+meow--define-fallback-keys v)))
+
+;;;###autoload
+(defun +meow-setup-fallback-keys ()
+  (+meow--define-fallback-keys +meow-fallback-key-cmd-alist))
 
 ;;;###autoload
 (defadvice! meow-query-replace-ad (&rest _)
@@ -443,16 +463,17 @@ Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
 (defadvice! meow--save-origin-cmds-ad (&rest _)
   "Save original sub keymaps as well."
   :override #'meow--save-origin-commands
-  (cl-loop
-   for key-code being the key-codes of meow-motion-state-keymap do
-   (ignore-errors
-     (let* ((key (meow--parse-input-event key-code))
-            (cmd-or-kmap (key-binding (kbd key))))
-       (when (or (and (commandp cmd-or-kmap)
-                      (not (equal cmd-or-kmap 'undefined)))
-                 (keymapp cmd-or-kmap))
-         (let ((rebind-key (concat meow-motion-remap-prefix key)))
-           (local-set-key (kbd rebind-key) cmd-or-kmap)))))))
+  (unless (bound-and-true-p transient--window)
+    (cl-loop
+     for key-code being the key-codes of meow-motion-state-keymap do
+     (ignore-errors
+       (let* ((key (meow--parse-input-event key-code))
+              (cmd-or-kmap (key-binding (kbd key))))
+         (when (or (and (commandp cmd-or-kmap)
+                        (not (equal cmd-or-kmap 'undefined)))
+                   (keymapp cmd-or-kmap))
+           (let ((rebind-key (concat meow-motion-remap-prefix key)))
+             (local-set-key (kbd rebind-key) cmd-or-kmap))))))))
 
 (defun +meow-save-line ()
   "Fallback command for `+meow-save'."
@@ -666,7 +687,9 @@ A list of my favorite CJK fonts.
 (setq +variable-font "Sarasa Mono SC")
 (setq +CJK-font "LXGW WenKai Mono")
 
-(add-hook 'after-make-frame-functions #'+font-setup)
+(if (daemonp)
+    (add-hook 'after-make-frame-functions #'+font-setup)
+  (+font-setup))
 #+end_src
 
 *** Autoload
@@ -1304,7 +1327,7 @@ This section contains all core keybindings of *Grandview*.
 #+begin_src emacs-lisp
 (once '(:packages meow)
   (bind-keys :map meow-insert-state-keymap
-             ("C-;" . meow-kill-whole-line)
+             ("C-u" . meow-kill-whole-line)
              ("<C-i>" . meow-right)
              ("C-o" . meow-left)))
 #+end_src
@@ -1331,8 +1354,8 @@ This section contains all core keybindings of *Grandview*.
    '("<backspace>" . meow-pop-selection)
    '("," . meow-inner-of-thing)
    '("." . meow-bounds-of-thing)
-   '("[" . meow-beginning-of-thing)
-   '("]" . meow-end-of-thing)
+   '("<" . meow-beginning-of-thing)
+   '(">" . meow-end-of-thing)
    '("-" . negative-argument)
    '("=" . meow-query-replace)
    '("+" . meow-query-replace-regexp)
@@ -1367,7 +1390,6 @@ This section contains all core keybindings of *Grandview*.
    '("O" . meow-left-expand)
    '("p" . meow-prev)
    '("P" . meow-open-above)
-   '("q" . +meow-with-key-fallback)
    '("r" . meow-reverse)
    '("R" . repeat)
    '("s" . meow-search)
@@ -1469,11 +1491,12 @@ your terminal emulator's settings.
            ("C-o" . pop-global-mark)
            ("s-n" . scroll-up-command)
            ("s-p" . scroll-down-command)
-           ("M-o" . other-window)
            ("M-n" . forward-paragraph)
            ("M-p" . backward-paragraph)
+           :map grandview-win/tabs-map
+           ("w"   . other-window)
            :map minibuffer-local-map
-           ("C-;" . meow-kill-whole-line)
+           ("C-u" . meow-kill-whole-line)
            ("<C-i>" . forward-char)
            ("C-o" . backward-char))
 #+end_src
@@ -1482,9 +1505,7 @@ These keybindings are available when the current major mode doesn't define that 
 
 #+begin_src emacs-lisp
 (when (featurep 'meow)
-  (meow-motion-overwrite-define-key
-   '("<escape>" . +meow-escape)
-   '("/" . +meow-with-key-fallback)))
+  (meow-motion-overwrite-define-key '("<escape>" . +meow-escape)))
 #+end_src
 
 * File management
@@ -3134,7 +3155,11 @@ Another great package from Prot!
 
 (pulsar-global-mode)
 (once '(:packages pulsar)
-  (push '+meow-save pulsar-pulse-functions))
+  (push 'ace-select-window pulsar-pulse-functions)
+  (push '+meow-with-key-fallback pulsar-pulse-functions)
+  (push '+meow-save pulsar-pulse-functions)
+  (push 'previous-window-any-frame pulsar-pulse-functions)
+  (push 'next-window-any-frame pulsar-pulse-functions))
 #+end_src
 
 ** VSCode style icons (vscode-icon.el)
@@ -3234,7 +3259,7 @@ code.  Do it with =M-x find-library transpose-frame=.
 #+begin_src emacs-lisp
 (straight-use-package 'writeroom-mode)
 
-(once '(:hooks find-file-hook)
+(once '(:before pre-command-hook)
   (setq writeroom-width 128
         writeroom-bottom-divider-width 0
         writeroom-fringes-outside-margins t
@@ -3243,8 +3268,9 @@ code.  Do it with =M-x find-library transpose-frame=.
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
         writeroom-mode-line t)
-  (global-writeroom-mode)
-  (add-hook 'org-mode-hook #'+visual-fill-center-text))
+  (global-writeroom-mode))
+
+(add-hook 'org-mode-hook #'+visual-fill-center-text)
 #+end_src
 
 *** Autoload
@@ -3369,7 +3395,7 @@ Index based window motions.
 (straight-use-package 'ace-window)
 
 (setq aw-keys '(?a ?s ?t ?n ?e ?o))
-(bind-key "M-O" 'ace-select-window)
+(bind-key "M-o" 'ace-select-window)
 #+end_src
 
 ** Vterm (vterm.el)
@@ -3402,7 +3428,7 @@ Index based window motions.
              ("S-<escape>" .
               (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
              ("<C-i>" . vterm-send-C-i)
-             ("C-;" . vterm-send-C-semicolon)
+             ("C-u" . vterm-send-C-u)
              ("C-<delete>" . vterm-send-C-delete)
              ("C-<return>" . vterm-send-F5)))
 #+end_src
