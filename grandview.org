@@ -275,12 +275,6 @@ related to some major mode or to file-handling.
   (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
 
 ;;;###autoload
-(defadvice! keyboard-escape-quit-ad (fn &rest args)
-  "Do not close any window when calling `keyboard-escape-quit'."
-  :around #'keyboard-escape-quit
-  (let ((buffer-quit-function #'ignore)) (apply fn args)))
-
-;;;###autoload
 (defadvice! next-error-no-select-ad (fn &rest args)
   "Do not open new window when calling `next-error-no-select'."
   :around #'next-error-no-select
@@ -1752,7 +1746,7 @@ users deserve a file manager better than those popular ones on terminal such as
 [[https://github.com/ranger/ranger][ranger]], [[https://github.com/vifm/vifm][vifm]], [[https://github.com/gokcehan/lf][lf]] since Emacs is more than a terminal emulator.
 
 #+begin_src emacs-lisp
-(straight-use-package 'dirvish)
+(straight-use-package '(dirvish :type git :repo "alexluigit/dirvish" :depth full))
 
 (once '(:hooks pre-command-hook)
   (dirvish-override-dired-mode)
@@ -1767,23 +1761,20 @@ users deserve a file manager better than those popular ones on terminal such as
          '(:left (sort file-time " " file-size symlink) :right (vc-info yank index)))
   (setq! dirvish-header-line-format '(:left (path) :right (free-space)))
   (setq! dirvish-quick-access-entries
-         '(("o" "~/"                                "Home")
-           ("d" "/opt/dotfiles/"                    "Dotfiles")
-           ("u" "~/.cache/emacs/"                   "Emacs cache")
-           ("p" "~/Code/"                           "Code")
-           ("n" "~/Downloads/"                      "Downloads")
-           ("w" "~/Pictures/wallpaper/"             "Wallpaper")
-           ("m" "/mnt/"                             "Drives")
-           ("a" "FD####~/Documents/####\\\\.org$"   "All org files in ~/Documents")
+         '(("o" "~/"                          "Home")
+           ("d" "/opt/dotfiles/"              "Dotfiles")
+           ("u" "~/.cache/emacs/"             "Emacs cache")
+           ("p" "~/Code/"                     "Code")
+           ("n" "~/Downloads/"                "Downloads")
+           ("w" "~/Pictures/wallpaper/"       "Wallpaper")
+           ("m" "/mnt/"                       "Drives")
+           ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
            ("t" "~/.local/share/Trash/files/" "Trash")))
   (setq! dirvish-attributes
          '(vc-state file-size git-msg subtree-state all-the-icons collapse))
   (setq! dirvish-preview-dispatchers
          '(exa image gif video audio epub archive pdf))
   (setq! dirvish-all-the-icons-height 0.8)
-  (setq! dirvish-side-attributes dirvish-attributes)
-  (setq! dirvish-side-preview-dispatchers
-         (append '(vc-diff) dirvish-preview-dispatchers))
   (setq! dirvish-side-display-alist
          '((side . left) (slot . -1) (window-width . 0.2)))
   (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
@@ -3237,20 +3228,6 @@ are slightly simplified.
              ([remap previous-matching-history-element] . consult-isearch-history)))
 #+end_src
 
-** Window position (transpose-frame.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Window_position_(transpose-frame.el)-d3871e3b
-:END:
-
-The =transpose-frame= library defines a set of commands for shifting the
-layout of Emacs windows.  Rather than me describing how these work, I
-strongly encourage you to read the "Commentary" section in the source
-code.  Do it with =M-x find-library transpose-frame=.
-
-#+begin_src emacs-lisp
-(straight-use-package 'transpose-frame)
-#+end_src
-
 ** Distraction-free writing (writeroom-mode.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-2ea3c297
@@ -3778,37 +3755,17 @@ regexp .etc).
              ("D" . 'pdf-annot-delete)))
 #+end_src
 
-** COMMENT Epub reader (nov.el)
+** Epub reader (nov.el)
 :PROPERTIES:
 :CUSTOM_ID: Utils-Epub_reader_(nov.el)-cd2820eb
 :END:
 
 #+begin_src emacs-lisp
-(use-package shrface
-  :after nov
-  :config
-  (shrface-basic)
-  (shrface-trial)
-  (add-to-list 'shr-external-rendering-functions
-               '(span . shrface-tag-span))
-  (shrface-default-keybindings) ; setup default keybindings
-  (setq shrface-href-versatile t))
-
-(use-package nov
-  :init
-  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-  (add-hook 'nov-mode-hook '+nov-setup)
-  :config
-  (advice-add 'nov-render-title :override #'ignore)
-  (setq nov-shr-rendering-functions '((img . nov-render-img)
-                                      (title . nov-render-title)
-                                      (b . shr-tag-b)))
-  (setq nov-shr-rendering-functions
-        (append nov-shr-rendering-functions
-                shr-external-rendering-functions))
-  (defun +nov-setup ()
-    (require 'shrface)
-    (shrface-mode)))
+(straight-use-package 'nov)
+(push '("\\.epub\\'" . nov-mode) auto-mode-alist)
+(setq nov-shr-rendering-functions '((img . nov-render-img)
+                                    (title . nov-render-title)
+                                    (b . shr-tag-b)))
 #+end_src
 
 ** Murl (murl.el)
