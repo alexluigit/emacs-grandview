@@ -1,10 +1,5 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
-(defconst HAS-GUI (or (daemonp) (display-graphic-p)))
-(defconst DEBUG-INIT-P (or (getenv-internal "DEBUG") init-file-debug))
-(defconst EMACS28+ (> emacs-major-version 27))
-(defconst EMACS29+ (> emacs-major-version 28))
-
 (defcustom grandview-cache-dir (concat user-emacs-directory "grandview/")
   "Cache directory for grandview."
   :group 'grandview :type 'string)
@@ -239,9 +234,10 @@ When FORCE, ensure the tangle process and autoloads generation."
   (load bootstrap nil 'nomessage)
   (straight-use-package 'bind-key) ; for `bind-keys' macro
   (straight-use-package '(once :type git :host github :repo "emacs-magus/once"))
-  (straight-use-package `(transient ,@(when EMACS28+ '(:type built-in)))) ; use inbuilt version
+  ;; Use inbuilt version of transient
+  (straight-use-package `(transient ,@(when (> emacs-major-version 27) '(:type built-in))))
   ;; Load user config
-  (load (grandview--init-path 'user) nil t)
+  (ignore-errors (load (grandview--init-path 'user) nil t))
   ;; Tangle and load Grandview
   ;; "Initiate spin!" -- Joseph Cooper
   (unless (file-exists-p grandview-cache-dir)
@@ -251,7 +247,7 @@ When FORCE, ensure the tangle process and autoloads generation."
   (load (grandview--init-path 'main) nil t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   ;; Show profiler when debugging
-  (when DEBUG-INIT-P (grandview-profiler))
+  (when (or (getenv-internal "DEBUG") init-file-debug) (grandview-profiler))
   ;; Setup garbage collection
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))

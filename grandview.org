@@ -100,19 +100,19 @@ cp -r ~/.emacs.d ~/.emacs.d.bak
 
 Here are the dependencies of this project.
 
-|-------------------+-----------------------------+----------|
-| Package           | Description                 | Required |
-|-------------------+-----------------------------+----------|
-| =fd=                | A modern =find=               |          |
-| =rg=                | A modern =grep=               |          |
+|---------------------+-----------------------------+----------|
+| Package             | Description                 | Required |
+|---------------------+-----------------------------+----------|
+| =fd=                | A modern =find=             |          |
+| =rg=                | A modern =grep=             |          |
 | =git=               | Version control             |          |
-| =exa=               | A modern =ls=                 | optional |
+| =exa=               | A modern =ls=               | optional |
 | =noto-fonts-emoji=  | Font for emojis             | optional |
 | =words=             | English words completion    | optional |
 | =font-victor-mono=  | Default fixed pitch font    | optional |
 | =ttf-sarasa-gothic= | Default variable pitch font | optional |
 | =xdotool=           | Automation tool for X11     | optional |
-|-------------------+-----------------------------+----------|
+|---------------------+-----------------------------+----------|
 
 *** Tangling
 :PROPERTIES:
@@ -365,11 +365,10 @@ If you want to know more about meow or modal editing in general, check out [[htt
 (straight-use-package 'meow)
 (require 'meow)
 
-(setq meow-keymap nil)
 (meow-global-mode)
+(+meow-setup-fallback-keys)
 
 (once '(:before self-insert-command)
-  (+meow-setup-fallback-keys)
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -393,9 +392,10 @@ If you want to know more about meow or modal editing in general, check out [[htt
         '((?r . round) (?b . square) (?c . curly) (?s . string) (?e . symbol)
           (?w . window) (?B . buffer) (?p . paragraph) (?< . line) (?> . line)
           (?d . defun) (?i . indent) (?x . extend) (?. . sentence)))
-  (appendq! meow-mode-state-list '((helpful-mode . normal)
-                                   (Man-mode . normal)
-                                   (message-buffer-mode . normal))))
+  (appendq! meow-mode-state-list
+            '((helpful-mode . normal)
+              (Man-mode . normal)
+              (message-buffer-mode . normal))))
 #+end_src
 
 *** Autoload
@@ -625,7 +625,7 @@ direction (use =C-l= to reposition it).
 #+begin_src emacs-lisp
 (setq-default bidi-display-reordering 'left-to-right)
 (setq-default bidi-paragraph-direction 'left-to-right)
-(setq bidi-inhibit-bpa t)  ; Emacs 27 only
+(setq bidi-inhibit-bpa t)
 (setq-default truncate-lines t)
 (setq echo-keystrokes 0.25)
 (setq scroll-conservatively 101)
@@ -648,7 +648,7 @@ direction (use =C-l= to reposition it).
 Protesilaos Stavrou.
 
 #+begin_src emacs-lisp
-(straight-use-package `(modus-themes ,@(when EMACS29+ '(:type built-in))))
+(straight-use-package `(modus-themes ,@(when (> emacs-major-version 28) '(:type built-in))))
 
 (once '(:hooks after-init-hook)
   (setq! modus-themes-links '(no-underline))
@@ -713,7 +713,7 @@ A list of my favorite CJK fonts.
                                :height ,+font-size)))))
   (dolist (charset '(kana han cjk-misc bopomofo))
     (set-fontset-font t charset (font-spec :family +CJK-font)))
-  (unless EMACS28+
+  (unless (> emacs-major-version 27)
     (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))
 
 ;;;###autoload
@@ -823,7 +823,7 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
 Adjust frame parameters such as opacity dynamically.
 
 #+begin_src emacs-lisp
-(when EMACS29+
+(when (> emacs-major-version 28)
   (add-hook 'window-configuration-change-hook #'+frame-opacity-auto))
 #+end_src
 
@@ -881,6 +881,16 @@ Adjust frame parameters such as opacity dynamically.
     (blink-cursor-mode +1)
     (set-cursor-color +frame-cursor-saved-color)))
 #+end_src
+
+** COMMENT Persistent sessions (desktop.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Persistent_sessions_(desktop.el)-8aa71a74
+:END:
+
+#+begin_src emacs-lisp
+(desktop-save-mode 1)
+#+end_src
+
 
 ** Icon library (all-the-icons.el)
 :PROPERTIES:
@@ -1465,7 +1475,7 @@ On terminal, we rebind =<f6>= to =C-i=, so make sure you have relevant settings 
 your terminal emulator's settings.
 
 #+begin_src emacs-lisp
-(if HAS-GUI
+(if (daemonp)
     (add-hook 'after-make-frame-functions
               (lambda (f) (with-selected-frame f
                             (define-key input-decode-map [?\C-i] [C-i]))))
@@ -1703,7 +1713,8 @@ inside of an Emacs buffer.  It is simply superb!
       "-g --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
 
 (once '(:before dired-noselect dired-jump dirvish-curr)
-  (setq dired-mouse-drag-files t) ; added in Emacs 29
+  (setq mouse-1-click-follows-link nil)
+  (setq dired-mouse-drag-files t)                   ; added in Emacs 29
   (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
   (setq dired-kill-when-opening-new-dired-buffer t) ; added in Emacs 28
   (setq dired-recursive-copies 'always)
@@ -1757,9 +1768,6 @@ users deserve a file manager better than those popular ones on terminal such as
     (when (file-directory-p file)
       `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
   (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
-  (setq! dirvish-mode-line-format
-         '(:left (sort file-time " " file-size symlink) :right (vc-info yank index)))
-  (setq! dirvish-header-line-format '(:left (path) :right (free-space)))
   (setq! dirvish-quick-access-entries
          '(("o" "~/"                          "Home")
            ("d" "/opt/dotfiles/"              "Dotfiles")
@@ -1770,16 +1778,19 @@ users deserve a file manager better than those popular ones on terminal such as
            ("m" "/mnt/"                       "Drives")
            ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
            ("t" "~/.local/share/Trash/files/" "Trash")))
-  (setq! dirvish-attributes
+  (setq dirvish-attributes
          '(vc-state file-size git-msg subtree-state all-the-icons collapse))
-  (setq! dirvish-preview-dispatchers
-         '(exa image gif video audio epub archive pdf))
-  (setq! dirvish-all-the-icons-height 0.8)
-  (setq! dirvish-side-display-alist
+  (setq dirvish-preview-dispatchers '(exa image gif video audio epub archive pdf))
+  (setq dirvish-all-the-icons-height 0.8)
+  (setq dirvish-side-display-alist
          '((side . left) (slot . -1) (window-width . 0.2)))
-  (setq! dirvish-side-header-line-format '(:left (project) :right (vc-info)))
-  (setq! dirvish-side-mode-line-format '(:left (sort omit) :right (index)))
+  (setq dirvish-mode-line-format
+         '(:left (sort file-time file-size symlink) :right (vc-info yank index)))
+  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
   (bind-keys :map 'dirvish-mode-map
+             ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
+             ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
+             ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
              ("SPC" . consult-buffer)
              ("M-n" . dirvish-history-go-forward)
              ("M-p" . dirvish-history-go-backward)
@@ -2213,7 +2224,6 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (straight-use-package '(org-src :type built-in))
 
 (once '(:packages org-src)
-  (setq org-edit-src-content-indentation 0)
   (setq org-src-window-setup 'split-window-right)
   (push '("conf-unix" . conf-unix) org-src-lang-modes))
 #+end_src
@@ -4261,6 +4271,12 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
 :CUSTOM_ID: About_this_file-File_local_variables-4f09d29d
 :END:
 
+Here are the local variables in this file.
+
++ ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
++ ~org-edit-src-content-indentation~: do not add spaces at line beginning in src blocks
++ ~+org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
+
 #+begin_src emacs-lisp
 (defun grandview--org-eldoc-funcall (_callback &rest _ignored)
   "Fix `elisp-eldoc-funcall' in `org-mode'."
@@ -4276,13 +4292,9 @@ along with this file.  If not, see <http://www.gnu.org/licenses/>.
   "Setup for `grandview-org-file'."
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
+  (setq-local org-edit-src-content-indentation 0)
   (setq-local +org-id-auto t))
 #+end_src
-
-Here are the local variables in this file.
-
-+ ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
-+ ~+org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
 # Local Variables:
 # eval: (ignore-errors (grandview-setup-literate-file)))
