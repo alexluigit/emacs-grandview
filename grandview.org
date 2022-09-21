@@ -167,7 +167,9 @@ The following section provided a CLI for restarting *Grandview*.
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
 
-ELCs=false REPOs=false RESET=false DEBUG=""
+ELCs=false REPOs=false RESET=false DEBUG="" INIT_DIR=""
+
+[[ "$GRANDVIEW_HOME" ]] && INIT_DIR="--init-directory $GRANDVIEW_HOME"
 
 while getopts "pPrd" opt; do
   case $opt in
@@ -179,7 +181,7 @@ while getopts "pPrd" opt; do
 done
 shift $((OPTIND -1))
 
-emacs_cmd="emacs --daemon $DEBUG"
+emacs_cmd="emacs --daemon $DEBUG $INIT_DIR"
 notify-send "Restarting emacs..." 2>/dev/null
 emacs_pid=$(pidof emacs)
 timeout=300
@@ -366,7 +368,6 @@ If you want to know more about meow or modal editing in general, check out [[htt
 (require 'meow)
 
 (meow-global-mode)
-(+meow-setup-fallback-keys)
 
 (once '(:before self-insert-command)
   (setq meow-visit-sanitize-completion nil)
@@ -405,32 +406,6 @@ If you want to know more about meow or modal editing in general, check out [[htt
 :END:
 
 #+begin_src emacs-lisp
-(defun +meow--define-fallback-keys (key-cmds)
-  "Define fallback keys for KEY-CMDS."
-  (cl-loop for (key . cmd) in key-cmds do
-           (unless (equal key "SPC")
-             (meow-normal-define-key
-              `(,key . ,cmd))
-             (meow-motion-overwrite-define-key
-              `(,key . +meow-with-key-fallback)))))
-
-(defcustom +meow-fallback-key-cmd-alist
-  '(("SPC" . consult-buffer)
-    ("`"   . previous-window-any-frame)
-    ("\\"  . next-window-any-frame)
-    ("["   . backward-paragraph)
-    ("]"   . forward-paragraph)
-    ("/"   . consult-line)
-    ("q"   . quit-window))
-  "A list of (KEY . CMD) pairs.
-Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
-  :group 'grandview :type 'alist
-  :set (lambda (k v) (set k v) (+meow--define-fallback-keys v)))
-
-;;;###autoload
-(defun +meow-setup-fallback-keys ()
-  (+meow--define-fallback-keys +meow-fallback-key-cmd-alist))
-
 ;;;###autoload
 (defadvice! meow-query-replace-ad (&rest _)
   "Call `meow-query-replace' and auto fill prompt with region text."
@@ -452,22 +427,6 @@ Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
   "Do not highlight number positions."
   :override #'meow--maybe-highlight-num-positions
   (ignore))
-
-;;;###autoload
-(defadvice! meow--save-origin-cmds-ad (&rest _)
-  "Save original sub keymaps as well."
-  :override #'meow--save-origin-commands
-  (unless (bound-and-true-p transient--window)
-    (cl-loop
-     for key-code being the key-codes of meow-motion-state-keymap do
-     (ignore-errors
-       (let* ((key (meow--parse-input-event key-code))
-              (cmd-or-kmap (key-binding (kbd key))))
-         (when (or (and (commandp cmd-or-kmap)
-                        (not (equal cmd-or-kmap 'undefined)))
-                   (keymapp cmd-or-kmap))
-           (let ((rebind-key (concat meow-motion-remap-prefix key)))
-             (local-set-key (kbd rebind-key) cmd-or-kmap))))))))
 
 (defun +meow-save-line ()
   "Fallback command for `+meow-save'."
@@ -495,19 +454,6 @@ Setup KEY's corresponding fallback CMD in `meow-motion-mode'."
    ((region-active-p)
     (meow-cancel))
    (t (call-interactively 'execute-extended-command))))
-
-;;;###autoload
-(defun +meow-with-key-fallback ()
-  "Execute fallback command if exists.
-If `last-input-event' is bounded to any command in current
-major-mode, call that command, otherwise call its fallback
-command defined in `+meow-fallback-key-cmd-alist'."
-  (interactive)
-  (let* ((key (meow--parse-input-event last-input-event))
-         (rebind-key (concat meow-motion-remap-prefix key)))
-    (if (key-binding (kbd rebind-key))
-        (meow--execute-kbd-macro rebind-key)
-      (funcall (alist-get key +meow-fallback-key-cmd-alist #'ignore nil #'string=)))))
 
 ;;;###autoload
 (defun +meow-insert ()
@@ -644,15 +590,78 @@ direction (use =C-l= to reposition it).
 :CUSTOM_ID: User_interface_extras-Theme-35a328fb
 :END:
 
-=modus-vivendi= is a built-in theme in emacs (version >= 28) created by
+Recommended themes:
+
+- =modus-vivendi= is a built-in theme in emacs (version >= 28) created by
 Protesilaos Stavrou.
+
+- =ef-themes= is yet another theme suite developed by Prot.
+
+- =doom-themes=
+
+*** COMMENT Modus-themes
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Modus-a55199f9
+:END:
 
 #+begin_src emacs-lisp
 (straight-use-package `(modus-themes ,@(when (> emacs-major-version 28) '(:type built-in))))
 
+(setq modus-themes-links '(no-underline))
+(once '(:hooks after-init-hook) (load-theme 'modus-vivendi t))
+#+end_src
+
+*** Ef-themes
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Ef-themes-669c8f67
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package 'ef-themes)
+(require 'ef-themes)
+(setq ef-themes-to-toggle '(ef-summer ef-winter)
+      ef-themes-mixed-fonts t
+      ef-themes-variable-pitch-ui t)
+(mapc #'disable-theme custom-enabled-themes)
+(ef-themes-select 'ef-night)
+#+end_src
+
+*** COMMENT Lambda-themes
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Lambda-themes-1842bf45
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package '(lambda-themes :host github :repo "lambda-emacs/lambda-themes"))
 (once '(:hooks after-init-hook)
-  (setq! modus-themes-links '(no-underline))
-  (load-theme 'modus-vivendi t))
+  (require 'lambda-themes)
+  (load-theme 'lambda-dark t))
+#+end_src
+
+*** COMMENT Apropospriate-theme
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Apropospriate-theme-ae253599
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package 'apropospriate-theme)
+(once '(:hooks after-init-hook)
+  (require 'apropospriate-theme)
+  (load-theme 'apropospriate-dark t))
+#+end_src
+
+*** COMMENT Doom-themes
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Doom-themes-965cdc4f
+:END:
+
+=doom-theme= is an megapack of popular themes, including aesthetic extensions for
+popular packages.
+
+#+begin_src emacs-lisp
+(straight-use-package 'doom-themes)
+(once '(:hooks after-init-hook)
+  (load-theme 'doom-one t))
 #+end_src
 
 ** Fonts (fonts.el)
@@ -675,12 +684,6 @@ A list of my favorite CJK fonts.
 - =FZSuXinShiLiuKaiS-R-GB=
 
 #+begin_src emacs-lisp
-(setq +font-size 140)
-(setq +default-font "Victor Mono")
-(setq +fixed-font "Sarasa Mono SC")
-(setq +variable-font "Sarasa Mono SC")
-(setq +CJK-font "LXGW WenKai Mono")
-
 (if (daemonp)
     (add-hook 'after-make-frame-functions #'+font-setup)
   (+font-setup))
@@ -693,28 +696,31 @@ A list of my favorite CJK fonts.
 :END:
 
 #+begin_src emacs-lisp
-(defvar +font-size 140)
-(defvar +default-font "Victor Mono")
-(defvar +fixed-font "Sarasa Mono SC")
-(defvar +variable-font "Sarasa Mono SC")
-(defvar +CJK-font "LXGW WenKai Mono")
-
 ;;;###autoload
 (defun +font-setup (&optional frame)
   "Setup default/fixed-pitch/variable-pitch/zh-font."
-  (custom-theme-set-faces
-   'user
-   '(font-lock-keyword-face ((t (:slant italic))))
-   '(font-lock-variable-name-face ((t (:weight demibold))))
-   '(font-lock-function-name-face ((t (:weight demibold))))
-   `(default ((t (:font ,(font-spec :family +default-font) :height ,+font-size))))
-   `(fixed-pitch ((t (:font ,(font-spec :family +fixed-font) :height ,+font-size))))
-   `(variable-pitch ((t (:font ,(font-spec :family +variable-font)
-                               :height ,+font-size)))))
-  (dolist (charset '(kana han cjk-misc bopomofo))
-    (set-fontset-font t charset (font-spec :family +CJK-font)))
-  (unless (> emacs-major-version 27)
-    (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))
+  (cl-loop with font-families = (font-family-list frame)
+           for font in (list grandview-default-font grandview-fixed-font
+                             grandview-variable-font)
+           for name in '(default fixed-pitch variable-pitch)
+           for fspec = (font-spec :family font)
+           if (member font font-families) do
+           (custom-theme-set-faces
+            'user `(,name ((t (:font ,fspec :height ,grandview-font-size)))))
+           else do (warn "Font `%s' is not available" font)
+           finally
+           (progn
+             (custom-theme-set-faces
+              'user
+              '(font-lock-keyword-face ((t (:slant italic))))
+              '(font-lock-variable-name-face ((t (:weight demibold))))
+              '(font-lock-function-name-face ((t (:weight demibold)))))
+             (if (member grandview-CJK-font font-families)
+                 (dolist (charset '(kana han cjk-misc bopomofo))
+                   (set-fontset-font t charset (font-spec :family grandview-CJK-font)))
+               (warn "Font `%s' is not available" grandview-CJK-font))
+             (unless (> emacs-major-version 27)
+               (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))))
 
 ;;;###autoload
 (defun +font-cn-set-title (beg end)
@@ -729,6 +735,50 @@ A list of my favorite CJK fonts.
   (remove-overlays beg end)
   (let ((ov (make-overlay beg end)))
     (overlay-put ov 'face 'font-lock-comment-face)))
+#+end_src
+
+** Buffer management (ibuffer.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Buffer_management_(ibuffer.el)-98eec7f5
+:END:
+
+=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
+=list-buffers=.  Compared to its counterpart, it allows for granular
+control over the buffer list and is more powerful overall.
+
+#+begin_src emacs-lisp
+(straight-use-package '(ibuffer :type built-in))
+
+(once '(:packages ibuffer)
+  (add-hook 'ibuffer-mode-hook
+            (lambda () (hl-line-mode) (ibuffer-update 0)))
+  (setq ibuffer-expert t)
+  (setq ibuffer-display-summary nil)
+  (setq ibuffer-use-other-window nil)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-movement-cycle nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (setq ibuffer-use-header-line t)
+  (setq ibuffer-default-shrink-to-minimum-size nil)
+  ;; (setq ibuffer-never-show-predicates '("^ \\*.*"))
+  (setq ibuffer-formats
+        '((mark modified read-only locked " "
+                (name 30 30 :left :elide)
+                " "
+                (size 9 -1 :right)
+                " "
+                (mode 16 16 :left :elide)
+                " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups nil)
+  (setq ibuffer-old-time 48)
+  (bind-keys :map ibuffer-mode-map
+             ("M-o" . nil)
+             ("* f" . ibuffer-mark-by-file-name-regexp)
+             ("* g" . ibuffer-mark-by-content-regexp)
+             ("* n" . ibuffer-mark-by-name-regexp)
+             ("s n" . ibuffer-do-sort-by-alphabetic)
+             ("/ g" . ibuffer-filter-by-content)))
 #+end_src
 
 ** Window placement (window.el)
@@ -891,7 +941,6 @@ Adjust frame parameters such as opacity dynamically.
 (desktop-save-mode 1)
 #+end_src
 
-
 ** Icon library (all-the-icons.el)
 :PROPERTIES:
 :CUSTOM_ID: *USER_INTERFACE*-Icon_library_(all-the-icons.el)-af370f8e
@@ -906,7 +955,23 @@ aliasing of the icons.
 (straight-use-package 'all-the-icons)
 
 (once '(:packages all-the-icons)
+  (setq all-the-icons-scale-factor 0.9)
+  (setq all-the-icons-font-names (remove "weathericons.ttf" all-the-icons-font-names))
   (assoc-delete-all "bookmark" all-the-icons-regexp-icon-alist #'equal))
+#+end_src
+
+** Nerd fonts (nerd-fonts.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Nerd_fonts_(nerd-fonts.el)-c1c1aede
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(nerd-fonts :host github :repo "twlz0ne/nerd-fonts.el"))
+
+;; (once '(:hooks pre-command-hook)
+(require 'nerd-fonts)
+  ;; )
 #+end_src
 
 * *COMPLETION FRAMEWORK*
@@ -1394,6 +1459,7 @@ This section contains all core keybindings of *Grandview*.
    '("O" . meow-left-expand)
    '("p" . meow-prev)
    '("P" . meow-open-above)
+   '("q" . meow-quit)
    '("r" . meow-reverse)
    '("R" . repeat)
    '("s" . meow-search)
@@ -1421,7 +1487,7 @@ This section contains all core keybindings of *Grandview*.
 #+begin_src emacs-lisp
 (once '(:packages meow)
   (meow-leader-define-key
-   '("SPC" . +meow-with-key-fallback)
+   '("SPC" . consult-buffer)
    '("0" . delete-window)
    '("1" . delete-other-windows)
    '("2" . split-window-below)
@@ -1439,7 +1505,7 @@ This section contains all core keybindings of *Grandview*.
    '("e" . dired-jump)
    '("E" . eval-expression)
    '("f" . grandview-files-map)
-   '("i" . list-buffers)
+   '("i" . ibuffer)
    '("k" . kill-this-buffer)
    '("n" . +project-find-file)
    '("o" . grandview-org-map)
@@ -1502,7 +1568,10 @@ your terminal emulator's settings.
            :map minibuffer-local-map
            ("C-u" . meow-kill-whole-line)
            ("<C-i>" . forward-char)
-           ("C-o" . backward-char))
+           ("C-o" . backward-char)
+           :map image-map
+           ("o" . nil)
+           ("w" . image-save))
 #+end_src
 
 These keybindings are available when the current major mode doesn't define that key.
@@ -1678,6 +1747,7 @@ visited that file, allowing you to pick up from there.
   (setq save-place-forget-unreadable-files t)
   (save-place-mode 1))
 #+end_src
+
 ** Auto refresh file content (autorevert.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Auto_refresh_file_content_(autorevert.el)-fa9dac07
@@ -1707,7 +1777,15 @@ inside of an Emacs buffer.  It is simply superb!
 (straight-use-package '(dired :type built-in))
 (straight-use-package '(dired-x :type built-in))
 (straight-use-package '(dired-aux :type built-in))
-(straight-use-package '(wdired :type built-in))
+(straight-use-package 'diredfl)
+
+(add-hook 'dired-mode-hook 'diredfl-mode)
+(add-hook 'dirvish-directory-view-mode-hook 'diredfl-mode)
+(once '(:packages diredfl)
+  (set-face-attribute 'diredfl-dir-name nil :bold t)
+  (add-hook 'enable-theme-functions
+            (lambda (_theme)
+              (set-face-attribute 'diredfl-dir-name nil :bold t))))
 
 (setq dired-listing-switches
       "-g --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
@@ -1725,13 +1803,11 @@ inside of an Emacs buffer.  It is simply superb!
   (setq! dired-bind-man nil)
   (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-do-revert-buffer t)
-  (setq wdired-allow-to-change-permissions t)
-  (setq wdired-create-parent-directories t)
+  (setq dired-auto-revert-buffer #'dired-directory-changed-p)
   (bind-keys :map dired-mode-map
              ("/" . dired-goto-file)
              ("." . dired-create-empty-file)
              ("+" . dired-create-directory)
-             ("i" . wdired-change-to-wdired-mode)
              ("I" . dired-insert-subdir)
              ("K" . dired-kill-subdir)
              ("O" . dired-find-file-other-window)
@@ -1745,6 +1821,50 @@ inside of an Emacs buffer.  It is simply superb!
 
 (with-eval-after-load 'dired-x
   (setq dired-omit-files (concat dired-omit-files "\\|^\\..*$")))
+#+end_src
+
+** Writable Dired (wdired.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Writable_Dired_(wdired.el)-51253ea7
+:END:
+
+Bulk renaming files like a breeze.
+
+#+begin_src emacs-lisp
+(straight-use-package '(wdired :type built-in))
+
+(once '(:packages dired)
+  (setq wdired-allow-to-change-permissions t)
+  (setq wdired-create-parent-directories t)
+  (bind-keys :map dired-mode-map
+             ("i" . wdired-change-to-wdired-mode)))
+#+end_src
+
+** Use dired to browse and manipulate images (image-dired.el)
+:PROPERTIES:
+:CUSTOM_ID: File_management-Use_dired_to_browse_and_manipulate_images_(image-dired.el)-6cc60efc
+:END:
+
+
+=image-dired= allows us to browse and manipulate images using Dired.
+
++ show bigger sized thumbnail image, we are in the 21st century
++ no not display original image in other window when flag/mark files
+  - it's very slow
+  - if I want to view the bigger image, I use =dirvish= instead
++ tweak the keybindings to my preferences
+
+#+begin_src emacs-lisp
+(straight-use-package '(image-dired :type built-in))
+
+(once '(:packages image-dired)
+  (setq image-dired-thumb-size 256)
+  (setq image-dired-marking-shows-next nil)
+  (bind-keys :map image-dired-thumbnail-mode-map
+             ("n" . image-dired-next-line)
+             ("p" . image-dired-previous-line)
+             ("i" . image-dired-forward-image)
+             ("o" . image-dired-backward-image)))
 #+end_src
 
 ** A polished dired with batteries included (dirvish.el)
@@ -1762,12 +1882,15 @@ users deserve a file manager better than those popular ones on terminal such as
 (once '(:hooks pre-command-hook)
   (dirvish-override-dired-mode)
   (dirvish-peek-mode)
-  (dirvish-define-preview exa (file)
-    "Use `exa' to generate directory preview."
-    :require ("exa")
-    (when (file-directory-p file)
-      `(shell . ("exa" "--color=always" "-al" "--group-directories-first" ,file))))
   (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
+  (setq dirvish-reuse-session t)
+  (setq dirvish-attributes
+        '(vc-state file-size git-msg subtree-state all-the-icons collapse file-time))
+  (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
+  (setq dirvish-header-line-height '(25 . 35))
+  (setq dirvish-side-width 38)
+  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
+  (setq dirvish-path-separators (list "  " "  " "  "))
   (setq! dirvish-quick-access-entries
          '(("o" "~/"                          "Home")
            ("d" "/opt/dotfiles/"              "Dotfiles")
@@ -1778,15 +1901,6 @@ users deserve a file manager better than those popular ones on terminal such as
            ("m" "/mnt/"                       "Drives")
            ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
            ("t" "~/.local/share/Trash/files/" "Trash")))
-  (setq dirvish-attributes
-         '(vc-state file-size git-msg subtree-state all-the-icons collapse))
-  (setq dirvish-preview-dispatchers '(exa image gif video audio epub archive pdf))
-  (setq dirvish-all-the-icons-height 0.8)
-  (setq dirvish-side-display-alist
-         '((side . left) (slot . -1) (window-width . 0.2)))
-  (setq dirvish-mode-line-format
-         '(:left (sort file-time file-size symlink) :right (vc-info yank index)))
-  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
   (bind-keys :map 'dirvish-mode-map
              ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
              ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
@@ -1969,7 +2083,7 @@ With a universal prefix to choose project anyway."
 #+begin_src emacs-lisp
 (straight-use-package '(tramp :type built-in))
 
-(once '(:packages dirvish)
+(once '(:packages tramp)
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "/ssh:alex:") "direct-async-process" t))
   (setq tramp-verbose 0)
@@ -2061,8 +2175,8 @@ look like which can be described briefly as follows:
 (defun +org-font-setup ()
   "Setup variable-pitch fonts for org-mode."
   (variable-pitch-mode)
-  (let ((variable-pitch `(:font ,+variable-font))
-        (default `(:font ,+default-font)))
+  (let ((variable-pitch `(:font ,grandview-variable-font))
+        (default `(:font ,grandview-default-font)))
     (custom-theme-set-faces
      'user
      `(org-level-1 ((t (,@variable-pitch :height 1.5))))
@@ -2253,7 +2367,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (add-hook 'org-agenda-finalize-hook 'org-modern-agenda)
 #+end_src
 
-** Visual alignment (valign.el)
+** COMMENT Visual alignment (valign.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Visual_alignment_(valign.el)-f097ffdb
 :END:
@@ -2908,8 +3022,7 @@ Summary of what these do:
 (add-hook 'prog-mode-hook 'prettify-symbols-mode)
 
 (setq-default prettify-symbols-alist
-              '(("lambda" . ?λ)
-                ("<-" . ?←)
+              '(("<-" . ?←)
                 ("->" . ?→)
                 ("->>" . ?↠)
                 ("=>" . ?⇒)
@@ -3022,7 +3135,7 @@ in ~+mode-line-format~.
 The SEGMENTs are defined by `+mode-line-define'."
   :set #'+mode-line--fmt-setter)
 
-(defcustom +mode-line-height 25
+(defcustom +mode-line-height 30
   "Doc.")
 
 (defvar +mode-line-selected-window nil)
@@ -3157,7 +3270,6 @@ Another great package from Prot!
 (pulsar-global-mode)
 (once '(:packages pulsar)
   (push 'ace-select-window pulsar-pulse-functions)
-  (push '+meow-with-key-fallback pulsar-pulse-functions)
   (push '+meow-save pulsar-pulse-functions)
   (push 'previous-window-any-frame pulsar-pulse-functions)
   (push 'next-window-any-frame pulsar-pulse-functions))
@@ -3179,21 +3291,6 @@ style icons with image format.
   (push '("7z" . "zip") vscode-icon-file-alist)
   (push '("mkv" . "video") vscode-icon-file-alist)
   (push '("epub" . "storybook") vscode-icon-file-alist))
-#+end_src
-
-** A colorful dired (diredfl.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-A_colorful_dired_(diredfl.el)-ae4b5038
-:END:
-
-Additional syntax highlighting in dired buffer.
-
-#+begin_src emacs-lisp
-(straight-use-package 'diredfl)
-
-(add-hook 'dired-mode-hook 'diredfl-mode)
-(once '(:packages diredfl)
-  (set-face-attribute 'diredfl-dir-name nil :bold t))
 #+end_src
 
 ** Interactive query replace (anzu.el)
@@ -3304,51 +3401,6 @@ are slightly simplified.
 :PROPERTIES:
 :CUSTOM_ID: Utils-8191d3b4
 :END:
-
-** Buffer list (ibuffer.el)
-:PROPERTIES:
-:CUSTOM_ID: Utils-Buffer_list_(ibuffer.el)-593ca20f
-:END:
-
-=ibuffer.el= ships with Emacs and it provides a drop-in replacement for
-=list-buffers=.  Compared to its counterpart, it allows for granular
-control over the buffer list and is more powerful overall.
-
-#+begin_src emacs-lisp
-(straight-use-package '(ibuffer :type built-in))
-
-(advice-add 'list-buffers :override 'ibuffer)
-(once '(:packages ibuffer)
-  (add-hook 'ibuffer-mode-hook
-            (lambda () (hl-line-mode) (ibuffer-update 0)))
-  (setq ibuffer-expert t)
-  (setq ibuffer-display-summary nil)
-  (setq ibuffer-use-other-window nil)
-  (setq ibuffer-show-empty-filter-groups nil)
-  (setq ibuffer-movement-cycle nil)
-  (setq ibuffer-default-sorting-mode 'filename/process)
-  (setq ibuffer-use-header-line t)
-  (setq ibuffer-default-shrink-to-minimum-size nil)
-  ;; (setq ibuffer-never-show-predicates '("^ \\*.*"))
-  (setq ibuffer-formats
-        '((mark modified read-only locked " "
-                (name 30 30 :left :elide)
-                " "
-                (size 9 -1 :right)
-                " "
-                (mode 16 16 :left :elide)
-                " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups nil)
-  (setq ibuffer-old-time 48)
-  (bind-keys :map ibuffer-mode-map
-             ("M-o" . nil)
-             ("* f" . ibuffer-mark-by-file-name-regexp)
-             ("* g" . ibuffer-mark-by-content-regexp)
-             ("* n" . ibuffer-mark-by-name-regexp)
-             ("s n" . ibuffer-do-sort-by-alphabetic)
-             ("/ g" . ibuffer-filter-by-content)))
-#+end_src
 
 ** Keyboard version right-click (embark.el)
 :PROPERTIES:
@@ -3963,6 +4015,7 @@ regexp .etc).
   (add-hook (intern (format "%s-mode-hook" lang)) 'lsp-deferred))
 
 (once '(:packages lsp-mode)
+  (setq lsp-enable-imenu nil)
   (setq lsp-eldoc-hook nil)
   (setq lsp-enable-snippet nil)
   (setq lsp-signature-auto-activate t)

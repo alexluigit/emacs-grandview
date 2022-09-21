@@ -8,6 +8,12 @@
   "Path for grandview main config .org file."
   :group 'grandview :type 'string)
 
+(defvar grandview-font-size 140)
+(defvar grandview-default-font "Victor Mono")
+(defvar grandview-fixed-font "Sarasa Mono SC")
+(defvar grandview-variable-font "Sarasa Mono SC")
+(defvar grandview-CJK-font "LXGW WenKai Mono")
+
 (defcustom grandview-gc-cons-threshold 134217728 ; 128mb
   "The default value to use for `gc-cons-threshold'.
 If you experience freezing, decrease this.  If you experience
@@ -157,7 +163,8 @@ Optional LABEL and STRING are echoed out."
   (let* ((md5-file (concat grandview-cache-dir "init.md5"))
          (old-md5 (when (file-exists-p md5-file) (grandview--readfile md5-file)))
          (new-md5 (secure-hash 'md5 (grandview--readfile grandview-org-file)))
-         (org-confirm-babel-evaluate nil))
+         org-confirm-babel-evaluate find-file-hook
+         kill-buffer-hook write-file-functions)
     (when (or force (not (string= old-md5 new-md5)))
       (when (file-exists-p (grandview--init-path 'main))
         (delete-file (grandview--init-path 'main)))
@@ -222,6 +229,7 @@ When FORCE, ensure the tangle process and autoloads generation."
 
 (let ((bootstrap (locate-user-emacs-file "straight/repos/straight.el/bootstrap.el"))
       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
+      (debug (or (getenv-internal "DEBUG") init-file-debug))
       (file-name-handler-alist nil))
   ;; Init package manager `straight.el'
   (setq straight-use-package-by-default t
@@ -237,18 +245,20 @@ When FORCE, ensure the tangle process and autoloads generation."
   ;; Use inbuilt version of transient
   (straight-use-package `(transient ,@(when (> emacs-major-version 27) '(:type built-in))))
   ;; Load user config
-  (ignore-errors (load (grandview--init-path 'user) nil t))
+  (when (file-exists-p (grandview--init-path 'user))
+    (load (grandview--init-path 'user) (not debug) t))
   ;; Tangle and load Grandview
   ;; "Initiate spin!" -- Joseph Cooper
   (unless (file-exists-p grandview-cache-dir)
     (make-directory (grandview--init-path 'au-dir) t)
     (grandview-tangle t))
-  (load (grandview--init-path 'au-el) nil t)
-  (load (grandview--init-path 'main) nil t)
+  (load (grandview--init-path 'au-el) (not debug) t)
+  (load (grandview--init-path 'main) (not debug) t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   ;; Show profiler when debugging
-  (when (or (getenv-internal "DEBUG") init-file-debug) (grandview-profiler))
+  (when debug (grandview-profiler))
   ;; Setup garbage collection
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))
   (setq gc-cons-threshold grandview-gc-cons-threshold))
+(put 'dired-find-alternate-file 'disabled nil)
