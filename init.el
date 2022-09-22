@@ -261,4 +261,3 @@ When FORCE, ensure the tangle process and autoloads generation."
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))
   (setq gc-cons-threshold grandview-gc-cons-threshold))
-(put 'dired-find-alternate-file 'disabled nil)

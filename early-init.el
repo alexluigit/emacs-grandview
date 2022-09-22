@@ -15,7 +15,6 @@
  ad-redefinition-action 'accept ; Disable warnings from legacy advice system
  inhibit-startup-message t ; Reduce noise at startup
  inhibit-startup-echo-area-message user-login-name
- inhibit-startup-screen t
  inhibit-default-init t
  initial-scratch-message nil
  auto-mode-case-fold nil ; Use case-sensitive `auto-mode-alist' for performance

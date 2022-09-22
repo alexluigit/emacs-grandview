@@ -100,19 +100,18 @@ cp -r ~/.emacs.d ~/.emacs.d.bak
 
 Here are the dependencies of this project.
 
-|---------------------+-----------------------------+----------|
-| Package             | Description                 | Required |
-|---------------------+-----------------------------+----------|
-| =fd=                | A modern =find=             |          |
-| =rg=                | A modern =grep=             |          |
+|-------------------+-----------------------------+----------|
+| Package           | Description                 | Required |
+|-------------------+-----------------------------+----------|
+| =fd=                | A modern =find=               |          |
+| =rg=                | A modern =grep=               |          |
 | =git=               | Version control             |          |
-| =exa=               | A modern =ls=               | optional |
 | =noto-fonts-emoji=  | Font for emojis             | optional |
 | =words=             | English words completion    | optional |
 | =font-victor-mono=  | Default fixed pitch font    | optional |
 | =ttf-sarasa-gothic= | Default variable pitch font | optional |
 | =xdotool=           | Automation tool for X11     | optional |
-|---------------------+-----------------------------+----------|
+|-------------------+-----------------------------+----------|
 
 *** Tangling
 :PROPERTIES:
@@ -1920,6 +1919,7 @@ users deserve a file manager better than those popular ones on terminal such as
              ("M-t" . dirvish-layout-toggle)
              ("M-s" . dirvish-setup-menu)
              ("M-j" . dirvish-fd-jump)
+             ([remap dired-create-empty-file] . dirvish-create-empty-file)
              ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
              ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
              ([remap dired-do-copy] . dirvish-yank-menu)
@@ -3162,7 +3162,7 @@ The SEGMENTs are defined by `+mode-line-define'."
               (minibuffer-selected-window)
             win))))
 
-(add-hook 'pre-redisplay-functions #'+mode-line-record-selected-window-h)
+(add-hook 'window-selection-change-functions #'+mode-line-record-selected-window-h)
 
 (defun +mode-line--suffix (ml-func)
   "If ML-FUNC return a non-empty string, append a space to it."
