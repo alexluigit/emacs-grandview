@@ -3043,6 +3043,17 @@ Summary of what these do:
 :CUSTOM_ID: User_interface_extras-9ff97526
 :END:
 
+** Makes windows without focus less prominent (auto-dim-other-buffers.el)
+:PROPERTIES:
+:CUSTOM_ID: User_interface-Make_(auto-dim-other-buffers.el)-73a27abb
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package 'auto-dim-other-buffers)
+
+(auto-dim-other-buffers-mode)
+#+end_src
+
 ** COMMENT Tabs as workspaces (tab-bar.el)
 :PROPERTIES:
 :CUSTOM_ID: *User_interface*-Tabs_as_workspaces_(tab-bar.el)-a66cb3df
@@ -3381,7 +3392,7 @@ are slightly simplified.
 #+begin_src emacs-lisp
 (straight-use-package 'which-key)
 
-(once '(:before pre-command-hook) (which-key-mode))
+(once '(:hooks pre-command-hook) (which-key-mode))
 #+end_src
 
 ** Hunk indicator (git-gutter.el)
