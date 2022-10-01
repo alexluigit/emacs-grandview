@@ -152,8 +152,11 @@ Optional LABEL and STRING are echoed out."
                      (save-excursion
                        (org-up-heading-safe)
                        (let ((h (org-get-heading)))
-                         (substring h (1+ (string-match "(\\(.*\\))" h)) (match-end 1)))))
-                    (tangle-path (concat ":tangle \"" (grandview--init-path 'au-dir) "+" package-name "\"")))
+                         (substring h (1+ (string-match "(\\(.*\\))" h))
+                                    (match-end 1)))))
+                    (tangle-path (concat ":tangle \""
+                                         (grandview--init-path 'au-dir)
+                                         "+" package-name "\"")))
                (org-entry-put nil "header-args:emacs-lisp" tangle-path)))))))
     (save-buffer)
     (kill-this-buffer)))
@@ -220,20 +223,19 @@ When FORCE, ensure the tangle process and autoloads generation."
 
 (defun grandview-profiler ()
   "Profile init time."
-  (let ((package-count 0)
-        (time (emacs-init-time "%.3f"))
+  (let ((packages 0) (time (emacs-init-time "%.3f"))
         (docstr "%d packages loaded in %ss"))
     (when (boundp 'straight--profile-cache)
-      (setq package-count (+ (hash-table-size straight--profile-cache) package-count)))
-    (run-with-timer 1 nil 'grandview--log "GrandView Profiler" (format docstr package-count time))))
+      (setq packages (+ (hash-table-size straight--profile-cache) packages)))
+    (run-with-timer 1 nil 'grandview--log "GrandView Profiler"
+                    (format docstr packages time))))
 
 (let ((bootstrap (locate-user-emacs-file "straight/repos/straight.el/bootstrap.el"))
       (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
       (debug (or (getenv-internal "DEBUG") init-file-debug))
       (file-name-handler-alist nil))
   ;; Init package manager `straight.el'
-  (setq straight-use-package-by-default t
-        straight-vc-git-default-clone-depth 1
+  (setq straight-vc-git-default-clone-depth 1
         straight-check-for-modifications '(check-on-save find-when-checking)
         straight-repository-branch "develop")
   (unless (file-exists-p bootstrap)

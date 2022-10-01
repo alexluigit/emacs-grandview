@@ -314,7 +314,7 @@ Call this repeatedly will cycle all positions in `mark-ring'."
   "Mark inner line and move cursor to bol."
   (interactive)
   (save-window-excursion
-    (end-of-visual-line)
+    (move-end-of-line 1)
     (set-mark-command nil)
     (back-to-indentation)))
 
@@ -589,24 +589,41 @@ direction (use =C-l= to reposition it).
 :CUSTOM_ID: User_interface_extras-Theme-35a328fb
 :END:
 
-Recommended themes:
+Recommended themes (using their package names):
 
-- =modus-vivendi= is a built-in theme in emacs (version >= 28) created by
-Protesilaos Stavrou.
-
-- =ef-themes= is yet another theme suite developed by Prot.
-
+- =modus-vivendi=
+- =ef-themes=
 - =doom-themes=
+- =apropospriate-theme=
+- =lambda-themes=
+- =color-theme-sanityinc-tomorrow=
+- =mindre-theme=
+
+Leave the theme you wanted uncommented.
+
+#+begin_src emacs-lisp
+(straight-use-package `(modus-themes ,@(when (> emacs-major-version 28) '(:type built-in))))
+(straight-use-package 'ef-themes)
+(straight-use-package '(lambda-themes :host github :repo "lambda-emacs/lambda-themes"))
+(straight-use-package 'apropospriate-theme)
+(straight-use-package 'doom-themes)
+(straight-use-package 'color-theme-sanityinc-tomorrow)
+(straight-use-package 'mindre-theme)
+(once '(:hooks after-init-hook)
+  (setq modus-themes-links '(no-underline))
+  (setq ef-themes-to-toggle '(ef-summer ef-winter)
+        ef-themes-mixed-fonts t
+        ef-themes-variable-pitch-ui t))
+#+end_src
 
 *** COMMENT Modus-themes
 :PROPERTIES:
 :CUSTOM_ID: *USER_INTERFACE*-Theme-Modus-a55199f9
 :END:
 
-#+begin_src emacs-lisp
-(straight-use-package `(modus-themes ,@(when (> emacs-major-version 28) '(:type built-in))))
+A built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
 
-(setq modus-themes-links '(no-underline))
+#+begin_src emacs-lisp
 (once '(:hooks after-init-hook) (load-theme 'modus-vivendi t))
 #+end_src
 
@@ -615,14 +632,11 @@ Protesilaos Stavrou.
 :CUSTOM_ID: *USER_INTERFACE*-Theme-Ef-themes-669c8f67
 :END:
 
+Yet another theme suite developed by Prot.
+
 #+begin_src emacs-lisp
-(straight-use-package 'ef-themes)
-(require 'ef-themes)
-(setq ef-themes-to-toggle '(ef-summer ef-winter)
-      ef-themes-mixed-fonts t
-      ef-themes-variable-pitch-ui t)
-(mapc #'disable-theme custom-enabled-themes)
-(ef-themes-select 'ef-night)
+(once '(:hooks after-init-hook)
+  (load-theme 'ef-night t))
 #+end_src
 
 *** COMMENT Lambda-themes
@@ -631,9 +645,7 @@ Protesilaos Stavrou.
 :END:
 
 #+begin_src emacs-lisp
-(straight-use-package '(lambda-themes :host github :repo "lambda-emacs/lambda-themes"))
 (once '(:hooks after-init-hook)
-  (require 'lambda-themes)
   (load-theme 'lambda-dark t))
 #+end_src
 
@@ -643,9 +655,7 @@ Protesilaos Stavrou.
 :END:
 
 #+begin_src emacs-lisp
-(straight-use-package 'apropospriate-theme)
 (once '(:hooks after-init-hook)
-  (require 'apropospriate-theme)
   (load-theme 'apropospriate-dark t))
 #+end_src
 
@@ -658,10 +668,29 @@ Protesilaos Stavrou.
 popular packages.
 
 #+begin_src emacs-lisp
-(straight-use-package 'doom-themes)
 (once '(:hooks after-init-hook)
   (load-theme 'doom-one t))
 #+end_src
+
+*** COMMENT Color-theme-sanityinc-tomorrow
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Color-theme-sanityinc-tomorrow-46682526
+:END:
+
+#+begin_src emacs-lisp
+(once '(:hooks after-init-hook)
+  (load-theme 'sanityinc-tomorrow-night t))
+#+end_src
+
+*** COMMENT Mindre-theme
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Theme-Doom-themes-965cdc4f
+:END:
+#+begin_src emacs-lisp
+(once '(:hooks after-init-hook)
+  (load-theme 'mindre t))
+#+end_src
+
 
 ** Fonts (fonts.el)
 :PROPERTIES:
@@ -1069,12 +1098,10 @@ Here I just modified face for current candidate and make height of vertico
 window as a constant value.
 
 #+begin_src emacs-lisp
-  (straight-use-package 'vertico)
+(straight-use-package 'vertico)
 
-  (once '(:hooks pre-command-hook)
-  (vertico-mode 1)
-  (setq resize-mini-windows 'grow-only)
-  (custom-theme-set-faces 'user '(vertico-current ((t (:inherit lazy-highlight))))))
+(once '(:hooks pre-command-hook)
+  (vertico-mode 1))
 #+end_src
 
 ** Match candidates made easy (orderless.el)
@@ -1185,18 +1212,22 @@ Selectrum, Vertico and Embark.
   (setq consult-narrow-key ">")
   (bind-keys :map grandview-mct-map
              ("/" . consult-line-multi)
-             ("b" . consult-bookmark)
+             ("t" . consult-mark)
+             ("T" . consult-global-mark)
+             ("a" . consult-apropos)
              ("e" . consult-compile-error)
              ("r" . consult-ripgrep)
-             ("k" . consult-keep-lines)
+             ("k" . consult-kmacro)
+             ("K" . consult-keep-lines)
              ("i" . consult-imenu-multi)
              ("n" . consult-focus-lines) ; narrow
              ("o" . consult-outline)
              ("R" . consult-register)
              ("y" . consult-yank-from-kill-ring)
-             ("m" . consult-minor-mode-menu)
+             ("m" . consult-bookmark)
              ("c" . consult-complex-command)
-             ("C" . consult-mode-command)))
+             ("C" . consult-mode-command)
+             ("M" . consult-minor-mode-menu)))
 
 (once '(:packages meow)
   (bind-key "/" 'consult-line meow-normal-state-keymap))
@@ -1805,8 +1836,8 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
   (bind-keys :map dired-mode-map
              ("/" . dired-goto-file)
+             ("," . dired-create-directory)
              ("." . dired-create-empty-file)
-             ("+" . dired-create-directory)
              ("I" . dired-insert-subdir)
              ("K" . dired-kill-subdir)
              ("O" . dired-find-file-other-window)
@@ -1882,7 +1913,6 @@ users deserve a file manager better than those popular ones on terminal such as
   (dirvish-override-dired-mode)
   (dirvish-peek-mode)
   (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
-  (setq dirvish-reuse-session t)
   (setq dirvish-attributes
         '(vc-state file-size git-msg subtree-state all-the-icons collapse file-time))
   (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
@@ -1919,7 +1949,6 @@ users deserve a file manager better than those popular ones on terminal such as
              ("M-t" . dirvish-layout-toggle)
              ("M-s" . dirvish-setup-menu)
              ("M-j" . dirvish-fd-jump)
-             ([remap dired-create-empty-file] . dirvish-create-empty-file)
              ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
              ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
              ([remap dired-do-copy] . dirvish-yank-menu)
