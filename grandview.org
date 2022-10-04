@@ -256,9 +256,13 @@ Here are the available flags of this command.
 =simple.el= consists of a grab-bag of basic Emacs commands not specifically
 related to some major mode or to file-handling.
 
+- Unbind =SPC= in /*messages*/ buffer since we use it as the leader key
+- Recenter the screen and highlight the keywords after we call ~next/previous-error~
+
 #+begin_src emacs-lisp
 (once '(:packages simple)
   (bind-key "SPC" nil messages-buffer-mode-map)
+  (add-hook 'next-error-hook #'recenter)
   (setq next-error-message-highlight t)) ; added in Emacs 28.1
 #+end_src
 
@@ -405,6 +409,12 @@ If you want to know more about meow or modal editing in general, check out [[htt
 :END:
 
 #+begin_src emacs-lisp
+;;;###autoload
+(defadvice! meow-search-ad (&rest _)
+  "Do not highlight number positions."
+  :after #'meow-search
+  (recenter))
+
 ;;;###autoload
 (defadvice! meow-query-replace-ad (&rest _)
   "Call `meow-query-replace' and auto fill prompt with region text."
@@ -1591,6 +1601,7 @@ your terminal emulator's settings.
            ("C-o" . pop-global-mark)
            ("s-n" . scroll-up-command)
            ("s-p" . scroll-down-command)
+           ("M-o" . other-window)
            ("M-n" . forward-paragraph)
            ("M-p" . backward-paragraph)
            :map grandview-win/tabs-map
@@ -1927,7 +1938,8 @@ users deserve a file manager better than those popular ones on terminal such as
            ("p" "~/Code/"                     "Code")
            ("n" "~/Downloads/"                "Downloads")
            ("w" "~/Pictures/wallpaper/"       "Wallpaper")
-           ("m" "/mnt/"                       "Drives")
+           ("m" "/mnt/"                       "Mounted Drives")
+           ("s" "/mnt/HDD/Share/"             "Shared files")
            ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
            ("t" "~/.local/share/Trash/files/" "Trash")))
   (bind-keys :map 'dirvish-mode-map
@@ -1958,6 +1970,7 @@ users deserve a file manager better than those popular ones on terminal such as
              ("e" . dirvish)
              ("f" . dirvish-fd)
              ("n" . dirvish-side)
+             ("o" . dirvish-quick-access)
              ("b" . dirvish-fd-jump)))
 #+end_src
 
@@ -3305,14 +3318,13 @@ need to add =--with-xinput2= in build flags to enable this feature.
 Another great package from Prot!
 
 #+begin_src emacs-lisp
-(straight-use-package 'pulsar)
+  (straight-use-package 'pulsar)
 
-(pulsar-global-mode)
-(once '(:packages pulsar)
-  (push 'ace-select-window pulsar-pulse-functions)
-  (push '+meow-save pulsar-pulse-functions)
-  (push 'previous-window-any-frame pulsar-pulse-functions)
-  (push 'next-window-any-frame pulsar-pulse-functions))
+  (pulsar-global-mode)
+  (once '(:packages pulsar)
+    (appendq! pulsar-pulse-functions
+              (list 'ace-select-window 'previous-window-any-frame
+                    'next-window-any-frame '+meow-save)))
 #+end_src
 
 ** VSCode style icons (vscode-icon.el)
@@ -3909,7 +3921,7 @@ regexp .etc).
       (set-text-properties 0 (length clip) nil clip)
       (when-let* ((is-url (string-prefix-p "http" clip))
                   (json (shell-command-to-string
-                         (concat "murl -P 1088 json '" clip "'")))
+                         (concat "murl -P 10801 json '" clip "'")))
                   (valid (string-prefix-p "{" json))
                   (obj (json-read-from-string json))
                   (playlist (murl--playlist)))
@@ -3924,7 +3936,7 @@ regexp .etc).
          (cands (+minibuffer-append-metadata annotation cands-raw))
          (title (completing-read "murls: " cands))
          (sub (murl--get-attr title 'sub)))
-    (call-process "murl" nil 0 nil "-r" "-f" "-P" "1088" "-s" sub
+    (call-process "murl" nil 0 nil "-r" "-f" "-P" "10801" "-s" sub
                   (murl--get-attr title 'url))))
 #+end_src
 
@@ -4112,6 +4124,24 @@ regexp .etc).
          (py-ver "python3.9")
          (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
     (setq lsp-pyright-extra-paths (vector extra-path))))
+#+end_src
+
+** COMMENT Fastest LSP client (lsp-bridge.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Fastest_LSP_client_(lsp-bridge.el)-b41ad894
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(lsp-bridge :host github :repo "manateelazycat/lsp-bridge"
+              :files (:defaults "acm/*.el" "acm/*.py" "*.py")
+              :post-build ((make-symbolic-link
+                            (expand-file-name "acm/icons" default-directory)
+                            (expand-file-name "straight/build/lsp-bridge/"
+                                              straight-base-dir)))))
+
+(once '(:hooks find-file-hook)
+  (global-lsp-bridge-mode))
 #+end_src
 
 ** Virturl environment (conda.el)
