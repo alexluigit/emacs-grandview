@@ -745,7 +745,7 @@ A list of my favorite CJK fonts.
            if (member font font-families) do
            (custom-theme-set-faces
             'user `(,name ((t (:font ,fspec :height ,grandview-font-size)))))
-           else do (warn "Font `%s' is not available" font)
+           else do (message "Font `%s' is not available" font)
            finally
            (progn
              (custom-theme-set-faces
@@ -756,7 +756,7 @@ A list of my favorite CJK fonts.
              (if (member grandview-CJK-font font-families)
                  (dolist (charset '(kana han cjk-misc bopomofo))
                    (set-fontset-font t charset (font-spec :family grandview-CJK-font)))
-               (warn "Font `%s' is not available" grandview-CJK-font))
+               (message "Font `%s' is not available" grandview-CJK-font))
              (unless (> emacs-major-version 27)
                (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji"))))))
 
@@ -3586,8 +3586,8 @@ Index based window motions.
 (once '(:packages vterm)
   (+vterm-mux-mode)
   (setq vterm-max-scrollback 5000)
-  (set-face-attribute 'vterm-color-white nil :foreground "#cccccc")
-  (set-face-attribute 'vterm-color-black nil :foreground "#111111")
+  (add-hook 'vterm-copy-mode-hook
+            (lambda () (if vterm-copy-mode (meow-normal-mode) (meow-insert-mode))))
   (bind-keys :map vterm-mode-map
              ("M-`" . +vterm-toggle)
              ("M--" . +vterm-new)
@@ -3600,12 +3600,13 @@ Index based window motions.
              ("s-n" . vterm-next-prompt)
              ("s-p" . vterm-previous-prompt)
              ("S-SPC" . nil)
-             ("S-<escape>" .
-              (lambda () (interactive) (meow-normal-mode) (meow--update-cursor)))
+             ("S-<escape>" . vterm-copy-mode)
              ("<C-i>" . vterm-send-C-i)
-             ("C-u" . vterm-send-C-u)
+             ("C-u" . vterm-send-key)
              ("C-<delete>" . vterm-send-C-delete)
-             ("C-<return>" . vterm-send-F5)))
+             ("C-<return>" . vterm-send-F5)
+             :map vterm-copy-mode-map
+             ("S-<escape>" . vterm-copy-mode-done)))
 #+end_src
 
 *** Autoload
