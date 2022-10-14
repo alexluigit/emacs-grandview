@@ -1919,6 +1919,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (straight-use-package '(dirvish :type git :repo "alexluigit/dirvish" :depth full))
 
 (dirvish-override-dired-mode)
+(dirvish-side-follow-mode)
 (dirvish-peek-mode)
 (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
 (setq dirvish-attributes
