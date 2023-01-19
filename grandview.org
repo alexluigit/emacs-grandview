@@ -701,7 +701,6 @@ popular packages.
   (load-theme 'mindre t))
 #+end_src
 
-
 ** Fonts (fonts.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-073ed5c4
@@ -1586,6 +1585,7 @@ your terminal emulator's settings.
   (bind-keys ("<f6>" . +simple-pop-local-mark-ring)
              :map minibuffer-local-map
              ("<f6>" . forward-char)
+             ("<mouse-8>" . exit-minibuffer)
              :map meow-insert-state-keymap
              ("<f6>" . meow-right)))
 #+end_src
@@ -1945,6 +1945,7 @@ users deserve a file manager better than those popular ones on terminal such as
              ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
              ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
              ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
+             ("<mouse-8>" . dired-do-shell-command)             ; side button for shell command execution
              ("SPC" . consult-buffer)
              ("M-n" . dirvish-history-go-forward)
              ("M-p" . dirvish-history-go-backward)
