@@ -1435,7 +1435,7 @@ This section contains all core keybindings of *Grandview*.
 #+begin_src emacs-lisp
 (once '(:packages meow)
   (bind-keys :map meow-insert-state-keymap
-             ("C-u" . meow-kill-whole-line)
+             ("M-<backspace>" . meow-kill-whole-line)
              ("<C-i>" . meow-right)
              ("C-o" . meow-left)))
 #+end_src
@@ -1605,7 +1605,7 @@ your terminal emulator's settings.
            :map tab-prefix-map
            ("w"   . other-window)
            :map minibuffer-local-map
-           ("C-u" . meow-kill-whole-line)
+           ("M-<backspace>" . meow-kill-whole-line)
            ("<C-i>" . forward-char)
            ("C-o" . backward-char)
            :map image-map
@@ -3603,9 +3603,6 @@ Index based window motions.
              ("s-p" . vterm-previous-prompt)
              ("S-SPC" . nil)
              ("S-<escape>" . vterm-copy-mode)
-             ("<C-i>" . vterm-send-C-i)
-             ("C-u" . vterm-send-key)
-             ("C-<delete>" . vterm-send-C-delete)
              ("C-<return>" . vterm-send-F5)
              :map vterm-copy-mode-map
              ("S-<escape>" . vterm-copy-mode-done)))
@@ -3624,11 +3621,6 @@ Index based window motions.
   '((always . ((window-height . 0.2) (side . bottom))))
   "doc")
 
-(defcustom +vterm-kill-whole-line-cmd
-  'vterm-send-C-u
-  "Command for kill whole line in vterm buffer."
-  :type 'symbol :group 'vterm)
-
 (defvar +vterm-buffers nil
   "The list of non-dedicated vterm buffers.")
 
@@ -3646,7 +3638,14 @@ Index based window motions.
 (defadvice! +vterm-kill-whole-line-a (fn &rest args)
   :around #'meow-kill-whole-line
   (if (derived-mode-p 'vterm-mode)
-      (funcall +vterm-kill-whole-line-cmd)
+      (vterm-send-key "<f4>" nil nil nil)
+    (apply fn args)))
+
+;;;###autoload
+(defadvice! +vterm-backword-char-a (fn &rest args)
+  :around #'meow-right
+  (if (derived-mode-p 'vterm-mode)
+      (vterm-send-key "<f6>" nil nil nil)
     (apply fn args)))
 
 (defun +vterm--disable-side-window (fn &rest args)
@@ -3654,16 +3653,6 @@ Index based window motions.
   (unless (and (region-active-p)
                (derived-mode-p 'vterm-mode))
     (apply fn args)))
-
-;;;###autoload
-(defun vterm-send-C-delete ()
-  (interactive)
-  (vterm-send-key "<delete>" nil nil 0))
-
-;;;###autoload
-(defun vterm-send-C-semicolon ()
-  (interactive)
-  (vterm-send-key ";" nil nil 0))
 
 ;;;###autoload
 (defun vterm-send-M-return ()
