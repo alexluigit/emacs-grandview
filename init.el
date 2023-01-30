@@ -1,6 +1,6 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
-(defcustom grandview-cache-dir (concat user-emacs-directory "grandview/")
+(defcustom grandview-cache-dir "/tmp/grandview/"
   "Cache directory for grandview."
   :group 'grandview :type 'string)
 
@@ -257,6 +257,12 @@ When FORCE, ensure the tangle process and autoloads generation."
   (load (grandview--init-path 'au-el) (not debug) t)
   (load (grandview--init-path 'main) (not debug) t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
+  ;; Setup PATH on macOS
+  (when (memq window-system '(mac ns))
+    (straight-use-package 'exec-path-from-shell)
+    (exec-path-from-shell-initialize)
+    (exec-path-from-shell-copy-env "DOTPATH")
+    (exec-path-from-shell-copy-env "XDG_DATA_HOME"))
   ;; Show profiler when debugging
   (when debug (grandview-profiler))
   ;; Setup garbage collection

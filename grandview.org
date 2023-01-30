@@ -131,7 +131,7 @@ mv ~/emacs-grandview ~/.config/emacs/
 # mv ~/emacs-grandview ~/.emacs.d
 
 ## let it tangles itself
-emacs --daemon
+emacs --bg-daemon
 ## hooray, enjoy the Grandview
 emacsclient -cn
 ## NOTE: You should be able to start/restart Emacs by 'rem' bash
@@ -167,6 +167,8 @@ The following section provided a CLI for restarting *Grandview*.
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
 
 ELCs=false REPOs=false RESET=false DEBUG="" INIT_DIR=""
+BIN="emacs"
+[[ $(uname) == "Darwin" ]] && BIN="/Applications/Emacs.app/Contents/MacOS/Emacs"
 
 [[ "$GRANDVIEW_HOME" ]] && INIT_DIR="--init-directory $GRANDVIEW_HOME"
 
@@ -180,9 +182,9 @@ while getopts "pPrd" opt; do
 done
 shift $((OPTIND -1))
 
-emacs_cmd="emacs --daemon $DEBUG $INIT_DIR"
+emacs_cmd="$BIN --bg-daemon $DEBUG $INIT_DIR"
 notify-send "Restarting emacs..." 2>/dev/null
-emacs_pid=$(pidof emacs)
+emacs_pid=$(ps ax | grep '[Ee]macs --bg-daemon' | awk '{print $1}')
 timeout=300
 counter=0
 emacsclient --eval '(kill-emacs)' 2>/dev/null &
@@ -196,7 +198,7 @@ $ELCs && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
 $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 _is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd \
     || eval $emacs_cmd
-command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0
+command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0 2>&1
 emacsclient -cne '(delete-file "~/nohup.out")'
 #+end_src
 
@@ -268,7 +270,7 @@ related to some major mode or to file-handling.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+simple.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+simple.el"
 :CUSTOM_ID: *Text_editing*-Basic_editing_(simple.el)-Autoload-40b8d1b5
 :END:
 
@@ -404,7 +406,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+meow.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+meow.el"
 :CUSTOM_ID: *Text_editing*-Modal_editing_(meow.el)-Autoload-862833de
 :END:
 
@@ -728,7 +730,7 @@ A list of my favorite CJK fonts.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+fonts.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+fonts.el"
 :CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-Autoload-647703e6
 :END:
 
@@ -861,7 +863,7 @@ rendering/line scan work for Emacs in non-focused windows.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+window.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+window.el"
 :CUSTOM_ID: *User_interface*-Window_placement_(window.el)-Autoload-544e5f03
 :END:
 
@@ -916,7 +918,7 @@ Adjust frame parameters such as opacity dynamically.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+frame.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+frame.el"
 :CUSTOM_ID: *User_interface*-Frame_(frame.el)-Autoload-e5168c36
 :END:
 
@@ -1060,7 +1062,7 @@ What my minibuffer config does:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+minibuffer.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+minibuffer.el"
 :CUSTOM_ID: *Completion_framework*-Minibuffer_and_completion_functions_(minibuffer.el)-Autoload-838b8348
 :END:
 
@@ -1152,7 +1154,7 @@ rather than all of the =dired-*= noise.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+orderless.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+orderless.el"
 :CUSTOM_ID: *Completion_framework*-Match_candidates_made_easy_(orderless.el)-Autoload-b4e5dd4a
 :END:
 
@@ -1277,10 +1279,8 @@ all-the-icons integration for corfu.
 
 #+begin_src emacs-lisp
 (straight-use-package 'corfu)
-(straight-use-package 'corfu-doc)
 
 (once '(:before self-insert-command)
-  (add-hook 'corfu-mode-hook 'corfu-doc-mode)
   (setq! corfu-auto t)
   (setq! corfu-auto-delay 0.05)
   (setq! corfu-auto-prefix 2)
@@ -1301,7 +1301,7 @@ all-the-icons integration for corfu.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: *COMPLETION_FRAMEWORK*-Completion_overlay_region_function_(corfu.el)-Autoload-0cd965f2
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+corfu.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+corfu.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1590,6 +1590,15 @@ your terminal emulator's settings.
              ("<f6>" . meow-right)))
 #+end_src
 
+macOS specific settings.
+
+#+begin_src emacs-lisp
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'super)
+#+end_src
+
+A bunch of global bindings.
+
 #+begin_src emacs-lisp
 (bind-keys :map global-map
            ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
@@ -1662,7 +1671,7 @@ These keybindings are available when the current major mode doesn't define that 
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+files.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+files.el"
 :CUSTOM_ID: File_management-Find_files_(files.el)-Autoload-d23acbab
 :END:
 
@@ -1826,6 +1835,7 @@ inside of an Emacs buffer.  It is simply superb!
             (lambda (_theme)
               (set-face-attribute 'diredfl-dir-name nil :bold t))))
 
+(when (eq system-type 'darwin) (setq insert-directory-program "gls"))
 (setq dired-listing-switches
       "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
 
@@ -2000,7 +2010,7 @@ users deserve a file manager better than those popular ones on terminal such as
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+project.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+project.el"
 :CUSTOM_ID: File_management-Project_management_(project.el)-Autoload-49a0fbb3
 :END:
 
@@ -2190,7 +2200,7 @@ look like which can be described briefly as follows:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+org.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+org.el"
 :CUSTOM_ID: Org_mode-Org_(org.el)-Autoload-e4ba486e
 :END:
 
@@ -2248,7 +2258,7 @@ look like which can be described briefly as follows:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+org-id.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+org-id.el"
 :CUSTOM_ID: Org_mode-Identifiers_for_org_entries_(org-id.el)-Autoload-2963b014
 :END:
 
@@ -2439,7 +2449,7 @@ generated by Org mode (or Markdown mode) is left untouched.
   (setq org-habit-graph-column 60))
 #+end_src
 
-** Notebook (org-roam.el)
+** COMMENT Notebook (org-roam.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Wiki_(org-roam.el)-acf43c6a
 :END:
@@ -2495,7 +2505,7 @@ generated by Org mode (or Markdown mode) is left untouched.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+org-tree-slide.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+org-tree-slide.el"
 :CUSTOM_ID: Org_mode-Slide_(org-tree-slide.el)-Autoload-7ff9d878
 :END:
 
@@ -2672,7 +2682,7 @@ you change your mind).
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: Text_editing-Interactive_diff,_patch,_or_merge_conflict_(ediff.el)-Autoload-d752df39
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+ediff.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+ediff.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2723,7 +2733,7 @@ sure this is a good approach."
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rime.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+rime.el"
 :CUSTOM_ID: Text_editing_extras-Input_method_(rime.el)-Autoload-8f669619
 :END:
 
@@ -2766,7 +2776,7 @@ sure this is a good approach."
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: Text_editing-Snippet_(tempel.el)-Autoload-3abbbd2b
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+tempel.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+tempel.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2999,7 +3009,7 @@ of characters.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+eletric.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+eletric.el"
 :CUSTOM_ID: Text_editing_extras-Pair_insertion_(eletric.el)-Autoload-1ff20547
 :END:
 
@@ -3156,7 +3166,7 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+tabspaces.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+tabspaces.el"
 :CUSTOM_ID: User_interface-Workspaces_(tabspaces.el)-Autoload-14379110
 :END:
 
@@ -3243,7 +3253,7 @@ in ~+mode-line-format~.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+mode-line.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+mode-line.el"
 :CUSTOM_ID: User_interface_extras-Modeline_(mode-line.el)-Autoload-750e010a
 :END:
 
@@ -3497,7 +3507,7 @@ are slightly simplified.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+writeroom-mode.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+writeroom-mode.el"
 :CUSTOM_ID: User_interface_extras-Distraction-free_writing_(writeroom-mode.el)-Autoload-a4284246
 :END:
 
@@ -3610,7 +3620,7 @@ Index based window motions.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+vterm.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+vterm.el"
 :CUSTOM_ID: Utils-Vterm_(vterm.el)-Autoload-45112bf1
 :END:
 
@@ -3638,7 +3648,7 @@ Index based window motions.
 (defadvice! +vterm-kill-whole-line-a (fn &rest args)
   :around #'meow-kill-whole-line
   (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f4>" nil nil nil)
+      (vterm-send-key "<f5>" nil nil nil)
     (apply fn args)))
 
 ;;;###autoload
@@ -3878,7 +3888,7 @@ Some additions I've added to rg transient:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: Utils-Ripgrep_(rg.el)-Autoload-c1d779af
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+rg.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+rg.el"
 :END:
 
 The purpose of wrapping =rg-define-toggle/search= is to avoid executing them
@@ -3966,7 +3976,7 @@ regexp .etc).
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+murl.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+murl.el"
 :CUSTOM_ID: Utils-Murl_(murl.el)-Autoload-4a8c3e5e
 :END:
 
@@ -4172,7 +4182,7 @@ regexp .etc).
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+lsp.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+lsp.el"
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-Autoload-7b67a356
 :END:
 
@@ -4233,7 +4243,7 @@ regexp .etc).
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+conda.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+conda.el"
 :CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-Autoload-075d685c
 :END:
 
@@ -4316,7 +4326,7 @@ optional minor mode which can apply this command automatically on save.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Formatter_(reformatter.el)-Autoload-a38e5186
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+reformatter.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+reformatter.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4352,7 +4362,7 @@ optional minor mode which can apply this command automatically on save.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Syntax_checker_(flymake.el)-Autoload-12553acc
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+flymake.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+flymake.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4391,7 +4401,7 @@ prompt for a major mode instead.  Simple yet super effective!
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/home/alex/.cache/emacs/grandview/autoloads/+scratch.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+scratch.el"
 :CUSTOM_ID: DevTools-Scratch_buffers_(scratch.el)-Autoload-44ca32c9
 :END:
 
