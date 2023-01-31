@@ -909,9 +909,15 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
 :CUSTOM_ID: *User_interface*-Frame_(frame.el)-0b197c36
 :END:
 
-Adjust frame parameters such as opacity dynamically.
+- Remove title bar on macOS
+- Enter fullscreen automatically on macOS
+- Adjust frame opacity dynamically
 
 #+begin_src emacs-lisp
+(when  (eq system-type 'darwin)
+  (add-to-list 'default-frame-alist '(undecorated . t))
+  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
+
 (when (> emacs-major-version 28)
   (add-hook 'window-configuration-change-hook #'+frame-opacity-auto))
 #+end_src
@@ -930,31 +936,33 @@ Adjust frame parameters such as opacity dynamically.
   "Cursor color for `+frame-cursor-dim-mode'."
   :group 'cursor :type 'string)
 
-(defcustom +frame-opacity-alpha-background 80
+(defcustom +frame-opacity (if (eq system-type 'gnu/linux) 80 90)
   "Default frame opacity."
   :group 'grandview
   :type 'integer)
 
+(defun +frame-opacity--adjust (opacity)
+  (pcase system-type
+    ('darwin (set-frame-parameter nil 'alpha `(,opacity ,opacity)))
+    (_ (set-frame-parameter nil 'alpha-background opacity))))
+
 ;;;###autoload
 (defun +frame-opacity-auto ()
   "Setup frame opacity according to current major-mode."
-  (set-frame-parameter nil 'alpha-background +frame-opacity-alpha-background))
+  (+frame-opacity--adjust +frame-opacity))
 
 ;;;###autoload
 (defun +frame-opacity-set (&optional percent)
   (interactive "P")
   (cond ((or (and percent (not current-prefix-arg))
              (numberp percent))
-         (setq +frame-opacity-alpha-background (* 10 percent))
-         (set-frame-parameter nil 'alpha-background +frame-opacity-alpha-background))
+         (setq +frame-opacity (* 10 percent))
+         (+frame-opacity--adjust +frame-opacity))
         ((equal current-prefix-arg '(4))
-         (set-frame-parameter nil 'alpha-background +frame-opacity-alpha-background))
-        (t
-         (let ((opa (frame-parameter nil 'alpha-background))
-               (low 60) (high 100))
-           (if (eq opa low)
-               (set-frame-parameter (selected-frame) 'alpha-background high)
-             (set-frame-parameter (selected-frame) 'alpha-background low))))))
+         (+frame-opacity--adjust +frame-opacity))
+        (t (let ((opa (frame-parameter nil 'alpha-background))
+                 (low 60) (high 100))
+             (+frame-opacity--adjust (if (eq opa low) high low))))))
 
 ;;;###autoload
 (define-minor-mode +frame-cursor-dim-mode
@@ -2227,8 +2235,12 @@ look like which can be described briefly as follows:
 (defun +org-font-setup ()
   "Setup variable-pitch fonts for org-mode."
   (variable-pitch-mode)
-  (let ((variable-pitch `(:font ,grandview-variable-font))
-        (default `(:font ,grandview-default-font)))
+  (let* ((families (font-family-list))
+         (fallback `(:font ,(car families)))
+         (variable-pitch (if (member grandview-variable-font families)
+                             `(:font ,grandview-variable-font) fallback))
+         (default (if (member grandview-default-font families)
+                      `(:font ,grandview-default-font) fallback)))
     (custom-theme-set-faces
      'user
      `(org-level-1 ((t (,@variable-pitch :height 1.5))))
