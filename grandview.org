@@ -1293,8 +1293,8 @@ all-the-icons integration for corfu.
   (setq! corfu-auto-delay 0.05)
   (setq! corfu-auto-prefix 2)
   (setq! corfu-cycle t)
-  (setq! corfu-preselect-first nil)
-  (setq! corfu-on-exact-match nil)
+  (setq! corfu-preselect 'prompt)
+  (setq! corfu-on-exact-match 'insert)
   (global-corfu-mode)
   (add-to-list 'corfu-margin-formatters #'+corfu-icons-margin-formatter)
   (bind-keys :map corfu-map
