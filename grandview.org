@@ -135,10 +135,10 @@ emacs --bg-daemon
 ## hooray, enjoy the Grandview
 emacsclient -cn
 ## NOTE: You should be able to start/restart Emacs by 'rem' bash
-## command from now on, see the "** Restart it!"  section below.
+## command from now on, see the "** Restart Emacs"  section below.
 #+end_src
 
-* Restart it!
+* Restart Emacs
 :PROPERTIES:
 :CUSTOM_ID: *Restart_it!*-780054ff
 :END:
@@ -146,14 +146,23 @@ emacsclient -cn
 Although Emacs already provided functionalities like ~unload-feature~ and
 ~remove-hook~ to eliminate the side effects of certain packages or user
 configurations, most of the time it's still easier to reload your Emacs
-configurations through a completely restart.
+configurations through a complete restart.  Luckily, Emacs 30+ comes with this
+feature out of the box, that is the ~restart-emacs~ command.  However, when Emacs
+hangs up, we can not expect it to evaluate any elisp code, in this case, a shell
+script that helps us to restart Emacs can be very handy.
 
-The following section provided a CLI for restarting *Grandview*.
-
-** CLI source
+** Source
 :PROPERTIES:
 :CUSTOM_ID: *Restart_it!*-CLI_source-a2764225
 :END:
+
+Here is the source code for the =rem= (acronym for ~restart-emacs~) command.  The
+first elisp code block is consumed by the second code block to inject a few
+values such as file path into the actual shell script.
+
+You don't need to install this script if you have followed =Installation=
+section. This script will be tangled to *~/.local/bin/rem*, so make sure
+*~/.local/bin* is in your *PATH*.
 
 #+name: grandview-cache
 #+begin_src emacs-lisp :var type="main" :tangle no
@@ -184,66 +193,27 @@ shift $((OPTIND -1))
 
 emacs_cmd="$BIN --bg-daemon $DEBUG $INIT_DIR"
 notify-send "Restarting emacs..." 2>/dev/null
-emacs_pid=$(ps ax | grep '[Ee]macs --bg-daemon' | awk '{print $1}')
-timeout=300
-counter=0
-emacsclient --eval '(kill-emacs)' 2>/dev/null &
-while $(kill -0 $emacs_pid 2>/dev/null) && [[ $counter -lt $timeout ]]; do
-  counter=$((counter + 1))
-  sleep 0.01
-done
-kill -9 $emacs_pid 2>/dev/null
+kill -9 $(pgrep -x '[Ee]macs') 2>/dev/null
 $RESET && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
 $ELCs && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
 $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 _is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd \
     || eval $emacs_cmd
 command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0 2>&1
-emacsclient -cne '(delete-file "~/nohup.out")'
+emacsclient -cn
 #+end_src
 
-This script first dispatches a ~kill-emacs~ command to the living Emacs process,
-which triggers the ~grandview-tangle~ hook, the main process of Emacs only get
-killed after the tangle function finishes.  It usually takes less than 1s to
-tangle this org file, so if Emacs keeps alive for over 3s after the ~kill-emacs~
-command, it probably gets frozen, so we kill it with ~kill -9~. After the old
-Emacs get killed, the Emacs daemon is initialized followed by a new frame.
-
-You don't need to install this script if you have followed =Installation=
-section. This script will be tangled to *~/.local/bin/rem*, so make sure
-*~/.local/bin* is in your *PATH*.
-
-** Elisp wrapper
-:PROPERTIES:
-:CUSTOM_ID: *Restart_it!*-Elisp_wrapper-9ed0e215
-:END:
-
-Ideally, we can restart Emacs right inside of it via M-x =restart-emacs= which is
-a wrapper for ~rem~ bash command.
-
-#+begin_src emacs-lisp
-(defun restart-emacs ()
-  "A elisp wrapper to `rem' command."
-  (interactive)
-  (let ((default-directory "~"))
-    (start-process "" nil "nohup" "rem")))
-#+end_src
-
-** CLI usage
+** Usage
 :PROPERTIES:
 :CUSTOM_ID: *Restart_it!*-CLI_usage-63ad000f
 :END:
-
-But when Emacs hangs up, we can not expect it to evaluate any elisp code.  The
-only thing we can do by then is spawn a terminal call the ~rem~ (alias for
-~restart-emacs~) bash command.
 
 Here are the available flags of this command.
 
 + ~-r~: delete *Grandview*'s cache before restarting. (re-tangle)
 + ~-p~: delete all =.elc= build of packages before restarting. (rebuild)
 + ~-P~: delete all package repos before restarting. (re-download & rebuild)
-+ ~-d~: use --debug-init flag for the daemon
++ ~-d~: use =--debug-init= flag for the daemon
 
 * *TEXT EDITING*
 :PROPERTIES:
@@ -4466,20 +4436,19 @@ If called with prefix arg, prompt for a major mode for the buffer."
 :END:
 
 #+begin_quote
-Copyright (c) 2020-2022  Alex Lu <alexluigit@gmail.com>
+Copyright (c) 2020-2022 Alex Lu <alexluigit@gmail.com>
 
-This file is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
+This file is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
 
-This file is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
+This file is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this file.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with
+this file.  If not, see <http://www.gnu.org/licenses/>.
 #+end_quote
 
 ** File local variables
