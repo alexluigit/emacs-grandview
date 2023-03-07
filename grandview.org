@@ -4078,6 +4078,19 @@ regexp .etc).
 :CUSTOM_ID: DevTools-f401ccff
 :END:
 
+** Compiler (compile.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Compiler-842C3947
+:END:
+
+Run compiler as inferior of Emacs, parse error messages.
+
+#+begin_src emacs-lisp
+(bind-keys :map grandview-prog-map
+           ("p" . compile)
+           ("P" . recompile))
+#+end_src
+
 ** LSP (lsp.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-LSP_(lsp.el)-9884b2d1
@@ -4301,9 +4314,9 @@ optional minor mode which can apply this command automatically on save.
 (add-hook 'prog-mode-hook '+flymake-enable)
 (add-hook 'text-mode-hook 'flymake-mode)
 (bind-keys :map grandview-prog-map
-           ("N" . 'flymake-goto-next-error)
-           ("P" . 'flymake-goto-prev-error)
-           ("S" . 'flymake-start))
+           ("e" . flymake-goto-next-error)
+           ("E" . flymake-goto-prev-error)
+           ("S" . flymake-start))
 #+end_src
 
 *** Autoload
