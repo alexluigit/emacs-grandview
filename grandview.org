@@ -30,9 +30,18 @@ straightforward project structure:
 =user.el= is the file to place your:
 
 1. *grandview* specfic options which include:
-   + ~grandview-cache-dir~: Cache directory for grandview
-   + ~grandview-org-file~: Path for grandview main config .org file
-   + ~grandview-gc-cons-threshold~: The default value to use for ~gc-cons-threshold~
+   + ~grandview-cache-dir~: Cache directory for grandview.
+   + ~grandview-org-file~: Path for grandview main config .org file.
+   + ~grandview-gc-cons-threshold~: The value for ~gc-cons-threshold~.
+   + ~grandview-theme~: The default theme, it should be a theme name.
+   + ~grandview-font-size~: Font size being applied.
+   + ~grandview-default-font~: The default font, which should included in
+     ~font-family-list~.
+   + ~grandview-fixed-font~: The =fixed-pitch= font, which should included in
+     ~font-family-list~.
+   + ~grandview-variable-font~: The =variable-pitch= font, which should included in
+     ~font-family-list~.
+   + ~grandview-CJK-font~: The font used for CJK characters.
 2. other arbitrary codes to load before loading the main config
 3. packages expecting further evaluation or testing
 
@@ -1232,7 +1241,7 @@ all-the-icons integration for corfu.
   (setq! corfu-auto-prefix 2)
   (setq! corfu-cycle t)
   (setq! corfu-preselect 'prompt)
-  (setq! corfu-on-exact-match 'insert)
+  (setq! corfu-on-exact-match nil)
   (global-corfu-mode)
   (add-to-list 'corfu-margin-formatters #'+corfu-icons-margin-formatter)
   (bind-keys :map corfu-map
@@ -1901,7 +1910,8 @@ users deserve a file manager better than those popular ones on terminal such as
            ("m" "/mnt/"                       "Mounted Drives")
            ("s" "/mnt/HDD/Share/"             "Shared files")
            ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
-           ("t" "~/.local/share/Trash/files/" "Trash")))
+           ("t" "~/.local/share/Trash/files/" "Trash")
+           ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/")))
   (bind-keys :map 'dirvish-mode-map
              ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
              ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
@@ -3527,6 +3537,7 @@ offering you relevant actions to use on a target determined by the context.
 
 #+begin_src emacs-lisp
 (straight-use-package 'embark)
+(straight-use-package 'embark-consult)
 
 (once '(:hooks pre-command-hook)
   (setq embark-quit-after-action t)
@@ -3853,7 +3864,7 @@ startup.
   (rg-define-toggle "--context 3" (kbd "C"))
   (rg-define-toggle "-A 5" (kbd "A"))
   (rg-define-search rg-project-all-files-no-ask
-    :dir project :files "all"))
+    :dir project :files "*"))
 #+end_src
 
 ** Writable grep (wgrep.el)
@@ -4146,7 +4157,7 @@ Run compiler as inferior of Emacs, parse error messages.
   (setq lsp-pyright-python-executable-cmd "python3"))
 (setq lsp-ui-doc-position 'bottom)
 (setq lsp-ui-doc-show-with-cursor t)
-(setq lsp-ui-doc-show-with-mouse nil)
+(setq lsp-ui-doc-show-with-mouse t)
 #+end_src
 
 *** Autoload
