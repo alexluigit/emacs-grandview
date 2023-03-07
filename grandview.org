@@ -3246,6 +3246,10 @@ The SEGMENTs are defined by `+mode-line-define'."
 
 (defvar +mode-line-selected-window nil)
 
+(defun +mode-line-disable-locally ()
+  "Do not show mode line in this buffer."
+  (setq mode-line-format nil))
+
 (defun +mode-line--window-active ()
   "Return t if mode line is in active window."
   (unless (and (bound-and-true-p mini-frame-frame)
@@ -3329,8 +3333,11 @@ The SEGMENTs are defined by `+mode-line-define'."
   "Toggle `+mode-line-mode' on or off."
   :global t
   (if +mode-line-mode
-      (setq-default mode-line-format +mode-line-format)
-    (setq-default mode-line-format +mode-line--default-mode-line)))
+      (progn
+        (setq-default mode-line-format +mode-line-format)
+        (add-hook 'compilation-mode-hook #'+mode-line-disable-locally))
+    (setq-default mode-line-format +mode-line--default-mode-line)
+    (remove-hook 'compilation-mode-hook #'+mode-line-disable-locally)))
 #+end_src
 
 ** Frame margin (fringe.el)
