@@ -2662,6 +2662,8 @@ sure this is a good approach."
 
 (setq default-input-method "rime")
 (once '(:packages rime)
+  (when (eq system-type 'darwin)
+    (setq! rime-librime-root (expand-file-name "librime" user-emacs-directory)))
   (setq rime-disable-predicates '(meow-normal-mode-p
                                   meow-motion-mode-p
                                   meow-keypad-mode-p
