@@ -8,6 +8,7 @@
   "Path for grandview main config .org file."
   :group 'grandview :type 'string)
 
+(defvar grandview-theme 'modus-vivendi)
 (defvar grandview-font-size 140)
 (defvar grandview-default-font "Victor Mono")
 (defvar grandview-fixed-font "Sarasa Mono SC")

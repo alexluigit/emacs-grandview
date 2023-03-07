@@ -574,14 +574,26 @@ direction (use =C-l= to reposition it).
 Recommended themes (using their package names):
 
 - =modus-vivendi=
-- =ef-themes=
-- =doom-themes=
-- =apropospriate-theme=
-- =lambda-themes=
-- =color-theme-sanityinc-tomorrow=
-- =mindre-theme=
+  A built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
 
-Leave the theme you wanted uncommented.
+- =ef-themes=
+  Yet another theme suite developed by Prot.
+
+- =doom-themes=
+  A megapack of popular themes, including aesthetic extensions
+  for popular packages.
+
+- =apropospriate-theme=
+  Apropospriate theme.
+
+- =lambda-themes=
+  Lambda themes.
+
+- =color-theme-sanityinc-tomorrow=
+  SanityInc tomorrow theme.
+
+- =mindre-theme=
+  Mindre theme.
 
 #+begin_src emacs-lisp
 (straight-use-package `(modus-themes ,@(when (> emacs-major-version 28) '(:type built-in))))
@@ -592,85 +604,14 @@ Leave the theme you wanted uncommented.
 (straight-use-package 'color-theme-sanityinc-tomorrow)
 (straight-use-package 'mindre-theme)
 (once '(:hooks after-init-hook)
-  (setq modus-themes-links '(no-underline))
+  (setq modus-themes-common-palette-overrides
+        '((underline-link unspecified)
+          (underline-link-visited unspecified)
+          (underline-link-symbolic unspecified)))
   (setq ef-themes-to-toggle '(ef-summer ef-winter)
         ef-themes-mixed-fonts t
-        ef-themes-variable-pitch-ui t))
-#+end_src
-
-*** COMMENT Modus-themes
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Modus-a55199f9
-:END:
-
-A built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
-
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook) (load-theme 'modus-vivendi t))
-#+end_src
-
-*** Ef-themes
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Ef-themes-669c8f67
-:END:
-
-Yet another theme suite developed by Prot.
-
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook)
-  (load-theme 'ef-night t))
-#+end_src
-
-*** COMMENT Lambda-themes
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Lambda-themes-1842bf45
-:END:
-
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook)
-  (load-theme 'lambda-dark t))
-#+end_src
-
-*** COMMENT Apropospriate-theme
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Apropospriate-theme-ae253599
-:END:
-
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook)
-  (load-theme 'apropospriate-dark t))
-#+end_src
-
-*** COMMENT Doom-themes
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Doom-themes-965cdc4f
-:END:
-
-=doom-theme= is an megapack of popular themes, including aesthetic extensions for
-popular packages.
-
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook)
-  (load-theme 'doom-one t))
-#+end_src
-
-*** COMMENT Color-theme-sanityinc-tomorrow
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Color-theme-sanityinc-tomorrow-46682526
-:END:
-
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook)
-  (load-theme 'sanityinc-tomorrow-night t))
-#+end_src
-
-*** COMMENT Mindre-theme
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Theme-Doom-themes-965cdc4f
-:END:
-#+begin_src emacs-lisp
-(once '(:hooks after-init-hook)
-  (load-theme 'mindre t))
+        ef-themes-variable-pitch-ui t)
+  (load-theme grandview-theme t))
 #+end_src
 
 ** Fonts (fonts.el)
