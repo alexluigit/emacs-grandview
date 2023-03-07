@@ -731,9 +731,32 @@ control over the buffer list and is more powerful overall.
              ("/ g" . ibuffer-filter-by-content)))
 #+end_src
 
-** Window placement (window.el)
+** Window commands (window.el)
 :PROPERTIES:
-:CUSTOM_ID: *User_interface*-Window_placement_(window.el)-905aceb8
+:CUSTOM_ID: *USER_INTERFACE*-Window_commands_(window.el)-23CE9BA0
+:END:
+
+*** Window selection (windmove.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Window_commands_(window.el)-Window_selection_(windmove.el)-05B96B74
+:END:
+
+Directional window-selection routines.
+
+#+begin_src emacs-lisp
+(straight-use-package '(windmove :type built-in))
+
+(bind-keys :map global-map
+           ("M-o" . other-window)
+           ("M-N" . windmove-down)
+           ("M-P" . windmove-up)
+           ("M-I" . windmove-right)
+           ("M-O" . windmove-left))
+#+end_src
+
+*** Window placement (window.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Window_commands_(window.el)-Window_placement-79B7247E
 :END:
 
 The =display-buffer-alist= is intended as a rule-set for controlling the display
@@ -762,7 +785,11 @@ rendering/line scan work for Emacs in non-focused windows.
            (window-width . 0.4)
            (side . right))
           ("\\*\\vc-\\(incoming\\|outgoing\\|Output\\|Register Preview\\).*"
-           (display-buffer-at-bottom))))
+           (display-buffer-at-bottom))
+          ("\\*compilation\\*"
+           (display-buffer-in-side-window)
+           (window-height . 0.2)
+           (side . bottom))))
   (setq help-window-select t)
   (setq window-combination-resize t)
   (setq even-window-sizes 'height-only)
@@ -3337,13 +3364,15 @@ need to add =--with-xinput2= in build flags to enable this feature.
 Another great package from Prot!
 
 #+begin_src emacs-lisp
-  (straight-use-package 'pulsar)
+(straight-use-package 'pulsar)
 
-  (pulsar-global-mode)
-  (once '(:packages pulsar)
-    (appendq! pulsar-pulse-functions
-              (list 'ace-select-window 'previous-window-any-frame
-                    'next-window-any-frame '+meow-save)))
+(pulsar-global-mode)
+(once '(:packages pulsar)
+  (appendq! pulsar-pulse-functions
+            (list 'windmove-left 'windmove-right
+                  'windmove-up 'windmove-down
+                  'previous-window-any-frame
+                  'next-window-any-frame '+meow-save)))
 #+end_src
 
 ** VSCode style icons (vscode-icon.el)
@@ -3492,20 +3521,6 @@ offering you relevant actions to use on a target determined by the context.
              :map minibuffer-local-map
              ("C-." . embark-act)
              ("C-," . embark-become)))
-#+end_src
-
-** Window motions (ace-window.el)
-:PROPERTIES:
-:CUSTOM_ID: Utils-Window_motions_(ace-window.el)-95d39597
-:END:
-
-Index based window motions.
-
-#+begin_src emacs-lisp
-(straight-use-package 'ace-window)
-
-(setq aw-keys '(?a ?s ?t ?n ?e ?o))
-(bind-key "M-o" 'ace-select-window)
 #+end_src
 
 ** Vterm (vterm.el)
