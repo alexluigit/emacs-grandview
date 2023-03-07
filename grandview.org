@@ -1348,7 +1348,12 @@ in the form of Capfs (~completion-at-point-functions~).
   (add-to-list 'completion-at-point-functions #'cape-keyword)
   (add-to-list 'completion-at-point-functions #'cape-ispell)
   (add-to-list 'completion-at-point-functions #'cape-dict)
-  (bind-keys :map grandview-prog-map
+  (define-prefix-command '+cape-map)
+  (defvar +cape-prefix-map (make-sparse-keymap))
+  (defalias '+cape-map +cape-prefix-map)
+  (bind-keys :map global-map
+             ("C-M-/" . +cape-map)       ; remapped `dabbrev-completion'
+             :map +cape-prefix-map
              ("c" . completion-at-point) ; capf
              ("t" . complete-tag)        ; etags
              ("d" . cape-dabbrev)        ; or dabbrev-completion
@@ -3814,13 +3819,12 @@ Some additions I've added to rg transient:
   like =--context=, but only show text after the keyword
 + press =SPC p p= to search in current project, no ask for confirmation
 
-
 #+begin_src emacs-lisp
 (straight-use-package 'rg)
 
 (once '(:hooks find-file-hook)
   (+rg-setup) ; for lazy loading
-  (bind-key "p" 'rg-project-all-files-no-ask grandview-prog-map))
+  (bind-key "r" 'rg-project-all-files-no-ask grandview-prog-map))
 #+end_src
 
 *** Autoload
@@ -4082,8 +4086,13 @@ regexp .etc).
 #+begin_src emacs-lisp
 (straight-use-package 'lsp-mode)
 
-(dolist (lang '(sh lua python web typescript rust))
+(dolist (lang '(sh lua python web typescript rust csharp))
+  (define-prefix-command '+lsp-map)
+  (bind-keys :map mode-specific-map ("l" . +lsp-map))
   (add-hook (intern (format "%s-mode-hook" lang)) 'lsp-deferred))
+
+(once '(:hooks lsp-mode-hook)
+  (defalias '+lsp-map lsp-command-map))
 
 (once '(:packages lsp-mode)
   (setq lsp-enable-imenu nil)
