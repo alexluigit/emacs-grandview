@@ -1093,7 +1093,7 @@ rather than all of the =dired-*= noise.
 (straight-use-package 'orderless)
 
 (autoload 'pinyinlib-build-regexp-string "pinyinlib")
-(setq completion-styles '(orderless))
+(setq completion-styles '(orderless partial-completion basic))
 (setq orderless-component-separator #'orderless-escapable-split-on-space)
 (setq orderless-matching-styles
       '(+orderless-pinyin-only-initialism
@@ -1387,6 +1387,32 @@ in the form of Capfs (~completion-at-point-functions~).
 
 This section contains all core keybindings of *Grandview*.
 
+** Orientation
+:PROPERTIES:
+:CUSTOM_ID: Keybindings-Orientation-D2EEBCF8
+:END:
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
+this convention, but it doesn't mean emacs are not able to tell the
+difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
+On terminal, we rebind =<f6>= to =C-i=, so make sure you have relevant settings in
+your terminal emulator's settings.
+
+#+begin_src emacs-lisp
+;; (define-key input-decode-map [?\C-i] [C-i])
+(add-hook 'after-make-frame-functions
+          (lambda (f) (with-selected-frame f
+                        (define-key input-decode-map [?\C-i] [C-i]))))
+#+end_src
+
+macOS specific settings.
+
+#+begin_src emacs-lisp
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'super)
+#+end_src
+
 ** INSERT
 :PROPERTIES:
 :CUSTOM_ID: *Keybindings*-INSERT-3d96728e
@@ -1530,37 +1556,11 @@ This section contains all core keybindings of *Grandview*.
 :CUSTOM_ID: *Keybindings*-GLOBAL-4055cc3f
 :END:
 
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
-this convention, but it doesn't mean emacs are not able to tell the
-difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
-On terminal, we rebind =<f6>= to =C-i=, so make sure you have relevant settings in
-your terminal emulator's settings.
-
-#+begin_src emacs-lisp
-(if (daemonp)
-    (add-hook 'after-make-frame-functions
-              (lambda (f) (with-selected-frame f
-                            (define-key input-decode-map [?\C-i] [C-i]))))
-  (bind-keys ("<f6>" . +simple-pop-local-mark-ring)
-             :map minibuffer-local-map
-             ("<f6>" . forward-char)
-             ("<mouse-8>" . exit-minibuffer)
-             :map meow-insert-state-keymap
-             ("<f6>" . meow-right)))
-#+end_src
-
-macOS specific settings.
-
-#+begin_src emacs-lisp
-(setq mac-command-modifier 'meta)
-(setq mac-option-modifier 'super)
-#+end_src
-
-A bunch of global bindings.
+All major bindings work globally.
 
 #+begin_src emacs-lisp
 (bind-keys :map global-map
+           ("<f6>" . +simple-pop-local-mark-ring)
            ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
            ("S-SPC" . toggle-input-method)
            ("M-u"   . +toggle-letter-case)
@@ -1574,9 +1574,13 @@ A bunch of global bindings.
            :map tab-prefix-map
            ("w"   . other-window)
            :map minibuffer-local-map
+           ("<mouse-8>" . exit-minibuffer)
            ("M-<backspace>" . meow-kill-whole-line)
+           ("<f6>" . forward-char)
            ("<C-i>" . forward-char)
            ("C-o" . backward-char)
+           :map meow-insert-state-keymap
+           ("<f6>" . meow-right)
            :map image-map
            ("o" . nil)
            ("w" . image-save))
@@ -1717,8 +1721,8 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 #+begin_src emacs-lisp
 (straight-use-package 'find-func)
 
-(setq find-function-C-source-directory
-      "~/.cache/paru/clone/emacs-git/src/emacs-git/src")
+(when (eq system-type 'gnu/linux)
+  (setq find-function-C-source-directory "~/Code/emacs/src"))
 (bind-keys :map grandview-files-map
            ("l" . find-library))
 #+end_src
@@ -2329,12 +2333,14 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (straight-use-package '(ob-shell :type built-in))
 (straight-use-package '(ob-latex :type built-in))
 (straight-use-package '(ob-makefile :type built-in))
+(straight-use-package '(ob-csharp :host github :repo "samwdp/ob-csharp"))
 
 (once '(:packages org)
   (autoload 'org-babel-execute:C "ob-C")
   (autoload 'org-babel-expand:C "ob-C")
   (autoload 'org-babel-execute:cpp "ob-C")
   (autoload 'org-babel-expand:cpp "ob-C")
+  (autoload 'org-babel-execute:csharp "ob-csharp")
   (autoload 'org-babel-execute:python "ob-python")
   (autoload 'org-babel-execute:js "ob-js")
   (autoload 'org-babel-execute:bash "ob-shell")
@@ -2902,6 +2908,7 @@ org-mode
 (elisp "#+begin_src emacs-lisp" n> r> n "#+end_src")
 (cc "#+begin_src C" n> r> n "#+end_src")
 (cpp "#+begin_src cpp" n> r> n "#+end_src")
+(csharp "#+begin_src csharp" n> r> n "#+end_src")
 (python "#+begin_src python" n> r> n "#+end_src")
 (js "#+begin_src js" n> r> n "#+end_src")
 (bash "#+begin_src bash" n> r> n "#+end_src")
@@ -4019,6 +4026,27 @@ regexp .etc).
 (straight-use-package 'rust-mode)
 #+end_src
 
+** Csharp
+:PROPERTIES:
+:CUSTOM_ID: Programming_Languages-Csharp-701DFE28
+:END:
+
+Sharper is a Transient-based menu for the dotnet CLI. It aims to cover the most
+common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file.
+
+#+begin_src emacs-lisp
+(straight-use-package 'sharper)
+(once '(:hooks csharp-mode-hook)
+  (require 'sharper))
+
+;; A temporary fix for dotnet-sdk installation path on Apple Silicon machines
+(when (and (eq system-type 'darwin)
+           (string-match "aarch64-.*" system-configuration))
+  (setenv "DOTNET_ROOT" "/usr/local/share/dotnet"))
+
+(add-to-list 'auto-mode-alist '("\\.[a]?xaml\\'" . nxml-mode))
+#+end_src
+
 ** Python
 :PROPERTIES:
 :CUSTOM_ID: Programming_Languages-Python-a11554d3
@@ -4128,6 +4156,7 @@ Run compiler as inferior of Emacs, parse error messages.
   (defalias '+lsp-map lsp-command-map))
 
 (once '(:packages lsp-mode)
+  (setq lsp-completion-provider :none) ;; we use Corfu!
   (setq lsp-enable-imenu nil)
   (setq lsp-eldoc-hook nil)
   (setq lsp-enable-snippet nil)
@@ -4135,8 +4164,9 @@ Run compiler as inferior of Emacs, parse error messages.
   (setq lsp-signature-function 'lsp-signature-posframe)
   (setq lsp-signature-doc-lines 20)
   (setq lsp-server-install-dir (expand-file-name (locate-user-emacs-file "lsp")))
-  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-headerline-breadcrumb-enable t)
   (setq lsp-lua-completion-keyword-snippet "Disable")
+  (add-hook 'lsp-mode-hook #'+lsp-setup-orderless-h)
   (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'"))
 #+end_src
 
@@ -4185,6 +4215,12 @@ Run compiler as inferior of Emacs, parse error messages.
          (py-ver "python3.9")
          (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
     (setq lsp-pyright-extra-paths (vector extra-path))))
+
+;;;###autoload
+(defun +lsp-setup-orderless-h ()
+  "Configure orderless for `lsp-mode'."
+  (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+        '(orderless)))
 #+end_src
 
 ** COMMENT Fastest LSP client (lsp-bridge.el)

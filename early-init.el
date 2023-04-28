@@ -24,6 +24,7 @@
  idle-update-delay 1.0  ; slow down UI updates down
  inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
  read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
+ process-adaptive-read-buffering nil
  redisplay-skip-fontification-on-input t ; Inhibits it for better scrolling performance.
  command-line-x-option-alist nil ; Remove irreleant command line options for faster startup
  select-active-regions 'only ; Emacs hangs when large selections contain mixed line endings.
