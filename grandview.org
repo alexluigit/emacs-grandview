@@ -935,23 +935,16 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
 (desktop-save-mode 1)
 #+end_src
 
-** Icon library (all-the-icons.el)
+** Icon library (nerd-icons.el)
 :PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Icon_library_(all-the-icons.el)-af370f8e
+:CUSTOM_ID: *USER_INTERFACE*-Icon_library_(nerd-icons.el)-E848DA41
 :END:
 
-=all-the-icons= is a utility for using and formatting various Icon fonts within
-Emacs.  Icon Fonts allow you to propertize and format icons the same way you
-would normal text.  This enables things such as better scaling of and anti
-aliasing of the icons.
-
 #+begin_src emacs-lisp
-(straight-use-package 'all-the-icons)
-
-(once '(:packages all-the-icons)
-  (setq all-the-icons-scale-factor 0.9)
-  (setq all-the-icons-font-names (remove "weathericons.ttf" all-the-icons-font-names))
-  (assoc-delete-all "bookmark" all-the-icons-regexp-icon-alist #'equal))
+(straight-use-package
+ '(nerd-icons :repo "rainstormstudio/nerd-icons.el"
+              :host github
+              :files (:defaults "data")))
 #+end_src
 
 ** Nerd fonts (nerd-fonts.el)
@@ -1229,9 +1222,6 @@ Corfu can be considered the minimalistic completion-in-region counterpart of
 We also enabled ~corfu-doc-mode~ to show documentation of the candidates in a
 pop-up window.
 
-In addition, thanks to the snippet from @smallzhan in this [[https://emacs-china.org/t/corfu-all-the-icons-icon/20907][post]], we have
-all-the-icons integration for corfu.
-
 #+begin_src emacs-lisp
 (straight-use-package 'corfu)
 
@@ -1243,7 +1233,6 @@ all-the-icons integration for corfu.
   (setq! corfu-preselect 'prompt)
   (setq! corfu-on-exact-match nil)
   (global-corfu-mode)
-  (add-to-list 'corfu-margin-formatters #'+corfu-icons-margin-formatter)
   (bind-keys :map corfu-map
              ("TAB" . corfu-next)
              ([tab] . corfu-next)
@@ -1251,92 +1240,6 @@ all-the-icons integration for corfu.
              ([backtab] . corfu-previous)
              ("M-n" . nil)
              ("M-p" . nil)))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: *COMPLETION_FRAMEWORK*-Completion_overlay_region_function_(corfu.el)-Autoload-0cd965f2
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+corfu.el"
-:END:
-
-#+begin_src emacs-lisp
-(require 'all-the-icons)
-
-(defvar +corfu-icons--cache nil
-  "The cache of styled and padded label (text or icon).
-An alist.")
-
-(defvar +corfu-icons--icons
-  `((unknown . ,(all-the-icons-material "find_in_page" :height 0.8 :v-adjust -0.15))
-    (text . ,(all-the-icons-faicon "text-width" :height 0.8 :v-adjust -0.02))
-    (method . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.02 :face 'all-the-icons-purple))
-    (function . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.02 :face 'all-the-icons-purple))
-    (fun . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.02 :face 'all-the-icons-purple))
-    (constructor . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.02 :face 'all-the-icons-purple))
-    (ctor . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.02 :face 'all-the-icons-purple))
-    (field . ,(all-the-icons-octicon "tag" :height 0.85 :v-adjust 0 :face 'all-the-icons-lblue))
-    (variable . ,(all-the-icons-octicon "tag" :height 0.85 :v-adjust 0 :face 'all-the-icons-lblue))
-    (var . ,(all-the-icons-octicon "tag" :height 0.85 :v-adjust 0 :face 'all-the-icons-lblue))
-    (class . ,(all-the-icons-material "settings_input_component" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-orange))
-    (interface . ,(all-the-icons-material "share" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-lblue))
-    (i/f . ,(all-the-icons-material "share" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-lblue))
-    (module . ,(all-the-icons-material "view_module" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-lblue))
-    (mod . ,(all-the-icons-material "view_module" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-lblue))
-    (property . ,(all-the-icons-faicon "wrench" :height 0.8 :v-adjust -0.02))
-    (prop . ,(all-the-icons-faicon "wrench" :height 0.8 :v-adjust -0.02))
-    (unit . ,(all-the-icons-material "settings_system_daydream" :height 0.8 :v-adjust -0.15))
-    (value . ,(all-the-icons-material "format_align_right" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-lblue))
-    (enum . ,(all-the-icons-material "storage" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-orange))
-    (keyword . ,(all-the-icons-material "filter_center_focus" :height 0.8 :v-adjust -0.15))
-    (k/w . ,(all-the-icons-material "filter_center_focus" :height 0.8 :v-adjust -0.15))
-    (snippet . ,(all-the-icons-material "format_align_center" :height 0.8 :v-adjust -0.15))
-    (sn . ,(all-the-icons-material "format_align_center" :height 0.8 :v-adjust -0.15))
-    (color . ,(all-the-icons-material "palette" :height 0.8 :v-adjust -0.15))
-    (file . ,(all-the-icons-faicon "file-o" :height 0.8 :v-adjust -0.02))
-    (reference . ,(all-the-icons-material "collections_bookmark" :height 0.8 :v-adjust -0.15))
-    (ref . ,(all-the-icons-material "collections_bookmark" :height 0.8 :v-adjust -0.15))
-    (folder . ,(all-the-icons-faicon "folder-open" :height 0.8 :v-adjust -0.02))
-    (dir . ,(all-the-icons-faicon "folder-open" :height 0.8 :v-adjust -0.02))
-    (enum-member . ,(all-the-icons-material "format_align_right" :height 0.8 :v-adjust -0.15))
-    (enummember . ,(all-the-icons-material "format_align_right" :height 0.8 :v-adjust -0.15))
-    (member . ,(all-the-icons-material "format_align_right" :height 0.8 :v-adjust -0.15))
-    (constant . ,(all-the-icons-faicon "square-o" :height 0.8 :v-adjust -0.1))
-    (const . ,(all-the-icons-faicon "square-o" :height 0.8 :v-adjust -0.1))
-    (struct . ,(all-the-icons-material "settings_input_component" :height 0.8 :v-adjust -0.15 :face 'all-the-icons-orange))
-    (event . ,(all-the-icons-octicon "zap" :height 0.8 :v-adjust 0 :face 'all-the-icons-orange))
-    (operator . ,(all-the-icons-material "control_point" :height 0.8 :v-adjust -0.15))
-    (op . ,(all-the-icons-material "control_point" :height 0.8 :v-adjust -0.15))
-    (type-parameter . ,(all-the-icons-faicon "arrows" :height 0.8 :v-adjust -0.02))
-    (param . ,(all-the-icons-faicon "arrows" :height 0.8 :v-adjust -0.02))
-    (template . ,(all-the-icons-material "format_align_left" :height 0.8 :v-adjust -0.15))
-    (t . ,(all-the-icons-material "find_in_page" :height 0.8 :v-adjust -0.15))))
-
-(defsubst +corfu-icons--metadata-get (metadata type-name)
-  (or (plist-get completion-extra-properties (intern (format ":%s" type-name)))
-      (cdr (assq (intern type-name) metadata))))
-
-(defun +corfu-icons-formatted (kind)
-  "Format icon kind with all-the-icons."
-  (or (alist-get kind +corfu-icons--cache)
-      (let ((map (assq kind +corfu-icons--icons)))
-        (let*  ((icon (if map (cdr map) (cdr (assq t +corfu-icons--icons))))
-                (half (/ (default-font-width) 2))
-                (pad (propertize " " 'display `(space :width (,half))))
-                (disp (concat pad icon pad)))
-          (setf (alist-get kind +corfu-icons--cache) disp)
-          disp))))
-
-;;;###autoload
-(defun +corfu-icons-margin-formatter (metadata)
-  "Return a margin-formatter function which produces kind icons.
-METADATA is the completion metadata supplied by the caller (see
-info node `(elisp)Programmed Completion').  To use, add this
-function to the relevant margin-formatters list."
-  (when-let ((kind-func (+corfu-icons--metadata-get metadata "company-kind")))
-    (lambda (cand)
-            (if-let ((kind (funcall kind-func cand)))
-                (+corfu-icons-formatted kind)
-              (+corfu-icons-formatted t)))))
 #+end_src
 
 ** Completion at point Extensions (cape.el)
@@ -1897,7 +1800,8 @@ users deserve a file manager better than those popular ones on terminal such as
 (dirvish-peek-mode)
 (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
 (setq dirvish-attributes
-      '(vc-state file-size git-msg subtree-state all-the-icons collapse file-time))
+      '(vc-state file-size git-msg subtree-state nerd-icons collapse file-time))
+(setq! dirvish-subtree-state-style 'nerd)
 (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
 (setq dirvish-header-line-height '(25 . 35))
 (setq dirvish-side-width 38)
@@ -3322,7 +3226,7 @@ The SEGMENTs are defined by `+mode-line-define'."
 
 (+mode-line-define buffer-info
   (concat
-   (and buffer-file-name (all-the-icons-icon-for-file
+   (and buffer-file-name (nerd-icons-icon-for-file
                           buffer-file-name :height 0.75 :v-adjust 0.02))
    " "
    (propertize "%b"
