@@ -10,7 +10,7 @@
 
 (defvar grandview-theme 'modus-vivendi)
 (defvar grandview-font-size 140)
-(defvar grandview-default-font "Victor Mono")
+(defvar grandview-default-font "Iosevka Nerd Font Mono")
 (defvar grandview-fixed-font "Sarasa Mono SC")
 (defvar grandview-variable-font "Sarasa Mono SC")
 (defvar grandview-CJK-font "LXGW WenKai Mono")

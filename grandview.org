@@ -115,8 +115,9 @@ Here are the dependencies of this project.
 | =fd=                | A modern =find=               |          |
 | =rg=                | A modern =grep=               |          |
 | =git=               | Version control             |          |
-| =noto-fonts-emoji=  | Font for emojis             | optional |
 | =words=             | English words completion    | optional |
+| =noto-fonts-emoji=  | Font for emojis             | optional |
+| =Iosveka Nerd Font= | Default font                | optional |
 | =font-victor-mono=  | Default fixed pitch font    | optional |
 | =ttf-sarasa-gothic= | Default variable pitch font | optional |
 | =xdotool=           | Automation tool for X11     | optional |
@@ -945,20 +946,11 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
  '(nerd-icons :repo "rainstormstudio/nerd-icons.el"
               :host github
               :files (:defaults "data")))
-#+end_src
 
-** Nerd fonts (nerd-fonts.el)
-:PROPERTIES:
-:CUSTOM_ID: *USER_INTERFACE*-Nerd_fonts_(nerd-fonts.el)-c1c1aede
-:END:
-
-#+begin_src emacs-lisp
-(straight-use-package
- '(nerd-fonts :host github :repo "twlz0ne/nerd-fonts.el"))
-
-;; (once '(:hooks pre-command-hook)
-(require 'nerd-fonts)
-  ;; )
+(require 'nerd-icons)
+(setq nerd-icons-font-family "Iosevka Nerd Font")
+(when (memq system-type '(ms-dos cygwin windows-nt))
+  (setq nerd-icons-font-family "Iosevka NF"))
 #+end_src
 
 * *COMPLETION FRAMEWORK*
