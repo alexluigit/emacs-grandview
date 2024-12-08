@@ -267,6 +267,8 @@ When FORCE, ensure the tangle process and autoloads generation."
   (when (memq window-system '(mac ns))
     (straight-use-package 'exec-path-from-shell)
     (exec-path-from-shell-initialize)
+    (exec-path-from-shell-copy-env "DYLD_PRINT_LIBRARIES")
+    (exec-path-from-shell-copy-env "LD_LIBRARY_PATH")
     (exec-path-from-shell-copy-env "DOTPATH")
     (exec-path-from-shell-copy-env "XDG_DATA_HOME"))
   ;; Show profiler when debugging

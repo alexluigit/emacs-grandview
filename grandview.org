@@ -1247,10 +1247,11 @@ in the form of Capfs (~completion-at-point-functions~).
 
 (once '(:before self-insert-command)
   (setq! cape-dict-file "/usr/share/dict/words")
+  (when (>= emacs-major-version 30)
+    (setq! text-mode-ispell-word-completion nil))
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
   (add-to-list 'completion-at-point-functions #'cape-dict)
   (define-prefix-command '+cape-map)
   (defvar +cape-prefix-map (make-sparse-keymap))
@@ -1788,7 +1789,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (straight-use-package '(dirvish :type git :repo "alexluigit/dirvish" :depth full))
 
 (dirvish-override-dired-mode)
-(dirvish-side-follow-mode)
+;; (dirvish-side-follow-mode) ;; `dirvish--get-project-root' is buggy in Emacs 31
 (dirvish-peek-mode)
 (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
 (setq dirvish-attributes
@@ -2575,7 +2576,8 @@ sure this is a good approach."
 (setq default-input-method "rime")
 (once '(:packages rime)
   (when (eq system-type 'darwin)
-    (setq! rime-librime-root (expand-file-name "librime" user-emacs-directory)))
+    (setq! rime-librime-root (expand-file-name "librime" user-emacs-directory))
+    (setq! rime-emacs-module-header-root "/opt/homebrew/include"))
   (setq rime-disable-predicates '(meow-normal-mode-p
                                   meow-motion-mode-p
                                   meow-keypad-mode-p
@@ -3938,6 +3940,7 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 ;; A temporary fix for dotnet-sdk installation path on Apple Silicon machines
 (when (and (eq system-type 'darwin)
            (string-match "aarch64-.*" system-configuration))
+  (setenv "DYLD_FALLBACK_LIBRARY_PATH" "/usr/local/lib:/usr/local/lib64:/opt/homebrew/lib")
   (setenv "DOTNET_ROOT" "/usr/local/share/dotnet"))
 
 (add-to-list 'auto-mode-alist '("\\.[a]?xaml\\'" . nxml-mode))
