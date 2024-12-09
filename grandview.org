@@ -277,7 +277,7 @@ related to some major mode or to file-handling.
 (defadvice! yank-ad (&rest _)
   "Make `yank' behave like paste (p) command in vim."
   :before #'yank
-  (when-let ((clip (condition-case nil (current-kill 0 t) (error ""))))
+  (when-let* ((clip (condition-case nil (current-kill 0 t) (error ""))))
     (set-text-properties 0 (length clip) nil clip)
     (when (string-suffix-p "\n" clip)
       (goto-char (line-beginning-position)))))
@@ -3191,7 +3191,7 @@ The SEGMENTs are defined by `+mode-line-define'."
 
 (defun +mode-line--suffix (ml-func)
   "If ML-FUNC return a non-empty string, append a space to it."
-  (when-let (str (funcall ml-func)) (concat str " ")))
+  (when-let* ((str (funcall ml-func))) (concat str " ")))
 
 (cl-defmacro +mode-line-define (name &optional docstr &rest body)
   "Define a mode line segment NAME with BODY and DOCSTR."
