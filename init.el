@@ -183,11 +183,10 @@ Optional LABEL and STRING are echoed out."
       (require 'ob-tangle)
       (org-babel-tangle-file grandview-org-file (grandview--init-path 'main))
       (cl-loop for lib in (directory-files-recursively (grandview--init-path 'au-dir) "\\.el$")
-               do (with-current-buffer (find-file-noselect lib)
-                    (goto-char (point-min))
+               do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
-                    (save-buffer)
-                    (kill-this-buffer))))))
+                    (insert-file-contents lib)
+                    (write-region nil nil lib))))))
 
 (defun grandview--gen-autoload (&optional force)
   "Generate autoload files for Grandview.
