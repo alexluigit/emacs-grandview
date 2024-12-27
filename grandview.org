@@ -1523,6 +1523,7 @@ These keybindings are available when the current major mode doesn't define that 
         ((title . "  Downloads")    (path . "~/Downloads"))))
 (setq confirm-kill-processes nil)
 (auto-save-visited-mode)
+(setq auto-save-visited-interval 600)
 
 (bind-keys
  :map grandview-files-map
