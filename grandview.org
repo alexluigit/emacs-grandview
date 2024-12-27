@@ -1106,7 +1106,7 @@ rather than all of the =dired-*= noise.
 
 ;;;###autoload
 (defun +orderless-literal-dispatcher (pattern _index _total)
-  "Literal style dispatcher using the equals sign as a prefix."
+  "Literal style dispatcher using the equals sign as a suffix."
   (when (string-suffix-p "=" pattern)
     `(orderless-literal . ,(substring pattern 0 -1))))
 
@@ -1145,6 +1145,9 @@ The Consult commands are compatible with completion systems based on the Emacs
 =completing-read= API, including the default completion system, Icomplete,
 Selectrum, Vertico and Embark.
 
+The purpose for setting =consult-async-min-input= to 2 is to adapt for Chinese
+word, which usually consists of only 2 characters.
+
 #+begin_src emacs-lisp
 (straight-use-package 'consult)
 
@@ -1156,7 +1159,7 @@ Selectrum, Vertico and Embark.
   (setq xref-show-xrefs-function #'consult-xref)
   (setq xref-show-definitions-function #'consult-xref)
   (setq consult-line-numbers-widen t)
-  (setq consult-async-min-input 3)
+  (setq consult-async-min-input 2)
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">")
@@ -1788,7 +1791,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (straight-use-package '(dirvish :type git :repo "alexluigit/dirvish" :depth full))
 
 (dirvish-override-dired-mode)
-;; (dirvish-side-follow-mode) ;; `dirvish--get-project-root' is buggy in Emacs 31
+(dirvish-side-follow-mode) ;; `project-current' is buggy in Emacs 31
 (dirvish-peek-mode)
 (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
 (setq dirvish-attributes
@@ -2639,7 +2642,8 @@ sure this is a good approach."
 #+begin_src emacs-lisp
 (straight-use-package 'tempel)
 
-(add-hook 'prog-mode-hook '+tempel-setup-capf)
+;; (add-hook 'prog-mode-hook '+tempel-setup-capf) ; for now it confilcts with lsp clients
+(add-hook 'emacs-lisp-mode-hook '+tempel-setup-capf)
 (add-hook 'text-mode-hook '+tempel-setup-capf)
 #+end_src
 
@@ -3685,13 +3689,15 @@ made for this package and built-in help buffer:
 (bind-keys :map global-map
            ("C-h K" . describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
            ([remap describe-function] . helpful-callable)
-           ([remap describe-symbol] . helpful-symbol)
            ([remap describe-key] . helpful-key))
 
-(once '(:packages helpful)
-  (bind-keys :map helpful-mode-map
-             ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
-             ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
+(once '(:hooks minibuffer-setup-hook)
+  (require 'helpful)
+  (bind-keys
+   :map helpful-mode-map
+   ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
+   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t))))
+  (meow-leader-define-key '("/" . helpful-symbol)))
 #+end_src
 
 ** Emacs Manual (info.el)
