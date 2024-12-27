@@ -1429,7 +1429,7 @@ macOS specific settings.
    '("E" . eval-expression)
    '("f" . grandview-files-map)
    '("i" . ibuffer)
-   '("k" . kill-this-buffer)
+   '("k" . kill-current-buffer)
    '("n" . +project-find-file)
    '("o" . grandview-org-map)
    '("p" . grandview-prog-map)
@@ -1445,6 +1445,7 @@ macOS specific settings.
            :map grandview-apps-map
            ("d" . toggle-debug-on-error)
            ("o" . +frame-opacity-set)
+           ("t" . toggle-frame-maximized)
            ("=" . count-words)
            ("m" . +show-messages))
 #+end_src
