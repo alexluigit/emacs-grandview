@@ -1,5 +1,9 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
+(defcustom grandview-home "~/.config/emacs/"
+  "Path to place the repository of grandview."
+  :group 'grandview :type 'string)
+
 (defcustom grandview-cache-dir "/tmp/grandview/"
   "Cache directory for grandview."
   :group 'grandview :type 'string)

@@ -177,6 +177,7 @@ section. This script will be tangled to *~/.local/bin/rem*, so make sure
 #+name: grandview-cache
 #+begin_src emacs-lisp :var type="main" :tangle no
 (pcase type
+  ("home" (format "%s" grandview-home))
   ("main" (format "%s" grandview-cache-dir))
   ("pkg-builds" (straight--build-dir))
   ("pkg-repos" (straight--repos-dir)))
@@ -185,11 +186,9 @@ section. This script will be tangled to *~/.local/bin/rem*, so make sure
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
 _is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
 
-ELCs=false REPOs=false RESET=false DEBUG="" INIT_DIR=""
-BIN="emacs"
+ELCs=false REPOs=false RESET=false DEBUG="" BIN="emacs"
+INIT_DIR="--init-directory <<grandview-cache(type="home")>>"
 [[ $(uname) == "Darwin" ]] && BIN="/Applications/Emacs.app/Contents/MacOS/Emacs"
-
-[[ "$GRANDVIEW_HOME" ]] && INIT_DIR="--init-directory $GRANDVIEW_HOME"
 
 while getopts "pPrd" opt; do
   case $opt in
