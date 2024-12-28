@@ -5,7 +5,8 @@
   :group 'grandview :type 'string)
 
 (defcustom grandview-cache-dir "/tmp/grandview/"
-  "Cache directory for grandview."
+  "Cache directory for grandview.
+This path is added to your `load-path'."
   :group 'grandview :type 'string)
 
 (defcustom grandview-org-file (concat (file-name-directory user-init-file) "grandview.org")
@@ -139,8 +140,8 @@ Optional LABEL and STRING are echoed out."
   "Get grandview's init path according to TYPE."
   (pcase type
     ('main (concat grandview-cache-dir "grandview.el"))
-    ('au-el (concat grandview-cache-dir "autoload.el"))
-    ('au-dir (concat grandview-cache-dir "autoloads/"))
+    ('def-el (concat grandview-cache-dir "grandview-loaddefs.el"))
+    ('def-dir (concat grandview-cache-dir "autoloads/"))
     ('user (concat (file-name-directory grandview-org-file) "user.el"))))
 
 (defun grandview--gen-tangle-path ()
@@ -160,7 +161,7 @@ Optional LABEL and STRING are echoed out."
                          (substring h (1+ (string-match "(\\(.*\\))" h))
                                     (match-end 1)))))
                     (tangle-path (concat ":tangle \""
-                                         (grandview--init-path 'au-dir)
+                                         (grandview--init-path 'def-dir)
                                          "+" package-name "\"")))
                (org-entry-put nil "header-args:emacs-lisp" tangle-path)))))))
     (save-buffer)
@@ -182,7 +183,7 @@ Optional LABEL and STRING are echoed out."
         (write-region (point-min) (point-max) md5-file))
       (require 'ob-tangle)
       (org-babel-tangle-file grandview-org-file (grandview--init-path 'main))
-      (cl-loop for lib in (directory-files-recursively (grandview--init-path 'au-dir) "\\.el$")
+      (cl-loop for lib in (directory-files-recursively (grandview--init-path 'def-dir) "\\.el$")
                do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
                     (insert-file-contents lib)
@@ -191,23 +192,19 @@ Optional LABEL and STRING are echoed out."
 (defun grandview--gen-autoload (&optional force)
   "Generate autoload files for Grandview.
 Only do it when FORCE or contents in autoload directory changed."
-  (require 'autoload)
   (let* ((autoload-md5 (concat grandview-cache-dir "autoload.md5"))
          (old-md5 (when (file-exists-p autoload-md5)
                     (grandview--readfile autoload-md5)))
-         (all-el-files (directory-files-recursively (grandview--init-path 'au-dir) "\\.el$"))
+         (def-dir (grandview--init-path 'def-dir))
+         (all-el-files (directory-files-recursively def-dir "\\.el$"))
          (files-as-str (with-temp-buffer
                          (dolist (file all-el-files)
                            (insert-file-contents file))
                          (buffer-string)))
          (new-md5 (secure-hash 'md5 files-as-str)))
     (when (or force (not (string= old-md5 new-md5)))
-      (with-temp-file (grandview--init-path 'au-el)
-        (cl-loop with generated-autoload-file = nil
-                 with inhibit-message = t
-                 for file in all-el-files
-                 for generated-autoload-load-name = (file-name-sans-extension file)
-                 do (autoload-generate-file-autoloads file (current-buffer))))
+      (let ((generate-autoload-file nil) (inhibit-message t))
+        (loaddefs-generate def-dir (grandview--init-path 'def-el)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
@@ -255,10 +252,11 @@ When FORCE, ensure the tangle process and autoloads generation."
     (load (grandview--init-path 'user) (not debug) t))
   ;; Tangle and load Grandview
   ;; "Initiate spin!" -- Joseph Cooper
+  (add-to-list 'load-path grandview-cache-dir)
   (unless (file-exists-p grandview-cache-dir)
-    (make-directory (grandview--init-path 'au-dir) t)
+    (make-directory (grandview--init-path 'def-dir) t)
     (grandview-tangle t))
-  (load (grandview--init-path 'au-el) (not debug) t)
+  (require 'grandview-loaddefs)
   (load (grandview--init-path 'main) (not debug) t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   (add-hook 'after-init-hook
