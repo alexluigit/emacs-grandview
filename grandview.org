@@ -4197,52 +4197,6 @@ with all the mainstream lsp client. So we yasnippet as the fallback in =prog-mod
   (add-hook 'prog-mode-hook 'yas-minor-mode))
 #+end_src
 
-** Virturl environment (conda.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-89e49db2
-:END:
-
-#+begin_src emacs-lisp
-(straight-use-package 'conda)
-
-(setq conda-anaconda-home "/opt/miniconda/")
-(setq conda-env-home-directory "/opt/miniconda/")
-(setq conda-message-on-environment-switch t)
-(bind-key "C" '+conda-activate-for-buffer grandview-prog-map)
-(add-hook 'conda-postactivate-hook
-          (lambda () (require 'jupyter) (jupyter-available-kernelspecs t)))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+conda.el"
-:CUSTOM_ID: DevTools-Virturl_environment_(conda.el)-Autoload-075d685c
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
-(defun +conda-activate-for-buffer ()
-  "Enhanced `conda-env-activate-for-buffer'.
-It support local `conda-env-subdirectory' such as `./envs'."
-  (interactive)
-  (let* ((filename (buffer-file-name))
-         (yml-file (and filename (conda--find-env-yml (f-dirname filename))))
-         (yml-path (and yml-file (f-dirname yml-file)))
-         (prefix-env (concat yml-path "/" conda-env-subdirectory "/")))
-    (cond ((or (null filename) (null yml-file))
-           (conda-env-activate "base"))
-          ((bound-and-true-p conda-project-env-path)
-           (conda-env-activate conda-project-env-path))
-          ((file-exists-p prefix-env)
-           (unless (string= prefix-env (or conda-env-current-name ""))
-             (conda-env-activate-path prefix-env)))
-          (t
-           (let ((env-name (conda-env-name-to-dir
-                            (conda--get-name-from-env-yml yml-file))))
-             (when (and env-name (not (equal env-name conda-env-current-name)))
-               (conda-env-activate env-name)))))))
-#+end_src
-
 ** Jupyter (jupyter.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Jupyter_(jupyter.el)-3e47b9a1
