@@ -30,6 +30,7 @@ straightforward project structure:
 =user.el= is the file to place your:
 
 1. *grandview* specfic options which include:
+   + ~grandview-home~: Path to the repository of grandview.
    + ~grandview-cache-dir~: Cache directory for grandview.
    + ~grandview-org-file~: Path for grandview main config .org file.
    + ~grandview-gc-cons-threshold~: The value for ~gc-cons-threshold~.
