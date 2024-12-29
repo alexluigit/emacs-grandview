@@ -554,12 +554,14 @@ See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for d
 (setq treesit-language-source-alist
    '((bash "https://github.com/tree-sitter/tree-sitter-bash")
      (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (csharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
      (css "https://github.com/tree-sitter/tree-sitter-css")
      (elisp "https://github.com/Wilfred/tree-sitter-elisp")
      (go "https://github.com/tree-sitter/tree-sitter-go")
      (html "https://github.com/tree-sitter/tree-sitter-html")
      (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
      (json "https://github.com/tree-sitter/tree-sitter-json")
+     (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
      (make "https://github.com/alemuller/tree-sitter-make")
      (markdown "https://github.com/ikatyang/tree-sitter-markdown")
      (python "https://github.com/tree-sitter/tree-sitter-python")
@@ -4035,27 +4037,28 @@ regexp .etc).
 
 * Programming Languages
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-1f5deb4e
+:CUSTOM_ID: Programming_languages-F3C4EC1D
 :END:
 
 ** Rust
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Rust-71634a9b
+:CUSTOM_ID: Programming_Languages-Rust-94FD5ED2
 :END:
 
 #+begin_src emacs-lisp
-(straight-use-package 'rust-mode)
+(straight-use-package '(rust-ts-mode :type built-in))
 #+end_src
 
 ** Csharp
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Csharp-701DFE28
+:CUSTOM_ID: Programming_Languages-Csharp-0936F4EF
 :END:
 
 Sharper is a Transient-based menu for the dotnet CLI. It aims to cover the most
 common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file.
 
 #+begin_src emacs-lisp
+(straight-use-package '(csharp-ts-mode :type built-in))
 (straight-use-package 'sharper)
 (once '(:hooks csharp-mode-hook)
   (require 'sharper))
@@ -4071,53 +4074,53 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 
 ** Python
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Python-a11554d3
+:CUSTOM_ID: Programming_Languages-Python-F57F3090
 :END:
 
 #+begin_src emacs-lisp
 (straight-use-package '(python :type built-in))
 
-(setq python-indent-offset 4)
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-ts-mode))
+
+(setq python-indent-offset 2)
 (setq python-indent-guess-indent-offset-verbose nil)
 #+end_src
 
 ** Lua
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Lua-73137a0a
+:CUSTOM_ID: Programming_Languages-Lua-23D3DA80
 :END:
 
 #+begin_src emacs-lisp
-(straight-use-package 'lua-mode)
+(straight-use-package '(lua-ts-mode :type built-in))
+
+(add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-ts-mode))
 
 (setq lua-indent-level 2)
 #+end_src
 
 ** Yaml
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Yaml-a3da110e
+:CUSTOM_ID: Programming_Languages-Yaml-7D12BCC6
 :END:
 
 #+begin_src emacs-lisp
-(straight-use-package 'yaml-mode)
+(straight-use-package '(yaml-ts-mode :type built-in))
+
+(add-to-list 'auto-mode-alist '("\\.y[a]?ml\\'" . yaml-ts-mode))
 #+end_src
 
-** JavaScript
+** Javascript | Typescript
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-JavaScript-e274ea41
+:CUSTOM_ID: Programming_Languages-Javascript_|_Typescript-A43BAB31
 :END:
 
 #+begin_src emacs-lisp
 (straight-use-package '(js :type built-in))
-(straight-use-package 'web-mode)
+(straight-use-package '(typescript-ts-mode :type built-in))
 
-(add-hook 'web-mode-hook
-          (lambda ()
-            (emmet-mode)
-            (setq web-mode-markup-indent-offset 2)
-            (setq web-mode-code-indent-offset 2)
-            (setq web-mode-script-padding 0)))
-(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.jsx?$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 
 (add-hook 'typescript-ts-mode-hook #'eglot-ensure)
 (setq js-indent-level 2)
@@ -4182,24 +4185,15 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 (setq css-indent-offset 2)
 #+end_src
 
-** Bash|Zsh
+** Bash | Zsh
 :PROPERTIES:
-:CUSTOM_ID: Programming_Languages-Bash|Zsh-88916c15
+:CUSTOM_ID: Programming_Languages-Bash_|_Zsh-D38C6F4C
 :END:
 
 #+begin_src emacs-lisp
 (straight-use-package '(sh-script :type built-in))
 
 (setq sh-basic-offset 2)
-#+end_src
-
-** HTML
-:PROPERTIES:
-:CUSTOM_ID: Programming_Languages-HTML-38c2c5f7
-:END:
-
-#+begin_src emacs-lisp
-(straight-use-package 'emmet-mode)
 #+end_src
 
 * DevTools
