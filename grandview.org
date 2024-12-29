@@ -4218,9 +4218,6 @@ It support local `conda-env-subdirectory' such as `./envs'."
 (straight-use-package 'jupyter)
 
 (once '(:packages jupyter)
-  ;; See https://github.com/nnicandro/emacs-jupyter/issues/380.
-  (defun jupyter-ansi-color-apply-on-region (begin end)
-    (ansi-color-apply-on-region begin end t))
   (require 'ob-jupyter)
   (org-babel-jupyter-override-src-block "python")
   (setq org-babel-default-header-args:python
@@ -4363,7 +4360,7 @@ If called with prefix arg, prompt for a major mode for the buffer."
   (let ((buf (get-buffer "*Grandview-scratch*")))
     (unless buf
       (let* ((new-buf (generate-new-buffer "*Grandview-scratch*"))
-             (jpt-session (or (bound-and-true-p conda-env-current-name) "base"))
+             (jpt-session "base")
              (text (concat "#+PROPERTY: header-args:python :session "
                            jpt-session))
              (mode "org"))
