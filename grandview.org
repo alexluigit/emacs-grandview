@@ -4181,22 +4181,6 @@ Run compiler as inferior of Emacs, parse error messages.
   (global-lsp-bridge-mode))
 #+end_src
 
-** Snippets for programming (yasnippet.el)
-:PROPERTIES:
-:CUSTOM_ID: DevTools-Snippets_for_programming_(yasnippet.el)-E86A81C4
-:END:
-
-Although we already have =tempel.el=, unfortunately for now it doesn't play well
-with all the mainstream lsp client. So we yasnippet as the fallback in =prog-mode=.
-
-#+begin_src emacs-lisp
-(straight-use-package 'yasnippet)
-
-(once '(:before self-insert-command)
-  (require 'yasnippet)
-  (add-hook 'prog-mode-hook 'yas-minor-mode))
-#+end_src
-
 ** Jupyter (jupyter.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Jupyter_(jupyter.el)-3e47b9a1
