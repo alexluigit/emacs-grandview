@@ -574,6 +574,62 @@ See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for d
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 #+end_src
 
+** The Emacs Client for LSP servers (eglot.el)
+:PROPERTIES:
+:CUSTOM_ID: DevTools-The_Emacs_Client_for_LSP_servers_(eglot.el)-30ED01DB
+:END:
+
+*eglot* is the built-in language server protocol client in Emacs29+.
+
+It's much simper and faster than *lsp-mode*, also it works well with all the
+in-built emacs packages such as flymake, eldoc, etc.
+
+We use =emacs-lsp-booster= (see: https://github.com/blahgeek/emacs-lsp-booster) to
+speed up the json parsing, make sure you have the binary installed in your *PATH*.
+
+Huge thanks to @blahgeek and @jdtsmith!
+
+#+begin_src emacs-lisp
+(straight-use-package '(eglot :type built-in))
+(straight-use-package 'markdown-mode)
+(straight-use-package
+ '(eglot-tempel :host github :repo "fejfighter/eglot-tempel"))
+(straight-use-package
+ '(eglot-booster :host github :repo "jdtsmith/eglot-booster"))
+
+(once '(:packages eglot)
+  (setq eglot-autoshutdown t)
+  (setq eglot-send-changes-idle-time 0)
+  (add-hook 'eglot-mode-hook 'eglot-setup-eldoc)
+  (require 'eglot-tempel)
+  (eglot-tempel-mode)
+  (setq eglot-booster-io-only t)
+  (add-hook 'eglot-mode-hook 'eglot-booster-mode))
+
+(bind-keys :map grandview-prog-map
+           ("a" . eglot-code-actions)
+           ("t" . eglot-find-typeDefinition)
+           ("d" . eglot-find-declaration)
+           ("i" . eglot-find-implementation)
+           ("r" . eglot-rename))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: *TEXT_EDITING*-The_Emacs_Client_for_LSP_servers_(eglot.el)-Autoload-70983486
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+eglot.el"
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +eglot-setup-eldoc ()
+  "Show docs for errors first, then signatures and others."
+  (setq-local eldoc-documentation-functions
+              '(flymake-eldoc-function
+                eglot-signature-eldoc-function
+                eglot-hover-eldoc-function)))
+#+end_src
+
 * *USER INTERFACE*
 :PROPERTIES:
 :CUSTOM_ID: *User_interface*-c85993d8
@@ -1215,6 +1271,7 @@ word, which usually consists of only 2 characters.
              ("T" . consult-global-mark)
              ("a" . consult-apropos)
              ("e" . consult-compile-error)
+             ("f" . consult-flymake)
              ("r" . consult-ripgrep)
              ("k" . consult-kmacro)
              ("K" . consult-keep-lines)
@@ -2690,8 +2747,7 @@ sure this is a good approach."
 #+begin_src emacs-lisp
 (straight-use-package 'tempel)
 
-;; (add-hook 'prog-mode-hook '+tempel-setup-capf) ; for now it confilcts with lsp clients
-(add-hook 'emacs-lisp-mode-hook '+tempel-setup-capf)
+(add-hook 'prog-mode-hook '+tempel-setup-capf)
 (add-hook 'text-mode-hook '+tempel-setup-capf)
 #+end_src
 
@@ -2835,10 +2891,6 @@ text-mode
 rst-mode
 
 (title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
-
-java-mode
-
-(class "public class " (p (file-name-base (or (buffer-file-name) (buffer-name)))) " {" n> r> n "}")
 
 c-mode :condition (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
@@ -3802,7 +3854,7 @@ Some additions I've added to rg transient:
 
 (once '(:hooks find-file-hook)
   (+rg-setup) ; for lazy loading
-  (bind-key "r" 'rg-project-all-files-no-ask grandview-prog-map))
+  (bind-key "s" 'rg-project-all-files-no-ask grandview-prog-map))
 #+end_src
 
 *** Autoload
@@ -4049,8 +4101,67 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?$" . web-mode))
 
+(add-hook 'typescript-ts-mode-hook #'eglot-ensure)
 (setq js-indent-level 2)
-(setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+#+end_src
+
+** Vue
+:PROPERTIES:
+:CUSTOM_ID: Programming_Languages-Vue-4DAC98CA
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(vue-ts-mode :type git :host github :repo "8uff3r/vue-ts-mode"))
+
+(once '(:packages eglot)
+  (add-to-list 'eglot-server-programs (+eglot-vue-lsp-program)))
+
+(add-hook 'vue-ts-mode-hook #'eglot-ensure)
+
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . vue-ts-mode))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: Programming_Languages-Vue-Autoload-3BB563B7
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Vue.el"
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +eglot-vue-lsp-program ()
+  "something."
+  (let* ((tsdk (shell-command-to-string
+                "npm list --global --parseable typescript | head -n1 | tr -d \"\n\""))
+         (tsdk-path (expand-file-name "lib" tsdk))
+         (options `(:typescript
+                    (:tsdk
+                     ,tsdk-path
+                     :languageFeatures (:completion
+                                        (:defaultTagNameCase
+                                         "both" :defaultAttrNameCase "kebabCase"
+                                         :getDocumentNameCasesRequest nil
+                                         :getDocumentSelectionRequest nil)
+                                        :diagnostics (:getDocumentVersionRequest nil))
+                     :documentFeatures (:documentFormatting
+                                        (:defaultPrintWidth 100 :getDocumentPrintWidthRequest nil)
+                                        :documentSymbol t :documentColor t))
+                    :vue (:hybridMode :json-false))))
+    `((vue-ts-mode typescript-ts-mode) . ("vue-language-server" "--stdio" :initializationOptions ,options))))
+#+end_src
+
+** Css
+:PROPERTIES:
+:CUSTOM_ID: Programming_Languages-Css-98F54473
+:END:
+
+#+begin_src emacs-lisp
+(straight-use-package '(css-mode :type built-in))
+
+(add-to-list 'auto-mode-alist '("\\.css\\'" . css-ts-mode))
+
+(setq css-indent-offset 2)
 #+end_src
 
 ** Bash|Zsh
@@ -4086,7 +4197,7 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 Run compiler as inferior of Emacs, parse error messages.
 
 #+begin_src emacs-lisp
-(bind-keys :map grandview-prog-map
+(bind-keys :map grandview-files-map
            ("p" . compile)
            ("P" . recompile))
 #+end_src
