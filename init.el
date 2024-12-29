@@ -154,15 +154,15 @@ Optional LABEL and STRING are echoed out."
        (lambda ()
          (org-with-point-at (point)
            (when (string= (org-get-heading) "Autoload")
-             (let* ((package-name
-                     (save-excursion
-                       (org-up-heading-safe)
-                       (let ((h (org-get-heading)))
-                         (substring h (1+ (string-match "(\\(.*\\))" h))
-                                    (match-end 1)))))
+             (let* ((title (save-excursion (org-up-heading-safe) (org-get-heading)))
+                    (memo (ignore-errors
+                            (substring title (1+ (string-match "(\\(.*\\))" title))
+                                       (match-end 1))))
+                    (name (or memo (replace-regexp-in-string (regexp-quote " ") "_" title t t)))
+                    (.el? (ignore-errors (string= ".el" (substring name -3))))
                     (tangle-path (concat ":tangle \""
                                          (grandview--init-path 'def-dir)
-                                         "+" package-name "\"")))
+                                         "+" name (if .el? "" ".el") "\"")))
                (org-entry-put nil "header-args:emacs-lisp" tangle-path)))))))
     (save-buffer)
     (kill-this-buffer)))
