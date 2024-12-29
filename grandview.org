@@ -357,7 +357,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
-  (setq meow-keypad-start-keys '((?c . ?c) (?x . ?x)))
+  (setq meow-keypad-start-keys '((?c . ?c) (?x . ?x) (?h . ?h)))
   (setq meow-keypad-describe-delay 0.5)
   (setq meow-select-on-change t)
   (setq meow-cursor-type-normal 'box)
@@ -3689,9 +3689,9 @@ made for this package and built-in help buffer:
 (straight-use-package 'helpful)
 
 (bind-keys :map global-map
-           ("C-h K" . describe-keymap)  ; overrides `Info-goto-emacs-key-command-node'
-           ([remap describe-function] . helpful-callable)
-           ([remap describe-key] . helpful-key))
+           ("C-h K" . describe-keymap)    ; overrides `Info-goto-emacs-key-command-node'
+           ("C-h C-f" . helpful-callable) ; overrides default behavior of `meow'
+           ("C-h k" . helpful-key))       ; overrides default behavior of `meow'
 
 (once '(:hooks minibuffer-setup-hook)
   (require 'helpful)
