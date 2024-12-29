@@ -4053,9 +4053,10 @@ Run compiler as inferior of Emacs, parse error messages.
 #+begin_src emacs-lisp
 (straight-use-package 'lsp-mode)
 
-(dolist (lang '(sh lua python web typescript rust csharp))
-  (define-prefix-command '+lsp-map)
-  (bind-keys :map mode-specific-map ("l" . +lsp-map))
+(define-prefix-command '+lsp-map)
+(bind-keys :map mode-specific-map ("l" . +lsp-map))
+
+(dolist (lang '(bash-ts lua-ts python-ts web typescript-ts rust-ts csharp-ts js-ts))
   (add-hook (intern (format "%s-mode-hook" lang)) 'lsp-deferred))
 
 (once '(:hooks lsp-mode-hook)
@@ -4068,12 +4069,19 @@ Run compiler as inferior of Emacs, parse error messages.
   (setq lsp-enable-snippet nil)
   (setq lsp-signature-auto-activate t)
   (setq lsp-signature-function 'lsp-signature-posframe)
-  (setq lsp-signature-doc-lines 20)
+  ;; always show the full signature
+  (setq lsp-signature-posframe-params
+        '(:poshandler posframe-poshandler-point-bottom-left-corner-upward
+                      :max-height 40
+                      :width 60 :border-width 1 :min-width 60))
+  (setq lsp-enable-indentation nil)
+  (setq lsp-enable-relative-indentation nil)
+  (setq lsp-enable-on-type-formatting nil)
   (setq lsp-server-install-dir (expand-file-name (locate-user-emacs-file "lsp")))
   (setq lsp-headerline-breadcrumb-enable t)
+  (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
   (setq lsp-lua-completion-keyword-snippet "Disable")
-  (add-hook 'lsp-mode-hook #'+lsp-setup-orderless-h)
-  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\envs\\'"))
+  (add-hook 'lsp-mode-hook #'+lsp-setup-orderless-h))
 #+end_src
 
 *** Extensions
@@ -4086,7 +4094,6 @@ Run compiler as inferior of Emacs, parse error messages.
 (straight-use-package 'lsp-pyright)
 (straight-use-package 'lsp-ui)
 
-(add-hook 'python-mode-hook '+lsp-pyright-import-venv)
 (add-hook 'lsp-mode-hook 'lsp-ui-mode)
 (setq lsp-tailwindcss-add-on-mode t)
 (when (executable-find "python3")
@@ -4103,25 +4110,6 @@ Run compiler as inferior of Emacs, parse error messages.
 :END:
 
 #+begin_src emacs-lisp
-;;;###autoload
-(defadvice! +lsp-volar--vue-project-p (workspace-root)
-  "Make 'lsp-volar' support nuxt project."
-  :override #'lsp-volar--vue-project-p
-  (when-let* ((package-json (f-join workspace-root "package.json"))
-              (exist (f-file-p package-json))
-              (config (json-read-file package-json))
-              (dependencies (alist-get 'dependencies config)))
-    (or (alist-get 'vue dependencies) (alist-get 'nuxt dependencies))))
-
-;;;###autoload
-(defun +lsp-pyright-import-venv ()
-  "Fix `import' resolution with projects with virtual env like conda."
-  (require 'lsp-pyright)
-  (let* ((pr-root (lsp-workspace-root))
-         (py-ver "python3.9")
-         (extra-path (concat pr-root "/envs/lib/" py-ver "/site-packages")))
-    (setq lsp-pyright-extra-paths (vector extra-path))))
-
 ;;;###autoload
 (defun +lsp-setup-orderless-h ()
   "Configure orderless for `lsp-mode'."
