@@ -1055,6 +1055,23 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
   (setq nerd-icons-font-family "Iosevka NF"))
 #+end_src
 
+** Eldoc in childframe (eldoc-box.el)
+:PROPERTIES:
+:CUSTOM_ID: *USER_INTERFACE*-Eldoc_in_childframe_(eldoc-box.el)-CA383FCA
+:END:
+
+This package displays ElDoc documentations in a childframe. The childframe is
+selectable and scrollable with mouse, even though the cursor is hidden.
+
+#+begin_src emacs-lisp
+(straight-use-package 'eldoc-box)
+
+(setq eldoc-echo-area-use-multiline-p nil)
+(once '(:hooks minibuffer-setup-hook)
+  (require 'eldoc-box)
+  (bind-key "p" 'eldoc-box-help-at-point grandview-prog-map))
+#+end_src
+
 * *COMPLETION FRAMEWORK*
 :PROPERTIES:
 :CUSTOM_ID: *Completion_framework*-c9eb4c39
