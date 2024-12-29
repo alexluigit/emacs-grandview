@@ -4170,15 +4170,50 @@ Run compiler as inferior of Emacs, parse error messages.
 
 #+begin_src emacs-lisp
 (straight-use-package
- '(lsp-bridge :host github :repo "manateelazycat/lsp-bridge"
-              :files (:defaults "acm/*.el" "acm/*.py" "*.py")
-              :post-build ((make-symbolic-link
-                            (expand-file-name "acm/icons" default-directory)
-                            (expand-file-name "straight/build/lsp-bridge/"
-                                              straight-base-dir)))))
+ '(lsp-bridge :type git :host github
+              :repo "manateelazycat/lsp-bridge"
+              :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+              :build (:not compile)))
 
-(once '(:hooks find-file-hook)
-  (global-lsp-bridge-mode))
+(bind-keys :map grandview-prog-map
+           ("." . lsp-bridge-find-def)
+           ("," . lsp-bridge-find-def-return)
+           ("t" . lsp-bridge-find-type-def)
+           ("r" . lsp-bridge-find-references)
+           ("i" . lsp-bridge-find-impl)
+           ("p" . lsp-bridge-popup-documentation)
+           ("n" . lsp-bridge-peek)
+           ("o" . lsp-bridge-peek-abort)
+           ("e" . lsp-bridge-diagnostic-jump-next)
+           ("E" . lsp-bridge-diagnostic-jump-prev))
+
+(once '(:hooks post-command-hook)
+  (global-lsp-bridge-mode)
+  (setq lsp-bridge-enable-org-babel t)
+  (setq acm-enable-preview t))
+#+end_src
+
+*** Autoload
+:PROPERTIES:
+:CUSTOM_ID: DevTools-Fastest_LSP_client_(lsp-bridge.el)-Autoload-D631DD38
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defadvice! lsp-bridge-diagnostic-jump-next-a (fn &rest args)
+  "Fallback to `flymake-goto-next-error' when bridge found no error."
+  :around #'lsp-bridge-diagnostic-jump-next
+  (if (bound-and-true-p flymake-mode)
+      (flymake-goto-next-error current-prefix-arg)
+    (apply fn args)))
+
+;;;###autoload
+(defadvice! lsp-bridge-diagnostic-jump-prev-a (fn &rest args)
+  "Fallback to `flymake-goto-prev-error' when bridge found no error."
+  :around #'lsp-bridge-diagnostic-jump-prev
+  (if (bound-and-true-p flymake-mode)
+      (flymake-goto-prev-error current-prefix-arg)
+    (apply fn args)))
 #+end_src
 
 ** Jupyter (jupyter.el)
