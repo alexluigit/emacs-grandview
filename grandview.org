@@ -2635,13 +2635,36 @@ to tell apart, but also to render unambiguous commands like forward-sentence.
 :CUSTOM_ID: Text_editing_extras-Cross_reference_(xref.el)-1a6bcfb6
 :END:
 
-*xref* provides helpful commands for code navigation and discovery.
+*xref* is a pluggable emacs subsystem to quickly find where identifiers are
+defined and referenced, and for quick renaming, etc.
+
+Every module (such as *eglot*) that plugs into xref must provide a constructor function that
+returns a backend value and a set of methods:
+
+- ~xref-backend-identifier-at-point~
+- ~xref-backend-identifier-completion-table~
+- ~xref-backend-definitions~
+- ~xref-backend-references~
+- ~xref-backend-apropos~
+
+For users, there are some commands that are available to users by default, the
+most frequently used are:
+
+- ~xref-find-definitions~ (=M-.=)
+- ~xref-go-back~ (=M-,=)
+- ~xref-find-references~ (=M-?=)
+- ...etc.
+
+=M-?= is a bit hard to press, so we change it to =M-/= (this key was bound by
+~dabbrev-expand~, which is not that useful since we already have a completion
+framework works all around).
 
 #+begin_src emacs-lisp
 (straight-use-package '(fill :type built-in))
 
 (setq xref-file-name-display 'project-relative)
 (setq xref-search-program 'ripgrep)
+(bind-key "M-/" 'xref-find-references)
 #+end_src
 
 ** Interactive diff, patch, or merge conflict (ediff.el)
