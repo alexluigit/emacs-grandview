@@ -548,7 +548,8 @@ code structurally. For example:
 After setting the ~treesit-language-source-alist~, try =M-x
 treesit-install-language-grammar=.
 
-See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for details.
+See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for
+details.
 
 #+begin_src emacs-lisp
 (setq treesit-language-source-alist
@@ -2735,6 +2736,17 @@ sure this is a good approach."
 :CUSTOM_ID: Text_editing-Snippet_(tempel.el)-79179e2c
 :END:
 
+"Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
+Tempo library. Tempo is an ancient temple of the church of Emacs. It is 30 years
+old, but still in good shape since it successfully resisted change over the
+decades. However it may look a bit dusty here and there. Therefore we present
+Tempel, a new implementation of Tempo with inline expansion and integration with
+recent Emacs facilities. Tempel takes advantage of the standard
+completion-at-point-functions mechanism which is used by Emacs for in-buffer
+completion."
+
+  -- From https://github.com/minad/tempel
+
 #+begin_src emacs-lisp
 (straight-use-package 'tempel)
 
@@ -2749,29 +2761,6 @@ sure this is a good approach."
 :END:
 
 #+begin_src emacs-lisp
-;;;###autoload
-(defadvice! tempel-condition-ad (modes plist)
-  "Return non-nil if one of MODES matches and the PLIST condition is satisfied."
-  :override #'tempel--condition-p
-  (and
-   (cl-loop
-    for m in modes thereis
-    (or (eq m #'fundamental-mode)
-        (derived-mode-p m)
-        (when-let* (((derived-mode-p 'org-mode))
-                    (element (org-element-context))
-                    ((eq 'src-block (car-safe element))))
-          (if-let* ((lang (plist-get (cadr element) :language))
-                    (mode (org-src-get-lang-mode lang))
-                    ((fboundp mode)))
-              mode
-            #'fundamental-mode))))
-   (or (not (plist-member plist :condition))
-       (save-excursion
-         (save-restriction
-           (save-match-data
-             (eval (plist-get plist :condition) 'lexical)))))))
-
 ;;;###autoload
 (defun +tempel-setup-capf ()
   ;; Add the Tempel Capf to `completion-at-point-functions'.
@@ -2816,6 +2805,7 @@ Furthermore Tempel supports syntax extensions:
 
  - ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
  - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
+ - ~q~ Quits the containing template when jumped to.
 
 Use caution with templates which execute arbitrary code!
 
@@ -2845,66 +2835,98 @@ lisp-mode emacs-lisp-mode ;; Specify multiple modes
 emacs-lisp-mode
 
 (use "(straight-use-package '" p ")")
-(cond "(cond (" p ")" n> "()" n> "()" ")")
 (lambda "(lambda (" p ")" n> r> ")")
+(autoload ";;;###autoload")
+(pt "(point)")
 (var "(defvar " p "\n  \"" p "\")")
+(local "(defvar-local " p "\n  \"" p "\")")
 (const "(defconst " p "\n  \"" p "\")")
 (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")")
 (face "(defface " p " '((t :inherit " p "))\n  \"" p "\")")
 (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")")
 (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")")
+(alias "(defalias '" p " '" p ")")
 (fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
+(iflet "(if-let* (" p ")" n> r> ")")
+(whenlet "(when-let* (" p ")" n> r> ")")
+(whilelet "(while-let (" p ")" n> r> ")")
+(andlet "(and-let* (" p ")" n> r> ")")
+(cond "(cond (" p ")" n> "()" n> "()" ")")
+(pcase "(pcase " (p "scrutinee") n "(" q "))" >)
 (let "(let (" p ")" n> r> ")")
-(star "(let* (" p ")" n> r> ")")
+(lett "(let* (" p ")" n> r> ")")
+(pcaselet "(pcase-let (" p ")" n> r> ")")
+(pcaselett "(pcase-let* (" p ")" n> r> ")")
 (rec "(letrec (" p ")" n> r> ")")
-(command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive)" n> r> ")")
+(dotimes "(dotimes (" p ")" n> r> ")")
+(dolist "(dolist (" p ")" n> r> ")")
+(loop "(cl-loop for " p " in " p " do" n> r> ")")
+(command "(defun " p " (" p ")\n  \"" p "\"" n> "(interactive" p ")" n> r> ")")
+(header ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
+        " --- " p " -*- lexical-binding: t -*-" n
+        ";;; Commentary:" n ";;; Code:" n n)
+(provide "(provide '" (file-name-base (or (buffer-file-name) (buffer-name))) ")" n
+         ";;; " (file-name-nondirectory (or (buffer-file-name) (buffer-name)))
+         " ends here" n)
+(package (i header) r n n (i provide))
 
 eshell-mode
 
-(for "for " (p "i") " in " p " { " p " }")
-(while "while { " p " } { " p " }")
-(until "until { " p " } { " p " }")
-(if "if { " p " } { " p " }")
-(if-else "if { " p " } { " p " } { " p " }")
-(unless "unless { " p " } { " p " }")
-(unless-else "unless { " p " } { " p " } { " p " }")
+(for "for " (p "i") " in " p " { " q " }")
+(while "while { " p " } { " q " }")
+(until "until { " p " } { " q " }")
+(if "if { " p " } { " q " }")
+(ife "if { " p " } { " p " } { " q " }")
+(unl "unless { " p " } { " q " }")
+(unle "unless { " p " } { " p " } { " q " }")
 
 text-mode
 
+(box "┌─" (make-string (length str) ?─) "─┐" n
+     "│ " (s str)                       " │" n
+     "└─" (make-string (length str) ?─) "─┘" n)
+(abox "+-" (make-string (length str) ?-) "-+" n
+      "| " (s str)                       " |" n
+      "+-" (make-string (length str) ?-) "-+" n)
 (cut "--8<---------------cut here---------------start------------->8---" n r n
      "--8<---------------cut here---------------end--------------->8---" n)
-(asciibox "+-" (make-string (length str) ?-) "-+" n
-          "| " (s str)                       " |" n
-          "+-" (make-string (length str) ?-) "-+" n)
 (rot13 (p "plain text" text) n "----" n (rot13 text))
 (calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
+(table (p (read-number "Rows: ") rows noinsert)
+       (p (read-number "Cols: ") cols noinsert)
+       "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
+       "|" (* cols "----|") n
+       (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
 
 rst-mode
 
 (title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
 
-c-mode :condition (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
+c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
 (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
 (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
 
 org-mode
 
-(title "#+title: " p n "#+author: Alex Lu" n "#+language: en" n n)
-(quote "#+begin_quote" n> r> n> "#+end_quote")
-(example "#+begin_example" n> r> n> "#+end_example")
-(center "#+begin_center" n> r> n> "#+end_center")
-(comment "#+begin_comment" n> r> n> "#+end_comment")
-(verse "#+begin_verse" n> r> n> "#+end_verse")
-(src "#+begin_src " p n> r> n> "#+end_src")
-(elisp "#+begin_src emacs-lisp" n> r> n "#+end_src")
-(cc "#+begin_src C" n> r> n "#+end_src")
-(cpp "#+begin_src cpp" n> r> n "#+end_src")
-(csharp "#+begin_src csharp" n> r> n "#+end_src")
-(python "#+begin_src python" n> r> n "#+end_src")
-(js "#+begin_src js" n> r> n "#+end_src")
-(bash "#+begin_src bash" n> r> n "#+end_src")
-(latex "#+begin_src latex" n> r> n "#+end_src")
+(caption "#+caption: ")
+(drawer ":" p ":" n r ":end:")
+(begin "#+begin_" (s name) n> r> n "#+end_" name)
+(quote "#+begin_quote" n> r> n "#+end_quote")
+(sidenote "#+begin_sidenote" n> r> n "#+end_sidenote")
+(marginnote "#+begin_marginnote" n> r> n "#+end_marginnote")
+(example "#+begin_example" n> r> n "#+end_example")
+(center "#+begin_center" n> r> n "#+end_center")
+(ascii "#+begin_export ascii" n> r> n "#+end_export")
+(html "#+begin_export html" n> r> n "#+end_export")
+(latex "#+begin_export latex" n> r> n "#+end_export")
+(comment "#+begin_comment" n> r> n "#+end_comment")
+(verse "#+begin_verse" n> r> n "#+end_verse")
+(src "#+begin_src " q n r n "#+end_src")
+(gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n r n "#+end_src" :post (org-edit-src-code))
+(elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
+(inlsrc "src_" p "{" q "}")
+(title "#+title: " p n "#+author: Alex Lu" n "#+language: en")
 
 ;; Local Variables:
 ;; mode: lisp-data
