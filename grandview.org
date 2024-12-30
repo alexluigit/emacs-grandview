@@ -53,12 +53,18 @@ straightforward project structure:
 
 The elisp source blocks in this file is tangled to a regular =.el= file which is
 then evaluated by Emacs.  Sections named *Autoload* are tangled to separate files
-upon which corresponding autoloads are generated.  Whenever the content of this
-file changes, this tangling process is fired up on the execution of ~kill-emacs~
-command, after that the old config is replaced by the newly generated one.
+upon which corresponding autoloads are generated.
+
+After you modify the contents of code blocks in this file, you may want to apply
+these changes immediately, just ~M-x ~restart-emacs~, after restart the old config
+is automatically replaced by the newly generated one, and the newly opened emacs
+will apply the latest config.  It is the same behavior you would expect with a
+regular emacs config which don't follow the literate programming fashion.  A
+caveat is that before doing so you'd better have a quick look to check if all
+the parentheses are balanced, otherwise emacs won't start correctly.
 
 A section with /bold and uppercase title/ means it is a core config in
-*Grandview*. Unless you know exactly what you are doing, it is *NOT* recommended to
+*Grandview*. Unless you know exactly what you are doing, it is *NOT RECOMMENDED* to
 comment out these sections. Since codes in other sections may rely on
 orientations in the section to work properly, so be sure to edit these sections
 with caution.
@@ -121,7 +127,6 @@ Here are the dependencies of this project.
 | =Iosveka Nerd Font= | Default font                | optional |
 | =font-victor-mono=  | Default fixed pitch font    | optional |
 | =ttf-sarasa-gothic= | Default variable pitch font | optional |
-| =xdotool=           | Automation tool for X11     | optional |
 |-------------------+-----------------------------+----------|
 
 *** Tangling
@@ -141,15 +146,15 @@ mv ~/emacs-grandview ~/.config/emacs/
 ## or you can put it to ~/.emacs.d, it's an old convention
 # mv ~/emacs-grandview ~/.emacs.d
 
-## let it tangles itself
-emacs --bg-daemon
-## hooray, enjoy the Grandview
-emacsclient -cn
-## NOTE: You should be able to start/restart Emacs by 'rem' bash
-## command from now on, see the "** Restart Emacs"  section below.
+## hooray, enjoy the Emacs-Grandview
+
+emacs
+
+## NOTE: After the first initialization you should be able to start/restart
+## Emacs by 'rem' bash command, see the "** Restart Emacs" section below.
 #+end_src
 
-* Restart Emacs
+** Restart Emacs
 :PROPERTIES:
 :CUSTOM_ID: *Restart_it!*-780054ff
 :END:
@@ -157,12 +162,12 @@ emacsclient -cn
 Although Emacs already provided functionalities like ~unload-feature~ and
 ~remove-hook~ to eliminate the side effects of certain packages or user
 configurations, most of the time it's still easier to reload your Emacs
-configurations through a complete restart.  Luckily, Emacs 30+ comes with this
-feature out of the box, that is the ~restart-emacs~ command.  However, when Emacs
-hangs up, we can not expect it to evaluate any elisp code, in this case, a shell
-script that helps us to restart Emacs can be very handy.
+configurations through a complete restart.  Although emacs comes with the
+~restart-emacs~ command, however, when Emacs hangs up, =M-x= or keybindings is not
+accessible to us, in this case, a shell script to restart Emacs from terminal
+can be very handy.
 
-** Source
+*** Source
 :PROPERTIES:
 :CUSTOM_ID: *Restart_it!*-CLI_source-a2764225
 :END:
@@ -185,8 +190,6 @@ section. This script will be tangled to *~/.local/bin/rem*, so make sure
 #+end_src
 
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
-_is_ime_rime () { [[ -d ~/.config/rime ]] || [[ -d ~/.local/share/fcitx5/rime ]]; }
-
 ELCs=false REPOs=false RESET=false DEBUG="" BIN="emacs"
 INIT_DIR="--init-directory <<grandview-cache(type="home")>>"
 [[ $(uname) == "Darwin" ]] && BIN="/Applications/Emacs.app/Contents/MacOS/Emacs"
@@ -201,19 +204,16 @@ while getopts "pPrd" opt; do
 done
 shift $((OPTIND -1))
 
-emacs_cmd="$BIN --bg-daemon $DEBUG $INIT_DIR"
+emacs_cmd="$BIN $DEBUG $INIT_DIR >/dev/null 2>&1 & disown"
 notify-send "Restarting emacs..." 2>/dev/null
 kill -9 $(pgrep -x '[Ee]macs') 2>/dev/null
 $RESET && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
 $ELCs && rm -rf '<<grandview-cache(type="pkg-builds")>>' 2>/dev/null
 $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
-_is_ime_rime && eval GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs $emacs_cmd \
-    || eval $emacs_cmd
-command -v xdotool >/dev/null 2>&1 && xdotool set_desktop 0 2>&1
-emacsclient -cn
+eval $emacs_cmd
 #+end_src
 
-** Usage
+*** Usage
 :PROPERTIES:
 :CUSTOM_ID: *Restart_it!*-CLI_usage-63ad000f
 :END:

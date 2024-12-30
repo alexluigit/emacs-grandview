@@ -259,11 +259,10 @@ When FORCE, ensure the tangle process and autoloads generation."
   (require 'grandview-loaddefs)
   (load (grandview--init-path 'main) (not debug) t)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (add-hook 'after-init-hook
-            (lambda ()
-              (require 'server)
-              (unless (server-running-p)
-                (server-start))))
+  (add-hook 'after-init-hook (lambda ()
+                               (require 'server)
+                               (unless (server-running-p) (server-start))
+                               (select-frame-set-input-focus (selected-frame))))
   ;; Setup PATH on macOS
   (when (memq window-system '(mac ns))
     (straight-use-package 'exec-path-from-shell)
