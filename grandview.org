@@ -4040,7 +4040,7 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
  '(vue-ts-mode :type git :host github :repo "8uff3r/vue-ts-mode"))
 
 (once '(:packages eglot)
-  (add-to-list 'eglot-server-programs (+eglot-vue-lsp-program)))
+  (add-to-list 'eglot-server-programs +eglot-vue-ts-lsp-program))
 
 (add-hook 'vue-ts-mode-hook #'eglot-ensure)
 
@@ -4055,27 +4055,37 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +eglot-vue-lsp-program ()
-  "Lsp client options for vue project."
-  (let* ((tsdk (string-trim-right
-                (shell-command-to-string "npm list -g -p typescript | head -n1")))
-         (tsdk-path (expand-file-name "lib" tsdk))
-         (options `(:typescript
-                    (:tsdk
-                     ,tsdk-path
-                     :languageFeatures (:completion
-                                        (:defaultTagNameCase
-                                         "both" :defaultAttrNameCase "kebabCase"
-                                         :getDocumentNameCasesRequest nil
-                                         :getDocumentSelectionRequest nil)
-                                        :diagnostics (:getDocumentVersionRequest nil))
-                     :documentFeatures (:documentFormatting
-                                        (:defaultPrintWidth
-                                         100 :getDocumentPrintWidthRequest nil)
-                                        :documentSymbol t :documentColor t))
-                    :vue (:hybridMode :json-false))))
-    `((vue-ts-mode typescript-ts-mode) .
-      ("vue-language-server" "--stdio" :initializationOptions ,options))))
+(defcustom +eglot-vue-ts-lsp-program
+  '((vue-ts-mode typescript-ts-mode) .
+    ("vue-language-server" "--stdio"
+     :initializationOptions
+     (:typescript
+      (:tsdk
+       "/opt/homebrew/lib/node_modules/typescript/lib"
+       :languageFeatures
+       (:completion
+        (:defaultTagNameCase
+         "both" :defaultAttrNameCase "kebabCase"
+         :getDocumentNameCasesRequest nil
+         :getDocumentSelectionRequest nil)
+        :diagnostics (:getDocumentVersionRequest nil))
+       :documentFeatures
+       (:documentFormatting
+        (:defaultPrintWidth
+         100 :getDocumentPrintWidthRequest nil)
+        :documentSymbol t :documentColor t))
+      :vue (:hybridMode :json-false))))
+  "Lsp client options for vue - typescript project.
+The string followed by `:tsdk' is the path to typescript sdk library,
+which may vary across in different OS, usually you can get the path by
+evaluate the code below:
+`(expand-file-name \"lib\" (string-trim-right
+  (shell-command-to-string \"npm list -g -p typescript | head -n1\")))'
+It basically instructs npm to find the path by itself.  Run this npm
+query is quite expensive and slow, which makes emacs lag for a second
+everytime a new vue typescript project is opened.  Hence, set it
+manually seems a better option."
+  :type 'eglot-server-program)
 #+end_src
 
 ** Css
@@ -4176,7 +4186,9 @@ optional minor mode which can apply this command automatically on save.
     :program "eslint_d"
     :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
     :working-directory (+reformatter-eslint-root)
-    :lighter " eslint"))
+    :lighter " eslint")
+  (add-hook 'vue-ts-mode-hook #'vue-format-on-save-mode)
+  (add-hook 'vue-ts-mode-hook #'typescript-format-on-save-mode))
 #+end_src
 
 *** Autoload
