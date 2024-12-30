@@ -126,7 +126,6 @@ Here are the dependencies of this project.
 | =font-victor-mono=  | Default fixed pitch font    | optional |
 | =ttf-sarasa-gothic= | Default variable pitch font | optional |
 |-------------------+-----------------------------+----------|
-
 *** Tangling
 :PROPERTIES:
 :CUSTOM_ID: Overview-Installation-Tangling-2622c756
@@ -725,7 +724,7 @@ Recommended themes (using their package names):
   (load-theme grandview-theme t))
 #+end_src
 
-** Fonts (fonts.el)
+** Fonts
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-073ed5c4
 :END:
@@ -752,7 +751,7 @@ A list of my favorite CJK fonts.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+fonts.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Fonts.el"
 :CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-Autoload-647703e6
 :END:
 
@@ -865,7 +864,7 @@ Directional window-selection routines.
            ("M-O" . windmove-left))
 #+end_src
 
-*** Window placement (window.el)
+*** Window placement
 :PROPERTIES:
 :CUSTOM_ID: *USER_INTERFACE*-Window_commands_(window.el)-Window_placement-79B7247E
 :END:
@@ -1923,9 +1922,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (setq dirvish-side-width 38)
 (setq dirvish-header-line-format '(:left (path) :right (free-space)))
 (setq dirvish-path-separators (list "  " "  " "  "))
-(add-to-list 'dirvish-preview-disabled-exts "lockb")
-(add-to-list 'dirvish-preview-disabled-exts "sqlite")
-(add-to-list 'dirvish-preview-disabled-exts "db")
+(appendq! dirvish-preview-disabled-exts '("lockb" "sqlite" "db"))
 (once '(:hooks pre-command-hook)
   (setq! dirvish-quick-access-entries
          '(("o" "~/"                          "Home")
@@ -2606,7 +2603,7 @@ most frequently used are:
 framework works all around).
 
 #+begin_src emacs-lisp
-(straight-use-package '(fill :type built-in))
+(straight-use-package '(xref :type built-in))
 
 (setq xref-file-name-display 'project-relative)
 (setq xref-search-program 'ripgrep)
@@ -3079,7 +3076,7 @@ Summary of what these do:
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-9ff97526
 :END:
-** Makes windows without focus less prominent (auto-dim-other-buffers.el)
+** Less prominent for unfocused window (auto-dim-other-buffers.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Make_(auto-dim-other-buffers.el)-73a27abb
 :END:
@@ -4073,10 +4070,12 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
                                          :getDocumentSelectionRequest nil)
                                         :diagnostics (:getDocumentVersionRequest nil))
                      :documentFeatures (:documentFormatting
-                                        (:defaultPrintWidth 100 :getDocumentPrintWidthRequest nil)
+                                        (:defaultPrintWidth
+                                         100 :getDocumentPrintWidthRequest nil)
                                         :documentSymbol t :documentColor t))
                     :vue (:hybridMode :json-false))))
-    `((vue-ts-mode typescript-ts-mode) . ("vue-language-server" "--stdio" :initializationOptions ,options))))
+    `((vue-ts-mode typescript-ts-mode) .
+      ("vue-language-server" "--stdio" :initializationOptions ,options))))
 #+end_src
 
 ** Css
@@ -4158,6 +4157,7 @@ optional minor mode which can apply this command automatically on save.
 (straight-use-package 'reformatter)
 
 (bind-key "f" '+format-buffer grandview-prog-map)
+
 (once '(:packages reformatter)
   (reformatter-define lua-format
     :program "stylua"
