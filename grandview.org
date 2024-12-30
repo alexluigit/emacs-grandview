@@ -362,7 +362,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
   (setq meow-keypad-describe-delay 0.5)
   (setq meow-select-on-change t)
   (setq meow-cursor-type-normal 'box)
-  (setq meow-cursor-type-insert '(bar . 4))
+  (setq meow-cursor-type-insert '(bar . 2))
   (setq meow-cursor-type-default 'hbar)
   (setq meow-selection-command-fallback
         '((meow-replace . meow-yank)
@@ -989,7 +989,7 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
   "Cursor color for `+frame-cursor-dim-mode'."
   :group 'cursor :type 'string)
 
-(defcustom +frame-opacity (if (eq system-type 'gnu/linux) 80 90)
+(defcustom +frame-opacity 100
   "Default frame opacity."
   :group 'grandview
   :type 'integer)
@@ -1924,6 +1924,7 @@ users deserve a file manager better than those popular ones on terminal such as
 (setq! dirvish-subtree-state-style 'nerd)
 (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
 (setq dirvish-header-line-height '(25 . 35))
+(setq dirvish-mode-line-height 21)
 (setq dirvish-side-width 38)
 (setq dirvish-header-line-format '(:left (path) :right (free-space)))
 (setq dirvish-path-separators (list "  " "  " "  "))
@@ -3215,9 +3216,9 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
              ("ESC" . transient-quit-all)))
 #+end_src
 
-** Mode line (mode-line.el)
+** Custom Mode line
 :PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Modeline_(mode-line.el)-70f41922
+:CUSTOM_ID: User_interface-Custom_Mode_line-B9FF24C1
 :END:
 
 The following infos in modeline are provided:
@@ -3241,7 +3242,7 @@ in ~+mode-line-format~.
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+mode-line.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Custom_Mode_line.el"
 :CUSTOM_ID: User_interface_extras-Modeline_(mode-line.el)-Autoload-750e010a
 :END:
 
@@ -3272,8 +3273,8 @@ in ~+mode-line-format~.
 The SEGMENTs are defined by `+mode-line-define'."
   :set #'+mode-line--fmt-setter)
 
-(defcustom +mode-line-height 30
-  "Doc.")
+(defcustom +mode-line-height 21
+  "Modeline's height in pixel.")
 
 (defvar +mode-line-selected-window nil)
 
@@ -4065,9 +4066,9 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 #+begin_src emacs-lisp
 ;;;###autoload
 (defun +eglot-vue-lsp-program ()
-  "something."
-  (let* ((tsdk (shell-command-to-string
-                "npm list --global --parseable typescript | head -n1 | tr -d \"\n\""))
+  "Lsp client options for vue project."
+  (let* ((tsdk (string-trim-right
+                (shell-command-to-string "npm list -g -p typescript | head -n1")))
          (tsdk-path (expand-file-name "lib" tsdk))
          (options `(:typescript
                     (:tsdk
