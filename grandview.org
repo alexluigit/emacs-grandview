@@ -3,11 +3,38 @@
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
 #+STARTUP: showall
-
 * Overview
 :PROPERTIES:
 :CUSTOM_ID: Overview-4853848f
 :END:
+** Screenshots
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-36873671
+:END:
+
+*** File manager
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-File_manager-b2a4921d
+:END:
+[[https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png][https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png]]
+
+*** IDE
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-IDE-093ea33d
+:END:
+[[https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png][https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png]]
+
+*** Org-mode
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-Org-mode-7fb34810
+:END:
+[[https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png][https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png]]
+
+*** Lightning fast startup
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-Screenshots-Lightning_fast_startup-0c29acd2
+:END:
+[[https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png][https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png]]
 
 ** Introduction
 :PROPERTIES:
@@ -68,35 +95,6 @@ A section with /bold and uppercase title/ means it is a core config in
 comment out these sections. Since codes in other sections may rely on
 orientations in the section to work properly, so be sure to edit these sections
 with caution.
-
-*** Screenshots
-:PROPERTIES:
-:CUSTOM_ID: Overview-Introduction-Screenshots-36873671
-:END:
-
-**** File manager
-:PROPERTIES:
-:CUSTOM_ID: Overview-Introduction-Screenshots-File_manager-b2a4921d
-:END:
-[[https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png][https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png]]
-
-**** IDE
-:PROPERTIES:
-:CUSTOM_ID: Overview-Introduction-Screenshots-IDE-093ea33d
-:END:
-[[https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png][https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png]]
-
-**** Org-mode
-:PROPERTIES:
-:CUSTOM_ID: Overview-Introduction-Screenshots-Org-mode-7fb34810
-:END:
-[[https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png][https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png]]
-
-**** Lightning fast startup
-:PROPERTIES:
-:CUSTOM_ID: Overview-Introduction-Screenshots-Lightning_fast_startup-0c29acd2
-:END:
-[[https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png][https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png]]
 
 ** Installation
 :PROPERTIES:
@@ -229,7 +227,6 @@ Here are the available flags of this command.
 :PROPERTIES:
 :CUSTOM_ID: *Text_editing*-2d55608c
 :END:
-
 ** Basic editing (simple.el)
 :PROPERTIES:
 :CUSTOM_ID: *Text_editing*-Basic_editing_(simple.el)-32cbfccd
@@ -638,7 +635,6 @@ Huge thanks to @blahgeek and @jdtsmith!
 :PROPERTIES:
 :CUSTOM_ID: *User_interface*-c85993d8
 :END:
-
 ** Basics
 :PROPERTIES:
 :CUSTOM_ID: *USER_INTERFACE*-Basics-cf25db16
@@ -1619,7 +1615,6 @@ These keybindings are available when the current major mode doesn't define that 
 :PROPERTIES:
 :CUSTOM_ID: File_management-28279792
 :END:
-
 ** File/Directory handling functions (files.el)
 :PROPERTIES:
 :CUSTOM_ID: File_management-Find_files_(files.el)-9a84d0e0
@@ -1928,6 +1923,9 @@ users deserve a file manager better than those popular ones on terminal such as
 (setq dirvish-side-width 38)
 (setq dirvish-header-line-format '(:left (path) :right (free-space)))
 (setq dirvish-path-separators (list "  " "  " "  "))
+(add-to-list 'dirvish-preview-disabled-exts "lockb")
+(add-to-list 'dirvish-preview-disabled-exts "sqlite")
+(add-to-list 'dirvish-preview-disabled-exts "db")
 (once '(:hooks pre-command-hook)
   (setq! dirvish-quick-access-entries
          '(("o" "~/"                          "Home")
@@ -2138,7 +2136,6 @@ With a universal prefix to choose project anyway."
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-dd9abcb7
 :END:
-
 ** Org (org.el)
 :PROPERTIES:
 :CUSTOM_ID: Org_mode-Org_(org.el)-4769227e
@@ -2533,7 +2530,6 @@ Some number of BLANK-LINES will be shown below the header."
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-d41696e6
 :END:
-
 ** Long line text (so-long.el)
 :PROPERTIES:
 :CUSTOM_ID: Text_editing_extras-Long_line_text_(so-long.el)-812460aa
@@ -3083,7 +3079,6 @@ Summary of what these do:
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-9ff97526
 :END:
-
 ** Makes windows without focus less prominent (auto-dim-other-buffers.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface-Make_(auto-dim-other-buffers.el)-73a27abb
@@ -3547,7 +3542,6 @@ are slightly simplified.
 :PROPERTIES:
 :CUSTOM_ID: Utils-8191d3b4
 :END:
-
 ** Keyboard version right-click (embark.el)
 :PROPERTIES:
 :CUSTOM_ID: Utils-Keyboard_version_right-click_(embark.el)-70bed6c5
@@ -3953,7 +3947,6 @@ regexp .etc).
 :PROPERTIES:
 :CUSTOM_ID: Programming_languages-F3C4EC1D
 :END:
-
 ** Rust
 :PROPERTIES:
 :CUSTOM_ID: Programming_Languages-Rust-94FD5ED2
@@ -4114,7 +4107,6 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 :PROPERTIES:
 :CUSTOM_ID: DevTools-f401ccff
 :END:
-
 ** Compiler (compile.el)
 :PROPERTIES:
 :CUSTOM_ID: DevTools-Compiler-842C3947
@@ -4324,7 +4316,6 @@ If called with prefix arg, prompt for a major mode for the buffer."
 :PROPERTIES:
 :CUSTOM_ID: About_this_file-c37d0fab
 :END:
-
 ** COPYING
 :PROPERTIES:
 :CUSTOM_ID: About_this_file-COPYING-81f2aab2
