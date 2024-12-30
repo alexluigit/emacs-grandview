@@ -4165,7 +4165,7 @@ optional minor mode which can apply this command automatically on save.
 #+begin_src emacs-lisp
 (straight-use-package 'reformatter)
 
-(bind-key "f" '+format-buffer grandview-apps-map)
+(bind-key "f" '+format-buffer grandview-prog-map)
 (once '(:packages reformatter)
   (reformatter-define lua-format
     :program "stylua"
@@ -4174,7 +4174,17 @@ optional minor mode which can apply this command automatically on save.
   (reformatter-define python-format
     :program "black"
     :args '("-")
-    :lighter " blackFMT"))
+    :lighter " blackFMT")
+  (reformatter-define vue-format
+    :program "eslint_d"
+    :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
+    :working-directory (+reformatter-eslint-root)
+    :lighter " eslint")
+  (reformatter-define typescript-format
+    :program "eslint_d"
+    :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
+    :working-directory (+reformatter-eslint-root)
+    :lighter " eslint"))
 #+end_src
 
 *** Autoload
@@ -4185,9 +4195,22 @@ optional minor mode which can apply this command automatically on save.
 
 #+begin_src emacs-lisp
 ;;;###autoload
+(defun +reformatter-eslint-root ()
+  "Up traverse filesystem for a directory containing eslint config."
+  (locate-dominating-file
+     default-directory
+     (lambda (directory)
+       (seq-find
+        (lambda (project-marker)
+          (file-exists-p (expand-file-name project-marker directory)))
+        '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs" "package.json")))))
+
+;;;###autoload
 (defun +format-buffer ()
   (interactive)
-  (let* ((mode-name (string-remove-suffix "-mode" (format "%s" major-mode)))
+  (let* ((mode-name
+          (string-remove-suffix
+           "-mode" (string-remove-suffix "-ts-mode" (format "%s" major-mode))))
          (func-name (intern (format "%s-format-buffer" mode-name))))
     (if (functionp func-name)
         (funcall func-name)
