@@ -1534,6 +1534,14 @@ c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
 (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
 
+org-mode :when (and (org-in-src-block-p)
+                    (string= (org-element-property :language (org-element-context))
+                             "emacs-lisp"))
+
+(use "(straight-use-package '" p ")")
+(lambda "(lambda (" p ")" n> r> ")")
+(autoload ";;;###autoload")
+
 org-mode
 
 (caption "#+caption: ")
@@ -4399,6 +4407,7 @@ Here are the local variables in this file.
 
 + ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
 + ~org-edit-src-content-indentation~: do not add spaces at line beginning in src blocks
++ ~completion-at-point-functions~: show elisp completion candidates inside the src blocks.
 + ~+org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
 #+begin_src emacs-lisp
@@ -4416,6 +4425,10 @@ Here are the local variables in this file.
   "Setup for `grandview-org-file'."
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
+  (setq-local completion-at-point-functions
+              '(tempel-complete
+                pcomplete-completions-at-point
+                elisp-completion-at-point t))
   (setq-local org-edit-src-content-indentation 0)
   (setq-local +org-id-auto t))
 
