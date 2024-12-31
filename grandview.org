@@ -1803,13 +1803,13 @@ These keybindings are available when the current major mode doesn't define that 
 (setq permanently-enabled-local-variables '(lexical-binding encoding))
 (setq auto-save-default nil)
 (setq +files-user-dirs-alist
-      '(((title . "  Shows")        (path . "/mnt/HDD/Share"))
+      '(((title . "  Share")        (path . "/mnt/HDD/Share"))
         ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
-        ((title . "  Books")        (path . "/mnt/HDD/Book"))
-        ((title . "  Videos")       (path . "/mnt/HDD/Video"))
-        ((title . "  Notes")        (path . "~/Documents/notes"))
-        ((title . "  Photos")       (path . "~/Pictures"))
-        ((title . "  Downloads")    (path . "~/Downloads"))))
+        ((title . "󰂺  Books")        (path . "/mnt/HDD/Book"))
+        ((title . "  Videos")       (path . "/mnt/HDD/Video"))
+        ((title . "  Notes")        (path . "~/Documents/notes"))
+        ((title . "  Photos")       (path . "~/Pictures"))
+        ((title . "  Downloads")    (path . "~/Downloads"))))
 (setq confirm-kill-processes nil)
 (auto-save-visited-mode)
 (setq! auto-save-visited-interval 300)
@@ -1834,7 +1834,7 @@ These keybindings are available when the current major mode doesn't define that 
   :group 'grandview :type 'string)
 
 (defcustom +files-user-dirs-alist
-  '(((title . "  Photos")       (path . "~/Pictures/"))
+  '(((title . "  Photos")       (path . "~/Pictures/"))
     ((title . "  Videos")       (path . "~/Video/"))
     ((title . "  Downloads")    (path . "~/Downloads/")))
   "Doc."
