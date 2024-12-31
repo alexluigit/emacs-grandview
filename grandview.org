@@ -97,6 +97,7 @@ with caution.
 
 1. *grandview* specfic options which include:
    + ~grandview-home~: Path to the repository of grandview.
+   + ~grandview-envs~: Use these environment variables in GUI emacs.
    + ~grandview-cache-dir~: Cache directory for grandview.
    + ~grandview-org-file~: Path for grandview main config .org file.
    + ~grandview-gc-cons-threshold~: The value for ~gc-cons-threshold~.
@@ -1809,8 +1810,8 @@ These keybindings are available when the current major mode doesn't define that 
 :END:
 
 #+begin_src emacs-lisp
-(defcustom +files-dotfiles-repo (getenv "DOTPATH")
-  "Doc."
+(defcustom +files-dotfiles-repo "/opt/dotfiles/"
+  "Path for user dotfiles."
   :group 'grandview :type 'string)
 
 (defcustom +files-user-dirs-alist

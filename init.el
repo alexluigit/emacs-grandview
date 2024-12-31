@@ -4,6 +4,18 @@
   "Path to place the repository of grandview."
   :group 'grandview :type 'string)
 
+(defcustom grandview-envs
+  (let ((data-home (expand-file-name "~/.local/share")))
+    `(("PATH" . ,(string-join
+                  (list (expand-file-name "python/bin" data-home)
+                        "/opt/homebrew/bin" "/opt/homebrew/sbin"
+                        "/usr/local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
+                        (expand-file-name "~/.local/bin")
+                        (expand-file-name "cargo/bin" data-home)
+                        (expand-file-name "go/bin" data-home)) ":"))))
+  "Use these environment variables in GUI emacs."
+  :group 'grandview :type 'list)
+
 (defcustom grandview-cache-dir "/tmp/grandview/"
   "Cache directory for grandview.
 This path is added to your `load-path'."
@@ -263,14 +275,12 @@ When FORCE, ensure the tangle process and autoloads generation."
                                (require 'server)
                                (unless (server-running-p) (server-start))
                                (select-frame-set-input-focus (selected-frame))))
-  ;; Setup PATH on macOS
-  (when (memq window-system '(mac ns))
-    (straight-use-package 'exec-path-from-shell)
-    (exec-path-from-shell-initialize)
-    (exec-path-from-shell-copy-env "DYLD_PRINT_LIBRARIES")
-    (exec-path-from-shell-copy-env "LD_LIBRARY_PATH")
-    (exec-path-from-shell-copy-env "DOTPATH")
-    (exec-path-from-shell-copy-env "XDG_DATA_HOME"))
+  ;; Setup PATH
+  (pcase-dolist (`(,name . ,value) grandview-envs)
+    (setenv name value)
+    (when (string-equal "PATH" name)
+      (setq exec-path (append (parse-colon-path value) (list exec-directory)))
+      (setq-default eshell-path-env value)))
   ;; Show profiler when debugging
   (when debug (grandview-profiler))
   ;; Setup garbage collection
