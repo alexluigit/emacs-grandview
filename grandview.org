@@ -3511,17 +3511,6 @@ are slightly simplified.
   (visual-fill-column-mode 1))
 #+end_src
 
-** Key bindings hint (which-key.el)
-:PROPERTIES:
-:CUSTOM_ID: User_interface_extras-Key_bindings_hint_(which-key.el)-2c4b84b2
-:END:
-
-#+begin_src emacs-lisp
-(straight-use-package 'which-key)
-
-(once '(:hooks pre-command-hook) (which-key-mode))
-#+end_src
-
 ** Hunk indicator (git-gutter.el)
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-Hunk_indicator_(git-gutter.el)-644ef61a
@@ -3794,6 +3783,7 @@ made for this package and built-in help buffer:
 (bind-keys :map global-map
            ("C-h K" . describe-keymap)    ; overrides `Info-goto-emacs-key-command-node'
            ("C-h C-f" . helpful-callable) ; overrides default behavior of `meow'
+           ("C-h C-v" . helpful-variable) ; overrides default behavior of `meow'
            ("C-h k" . helpful-key))       ; overrides default behavior of `meow'
 
 (once '(:hooks minibuffer-setup-hook)
