@@ -1570,9 +1570,7 @@ On terminal, we rebind =<f6>= to =C-i=, so make sure you have relevant settings 
 your terminal emulator's settings.
 
 #+begin_src emacs-lisp
-(add-hook 'after-make-frame-functions
-          (lambda (f) (with-selected-frame f
-                        (define-key input-decode-map [?\C-i] [C-i]))))
+(define-key input-decode-map [?\C-i] [C-i])
 #+end_src
 
 macOS specific settings.
