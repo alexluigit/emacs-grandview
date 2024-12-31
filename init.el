@@ -5,8 +5,11 @@
   :group 'grandview :type 'string)
 
 (defcustom grandview-envs
-  (let ((data-home (expand-file-name "~/.local/share")))
-    `(("PATH" . ,(string-join
+  (let ((config-home (expand-file-name "~/.config"))
+        (data-home (expand-file-name "~/.local/share")))
+    `(("XDG_CONFIG_HOME" . ,config-home)
+      ("XDG_DATA_HOME" . ,data-home)
+      ("PATH" . ,(string-join
                   (list (expand-file-name "python/bin" data-home)
                         "/opt/homebrew/bin" "/opt/homebrew/sbin"
                         "/usr/local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
