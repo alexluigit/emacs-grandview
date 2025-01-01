@@ -1,17 +1,24 @@
 ;;; early-init.el --- -*- lexical-binding: t -*-
 
-(when (and (>= emacs-major-version 28) (native-comp-available-p))
+(when (native-comp-available-p)
   (setq native-comp-eln-load-path
-        (or (and (getenv "EMACSNATIVELOADPATH") native-comp-eln-load-path)
-            (append (list (expand-file-name "~/.cache/emacs/eln-cache/"))
-                    (delete (expand-file-name "eln-cache/" user-emacs-directory)
-                            native-comp-eln-load-path)))
+        (append (list (expand-file-name "~/.cache/emacs/eln-cache/"))
+                (delete (expand-file-name "eln-cache/" user-emacs-directory)
+                        native-comp-eln-load-path))
         native-comp-async-report-warnings-errors 'silent))
 
 (setq
  gc-cons-threshold most-positive-fixnum ; Inhibit garbage collection during startup
  package-quickstart nil ; Prevent package.el loading packages prior to their init-file
- package-enable-at-startup nil
+ package-enable-at-startup t
+ package-archives
+      '(("gnu-elpa" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa" . "https://melpa.org/packages/"))
+ package-archive-priorities '(("melpa" . 3) ("gnu-elpa" . 2) ("nongnu" . 1))
+ use-package-vc-prefer-newest t
+ use-package-always-defer t
+ package-install-upgrade-built-in nil
  ad-redefinition-action 'accept ; Disable warnings from legacy advice system
  inhibit-startup-message t ; Reduce noise at startup
  inhibit-startup-echo-area-message user-login-name
@@ -33,11 +40,14 @@
  make-backup-files nil ; Disable backup files
  vc-follow-symlinks t ; Do not ask about symlink following
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
+ package-user-dir (locate-user-emacs-file "elpa")
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
  use-short-answers t ; y/n for yes/no
  safe-local-variable-values
  '((eval . (ignore-errors (grandview-setup-literate-file)))))
 
+(setq ring-bell-function #'ignore)    ; Do NOT ring the bell
+(load custom-file 'noerror 'silent)   ; Load user's customization
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips
 (menu-bar-mode -1)                    ; Disable menu bar

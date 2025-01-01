@@ -9,6 +9,7 @@
         (data-home (expand-file-name "~/.local/share")))
     `(("XDG_CONFIG_HOME" . ,config-home)
       ("XDG_DATA_HOME" . ,data-home)
+      ("GNUPGHOME" . ,(expand-file-name "gnupg" data-home))
       ("PATH" . ,(string-join
                   (list (expand-file-name "python/bin" data-home)
                         "/opt/homebrew/bin" "/opt/homebrew/sbin"
@@ -237,31 +238,10 @@ When FORCE, ensure the tangle process and autoloads generation."
   (grandview--tangle force)
   (grandview--gen-autoload force))
 
-(defun grandview-profiler ()
-  "Profile init time."
-  (let ((packages 0) (time (emacs-init-time "%.3f"))
-        (docstr "%d packages loaded in %ss"))
-    (when (boundp 'straight--profile-cache)
-      (setq packages (+ (hash-table-size straight--profile-cache) packages)))
-    (run-with-timer 1 nil 'grandview--log "GrandView Profiler"
-                    (format docstr packages time))))
-
-(let ((bootstrap (locate-user-emacs-file "straight/repos/straight.el/bootstrap.el"))
-      (script "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el")
-      (debug (or (getenv-internal "DEBUG") init-file-debug))
-      (file-name-handler-alist nil))
-  ;; Init package manager `straight.el'
-  (setq straight-vc-git-default-clone-depth 1
-        straight-check-for-modifications '(check-on-save find-when-checking)
-        straight-repository-branch "develop")
-  (unless (file-exists-p bootstrap)
-    (with-current-buffer (url-retrieve-synchronously script 'silent 'inhibit-cookies)
-      (goto-char (point-max)) (eval-print-last-sexp)))
-  (load bootstrap nil 'nomessage)
-  (straight-use-package 'bind-key) ; for `bind-keys' macro
-  (straight-use-package '(once :type git :host github :repo "emacs-magus/once"))
-  ;; Use inbuilt version of transient
-  (straight-use-package `(transient ,@(when (> emacs-major-version 27) '(:type built-in))))
+(let ((debug (or (getenv-internal "DEBUG") init-file-debug))
+      file-name-handler-alist)
+  (use-package bind-key :ensure t) ; for `bind-keys' macro
+  (use-package once :vc (:url "https://github.com/emacs-magus/once"))
   ;; Load user config
   (when (file-exists-p (grandview--init-path 'user))
     (load (grandview--init-path 'user) (not debug) t))
@@ -271,8 +251,6 @@ When FORCE, ensure the tangle process and autoloads generation."
   (unless (file-exists-p grandview-cache-dir)
     (make-directory (grandview--init-path 'def-dir) t)
     (grandview-tangle t))
-  (require 'grandview-loaddefs nil (not debug))
-  (require 'grandview nil (not debug))
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   (add-hook 'after-init-hook (lambda ()
                                (require 'server)
@@ -284,8 +262,8 @@ When FORCE, ensure the tangle process and autoloads generation."
     (when (string-equal "PATH" name)
       (setq exec-path (append (parse-colon-path value) (list exec-directory)))
       (setq-default eshell-path-env value)))
-  ;; Show profiler when debugging
-  (when debug (grandview-profiler))
+  (require 'grandview-loaddefs nil (not debug))
+  (require 'grandview nil (not debug))
   ;; Setup garbage collection
   (add-function :after after-focus-change-function
                 (lambda () (unless (frame-focus-state) (garbage-collect))))
