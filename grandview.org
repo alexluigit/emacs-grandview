@@ -1283,12 +1283,11 @@ pop-up window.
 (use-package corfu :ensure t)
 
 (once '(:before self-insert-command)
-  (setq! corfu-auto t)
-  (setq! corfu-auto-delay 0.05)
-  (setq! corfu-auto-prefix 2)
-  (setq! corfu-cycle t)
-  (setq! corfu-preselect 'prompt)
-  (setq! corfu-on-exact-match nil)
+  (setq corfu-auto t)
+  (setq corfu-auto-delay 0.05)
+  (setq corfu-cycle t)
+  (setq corfu-preselect 'prompt)
+  (setq corfu-on-exact-match nil)
   (global-corfu-mode)
   (bind-keys :map corfu-map
              ("TAB" . corfu-next)
@@ -1311,9 +1310,9 @@ in the form of Capfs (~completion-at-point-functions~).
 (use-package cape :ensure t)
 
 (once '(:before self-insert-command)
-  (setq! cape-dict-file "/usr/share/dict/words")
+  (setq cape-dict-file "/usr/share/dict/words")
   (when (>= emacs-major-version 30)
-    (setq! text-mode-ispell-word-completion nil))
+    (setopt text-mode-ispell-word-completion nil))
   (add-hook 'completion-at-point-functions #'cape-file)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
   (add-hook 'completion-at-point-functions #'cape-keyword)
@@ -1791,7 +1790,7 @@ These keybindings are available when the current major mode doesn't define that 
         ((title . "  Downloads")    (path . "~/Downloads"))))
 (setq confirm-kill-processes nil)
 (auto-save-visited-mode)
-(setq! auto-save-visited-interval 300)
+(setopt auto-save-visited-interval 300)
 
 (bind-keys
  :map grandview-files-map
@@ -1980,8 +1979,8 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
   (setq dired-dwim-target t)
-  (setq! dired-bind-info nil)
-  (setq! dired-bind-man nil)
+  (setq dired-bind-info nil)
+  (setq dired-bind-man nil)
   (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-do-revert-buffer t)
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
@@ -2074,7 +2073,7 @@ that if you install it from Melpa.
 (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
 (setq dirvish-attributes
       '(vc-state file-size git-msg subtree-state nerd-icons collapse file-time))
-(setq! dirvish-subtree-state-style 'nerd)
+(setopt dirvish-subtree-state-style 'nerd)
 (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
 (setq dirvish-header-line-height '(25 . 35))
 (setq dirvish-mode-line-height 21)
@@ -2289,7 +2288,7 @@ With a universal prefix to choose project anyway."
   (setq tramp-verbose 0)
   (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
-  (setq! tramp-use-ssh-controlmaster-options nil))
+  (setopt tramp-use-ssh-controlmaster-options nil))
 #+end_src
 
 * Text editing
@@ -2438,8 +2437,8 @@ sure this is a good approach."
 (setq default-input-method "rime")
 (once '(:packages rime)
   (when (eq system-type 'darwin)
-    (setq! rime-librime-root (expand-file-name "librime" user-emacs-directory))
-    (setq! rime-emacs-module-header-root "/opt/homebrew/include"))
+    (setq rime-librime-root (expand-file-name "librime" user-emacs-directory))
+    (setq rime-emacs-module-header-root "/opt/homebrew/include"))
   (setq rime-disable-predicates '(meow-normal-mode-p
                                   meow-motion-mode-p
                                   meow-keypad-mode-p
@@ -3927,7 +3926,7 @@ are slightly simplified.
 #+begin_src emacs-lisp
 (use-package git-gutter :ensure t)
 
-(setq! git-gutter:modified-sign "⏽"
+(setq git-gutter:modified-sign "⏽"
        git-gutter:added-sign "⏽"
        git-gutter:deleted-sign "⏽")
 #+end_src

@@ -64,17 +64,6 @@ stuttering, increase this."
 (when (boundp 'project-prefix-map)
   (defalias 'grandview-project-map project-prefix-map))
 
-(defmacro setq! (&rest settings)
-  "A stripped-down `customize-set-variable' with the syntax of `setq'.
-
-This can be used as a drop-in replacement for `setq',
-particularly when you know a variable has a custom setter (a :set
-property in its `defcustom' declaration).  This triggers setters
-with SETTINGS.  `setq' does not."
-  (macroexp-progn
-   (cl-loop for (var val) on settings by 'cddr
-            collect `(funcall (or (get ',var 'custom-set) #'set) ',var ,val))))
-
 (defmacro appendq! (sym &rest lists)
   "Append LISTS to SYM in place."
   `(setq ,sym (append ,sym ,@lists)))
