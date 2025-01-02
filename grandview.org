@@ -2097,7 +2097,7 @@ that if you install it from Melpa.
             ("t" "~/.local/share/Trash/files/" "Trash")
             ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/"))))
 
-(bind-keys :map 'dirvish-mode-map
+(bind-keys :map dirvish-mode-map
            ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
            ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
            ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
@@ -2128,7 +2128,6 @@ that if you install it from Melpa.
            ("n" . dirvish-side)
            ("o" . dirvish-quick-access)
            ("b" . dirvish-fd-jump))
-
 #+end_src
 
 ** Project management (project.el)
@@ -4086,7 +4085,7 @@ project root directory as `default-directory'."
            (default-directory (if project-root pr-root default-directory))
            (index (if buf (+vterm--get-index buf) 0)))
       (add-to-list '+vterm-buffers (vterm index))
-      (+vterm--insert))))
+      (meow-insert))))
 
 (defun +vterm--get-index (buf)
   (let* ((name (buffer-name buf)))
@@ -4094,9 +4093,6 @@ project root directory as `default-directory'."
     (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
 
 (declare-function meow-insert "meow-command")
-(declare-function evil-insert-state "evil")
-(defun +vterm--insert ()
-  (cond ((featurep 'meow) (meow-insert)) ((featurep 'evil) (evil-insert-state))))
 
 ;;;###autoload
 (defun +vterm-new ()
@@ -4105,7 +4101,7 @@ project root directory as `default-directory'."
   (let ((new-index (1+ (+vterm--get-index (car +vterm-buffers))))
         (display-buffer-alist (+vterm--get-win-params)))
     (add-to-list '+vterm-buffers (vterm new-index))
-    (+vterm--insert)))
+    (meow-insert)))
 
 ;;;###autoload
 (defun +vterm-next (&optional arg)
