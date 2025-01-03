@@ -43,26 +43,23 @@ stuttering, increase this."
   :group 'grandview :type 'integer)
 
 ;; Keymaps
-;; `grandview-files-map':    Open files/dirs or operations on files
-;; `grandview-mct-map':      'mct' is the acronym for "Minibuffer and Completions in Tandem"
-;; `grandview-prog-map':     Programming related commands
-;; `grandview-org-map':      Shortcuts for org related commands
-;; `grandview-win/tabs-map': Commands related to windows/workspaces
-;; `grandview-apps-map':     Useful utils such as format buffer, set frame opacity, etc.
-;; `grandview-reg/rect-map': Keymap for subcommands of \\`C-x r'.
-;; `grandview-project-map':  Project commands.
+;; `grandview-files-map':      Open files/dirs or operations on files
+;; `grandview-mct-map':        'mct' is the acronym for "Minibuffer and Completions in Tandem"
+;; `grandview-prog-map':       Programming related commands
+;; `grandview-workspace-map':  Commands related to windows/workspaces
+;; `grandview-apps-map':       Useful utils such as format buffer, set frame opacity, etc.
+;; `grandview-reg-map':        Keymap for subcommands of \\`C-x r'.
+;; `grandview-project-map':    Project commands.
 (define-prefix-command 'grandview-files-map)
 (define-prefix-command 'grandview-mct-map)
 (define-prefix-command 'grandview-prog-map)
-(define-prefix-command 'grandview-org-map)
 (define-prefix-command 'grandview-apps-map)
 (define-prefix-command 'grandview-win/tabs-map)
 (define-prefix-command 'grandview-reg-map)
 (define-prefix-command 'grandview-project-map)
-(defalias 'grandview-win/tabs-map tab-prefix-map)
+(defalias 'grandview-workspace-map tab-prefix-map)
 (defalias 'grandview-reg-map ctl-x-r-map)
-(when (boundp 'project-prefix-map)
-  (defalias 'grandview-project-map project-prefix-map))
+(defalias 'grandview-project-map project-prefix-map)
 
 (defmacro appendq! (sym &rest lists)
   "Append LISTS to SYM in place."

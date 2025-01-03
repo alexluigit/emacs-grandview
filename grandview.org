@@ -815,7 +815,6 @@ control over the buffer list and is more powerful overall.
   (setq ibuffer-saved-filter-groups nil)
   (setq ibuffer-old-time 48)
   (bind-keys :map ibuffer-mode-map
-             ("M-o" . nil)
              ("* f" . ibuffer-mark-by-file-name-regexp)
              ("* g" . ibuffer-mark-by-content-regexp)
              ("* n" . ibuffer-mark-by-name-regexp)
@@ -837,12 +836,11 @@ Directional window-selection routines.
 #+begin_src emacs-lisp
 (use-package windmove :ensure nil)
 
-(bind-keys :map global-map
-           ("M-o" . other-window)
-           ("M-N" . windmove-down)
-           ("M-P" . windmove-up)
-           ("M-I" . windmove-right)
-           ("M-O" . windmove-left))
+(bind-keys :map tab-prefix-map
+           ("C-w d" . windmove-swap-states-down)
+           ("C-w u" . windmove-swap-states-up)
+           ("C-w r" . windmove-swap-states-right)
+           ("C-w l" . windmove-swap-states-left))
 #+end_src
 
 *** Window placement
@@ -1293,9 +1291,7 @@ pop-up window.
              ("TAB" . corfu-next)
              ([tab] . corfu-next)
              ("S-TAB" . corfu-previous)
-             ([backtab] . corfu-previous)
-             ("M-n" . nil)
-             ("M-p" . nil)))
+             ([backtab] . corfu-previous)))
 #+end_src
 
 ** Completion at point Extensions (cape.el)
@@ -1569,7 +1565,7 @@ For historical reason, terminal can not tell the difference between some key
 storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
 this convention, but it doesn't mean emacs are not able to tell the
 difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
-On terminal, we rebind =<f6>= to =C-i=, so make sure you have relevant settings in
+On terminal, we rebind =<f3>= to =C-i=, so make sure you have relevant settings in
 your terminal emulator's settings.
 
 #+begin_src emacs-lisp
@@ -1579,8 +1575,8 @@ your terminal emulator's settings.
 macOS specific settings.
 
 #+begin_src emacs-lisp
-(setq mac-command-modifier 'meta)
-(setq mac-option-modifier 'super)
+(setq ns-command-modifier 'super)
+(setq ns-alternate-modifier 'meta)
 #+end_src
 
 ** INSERT
@@ -1590,7 +1586,7 @@ macOS specific settings.
 
 #+begin_src emacs-lisp
 (bind-keys :map meow-insert-state-keymap
-           ("M-<backspace>" . meow-kill-whole-line)
+           ("S-<backspace>" . meow-kill-whole-line)
            ("<C-i>" . meow-right)
            ("C-o" . meow-left))
 #+end_src
@@ -1700,12 +1696,11 @@ macOS specific settings.
  '("i" . ibuffer)
  '("k" . kill-current-buffer)
  '("n" . +project-find-file)
- '("o" . grandview-org-map)
- '("p" . grandview-prog-map)
- '("P" . grandview-project-map)
+ '("o" . grandview-prog-map)
+ '("p" . grandview-project-map)
  '("r" . grandview-reg-map)
  '("t" . grandview-mct-map)
- '("w" . grandview-win/tabs-map)
+ '("w" . grandview-workspace-map)
  '("z" . window-toggle-side-windows))
 
 (bind-keys :map grandview-files-map
@@ -1728,27 +1723,25 @@ All major bindings work globally.
 
 #+begin_src emacs-lisp
 (bind-keys :map global-map
-           ("<f6>" . +simple-pop-local-mark-ring)
-           ("M-SPC" . +monocle-mode) ; replaced `just-one-space'
+           ("<f3>" . +simple-pop-local-mark-ring)
+           ("s-SPC" . +monocle-mode) ; replaced `just-one-space'
            ("S-SPC" . toggle-input-method)
-           ("M-u"   . +toggle-letter-case)
+           ("s-u"   . +toggle-letter-case)
            ("<C-i>" . +simple-pop-local-mark-ring)
            ("C-o" . pop-global-mark)
-           ("s-n" . scroll-up-command)
-           ("s-p" . scroll-down-command)
-           ("M-o" . other-window)
-           ("M-n" . forward-paragraph)
-           ("M-p" . backward-paragraph)
-           :map tab-prefix-map
-           ("w"   . other-window)
+           ("s-o" . other-window)
+           ("M-n" . scroll-up-command)
+           ("M-p" . scroll-down-command)
+           ("s-n" . forward-paragraph)
+           ("s-p" . backward-paragraph)
            :map minibuffer-local-map
            ("<mouse-8>" . exit-minibuffer)
-           ("M-<backspace>" . meow-kill-whole-line)
-           ("<f6>" . forward-char)
+           ("S-<backspace>" . meow-kill-whole-line)
+           ("<f3>" . forward-char)
            ("<C-i>" . forward-char)
            ("C-o" . backward-char)
            :map meow-insert-state-keymap
-           ("<f6>" . meow-right)
+           ("<f3>" . meow-right)
            :map image-map
            ("o" . nil)
            ("w" . image-save))
@@ -2103,8 +2096,8 @@ that if you install it from Melpa.
            ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
            ("<mouse-8>" . dired-do-shell-command)             ; side button for shell command execution
            ("SPC" . consult-buffer)
-           ("M-n" . dirvish-history-go-forward)
-           ("M-p" . dirvish-history-go-backward)
+           ("s-n" . dirvish-history-go-forward)
+           ("s-p" . dirvish-history-go-backward)
            ("h"   . dirvish-history-jump)
            ("^"   . dirvish-history-last)
            ("TAB" . dirvish-subtree-toggle)
@@ -2113,10 +2106,10 @@ that if you install it from Melpa.
            ("v"   . dirvish-vc-menu)
            ("*"   . dirvish-mark-menu)
            ("N"   . dirvish-narrow)
-           ("M-e" . dirvish-emerge-menu)
-           ("M-t" . dirvish-layout-toggle)
-           ("M-s" . dirvish-setup-menu)
-           ("M-j" . dirvish-fd-jump)
+           ("s-e" . dirvish-emerge-menu)
+           ("s-t" . dirvish-layout-toggle)
+           ("s-s" . dirvish-setup-menu)
+           ("s-j" . dirvish-fd-jump)
            ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
            ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
            ([remap dired-do-copy] . dirvish-yank-menu)
@@ -2684,8 +2677,8 @@ look like which can be described briefly as follows:
   (setq org-log-into-drawer t)
   (setq org-image-actual-width nil)
   (setq org-display-remote-inline-images 'download)
-  (bind-keys :map grandview-org-map ("o" . consult-org-heading)
-             :map org-mode-map
+  (bind-keys :map org-mode-map
+             ("C-c C-x h" . consult-org-heading)
              ("C-c l" . org-insert-last-stored-link)))
 #+end_src
 
@@ -2938,7 +2931,8 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 #+begin_src emacs-lisp
 (use-package org-tree-slide :ensure t)
 
-(bind-key "S" 'org-tree-slide-mode grandview-org-map)
+(once '(:packages org)
+   (bind-key "C-c |" 'org-tree-slide-mode 'org-mode-map))
 
 (once '(:packages org-tree-slide)
   (setq org-tree-slide-activate-message " ")
@@ -2950,8 +2944,8 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
                     `(height ,(face-attribute 'org-level-1 :height))))
   (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
   (add-hook 'org-tree-slide-after-narrow-hook #'+frame-cursor-dim-mode)
-  (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
-  (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
+  ;; (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
+  ;; (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
   (bind-keys :map 'org-tree-slide-mode-map
              ("<left>" . org-tree-slide-move-previous-tree)
@@ -3002,30 +2996,29 @@ Some number of BLANK-LINES will be shown below the header."
     (overlay-put org-tree-slide--header-overlay 'display
                  (org-tree-slide--get-blank-lines blank-lines))))
 
-;;;###autoload
-(defun +org-tree-slide-hide-elements-h ()
-  "Hide org constructs defined in `+org-tree-hide-elements'."
-  (dolist (reg +org-tree-hide-elements)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward reg nil t)
-        (org-flag-region (match-beginning 1)
-                         (match-end 0) org-tree-slide-mode t)))))
+;; ;;;###autoload
+;; (defun +org-tree-slide-hide-elements-h ()
+;;   "Hide org constructs defined in `+org-tree-hide-elements'."
+;;   (dolist (reg +org-tree-hide-elements)
+;;     (save-excursion
+;;       (goto-char (point-min))
+;;       (while (re-search-forward reg nil t)
+;;         (org-fold-region (match-beginning 1) (match-end 0))))))
 
 ;;;###autoload
 (defun +org-tree-slide-prettify-slide-h ()
   "Set up the org window for presentation."
   (cond (org-tree-slide-mode
-         (when (bound-and-true-p flyspell-mode) (flyspell-mode -1))
          (text-scale-set +org-tree-slide-text-scale)
+         (+frame-cursor-dim-mode +1)
          (+monocle-mode +1)
          (when (fboundp 'writeroom-mode) (writeroom-mode +1))
          (ignore-errors (org-latex-preview '(4))))
         (t
          (text-scale-set 0)
-         (when (fboundp 'writeroom-mode) (writeroom-mode -1))
          (+monocle-mode -1)
          (+frame-cursor-dim-mode -1)
+         (when (fboundp 'writeroom-mode) (writeroom-mode -1))
          (org-clear-latex-preview)
          (org-mode))))
 #+end_src
@@ -3891,7 +3884,7 @@ are slightly simplified.
   (setq writeroom-width 128
         writeroom-bottom-divider-width 0
         writeroom-fringes-outside-margins t
-        writeroom-fullscreen-effect nil
+        writeroom-fullscreen-effect 'fullboth
         writeroom-major-modes '(text-mode prog-mode conf-mode special-mode Info-mode)
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
@@ -3964,7 +3957,7 @@ offering you relevant actions to use on a target determined by the context.
 #+begin_src emacs-lisp
 (use-package vterm :ensure t)
 
-(bind-key "M-`" '+vterm-toggle)
+(bind-key "s-`" '+vterm-toggle)
 
 (once '(:packages vterm)
   (+vterm-mux-mode)
@@ -3972,19 +3965,19 @@ offering you relevant actions to use on a target determined by the context.
   (add-hook 'vterm-copy-mode-hook
             (lambda () (if vterm-copy-mode (meow-normal-mode) (meow-insert-mode))))
   (bind-keys :map vterm-mode-map
-             ("M-`" . +vterm-toggle)
-             ("M--" . +vterm-new)
-             ("M-'" . vterm-send-M-apostrophe)
-             ("M-\"" . vterm-send-M-quote)
-             ("M-/" . vterm-send-M-/)
-             ("M-." . +vterm-next)
-             ("M-," . +vterm-prev)
-             ("M-RET" . vterm-send-M-return)
+             ("s-`" . +vterm-toggle)
+             ("s--" . +vterm-new)
+             ("s-." . +vterm-next)
+             ("s-," . +vterm-prev)
              ("s-n" . vterm-next-prompt)
              ("s-p" . vterm-previous-prompt)
+             ("C-<backspace>" . +vterm-send-F4)
+             ("C-/" . +vterm-send-F6)
+             ("C-," . +vterm-send-F10)
+             ("C-." . +vterm-send-F11)
+             ("C-;" . +vterm-send-F12)
              ("S-SPC" . nil)
              ("S-<escape>" . vterm-copy-mode)
-             ("C-<return>" . vterm-send-F5)
              :map vterm-copy-mode-map
              ("S-<escape>" . vterm-copy-mode-done)))
 #+end_src
@@ -4026,7 +4019,7 @@ offering you relevant actions to use on a target determined by the context.
 (defadvice! +vterm-backword-char-a (fn &rest args)
   :around #'meow-right
   (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f6>" nil nil nil)
+      (vterm-send-key "<f3>" nil nil nil)
     (apply fn args)))
 
 (defun +vterm--disable-side-window (fn &rest args)
@@ -4036,30 +4029,29 @@ offering you relevant actions to use on a target determined by the context.
     (apply fn args)))
 
 ;;;###autoload
-(defun vterm-send-M-return ()
+(defun +vterm-send-F4 ()
   (interactive)
-  (vterm-send-escape)
-  (vterm-send-return))
+  (vterm-send-key "<f4>" nil nil nil))
 
 ;;;###autoload
-(defun vterm-send-M-/ ()
+(defun +vterm-send-F6 ()
   (interactive)
-  (vterm-send-key "/" nil 0 nil))
+  (vterm-send-key "<f6>" nil nil nil))
 
 ;;;###autoload
-(defun vterm-send-F5 ()
+(defun +vterm-send-F10 ()
   (interactive)
-  (vterm-send-key "<f5>" nil nil nil))
+  (vterm-send-key "<f10>" nil nil nil))
 
 ;;;###autoload
-(defun vterm-send-M-apostrophe ()
+(defun +vterm-send-F11 ()
   (interactive)
-  (vterm-send-key "'" nil 0 nil))
+  (vterm-send-key "<f11>" nil nil nil))
 
 ;;;###autoload
-(defun vterm-send-M-quote ()
+(defun +vterm-send-F12 ()
   (interactive)
-  (vterm-send-key "\"" nil 0 nil))
+  (vterm-send-key "<f12>" nil nil nil))
 
 (defun +vterm--get-win-params ()
   "Parse `+vterm-position-alist' to get vterm display parameters."
@@ -4229,8 +4221,8 @@ made for this package and built-in help buffer:
              ("p" . previous-line)
              ("C-n" . Info-next)
              ("C-p" . Info-prev)
-             ("M-n" . forward-paragraph)
-             ("M-p" . backward-paragraph)))
+             ("s-n" . forward-paragraph)
+             ("s-p" . backward-paragraph)))
 #+end_src
 
 ** Man page (man.el)
@@ -4308,10 +4300,7 @@ regexp .etc).
 
 (once '(:packages wgrep)
   (setq wgrep-auto-save-buffer t)
-  (setq wgrep-change-readonly-file t)
-  (bind-keys :map wgrep-mode-map
-             ("M-n" . next-error-no-select)
-             ("M-p" . previous-error-no-select)))
+  (setq wgrep-change-readonly-file t))
 #+end_src
 
 ** Pdf reader (pdf-tools.el)
