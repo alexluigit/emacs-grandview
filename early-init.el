@@ -38,13 +38,11 @@
  make-backup-files nil ; Disable backup files
  vc-follow-symlinks t ; Do not ask about symlink following
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
- package-user-dir (locate-user-emacs-file "elpa")
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
  use-short-answers t ; y/n for yes/no
- safe-local-variable-values
- '((eval . (ignore-errors (grandview-setup-literate-file)))))
+ ring-bell-function #'ignore ; Do NOT ring the bell
+ package-user-dir (locate-user-emacs-file "elpa"))
 
-(setq ring-bell-function #'ignore)    ; Do NOT ring the bell
 (load custom-file 'noerror 'silent)   ; Load user's customization
 (tool-bar-mode -1)                    ; Disable toolbar
 (tooltip-mode -1)                     ; Disable tooltips

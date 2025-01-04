@@ -25,41 +25,16 @@
 This path is added to your `load-path'."
   :group 'grandview :type 'string)
 
-(defcustom grandview-org-file (concat (file-name-directory user-init-file) "grandview.org")
+(defcustom grandview-org-file
+  (concat (file-name-directory user-init-file) "grandview.org")
   "Path for grandview main config .org file."
   :group 'grandview :type 'string)
-
-(defvar grandview-theme 'modus-vivendi)
-(defvar grandview-font-size 140)
-(defvar grandview-default-font "Iosevka Nerd Font Mono")
-(defvar grandview-fixed-font "Sarasa Mono SC")
-(defvar grandview-variable-font "Sarasa Mono SC")
-(defvar grandview-CJK-font "LXGW WenKai Mono")
 
 (defcustom grandview-gc-cons-threshold 134217728 ; 128mb
   "The default value to use for `gc-cons-threshold'.
 If you experience freezing, decrease this.  If you experience
 stuttering, increase this."
   :group 'grandview :type 'integer)
-
-;; Keymaps
-;; `grandview-files-map':      Open files/dirs or operations on files
-;; `grandview-mct-map':        'mct' is the acronym for "Minibuffer and Completions in Tandem"
-;; `grandview-prog-map':       Programming related commands
-;; `grandview-workspace-map':  Commands related to windows/workspaces
-;; `grandview-apps-map':       Useful utils such as format buffer, set frame opacity, etc.
-;; `grandview-reg-map':        Keymap for subcommands of \\`C-x r'.
-;; `grandview-project-map':    Project commands.
-(define-prefix-command 'grandview-files-map)
-(define-prefix-command 'grandview-mct-map)
-(define-prefix-command 'grandview-prog-map)
-(define-prefix-command 'grandview-apps-map)
-(define-prefix-command 'grandview-win/tabs-map)
-(define-prefix-command 'grandview-reg-map)
-(define-prefix-command 'grandview-project-map)
-(defalias 'grandview-workspace-map tab-prefix-map)
-(defalias 'grandview-reg-map ctl-x-r-map)
-(defalias 'grandview-project-map project-prefix-map)
 
 (defmacro appendq! (sym &rest lists)
   "Append LISTS to SYM in place."
@@ -203,11 +178,6 @@ Only do it when FORCE or contents in autoload directory changed."
         (insert new-md5)
         (write-region (point-min) (point-max) autoload-md5)))))
 
-(defun grandview-config ()
-  "Edit `grandview-org-file'."
-  (interactive)
-  (find-file grandview-org-file))
-
 (defun grandview-tangle (&optional force)
   "Tangle and generate autoloads for `grandview-org-file'.
 When FORCE, ensure the tangle process and autoloads generation."
@@ -227,10 +197,6 @@ When FORCE, ensure the tangle process and autoloads generation."
     (make-directory (grandview--init-path 'def-dir) t)
     (grandview-tangle t))
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (add-hook 'after-init-hook (lambda ()
-                               (require 'server)
-                               (unless (server-running-p) (server-start))
-                               (select-frame-set-input-focus (selected-frame))))
   ;; Setup PATH
   (pcase-dolist (`(,name . ,value) grandview-envs)
     (setenv name value)

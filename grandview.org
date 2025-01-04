@@ -50,6 +50,78 @@ straightforward project structure:
 + User config (optional):  =user.el=
 + Main config file (.org): This file (defaults to =grandview.org=)
 
+*** The early init file (early-init.el)
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-The_early_init_file_(early-init.el)-43457CBA
+:END:
+
+It is sometimes necessary to have customizations take effect during Emacs
+startup earlier than the normal init file is processed. Such customizations can
+be put in the early init file.  This file is loaded before the package system
+and GUI is initialized, so in it you can customize variables that affect the
+package initialization process, such as =package-enable-at-startup=,
+=package-load-list=, and =package-user-dir=.
+
+*** The initialization file (init.el)
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-The_initialization_file_(init.el)-EFF6718A
+:END:
+
+The main responsibility of my =init.el= is to arrange the tangling procedure of
+the =grandview.org= file.  Secondly, a few handy macros were defined (taken from
+=doom-emacs=) to be used in elisp code blocks of this =.org= file, you'll see them
+appear in this file a couple of times.
+
++ =appendq!=: append lists to a symbol.
++ =delq!=: delete an element from a list.
++ =pushnew!=: add items to a list if they aren't there.
++ =prependq!=: prepend lists to somewhere.
+
+In addition, several custom options were introduced in this file:
+
++ ~grandview-home~: Path to the repository of grandview.
++ ~grandview-envs~: Use these environment variables in GUI emacs.
++ ~grandview-cache-dir~: Cache directory for grandview.
++ ~grandview-org-file~: Path for grandview main config .org file.
++ ~grandview-gc-cons-threshold~: The value for ~gc-cons-threshold~.
+
+You'll see other custom option such as ~grandview-fixed-font~ in the following
+sections.
+
+*** User config
+:PROPERTIES:
+:CUSTOM_ID: Overview-Introduction-User_config-c93b584e
+:END:
+
+=user.el= can be the place to put your *grandview* specific configuration or other
+arbitrary settings to load before loading =grandview.el=.
+
+Here is a example of =user.el=:
+
+#+begin_src emacs-lisp :tangle no
+;; adjust font size
+(setq grandview-font-size 150)
+
+;; use this font as fixed font
+(setq grandview-fixed-font "Victor Mono")
+
+;; set this theme
+(setq grandview-theme 'modus-operandi)
+
+;; use http proxy
+(pushnew! grandview-envs
+          '("HTTP_PROXY" . "http://localhost:1080")
+          '("HTTPS_PROXY" . "http://localhost:1080"))
+
+;; set initial frame opacity
+(setq +frame-opacity 80)
+
+;; enable copilot when programming
+(add-hook 'prog-mode-hook 'copilot-mode)
+
+;; ... other customizations
+#+end_src
+
 *** This =.org= file
 :PROPERTIES:
 :CUSTOM_ID: Overview-Introduction-This_=.org=_file-59a7ea61
@@ -64,9 +136,9 @@ read their documentation: https://orgmode.org/.  Try move the cursor to one of
 the headings in this file and press =Tab= to fold / unfold the node would be a
 good start.
 
-The elisp source blocks in this file is tangled to a regular =.el= file which is
-then evaluated by Emacs.  Sections named *Autoload* are tangled to separate files
-upon which corresponding autoloads are generated.
+The elisp source blocks in this file is tangled to a regular =grandview.el= file
+which is then evaluated by Emacs.  Sections named *Autoload* are tangled to
+separate files upon which corresponding autoloads are generated.
 
 After you modify the contents of code blocks in this file, you may want to apply
 these changes immediately, just ~M-x ~restart-emacs~, after restart the old config
@@ -81,35 +153,6 @@ manage the config becomes easy peasy.  When you find that your code in one or
 more sections is problematic and try to debug it, just comment out these
 sections then do ~restart-emacs~, all the configuartions in these sections are
 ignored (not being tangled at the first place actually).
-
-*** User config
-:PROPERTIES:
-:CUSTOM_ID: Overview-Introduction-User_config-c93b584e
-:END:
-
-=user.el= is the file to place your:
-
-1. *grandview* specfic options which include:
-   + ~grandview-home~: Path to the repository of grandview.
-   + ~grandview-envs~: Use these environment variables in GUI emacs.
-   + ~grandview-cache-dir~: Cache directory for grandview.
-   + ~grandview-org-file~: Path for grandview main config .org file.
-   + ~grandview-gc-cons-threshold~: The value for ~gc-cons-threshold~.
-   + ~grandview-theme~: The default theme, it should be a theme name.
-   + ~grandview-font-size~: Font size being applied.
-   + ~grandview-default-font~: The default font, which should included in
-     ~font-family-list~.
-   + ~grandview-fixed-font~: The =fixed-pitch= font, which should included in
-     ~font-family-list~.
-   + ~grandview-variable-font~: The =variable-pitch= font, which should included in
-     ~font-family-list~.
-   + ~grandview-CJK-font~: The font used for CJK characters.
-2. other arbitrary codes to load before loading the main config
-3. packages expecting further evaluation or testing
-
-Note that =user.el= is loaded before code blocks in this file, in other words all
-the third-party packages declared in this file (such as =meow.el=) are not
-accessiable in =user.el=.
 
 ** Installation
 :PROPERTIES:
@@ -347,8 +390,6 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
            (nconc (assq ',name grandview--deferred-packages-alist)
                   '(,@hooks)))
          (use-package-process-keywords name rest state))))))
-
-(use-package bind-key :ensure t) ; for `bind-keys' macro
 #+end_src
 
 ** Basic editing commands (simple.el)
@@ -364,7 +405,7 @@ related to some major mode or to file-handling.
 
 #+begin_src emacs-lisp
 (with-eval-after-load 'simple
-  (bind-key "SPC" nil messages-buffer-mode-map)
+  (define-key messages-buffer-mode-map (kbd "SPC") nil)
   (add-hook 'next-error-hook #'recenter)
   (setq next-error-message-highlight t)) ; added in Emacs 28.1
 #+end_src
@@ -527,6 +568,46 @@ If you want to know more about meow or modal editing in general, check out [[htt
             '((helpful-mode . normal)
               (Man-mode . normal)
               (message-buffer-mode . normal))))
+#+end_src
+
+*** Keymaps for leader key
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing_(meow.el)-Keymaps_for_leader_key-745F1081
+:END:
+
+Being able to use =SPC= as the *leader* key is one of the killing features of modal
+editing.  Prees =SPC x SPC f= in sequence takes 4 keystroke indeed, which looks
+longer than =C-x C-f=, but it is objectively easier than holding the control key
+while press another letter key (=C-c C-c=).  Using modifiers (ctrl/shift/alt etc.)
+in your shortcuts too much usually intensify the risk of getting repetitive
+strain injury (RSI).  Maximize the usage of leader key will help to reduce RSI
+for those who use the keyboard for long periods of time.
+
+We defined a few keymaps in *grandview* and bind them to the leader key (=SPC=).
+
++ =grandview-file-map=:       File manipulations, dired, etc.
++ =grandview-mct-map=:        "Minibuffer and Completions in Tandem"
++ =grandview-prog-map=:       Programming related commands
++ =grandview-workspace-map=:  Commands related to windows/workspaces
++ =grandview-util-map=:       Useful utils such as, set frame opacity, etc.
++ =grandview-reg-map=:        Keymap for subcommands of \\`C-x r'.
++ =grandview-project-map=:    Project commands.
+
+=grandview-workspace-map= is actually the alias for =tab-prefix-map=.
+=grandview-reg-map= is actually the alias for =ctl-x-r-map=.
+=grandview-project-map= is actually the alias for =project-prefix-map=.
+
+#+begin_src emacs-lisp
+(define-prefix-command 'grandview-file-map)
+(define-prefix-command 'grandview-mct-map)
+(define-prefix-command 'grandview-prog-map)
+(define-prefix-command 'grandview-util-map)
+(define-prefix-command 'grandview-workspace-map)
+(define-prefix-command 'grandview-reg-map)
+(define-prefix-command 'grandview-project-map)
+(defalias 'grandview-workspace-map tab-prefix-map)
+(defalias 'grandview-reg-map ctl-x-r-map)
+(defalias 'grandview-project-map project-prefix-map)
 #+end_src
 
 *** Quick goto char (avy.el)
@@ -807,7 +888,23 @@ A list of my favorite CJK fonts.
 - =LXGW WenKai Mono=
 - =HarmonyOS Sans SC Light=
 - =Smartisan Compact CNS=
-- =FZSuXinShiLiuKaiS-R-GB=
+
++ ~grandview-font-size~: Font size being applied.
++ ~grandview-default-font~: The default font
++ ~grandview-fixed-font~: The =fixed-pitch= font
++ ~grandview-variable-font~: The =variable-pitch= font
++ ~grandview-CJK-font~: The font used for CJK characters.
+
+Please make sure the font you choose can be recognized by Emacs, you can varify
+that by evaluating:
+
+#+begin_src emacs-lisp
+(member "<Your Font Name>" (font-family-list))
+
+;; for example
+(member "Sarasa Mono SC" (font-family-list))
+#+end_src
+
 
 #+begin_src emacs-lisp
 (if (daemonp)
@@ -836,6 +933,24 @@ A list of my favorite CJK fonts.
 :END:
 
 #+begin_src emacs-lisp
+(defcustom grandview-theme 'modus-vivendi
+  "Default theme for grandview.")
+
+(defcustom grandview-font-size 140
+  "Default font size for grandview.")
+
+(defcustom grandview-default-font "Iosevka Nerd Font Mono"
+  "Default font for grandview.")
+
+(defcustom grandview-fixed-font "Sarasa Mono SC"
+  "Default fixed font for grandview.")
+
+(defcustom grandview-variable-font "Sarasa Mono SC"
+  "Default variable font for grandview.")
+
+(defcustom grandview-CJK-font "LXGW WenKai Mono"
+  "Default CJK font (Chinese/Japanese/Korean) for grandview.")
+
 ;;;###autoload
 (defun +font-setup (&optional frame)
   "Setup default/fixed-pitch/variable-pitch/zh-font."
@@ -911,12 +1026,11 @@ control over the buffer list and is more powerful overall.
           (mark " " (name 16 -1) " " filename)))
   (setq ibuffer-saved-filter-groups nil)
   (setq ibuffer-old-time 48)
-  (bind-keys :map ibuffer-mode-map
-             ("* f" . ibuffer-mark-by-file-name-regexp)
-             ("* g" . ibuffer-mark-by-content-regexp)
-             ("* n" . ibuffer-mark-by-name-regexp)
-             ("s n" . ibuffer-do-sort-by-alphabetic)
-             ("/ g" . ibuffer-filter-by-content)))
+  (define-key ibuffer-mode-map (kbd "* f") 'ibuffer-mark-by-file-name-regexp)
+  (define-key ibuffer-mode-map (kbd "* g") 'ibuffer-mark-by-content-regexp)
+  (define-key ibuffer-mode-map (kbd "* n") 'ibuffer-mark-by-name-regexp)
+  (define-key ibuffer-mode-map (kbd "s n") 'ibuffer-do-sort-by-alphabetic)
+  (define-key ibuffer-mode-map (kbd "/ g") 'ibuffer-filter-by-content))
 #+end_src
 
 ** Window management (window.el)
@@ -934,11 +1048,10 @@ Directional window-selection routines.
 (use-package windmove :ensure nil :after-call split-window)
 
 (with-eval-after-load 'windmove
-  (bind-keys :map tab-prefix-map
-             ("C-w d" . windmove-swap-states-down)
-             ("C-w u" . windmove-swap-states-up)
-             ("C-w r" . windmove-swap-states-right)
-             ("C-w l" . windmove-swap-states-left)))
+  (define-key 'grandview-workspace-map (kbd "C-w d") 'windmove-swap-states-down)
+  (define-key 'grandview-workspace-map (kbd "C-w u") 'windmove-swap-states-up)
+  (define-key 'grandview-workspace-map (kbd "C-w r") 'windmove-swap-states-right)
+  (define-key 'grandview-workspace-map (kbd "C-w l") 'windmove-swap-states-left))
 #+end_src
 
 *** Window placement
@@ -1104,6 +1217,33 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
         (set-cursor-color +frame-cursor-dim-color))
     (blink-cursor-mode +1)
     (set-cursor-color +frame-cursor-saved-color)))
+#+end_src
+
+** Running Emacs as server process (server.el)
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Running_Emacs_as_server_process_(server.el)-51BFA66E
+:END:
+
+This library allows Emacs to operate as a server for other processes.
+
+During init, we enable Emacs as a server unless there is a running server.
+Emacs opens up a socket for communication with clients.  If there are no client
+buffers to edit, =server-edit= acts like =(switch-to-buffer (other-buffer))=.
+
+When some other program runs "the editor" to edit a file, "the editor" can be
+the Emacs client program =emacsclient=.  This program transmits the file names to
+Emacs through the server subprocess, and Emacs visits them and lets you edit
+them.
+
+Note that any number of clients may dispatch files to Emacs to be edited.
+
+#+begin_src emacs-lisp
+(use-package server :ensure nil :after-call after-init-hook)
+
+(with-eval-after-load 'server
+  (require 'server)
+  (unless (server-running-p) (server-start))
+  (select-frame-set-input-focus (selected-frame)))
 #+end_src
 
 * *COMPLETION FRAMEWORK*
@@ -1330,25 +1470,24 @@ word, which usually consists of only 2 characters.
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">")
-  (bind-keys :map grandview-mct-map
-             ("/" . consult-line-multi)
-             ("t" . consult-mark)
-             ("T" . consult-global-mark)
-             ("a" . consult-apropos)
-             ("e" . consult-compile-error)
-             ("f" . consult-flymake)
-             ("r" . consult-ripgrep)
-             ("k" . consult-kmacro)
-             ("K" . consult-keep-lines)
-             ("i" . consult-imenu-multi)
-             ("n" . consult-focus-lines) ; narrow
-             ("o" . consult-outline)
-             ("R" . consult-register)
-             ("y" . consult-yank-from-kill-ring)
-             ("m" . consult-bookmark)
-             ("c" . consult-complex-command)
-             ("C" . consult-mode-command)
-             ("M" . consult-minor-mode-menu)))
+  (define-key grandview-mct-map (kbd "/") 'consult-line-multi)
+  (define-key grandview-mct-map (kbd "t") 'consult-mark)
+  (define-key grandview-mct-map (kbd "T") 'consult-global-mark)
+  (define-key grandview-mct-map (kbd "a") 'consult-apropos)
+  (define-key grandview-mct-map (kbd "e") 'consult-compile-error)
+  (define-key grandview-mct-map (kbd "f") 'consult-flymake)
+  (define-key grandview-mct-map (kbd "r") 'consult-ripgrep)
+  (define-key grandview-mct-map (kbd "k") 'consult-kmacro)
+  (define-key grandview-mct-map (kbd "K") 'consult-keep-lines)
+  (define-key grandview-mct-map (kbd "i") 'consult-imenu-multi)
+  (define-key grandview-mct-map (kbd "n") 'consult-focus-lines) ; narrow
+  (define-key grandview-mct-map (kbd "o") 'consult-outline)
+  (define-key grandview-mct-map (kbd "R") 'consult-register)
+  (define-key grandview-mct-map (kbd "y") 'consult-yank-from-kill-ring)
+  (define-key grandview-mct-map (kbd "m") 'consult-bookmark)
+  (define-key grandview-mct-map (kbd "c") 'consult-complex-command)
+  (define-key grandview-mct-map (kbd "C") 'consult-mode-command)
+  (define-key grandview-mct-map (kbd "M") 'consult-minor-mode-menu))
 #+end_src
 
 ** Candidate annotation (marginalia.el)
@@ -1402,7 +1541,7 @@ Let your completions fly! This package provides additional completion backends
 in the form of Capfs (~completion-at-point-functions~).
 
 #+begin_src emacs-lisp
-(use-package cape :ensure t :after-call self-insert-command)
+(use-package cape :ensure t :after-call meow-insert-mode-hook)
 
 (with-eval-after-load 'cape
   (setq cape-dict-file "/usr/share/dict/words")
@@ -1415,24 +1554,22 @@ in the form of Capfs (~completion-at-point-functions~).
   (define-prefix-command '+cape-map)
   (defvar +cape-prefix-map (make-sparse-keymap))
   (defalias '+cape-map +cape-prefix-map)
-  (bind-keys :map global-map
-             ("C-M-/" . +cape-map)       ; remapped `dabbrev-completion'
-             :map +cape-prefix-map
-             ("c" . completion-at-point) ; capf
-             ("t" . complete-tag)        ; etags
-             ("d" . cape-dabbrev)        ; or dabbrev-completion
-             ("f" . cape-file)
-             ("k" . cape-keyword)
-             ("s" . cape-symbol)
-             ("a" . cape-abbrev)
-             ("i" . cape-ispell)
-             ("l" . cape-line)
-             ("w" . cape-dict)
-             ("\\" . cape-tex)
-             ("_" . cape-tex)
-             ("^" . cape-tex)
-             ("&" . cape-sgml)
-             ("r" . cape-rfc1345)))
+  (define-key global-map (kbd "C-M-/") '+cape-map)             ; remapped `dabbrev-completion'
+  (define-key +cape-prefix-map (kbd "c") 'completion-at-point) ; capf
+  (define-key +cape-prefix-map (kbd "t") 'complete-tag)        ; etags
+  (define-key +cape-prefix-map (kbd "d") 'cape-dabbrev)        ; or dabbrev-completion
+  (define-key +cape-prefix-map (kbd "f") 'cape-file)
+  (define-key +cape-prefix-map (kbd "k") 'cape-keyword)
+  (define-key +cape-prefix-map (kbd "s") 'cape-symbol)
+  (define-key +cape-prefix-map (kbd "a") 'cape-abbrev)
+  (define-key +cape-prefix-map (kbd "i") 'cape-ispell)
+  (define-key +cape-prefix-map (kbd "l") 'cape-line)
+  (define-key +cape-prefix-map (kbd "w") 'cape-dict)
+  (define-key +cape-prefix-map (kbd "\\") 'cape-tex)
+  (define-key +cape-prefix-map (kbd "_") 'cape-tex)
+  (define-key +cape-prefix-map (kbd "^") 'cape-tex)
+  (define-key +cape-prefix-map (kbd "&") 'cape-sgml)
+  (define-key +cape-prefix-map (kbd "r") 'cape-rfc1345))
 #+end_src
 
 ** Snippet (tempel.el)
@@ -1684,10 +1821,9 @@ macOS specific settings.
 :END:
 
 #+begin_src emacs-lisp
-(bind-keys :map meow-insert-state-keymap
-           ("S-<backspace>" . meow-kill-whole-line)
-           ("<C-i>" . meow-right)
-           ("C-o" . meow-left))
+(define-key meow-insert-state-keymap (kbd "S-<backspace>") 'meow-kill-whole-line)
+(define-key meow-insert-state-keymap (kbd "<C-i>") 'meow-right)
+(define-key meow-insert-state-keymap (kbd "C-o") 'meow-left)
 #+end_src
 
 ** NORMAL
@@ -1790,10 +1926,10 @@ macOS specific settings.
  '("." . xref-find-definitions)
  '("<" . beginning-of-buffer)
  '(">" . end-of-buffer)
- '("a" . grandview-apps-map)
+ '("a" . grandview-util-map)
  '("e" . dired-jump)
  '("E" . eval-expression)
- '("f" . grandview-files-map)
+ '("f" . grandview-file-map)
  '("i" . ibuffer)
  '("k" . kill-current-buffer)
  '("n" . +project-find-file)
@@ -1804,15 +1940,11 @@ macOS specific settings.
  '("w" . grandview-workspace-map)
  '("z" . window-toggle-side-windows))
 
-(bind-keys :map grandview-files-map
-           ("w" . save-buffer) ; [SPC x s] in Colemak is painful to press
-           ("g" . grandview-config)
-           :map grandview-apps-map
-           ("d" . toggle-debug-on-error)
-           ("o" . +frame-opacity-set)
-           ("t" . toggle-frame-maximized)
-           ("=" . count-words)
-           ("m" . +show-messages))
+(define-key grandview-util-map (kbd "d") 'toggle-debug-on-error)
+(define-key grandview-util-map (kbd "o") '+frame-opacity-set)
+(define-key grandview-util-map (kbd "t") 'toggle-frame-maximized)
+(define-key grandview-util-map (kbd "=") 'count-words)
+(define-key grandview-util-map (kbd "m") '+show-messages)
 #+end_src
 
 ** GLOBAL
@@ -1823,29 +1955,25 @@ macOS specific settings.
 All major bindings work globally.
 
 #+begin_src emacs-lisp
-(bind-keys :map global-map
-           ("<f3>" . +simple-pop-local-mark-ring)
-           ("s-SPC" . +monocle-mode) ; replaced `just-one-space'
-           ("S-SPC" . toggle-input-method)
-           ("s-u"   . +toggle-letter-case)
-           ("<C-i>" . +simple-pop-local-mark-ring)
-           ("C-o" . pop-global-mark)
-           ("s-o" . other-window)
-           ("M-n" . scroll-up-command)
-           ("M-p" . scroll-down-command)
-           ("s-n" . forward-paragraph)
-           ("s-p" . backward-paragraph)
-           :map minibuffer-local-map
-           ("<mouse-8>" . exit-minibuffer)
-           ("S-<backspace>" . meow-kill-whole-line)
-           ("<f3>" . forward-char)
-           ("<C-i>" . forward-char)
-           ("C-o" . backward-char)
-           :map meow-insert-state-keymap
-           ("<f3>" . meow-right)
-           :map image-map
-           ("o" . nil)
-           ("w" . image-save))
+(define-key global-map (kbd "<f3>") '+simple-pop-local-mark-ring)
+(define-key global-map (kbd "s-SPC") '+monocle-mode) ; replaced `just-one-space'
+(define-key global-map (kbd "S-SPC") 'toggle-input-method)
+(define-key global-map (kbd "s-u") '+toggle-letter-case)
+(define-key global-map (kbd "<C-i>") '+simple-pop-local-mark-ring)
+(define-key global-map (kbd "C-o") 'pop-global-mark)
+(define-key global-map (kbd "s-o") 'other-window)
+(define-key global-map (kbd "M-n") 'scroll-up-command)
+(define-key global-map (kbd "M-p") 'scroll-down-command)
+(define-key global-map (kbd "s-n") 'forward-paragraph)
+(define-key global-map (kbd "s-p") 'backward-paragraph)
+(define-key minibuffer-local-map (kbd "<mouse-8>") 'exit-minibuffer)
+(define-key minibuffer-local-map (kbd "S-<backspace>") 'meow-kill-whole-line)
+(define-key minibuffer-local-map (kbd "<f3>") 'forward-char)
+(define-key minibuffer-local-map (kbd "<C-i>") 'forward-char)
+(define-key minibuffer-local-map (kbd "C-o") 'backward-char)
+(define-key meow-insert-state-keymap (kbd "<f3>") 'meow-right)
+(define-key image-map (kbd "o") nil)
+(define-key image-map (kbd "w") 'image-save)
 #+end_src
 
 These keybindings are available when the current major mode doesn't define that key.
@@ -1866,6 +1994,7 @@ These keybindings are available when the current major mode doesn't define that 
 + Save modified buffers automatically
 + Utilities:
   - ~+files-find-dotfiles~
+  - ~+files-edit-grandview-config~
   - ~+files-sudo-find~
   - ~+files-rename-file-and-buffer~
   - ~+files-find-user-files~
@@ -1885,17 +2014,20 @@ These keybindings are available when the current major mode doesn't define that 
         ((title . "  Downloads")    (path . "~/Downloads"))))
 (setq confirm-kill-processes nil)
 
-(with-eval-after-load 'meow ;; before this no file is edited
+;; trust this .org file | this option is added in emacs30.1
+(push grandview-org-file trusted-content)
+
+(with-eval-after-load 'meow ;; files usually edited in `meow-insert-mode'
   (setq auto-save-default nil)
   (auto-save-visited-mode)
   (setopt auto-save-visited-interval 300))
 
-(bind-keys
- :map grandview-files-map
- ("." . +files-find-dotfiles)
- ("s" . +files-sudo-find)
- ("r" . +files-rename-file-and-buffer)
- ("u" . +files-find-user-files))
+(define-key grandview-file-map (kbd "w") 'save-buffer) ; [SPC x s] in Colemak is painful to press
+(define-key grandview-file-map (kbd "g") '+files-edit-grandview-config)
+(define-key grandview-file-map (kbd ".") '+files-find-dotfiles)
+(define-key grandview-file-map (kbd "s") '+files-sudo-find)
+(define-key grandview-file-map (kbd "r") '+files-rename-file-and-buffer)
+(define-key grandview-file-map (kbd "u") '+files-find-user-files)
 #+end_src
 
 *** Autoload
@@ -1925,6 +2057,12 @@ These keybindings are available when the current major mode doesn't define that 
          (files (+minibuffer-append-metadata 'file files-raw))
          (file (completing-read (or prompt "Open file: ") files)))
     (find-file (concat dir "/" file))))
+
+;;;###autoload
+(defun +files-edit-grandview-config ()
+  "Edit `grandview-org-file'."
+  (interactive)
+  (find-file grandview-org-file))
 
 ;;;###autoload
 (defun +files-rename-file-and-buffer (name)
@@ -1986,7 +2124,7 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 #+begin_src emacs-lisp
 (use-package find-func :ensure t :after-call minibuffer-setup-hook)
 
-(bind-key "l" 'find-library grandview-files-map)
+(define-key grandview-file-map (kbd "l") 'find-library)
 
 (when (eq system-type 'gnu/linux)
   (setq find-function-C-source-directory "~/Code/emacs/src"))
@@ -1997,13 +2135,20 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 :CUSTOM_ID: File_management-Recent_files_(recentf.el)-ef26c355
 :END:
 
-Keep a record of all recently opened files.
+*recentf.el* keep a record of recently opened files.
+
+The =recentf-cleanup= command, as its name suggest, cleans up the recent files
+list.  That is, remove duplicates, non-kept, and excluded files.  In order to
+keep our recent file list always up-to-date, running it once whenever the mode
+is activate, which is the default behavior, is not enough.  Hence, we set it to
+do the cleaning task every 5 minutes.
 
 #+begin_src emacs-lisp
 (use-package recentf :ensure nil :after-call meow-keypad-mode-hook)
 
 (with-eval-after-load 'recentf
   (setq recentf-max-saved-items 300)
+  (setq recentf-auto-cleanup 300)
   (recentf-mode 1))
 #+end_src
 
@@ -2081,20 +2226,19 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-do-revert-buffer t)
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
-  (bind-keys :map dired-mode-map
-             ("/" . dired-goto-file)
-             ("," . dired-create-directory)
-             ("." . dired-create-empty-file)
-             ("I" . dired-insert-subdir)
-             ("K" . dired-kill-subdir)
-             ("O" . dired-find-file-other-window)
-             ("[" . dired-prev-dirline)
-             ("]" . dired-next-dirline)
-             ("o" . dired-up-directory)
-             ("^" . mode-line-other-buffer)
-             ("x" . dired-do-delete)
-             ("X" . dired-do-flagged-delete)
-             ("y" . dired-do-copy)))
+  (define-key dired-mode-map (kbd "/") 'dired-goto-file)
+  (define-key dired-mode-map (kbd ",") 'dired-create-directory)
+  (define-key dired-mode-map (kbd ".") 'dired-create-empty-file)
+  (define-key dired-mode-map (kbd "I") 'dired-insert-subdir)
+  (define-key dired-mode-map (kbd "K") 'dired-kill-subdir)
+  (define-key dired-mode-map (kbd "O") 'dired-find-file-other-window)
+  (define-key dired-mode-map (kbd "[") 'dired-prev-dirline)
+  (define-key dired-mode-map (kbd "]") 'dired-next-dirline)
+  (define-key dired-mode-map (kbd "o") 'dired-up-directory)
+  (define-key dired-mode-map (kbd "^") 'mode-line-other-buffer)
+  (define-key dired-mode-map (kbd "x") 'dired-do-delete)
+  (define-key dired-mode-map (kbd "X") 'dired-do-flagged-delete)
+  (define-key dired-mode-map (kbd "y") 'dired-do-copy))
 
 (with-eval-after-load 'dired-x
   (setq dired-omit-files (concat dired-omit-files "\\|^\\..*$")))
@@ -2113,8 +2257,7 @@ Bulk renaming files like a breeze.
 (with-eval-after-load 'dired
   (setq wdired-allow-to-change-permissions t)
   (setq wdired-create-parent-directories t)
-  (bind-keys :map dired-mode-map
-             ("i" . wdired-change-to-wdired-mode)))
+  (define-key dired-mode-map (kbd "i") 'wdired-change-to-wdired-mode))
 #+end_src
 
 ** Use dired to browse and manipulate images (image-dired.el)
@@ -2137,11 +2280,10 @@ Bulk renaming files like a breeze.
 (with-eval-after-load 'image-dired
   (setq image-dired-thumb-size 256)
   (setq image-dired-marking-shows-next nil)
-  (bind-keys :map image-dired-thumbnail-mode-map
-             ("n" . image-dired-next-line)
-             ("p" . image-dired-previous-line)
-             ("i" . image-dired-forward-image)
-             ("o" . image-dired-backward-image)))
+  (define-key image-dired-thumbnail-mode-map (kbd "n") 'image-dired-next-line)
+  (define-key image-dired-thumbnail-mode-map (kbd "p") 'image-dired-previous-line)
+  (define-key image-dired-thumbnail-mode-map (kbd "i") 'image-dired-forward-image)
+  (define-key image-dired-thumbnail-mode-map (kbd "o") 'image-dired-backward-image))
 #+end_src
 
 ** A polished dired with batteries included (dirvish.el)
@@ -2162,7 +2304,7 @@ that if you install it from Melpa.
 (use-package dirvish
   :load-path "~/.cache/emacs/elpa/dirvish"
   :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions")
-  :after-call after-init-hook)
+  :after-call meow-keypad-mode-hook)
 
 (with-eval-after-load 'dirvish
   (require 'dirvish-extras)
@@ -2193,37 +2335,34 @@ that if you install it from Melpa.
             ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
             ("t" "~/.local/share/Trash/files/" "Trash")
             ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/")))
-  (bind-keys :map dirvish-mode-map
-             ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
-             ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
-             ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
-             ("<mouse-8>" . dired-do-shell-command)             ; side button for shell command execution
-             ("SPC" . consult-buffer)
-             ("s-n" . dirvish-history-go-forward)
-             ("s-p" . dirvish-history-go-backward)
-             ("h"   . dirvish-history-jump)
-             ("^"   . dirvish-history-last)
-             ("TAB" . dirvish-subtree-toggle)
-             ("a"   . dirvish-quick-access)
-             ("f"   . dirvish-file-info-menu)
-             ("v"   . dirvish-vc-menu)
-             ("*"   . dirvish-mark-menu)
-             ("N"   . dirvish-narrow)
-             ("s-e" . dirvish-emerge-menu)
-             ("s-t" . dirvish-layout-toggle)
-             ("s-s" . dirvish-setup-menu)
-             ("s-j" . dirvish-fd-jump)
-             ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
-             ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
-             ([remap dired-do-copy] . dirvish-yank-menu)
-             :map mode-specific-map
-             ("e" . dirvish-dwim)
-             :map grandview-files-map
-             ("e" . dirvish)
-             ("f" . dirvish-fd)
-             ("n" . dirvish-side)
-             ("o" . dirvish-quick-access)
-             ("b" . dirvish-fd-jump)))
+  (define-key dirvish-mode-map (kbd "<mouse-1>") 'dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
+  (define-key dirvish-mode-map (kbd "<mouse-2>") 'dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
+  (define-key dirvish-mode-map (kbd "<mouse-3>") 'dired-mouse-find-file)              ; right click for opening file / entering dir
+  (define-key dirvish-mode-map (kbd "<mouse-8>") 'dired-do-shell-command)             ; side button for shell command execution
+  (define-key dirvish-mode-map (kbd "SPC") 'consult-buffer)
+  (define-key dirvish-mode-map (kbd "s-n") 'dirvish-history-go-forward)
+  (define-key dirvish-mode-map (kbd "s-p") 'dirvish-history-go-backward)
+  (define-key dirvish-mode-map (kbd "h") 'dirvish-history-jump)
+  (define-key dirvish-mode-map (kbd "^") 'dirvish-history-last)
+  (define-key dirvish-mode-map (kbd "TAB") 'dirvish-subtree-toggle)
+  (define-key dirvish-mode-map (kbd "a") 'dirvish-quick-access)
+  (define-key dirvish-mode-map (kbd "f") 'dirvish-file-info-menu)
+  (define-key dirvish-mode-map (kbd "v") 'dirvish-vc-menu)
+  (define-key dirvish-mode-map (kbd "*") 'dirvish-mark-menu)
+  (define-key dirvish-mode-map (kbd "N") 'dirvish-narrow)
+  (define-key dirvish-mode-map (kbd "s-e") 'dirvish-emerge-menu)
+  (define-key dirvish-mode-map (kbd "s-t") 'dirvish-layout-toggle)
+  (define-key dirvish-mode-map (kbd "s-s") 'dirvish-setup-menu)
+  (define-key dirvish-mode-map (kbd "s-j") 'dirvish-fd-jump)
+  (define-key dirvish-mode-map [remap dired-sort-toggle-or-edit] 'dirvish-quicksort)
+  (define-key dirvish-mode-map [remap dired-do-redisplay] 'dirvish-ls-switches-menu)
+  (define-key dirvish-mode-map [remap dired-do-copy] 'dirvish-yank-menu)
+  (define-key mode-specific-map (kbd "e") 'dirvish-dwim)
+  (define-key grandview-file-map (kbd "e") 'dirvish)
+  (define-key grandview-file-map (kbd "f") 'dirvish-fd)
+  (define-key grandview-file-map (kbd "n") 'dirvish-side)
+  (define-key grandview-file-map (kbd "o") 'dirvish-quick-access)
+  (define-key grandview-file-map (kbd "b") 'dirvish-fd-jump))
 #+end_src
 
 ** Project management (project.el)
@@ -2243,11 +2382,10 @@ that if you install it from Melpa.
         (+project-commit-log "Log VC" ?l)))
 (setq +project-commit-log-limit 25)
 
-(bind-keys :map project-prefix-map
-           ("l" . +project-commit-log)
-           ("m" . +project-magit-status)
-           ("s" . +project-find-subdir)
-           ("t" . +project-retrieve-tag))
+(define-key 'grandview-project-map (kbd "l") '+project-commit-log)
+(define-key 'grandview-project-map (kbd "m") '+project-magit-status)
+(define-key 'grandview-project-map (kbd "s") '+project-find-subdir)
+(define-key 'grandview-project-map (kbd "t") '+project-retrieve-tag)
 #+end_src
 
 *** Autoload
@@ -2465,16 +2603,11 @@ most frequently used are:
 - ~xref-find-references~ (=M-?=)
 - ...etc.
 
-=M-?= is a bit hard to press, so we change it to =M-/= (this key was bound by
-~dabbrev-expand~, which is not that useful since we already have a completion
-framework works all around).
-
 #+begin_src emacs-lisp
 (use-package xref :ensure nil)
 
 (setq xref-file-name-display 'project-relative)
 (setq xref-search-program 'ripgrep)
-(bind-key "M-/" 'xref-find-references)
 #+end_src
 
 ** Interactive diff, patch, or merge conflict (ediff.el)
@@ -2551,15 +2684,14 @@ sure this is a good approach."
   (setq rime-candidate-num-format-function #'+rime-candidate-num-fmt)
   (custom-theme-set-faces
    'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
-  (bind-keys :map rime-active-mode-map
-             ("C-`" . rime-send-keybinding)
-             ("C-k" . rime-send-keybinding)
-             ("<C-i>" . rime-send-keybinding)
-             ("C-o" . rime-send-keybinding)
-             ("C-a" . rime-send-keybinding)
-             ("C-e" . rime-send-keybinding)
-             ("<escape>" . (lambda () (interactive) (execute-kbd-macro (kbd "C-g"))))
-             ([tab] . rime-send-keybinding)))
+  (define-key rime-active-mode-map (kbd "C-`") 'rime-send-keybinding)
+  (define-key rime-active-mode-map (kbd "C-k") 'rime-send-keybinding)
+  (define-key rime-active-mode-map (kbd "<C-i>") 'rime-send-keybinding)
+  (define-key rime-active-mode-map (kbd "C-o") 'rime-send-keybinding)
+  (define-key rime-active-mode-map (kbd "C-a") 'rime-send-keybinding)
+  (define-key rime-active-mode-map (kbd "C-e") 'rime-send-keybinding)
+  (define-key rime-active-mode-map (kbd "<escape>") (lambda () (interactive) (execute-kbd-macro (kbd "C-g"))))
+  (define-key rime-active-mode-map (kbd [tab]) 'rime-send-keybinding))
 #+end_src
 
 *** Autoload
@@ -2784,9 +2916,8 @@ look like which can be described briefly as follows:
   (setq org-log-into-drawer t)
   (setq org-image-actual-width nil)
   (setq org-display-remote-inline-images 'download)
-  (bind-keys :map org-mode-map
-             ("C-c C-x h" . consult-org-heading)
-             ("C-c l" . org-insert-last-stored-link)))
+  (define-key org-mode-map (kbd "C-c C-x h") 'consult-org-heading)
+  (define-key org-mode-map (kbd "C-c l") 'org-insert-last-stored-link))
 #+end_src
 
 *** Autoload
@@ -3039,7 +3170,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (use-package org-tree-slide :ensure t)
 
 (with-eval-after-load 'org
-  (bind-key "C-c |" 'org-tree-slide-mode 'org-mode-map))
+  (define-key org-mode-map (kbd "C-c |") 'org-tree-slide-mode))
 
 (with-eval-after-load 'org-tree-slide
   (setq org-tree-slide-activate-message " ")
@@ -3054,9 +3185,8 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
   ;; (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
   ;; (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
-  (bind-keys :map 'org-tree-slide-mode-map
-             ("<left>" . org-tree-slide-move-previous-tree)
-             ("<right>" . org-tree-slide-move-next-tree)))
+  (define-key org-tree-slide-mode-map (kbd "<left>") 'org-tree-slide-move-previous-tree)
+  (define-key org-tree-slide-mode-map (kbd "<right>") 'org-tree-slide-move-next-tree))
 #+end_src
 
 *** Autoload
@@ -3148,10 +3278,9 @@ environment.
   :vc (:url "https://github.com/copilot-emacs/copilot.el"))
 
 (with-eval-after-load 'copilot
-  (bind-keys :map copilot-completion-map
-             ("<tab>" . copilot-accept-completion)
-             ("TAB" . copilot-accept-completion)
-             ("S-TAB" . copilot-accept-completion-by-line)))
+  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+  (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+  (define-key copilot-completion-map (kbd "S-TAB") 'copilot-accept-completion-by-line))
 #+end_src
 
 ** Client for LSP servers (eglot.el)
@@ -3184,12 +3313,11 @@ Huge thanks to @blahgeek and @jdtsmith!
   (setq eglot-booster-io-only t)
   (add-hook 'eglot-mode-hook 'eglot-booster-mode))
 
-(bind-keys :map grandview-prog-map
-           ("a" . eglot-code-actions)
-           ("t" . eglot-find-typeDefinition)
-           ("d" . eglot-find-declaration)
-           ("i" . eglot-find-implementation)
-           ("r" . eglot-rename))
+(define-key grandview-prog-map (kbd "a") 'eglot-code-actions)
+(define-key grandview-prog-map (kbd "t") 'eglot-find-typeDefinition)
+(define-key grandview-prog-map (kbd "d") 'eglot-find-declaration)
+(define-key grandview-prog-map (kbd "i") 'eglot-find-implementation)
+(define-key grandview-prog-map (kbd "r") 'eglot-rename)
 #+end_src
 
 *** Autoload
@@ -3424,9 +3552,8 @@ So I turn =eldoc-echo-area-use-multiline-p= off.
 Run compiler as inferior of Emacs, parse error messages.
 
 #+begin_src emacs-lisp
-(bind-keys :map grandview-files-map
-           ("p" . compile)
-           ("P" . recompile))
+(define-key grandview-file-map (kbd "p") 'compile)
+(define-key grandview-file-map (kbd "P") 'recompile)
 #+end_src
 
 ** Jupyter (jupyter.el)
@@ -3451,7 +3578,7 @@ Run compiler as inferior of Emacs, parse error messages.
 
 #+begin_src emacs-lisp
 (use-package rainbow-mode :ensure t)
-;; (use-package rainbow-mode)
+
 (add-hook 'prog-mode-hook 'rainbow-mode)
 #+end_src
 
@@ -3467,7 +3594,7 @@ optional minor mode which can apply this command automatically on save.
 #+begin_src emacs-lisp
 (use-package reformatter :ensure t)
 
-(bind-key "f" '+format-buffer grandview-prog-map)
+(define-key grandview-prog-map (kbd "f") '+format-buffer)
 
 (with-eval-after-load 'reformatter
   (reformatter-define lua-format
@@ -3535,10 +3662,9 @@ optional minor mode which can apply this command automatically on save.
 
 (add-hook 'prog-mode-hook '+flymake-enable)
 (add-hook 'text-mode-hook 'flymake-mode)
-(bind-keys :map grandview-prog-map
-           ("e" . flymake-goto-next-error)
-           ("E" . flymake-goto-prev-error)
-           ("S" . flymake-start))
+(define-key grandview-prog-map (kbd "e") 'flymake-goto-next-error)
+(define-key grandview-prog-map (kbd "E") 'flymake-goto-prev-error)
+(define-key grandview-prog-map (kbd "S") 'flymake-start)
 #+end_src
 
 *** Autoload
@@ -3567,9 +3693,9 @@ optional minor mode which can apply this command automatically on save.
 (use-package restclient :ensure t)
 #+end_src
 
-** Scratch buffers (scratch.el)
+** Scratch buffer (scratch.el)
 :PROPERTIES:
-:CUSTOM_ID: Programming-Scratch_buffers_(scratch.el)-BE81F196
+:CUSTOM_ID: Programming-Scratch_buffer_(scratch.el)-C9F2C46A
 :END:
 
 =+scratch= command produces a org-mode buffer with right header-args for current
@@ -3577,8 +3703,7 @@ jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) 
 prompt for a major mode instead.  Simple yet super effective!
 
 #+begin_src emacs-lisp
-(bind-keys :map grandview-apps-map
-           ("s" . +scratch))
+(define-key grandview-util-map (kbd "s") '+scratch)
 #+end_src
 
 *** Autoload
@@ -3679,11 +3804,10 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
       tabspaces-remove-to-default t)
 
 (with-eval-after-load 'tabspaces
-  (bind-keys :map tab-prefix-map
-             ("C" . tabspaces-clear-buffers)
-             ("R" . tabspaces-remove-selected-buffer)
-             ("k" . tabspaces-kill-buffers-close-workspace)
-             ("s" . tabspaces-switch-or-create-workspace)))
+  (define-key 'grandview-workspace-map (kbd "C") 'tabspaces-clear-buffers)
+  (define-key 'grandview-workspace-map (kbd "R") 'tabspaces-remove-selected-buffer)
+  (define-key 'grandview-workspace-map (kbd "k") 'tabspaces-kill-buffers-close-workspace)
+  (define-key 'grandview-workspace-map (kbd "s") 'tabspaces-switch-or-create-workspace))
 
 (with-eval-after-load 'consult
   (consult-customize consult--source-buffer :hidden t :default nil)
@@ -3761,10 +3885,8 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
   (setq transient-show-popup -0.2)
   (transient-bind-q-to-quit)
   (setq transient-display-buffer-action '(display-buffer-below-selected))
-  (bind-keys :map transient-map
-             ("<escape>" . transient-quit-all)
-             :map transient-sticky-map
-             ("ESC" . transient-quit-all)))
+  (define-key transient-map (kbd "<escape>") 'transient-quit-all)
+  (define-key transient-sticky-map (kbd "ESC") 'transient-quit-all))
 #+end_src
 
 ** Custom Mode line
@@ -4005,8 +4127,8 @@ for your search query.
 
 (with-eval-after-load 'anzu
   (global-anzu-mode)
-  (bind-key [remap query-replace] 'anzu-query-replace)
-  (bind-key [remap query-replace-regexp] 'anzu-query-replace-regexp))
+  (define-key global-map [remap query-replace] 'anzu-query-replace)
+  (define-key global-map [remap query-replace-regexp] 'anzu-query-replace-regexp))
 #+end_src
 
 ** Alternative isearch UI (isearch-mb.el)
@@ -4027,8 +4149,8 @@ are slightly simplified.
   (isearch-mb-mode)
   (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
   (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
-  (bind-keys :map isearch-mb-minibuffer-map
-             ([remap previous-matching-history-element] . consult-isearch-history)))
+  (define-key isearch-mb-minibuffer-map
+              [remap previous-matching-history-element] 'consult-isearch-history))
 #+end_src
 
 ** Distraction-free writing (writeroom-mode.el)
@@ -4099,11 +4221,9 @@ offering you relevant actions to use on a target determined by the context.
 
 (with-eval-after-load 'embark
   (setq embark-quit-after-action t)
-  (bind-keys :map global-map
-             ("C-." . embark-act)
-             :map minibuffer-local-map
-             ("C-." . embark-act)
-             ("C-," . embark-become)))
+  (define-key global-map (kbd "C-.") 'embark-act)
+  (define-key minibuffer-local-map (kbd "C-.") 'embark-act)
+  (define-key minibuffer-local-map (kbd "C-,") 'embark-become))
 #+end_src
 
 ** Vterm (vterm.el)
@@ -4114,29 +4234,27 @@ offering you relevant actions to use on a target determined by the context.
 #+begin_src emacs-lisp
 (use-package vterm :ensure t)
 
-(bind-key "s-`" '+vterm-toggle)
+(define-key global-map (kbd "s-`") '+vterm-toggle)
 
 (with-eval-after-load 'vterm
   (+vterm-mux-mode)
   (setq vterm-max-scrollback 5000)
   (add-hook 'vterm-copy-mode-hook
             (lambda () (if vterm-copy-mode (meow-normal-mode) (meow-insert-mode))))
-  (bind-keys :map vterm-mode-map
-             ("s-`" . +vterm-toggle)
-             ("s--" . +vterm-new)
-             ("s-." . +vterm-next)
-             ("s-," . +vterm-prev)
-             ("s-n" . vterm-next-prompt)
-             ("s-p" . vterm-previous-prompt)
-             ("C-<backspace>" . +vterm-send-F4)
-             ("C-/" . +vterm-send-F6)
-             ("C-," . +vterm-send-F10)
-             ("C-." . +vterm-send-F11)
-             ("C-;" . +vterm-send-F12)
-             ("S-SPC" . nil)
-             ("S-<escape>" . vterm-copy-mode)
-             :map vterm-copy-mode-map
-             ("S-<escape>" . vterm-copy-mode-done)))
+  (define-key vterm-mode-map (kbd "s-`") '+vterm-toggle)
+  (define-key vterm-mode-map (kbd "s--") '+vterm-new)
+  (define-key vterm-mode-map (kbd "s-.") '+vterm-next)
+  (define-key vterm-mode-map (kbd "s-,") '+vterm-prev)
+  (define-key vterm-mode-map (kbd "s-n") 'vterm-next-prompt)
+  (define-key vterm-mode-map (kbd "s-p") 'vterm-previous-prompt)
+  (define-key vterm-mode-map (kbd "C-<backspace>") '+vterm-send-F4)
+  (define-key vterm-mode-map (kbd "C-/") '+vterm-send-F6)
+  (define-key vterm-mode-map (kbd "C-,") '+vterm-send-F10)
+  (define-key vterm-mode-map (kbd "C-.") '+vterm-send-F11)
+  (define-key vterm-mode-map (kbd "C-;") '+vterm-send-F12)
+  (define-key vterm-mode-map (kbd "S-SPC") nil)
+  (define-key vterm-mode-map (kbd "S-<escape>") 'vterm-copy-mode)
+  (define-key vterm-copy-mode-map (kbd "S-<escape>") 'vterm-copy-mode-done))
 #+end_src
 
 *** Autoload
@@ -4301,7 +4419,7 @@ Used as a hook function added to `kill-buffer-hook'."
 #+begin_src emacs-lisp
 (use-package magit :ensure t)
 
-(bind-key "C-M-g" 'magit-status-here)
+(define-key global-map (kbd "C-M-g") 'magit-status-here)
 (with-eval-after-load 'magit
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-define-global-key-bindings nil)
@@ -4313,8 +4431,7 @@ Used as a hook function added to `kill-buffer-hook'."
         '(non-empty-second-line overlong-summary-line))
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
-  (bind-keys :map magit-diff-section-base-map
-             ("<C-return>" . magit-diff-visit-file-other-window)))
+  (define-key magit-diff-section-base-map (kbd "<C-return>") 'magit-diff-visit-file-other-window))
 #+end_src
 
 ** Eldoc in childframe (eldoc-box.el)
@@ -4329,7 +4446,7 @@ selectable and scrollable with mouse, even though the cursor is hidden.
 (use-package eldoc-box :ensure t :after-call flymake-mode)
 
 (with-eval-after-load 'eldoc-box
-  (bind-key "p" 'eldoc-box-help-at-point grandview-prog-map))
+  (define-key grandview-prog-map (kbd "p") 'eldoc-box-help-at-point))
 #+end_src
 
 ** Helpful (helpful.el)
@@ -4347,18 +4464,15 @@ made for this package and built-in help buffer:
 #+begin_src emacs-lisp
 (use-package helpful :ensure t :after-call meow-keypad-mode-hook)
 
-(bind-keys :map global-map
-           ("C-h C-s" . helpful-symbol)
-           ("C-h K" . describe-keymap)
-           ("C-h C-f" . helpful-callable)
-           ("C-h C-v" . helpful-variable)
-           ("C-h k" . helpful-key))
+(define-key global-map (kbd "C-h C-s") 'helpful-symbol)
+(define-key global-map (kbd "C-h K") 'describe-keymap)
+(define-key global-map (kbd "C-h C-f") 'helpful-callable)
+(define-key global-map (kbd "C-h C-v") 'helpful-variable)
+(define-key global-map (kbd "C-h k") 'helpful-key)
 
 (with-eval-after-load 'helpful
-  (bind-keys
-   :map helpful-mode-map
-   ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
-   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
+  (define-key helpful-mode-map (kbd "M-n") (lambda () (interactive) (forward-button 1 nil 1 t)))
+  (define-key helpful-mode-map (kbd "M-p") (lambda () (interactive) (backward-button 1 nil 1 t))))
 #+end_src
 
 ** Emacs Manual (info.el)
@@ -4370,13 +4484,12 @@ made for this package and built-in help buffer:
 (use-package info :ensure nil)
 
 (with-eval-after-load 'info
-  (bind-keys :map Info-mode-map
-             ("n" . next-line)
-             ("p" . previous-line)
-             ("C-n" . Info-next)
-             ("C-p" . Info-prev)
-             ("s-n" . forward-paragraph)
-             ("s-p" . backward-paragraph)))
+  (define-key Info-mode-map (kbd "n") 'next-line)
+  (define-key Info-mode-map (kbd "p") 'previous-line)
+  (define-key Info-mode-map (kbd "C-n") 'Info-next)
+  (define-key Info-mode-map (kbd "C-p") 'Info-prev)
+  (define-key Info-mode-map (kbd "s-n") 'forward-paragraph)
+  (define-key Info-mode-map (kbd "s-p") 'backward-paragraph))
 #+end_src
 
 ** Man page (man.el)
@@ -4389,7 +4502,7 @@ made for this package and built-in help buffer:
 
 (setq Man-notify-method 'newframe)
 (with-eval-after-load 'man
-  (bind-keys :map Man-mode-map ("q" . kill-this-buffer)))
+  (define-key Man-mode-map (kbd "q") 'kill-this-buffer))
 #+end_src
 
 ** Ripgrep (rg.el)
@@ -4415,7 +4528,7 @@ Some additions I've added to rg transient:
 
 (with-eval-after-load 'rg
   (+rg-setup)
-  (bind-key "s" 'rg-project-all-files-no-ask grandview-prog-map))
+  (define-key grandview-prog-map (kbd "s") 'rg-project-all-files-no-ask))
 #+end_src
 
 *** Autoload
@@ -4471,11 +4584,10 @@ regexp .etc).
   (setq pdf-annot-activate-created-annotations t) ; automatically annotate highlights
   (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0))) ; turn off cua so copy works
   (setq pdf-view-resize-factor 1.1) ; more fine-grained zooming
-  (bind-keys :map pdf-view-mode-map
-             ("C-s" . isearch-forward)
-             ("h" . pdf-annot-add-highlight-markup-annotation)
-             ("t" . 'pdf-annot-add-text-annotation)
-             ("D" . 'pdf-annot-delete)))
+  (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
+  (define-key pdf-view-mode-map (kbd "h") 'pdf-annot-add-highlight-markup-annotation)
+  (define-key pdf-view-mode-map (kbd "t") ''pdf-annot-add-text-annotation)
+  (define-key pdf-view-mode-map (kbd "D") ''pdf-annot-delete))
 #+end_src
 
 ** Epub reader (nov.el)
@@ -4486,9 +4598,10 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package nov :ensure t)
 (push '("\\.epub\\'" . nov-mode) auto-mode-alist)
-(setq nov-shr-rendering-functions '((img . nov-render-img)
-                                    (title . nov-render-title)
-                                    (b . shr-tag-b)))
+(setq nov-shr-rendering-functions
+      '((img . nov-render-img)
+        (title . nov-render-title)
+        (b . shr-tag-b)))
 #+end_src
 
 ** COMMENT Persistent sessions (desktop.el)
@@ -4534,7 +4647,6 @@ Here are the local variables in this file.
 
 + ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
 + ~org-edit-src-content-indentation~: do not add spaces at line beginning in src blocks
-+ ~completion-at-point-functions~: show elisp completion candidates inside the src blocks.
 + ~+org-id-auto~: generate =:CUSTOM_ID= for every heading on saving.
 
 #+begin_src emacs-lisp
@@ -4552,12 +4664,10 @@ Here are the local variables in this file.
   "Setup for `grandview-org-file'."
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
-  (setq-local completion-at-point-functions
-              '(tempel-complete
-                pcomplete-completions-at-point
-                elisp-completion-at-point t))
   (setq-local org-edit-src-content-indentation 0)
   (setq-local +org-id-auto t))
+
+(push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
 
 (provide 'grandview)
 ;;; grandview.el ends here
