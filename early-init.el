@@ -12,12 +12,10 @@
  package-quickstart nil ; Prevent package.el loading packages prior to their init-file
  package-enable-at-startup t
  package-archives
-      '(("gnu-elpa" . "https://elpa.gnu.org/packages/")
-        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-        ("melpa" . "https://melpa.org/packages/"))
+ '(("gnu-elpa" . "https://elpa.gnu.org/packages/")
+   ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+   ("melpa" . "https://melpa.org/packages/"))
  package-archive-priorities '(("melpa" . 3) ("gnu-elpa" . 2) ("nongnu" . 1))
- use-package-vc-prefer-newest t
- use-package-always-defer t
  package-install-upgrade-built-in nil
  ad-redefinition-action 'accept ; Disable warnings from legacy advice system
  inhibit-startup-message t ; Reduce noise at startup

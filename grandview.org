@@ -259,6 +259,98 @@ doing.
 
 #+end_src
 
+** Package manager (use-package.el)
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Package_manager_(use-package.el)-BA8957EF
+:END:
+
+As the author of =use-package= stated, '=use-package= is *not* a package manager'.
+Instead, it's purpose is to allow you to isolate package configuration in your
+.emacs file in a way that is both performance-oriented and, well, tidy.
+
+Nonetheless, we still use it together with =package.el= to act as our package
+manager, there are several reasons for that:
+
++ Both of them are built-in to Emacs (we use emacs30).
++ =use-package= now support the ~:vc~ keyword to install package from source.
++ For our use cases, the package configs are maintained out side of =use-package=
+  anyway, so I guess it's fine to use them the "wrong" way.
+
+In order to expand its lazy-loading capabilities, here I bring in the
+=:after-call= keyword definition from *doom-emacs*.
+
+#+begin_src elisp :tangle no
+;; The keyword should be used like this:
+(use-package some-package :after-call SYMBOL|LIST)
+#+end_src
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'use-package-core
+  ;; `use-package' adds syntax highlighting for the `use-package' macro, but
+  ;; Emacs 26+ already highlights macros, so it's redundant.
+  (font-lock-remove-keywords 'emacs-lisp-mode use-package-font-lock-keywords)
+
+  (push :after-call use-package-deferring-keywords)
+  (setq use-package-keywords
+        (use-package-list-insert :after-call use-package-keywords :after))
+
+  (defvar grandview--deferred-packages-alist '(t))
+  (setq
+   use-package-compute-statistics init-file-debug
+   use-package-verbose init-file-debug
+   use-package-minimum-reported-time (if init-file-debug 0 0.1)
+   use-package-expand-minimally (not noninteractive)
+   use-package-vc-prefer-newest t
+   use-package-always-defer t)
+
+  (defun grandview--log (string &optional label)
+    "Log STRING out.
+Optional LABEL can be a symbol or string, use GRANDVIEW by default."
+    (let* ((label-str (cond ((and label (symbolp label)) (symbol-name label))
+                            ((stringp label) label)
+                            (t "GRANDVIEW")))
+           (label (propertize label-str 'face 'font-lock-builtin-face)))
+      (prog1 nil (message "%s" (format "%s: %s" label string)))))
+
+  (defalias 'use-package-normalize/:after-call #'use-package-normalize-symlist)
+  (defun use-package-handler/:after-call (name _keyword hooks rest state)
+    (if (plist-get state :demand)
+        (use-package-process-keywords name rest state)
+      (let ((fn (make-symbol (format "grandview--after-call-%s-h" name))))
+        (use-package-concat
+         `((fset ',fn
+                 (lambda (&rest _)
+                   (grandview--log (format "package「%s」lazy loaded" ',name))
+                   (condition-case e
+                       ;; If `default-directory' is a directory that doesn't
+                       ;; exist or is unreadable, Emacs throws up file-missing
+                       ;; errors, so we set it to a directory we know exists and
+                       ;; is readable.
+                       (let ((default-directory grandview-cache-dir))
+                         (require ',name))
+                     ((debug error)
+                      (message "Failed to load deferred package %s: %s" ',name e)))
+                   (when-let (deferral-list (assq ',name grandview--deferred-packages-alist))
+                     (dolist (hook (cdr deferral-list))
+                       (advice-remove hook #',fn)
+                       (remove-hook hook #',fn))
+                     (delq! deferral-list grandview--deferred-packages-alist)
+                     (unintern ',fn nil)))))
+         (let (forms)
+           (dolist (hook hooks forms)
+             (push (if (string-match-p "-\\(?:functions\\|hook\\)$" (symbol-name hook))
+                       `(add-hook ',hook #',fn)
+                     `(advice-add #',hook :before #',fn))
+                   forms)))
+         `((unless (assq ',name grandview--deferred-packages-alist)
+             (push '(,name) grandview--deferred-packages-alist))
+           (nconc (assq ',name grandview--deferred-packages-alist)
+                  '(,@hooks)))
+         (use-package-process-keywords name rest state))))))
+
+(use-package bind-key :ensure t) ; for `bind-keys' macro
+#+end_src
+
 ** Basic editing commands (simple.el)
 :PROPERTIES:
 :CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_commands_(simple.el)-1717816F
@@ -271,7 +363,7 @@ related to some major mode or to file-handling.
 - Recenter the screen and highlight the keywords after we call ~next/previous-error~
 
 #+begin_src emacs-lisp
-(once '(:packages simple)
+(with-eval-after-load 'simple
   (bind-key "SPC" nil messages-buffer-mode-map)
   (add-hook 'next-error-hook #'recenter)
   (setq next-error-message-highlight t)) ; added in Emacs 28.1
@@ -403,11 +495,11 @@ because it can be very lengthy and should be configured separately, see
 If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
 
 #+begin_src emacs-lisp
-(use-package meow :ensure t)
+(use-package meow :ensure t :after-call pre-command-hook)
 
 (meow-global-mode)
 
-(once '(:before self-insert-command)
+(with-eval-after-load 'meow
   (setq meow-visit-sanitize-completion nil)
   (setq meow-use-clipboard t)
   (setq meow-esc-delay 0.001)
@@ -579,26 +671,26 @@ details.
 
 #+begin_src emacs-lisp
 (setq treesit-language-source-alist
-   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-     (cmake "https://github.com/uyha/tree-sitter-cmake")
-     (csharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
-     (css "https://github.com/tree-sitter/tree-sitter-css")
-     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-     (go "https://github.com/tree-sitter/tree-sitter-go")
-     (html "https://github.com/tree-sitter/tree-sitter-html")
-     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-     (json "https://github.com/tree-sitter/tree-sitter-json")
-     (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
-     (make "https://github.com/alemuller/tree-sitter-make")
-     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-     (python "https://github.com/tree-sitter/tree-sitter-python")
-     (toml "https://github.com/tree-sitter/tree-sitter-toml")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-     (clojure "https://github.com/sogaiu/tree-sitter-clojure")
-     (rust "https://github.com/tree-sitter/tree-sitter-rust")
-     (vue "https://github.com/ikatyang/tree-sitter-vue")))
+      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (cmake "https://github.com/uyha/tree-sitter-cmake")
+        (c-sharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
+        (css "https://github.com/tree-sitter/tree-sitter-css")
+        (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+        (go "https://github.com/tree-sitter/tree-sitter-go")
+        (html "https://github.com/tree-sitter/tree-sitter-html")
+        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+        (json "https://github.com/tree-sitter/tree-sitter-json")
+        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
+        (make "https://github.com/alemuller/tree-sitter-make")
+        (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+        (python "https://github.com/tree-sitter/tree-sitter-python")
+        (toml "https://github.com/tree-sitter/tree-sitter-toml")
+        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+        (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+        (clojure "https://github.com/sogaiu/tree-sitter-clojure")
+        (rust "https://github.com/tree-sitter/tree-sitter-rust")
+        (vue "https://github.com/ikatyang/tree-sitter-vue")))
 
 (setq treesit-font-lock-level 2)
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
@@ -676,22 +768,27 @@ Recommended themes (using their package names):
   Mindre theme.
 
 #+begin_src emacs-lisp
-(use-package modus-themes :ensure nil)
-(use-package ef-themes :ensure t)
-(use-package lambda-themes :vc (:url "https://github.com/Lambda-Emacs/lambda-themes"))
-(use-package apropospriate-theme :ensure t)
-(use-package doom-themes :ensure t)
-(use-package color-theme-sanityinc-tomorrow :ensure t)
-(use-package mindre-theme :ensure t)
-(once '(:hooks after-init-hook)
+(use-package modus-themes :ensure nil :after-call after-init-hook)
+
+;; (use-package ef-themes :ensure t :after-call after-init-hook)
+;; (use-package lambda-themes :vc (:url "https://github.com/Lambda-Emacs/lambda-themes"))
+;; (use-package apropospriate-theme :ensure t)
+;; (use-package doom-themes :ensure t)
+;; (use-package color-theme-sanityinc-tomorrow :ensure t)
+;; (use-package mindre-theme :ensure t)
+
+;; (with-eval-after-load 'ef-themes
+;;   (setq ef-themes-to-toggle '(ef-summer ef-winter)
+;;     ef-themes-mixed-fonts t
+;;     ef-themes-variable-pitch-ui t))
+
+(with-eval-after-load 'modus-themes
   (setq modus-themes-common-palette-overrides
         '((underline-link unspecified)
           (underline-link-visited unspecified)
-          (underline-link-symbolic unspecified)))
-  (setq ef-themes-to-toggle '(ef-summer ef-winter)
-        ef-themes-mixed-fonts t
-        ef-themes-variable-pitch-ui t)
-  (load-theme grandview-theme t))
+          (underline-link-symbolic unspecified))))
+
+(add-hook 'after-init-hook (lambda () (load-theme grandview-theme t)))
 #+end_src
 
 ** Fonts and icons
@@ -791,7 +888,7 @@ control over the buffer list and is more powerful overall.
 #+begin_src emacs-lisp
 (use-package ibuffer :ensure nil)
 
-(once '(:packages ibuffer)
+(with-eval-after-load 'ibuffer
   (add-hook 'ibuffer-mode-hook
             (lambda () (hl-line-mode) (ibuffer-update 0)))
   (setq ibuffer-expert t)
@@ -822,9 +919,9 @@ control over the buffer list and is more powerful overall.
              ("/ g" . ibuffer-filter-by-content)))
 #+end_src
 
-** Window commands (window.el)
+** Window management (window.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Window_commands_(window.el)-CA1E231A
+:CUSTOM_ID: *GRANDVIEW_CORE*-Window_management_(window.el)-36635CB3
 :END:
 *** Window selection (windmove.el)
 :PROPERTIES:
@@ -834,13 +931,14 @@ control over the buffer list and is more powerful overall.
 Directional window-selection routines.
 
 #+begin_src emacs-lisp
-(use-package windmove :ensure nil)
+(use-package windmove :ensure nil :after-call split-window)
 
-(bind-keys :map tab-prefix-map
-           ("C-w d" . windmove-swap-states-down)
-           ("C-w u" . windmove-swap-states-up)
-           ("C-w r" . windmove-swap-states-right)
-           ("C-w l" . windmove-swap-states-left))
+(with-eval-after-load 'windmove
+  (bind-keys :map tab-prefix-map
+             ("C-w d" . windmove-swap-states-down)
+             ("C-w u" . windmove-swap-states-up)
+             ("C-w r" . windmove-swap-states-right)
+             ("C-w l" . windmove-swap-states-left)))
 #+end_src
 
 *** Window placement
@@ -861,7 +959,9 @@ Disable ~cursor-in-non-selected-windows~ and ~highlight-nonselected-windows~ red
 rendering/line scan work for Emacs in non-focused windows.
 
 #+begin_src emacs-lisp
-(once '(:hooks window-configuration-change-hook)
+(use-package window :ensure nil)
+
+(with-eval-after-load 'window
   (setq-default cursor-in-non-selected-windows nil)
   (setq highlight-nonselected-windows nil)
   (setq display-buffer-alist
@@ -1053,8 +1153,12 @@ What my minibuffer config does:
   edit is in progress.
 
 #+begin_src emacs-lisp
+(use-package minibuffer :ensure nil)
+(use-package minibuf-eldef :ensure nil)
+
 (setq enable-recursive-minibuffers t)
 (setq minibuffer-eldef-shorten-default t)
+
 (setq minibuffer-prompt-properties
       '(read-only t cursor-intangible t face minibuffer-prompt))
 (minibuffer-depth-indicate-mode 1)
@@ -1087,7 +1191,9 @@ What my minibuffer config does:
 Keeps a record of actions involving the minibuffer.
 
 #+begin_src emacs-lisp
-(once '(:hooks minibuffer-setup-hook)
+(use-package savehist :ensure nil :after-call minibuffer-setup-hook)
+
+(with-eval-after-load 'savehist
   (setq savehist-file (locate-user-emacs-file "savehist"))
   (setq history-length 10000)
   (setq history-delete-duplicates t)
@@ -1109,10 +1215,9 @@ Here I just modified face for current candidate and make height of vertico
 window as a constant value.
 
 #+begin_src emacs-lisp
-(use-package vertico :ensure t)
+(use-package vertico :ensure t :after-call pre-command-hook)
 
-(once '(:hooks pre-command-hook)
-  (vertico-mode 1))
+(with-eval-after-load 'vertico (vertico-mode 1))
 #+end_src
 
 ** Match candidates made easy (orderless.el)
@@ -1137,19 +1242,20 @@ rather than all of the =dired-*= noise.
 (use-package pinyinlib :ensure t)
 (use-package orderless :ensure t)
 
-(autoload 'pinyinlib-build-regexp-string "pinyinlib")
-(setq completion-styles '(orderless partial-completion basic))
-(setq orderless-component-separator #'orderless-escapable-split-on-space)
-(setq orderless-matching-styles
-      '(+orderless-pinyin-only-initialism
-        orderless-initialism
-        orderless-prefixes
-        orderless-regexp))
-(setq orderless-style-dispatchers
-      '(+orderless-literal-dispatcher
-        +orderless-initialism-dispatcher
-        +orderless-without-literal-dispatcher
-        +orderless-pinyin-dispatcher))
+(with-eval-after-load 'vertico
+  (autoload 'pinyinlib-build-regexp-string "pinyinlib")
+  (setq completion-styles '(orderless partial-completion basic))
+  (setq orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq orderless-matching-styles
+        '(+orderless-pinyin-only-initialism
+          orderless-initialism
+          orderless-prefixes
+          orderless-regexp))
+  (setq orderless-style-dispatchers
+        '(+orderless-literal-dispatcher
+          +orderless-initialism-dispatcher
+          +orderless-without-literal-dispatcher
+          +orderless-pinyin-dispatcher)))
 #+end_src
 
 *** Autoload
@@ -1212,7 +1318,7 @@ word, which usually consists of only 2 characters.
 #+begin_src emacs-lisp
 (use-package consult :ensure t)
 
-(once '(:packages vertico)
+(with-eval-after-load 'vertico
   (setq completion-in-region-function #'consult-completion-in-region)
   (advice-add #'register-preview :override #'consult-register-window)
   (setq register-preview-delay 0.2)
@@ -1243,8 +1349,6 @@ word, which usually consists of only 2 characters.
              ("c" . consult-complex-command)
              ("C" . consult-mode-command)
              ("M" . consult-minor-mode-menu)))
-
-(bind-key "/" 'consult-line meow-normal-state-keymap)
 #+end_src
 
 ** Candidate annotation (marginalia.el)
@@ -1259,7 +1363,7 @@ framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
 #+begin_src emacs-lisp
 (use-package marginalia :ensure t)
 
-(once '(:packages vertico)
+(with-eval-after-load 'vertico
   (marginalia-mode)
   (setq marginalia-align 'left))
 #+end_src
@@ -1278,20 +1382,15 @@ We also enabled ~corfu-doc-mode~ to show documentation of the candidates in a
 pop-up window.
 
 #+begin_src emacs-lisp
-(use-package corfu :ensure t)
+(use-package corfu :ensure t :after-call self-insert-command)
 
-(once '(:before self-insert-command)
+(with-eval-after-load 'corfu
   (setq corfu-auto t)
   (setq corfu-auto-delay 0.05)
   (setq corfu-cycle t)
   (setq corfu-preselect 'prompt)
   (setq corfu-on-exact-match nil)
-  (global-corfu-mode)
-  (bind-keys :map corfu-map
-             ("TAB" . corfu-next)
-             ([tab] . corfu-next)
-             ("S-TAB" . corfu-previous)
-             ([backtab] . corfu-previous)))
+  (global-corfu-mode))
 #+end_src
 
 ** Completion at point Extensions (cape.el)
@@ -1303,9 +1402,9 @@ Let your completions fly! This package provides additional completion backends
 in the form of Capfs (~completion-at-point-functions~).
 
 #+begin_src emacs-lisp
-(use-package cape :ensure t)
+(use-package cape :ensure t :after-call self-insert-command)
 
-(once '(:before self-insert-command)
+(with-eval-after-load 'cape
   (setq cape-dict-file "/usr/share/dict/words")
   (when (>= emacs-major-version 30)
     (setopt text-mode-ispell-word-completion nil))
@@ -1350,10 +1449,10 @@ recent Emacs facilities. Tempel takes advantage of the standard
 completion-at-point-functions mechanism which is used by Emacs for in-buffer
 completion."
 
-  -- From https://github.com/minad/tempel
+-- From https://github.com/minad/tempel
 
 #+begin_src emacs-lisp
-(use-package tempel :ensure t)
+(use-package tempel :ensure t :after-call self-insert-command)
 
 (add-hook 'prog-mode-hook '+tempel-setup-capf)
 (add-hook 'text-mode-hook '+tempel-setup-capf)
@@ -1388,29 +1487,29 @@ All the Tempo syntax elements are fully supported. The syntax elements are
 described in detail in the docstring of ~tempo-define-template~ in tempo.el. We
 document the important ones here:
 
- - "string" Inserts a string literal.
- - ~p~ Inserts an unnamed placeholder field.
- - ~n~ Inserts a newline.
- - ~>~ Indents with ~indent-according-to-mode~.
- - ~r~ Inserts the current region.
- - ~r>~ The region, but indented.
- - ~n>~ Inserts a newline and indents.
- - ~&~ Insert newline if there is only whitespace between line start and point.
- - ~%~ Insert newline if there is only whitespace between point and line end.
- - ~o~ Like ~%~ but leaves the point before newline.
- - ~(s NAME)~ Inserts a named field.
- - ~(p PROMPT <NAME> <NONINS>)~ Insert an optionally named field with a prompt.
-   The ~PROMPT~ is displayed directly in the buffer as default value. If ~NOINSERT~
-   is non-nil, no field is inserted. Then the minibuffer is used for prompting
-   and the value is bound to ~NAME~.
- - ~(r PROMPT <NAME> <NOINSERT>)~ Insert region or act like ~(p ...)~.
- - ~(r> PROMPT <NAME> <NOINSERT>)~ Act like ~(r ...)~, but indent region.
+- "string" Inserts a string literal.
+- ~p~ Inserts an unnamed placeholder field.
+- ~n~ Inserts a newline.
+- ~>~ Indents with ~indent-according-to-mode~.
+- ~r~ Inserts the current region.
+- ~r>~ The region, but indented.
+- ~n>~ Inserts a newline and indents.
+- ~&~ Insert newline if there is only whitespace between line start and point.
+- ~%~ Insert newline if there is only whitespace between point and line end.
+- ~o~ Like ~%~ but leaves the point before newline.
+- ~(s NAME)~ Inserts a named field.
+- ~(p PROMPT <NAME> <NONINS>)~ Insert an optionally named field with a prompt.
+  The ~PROMPT~ is displayed directly in the buffer as default value. If ~NOINSERT~
+  is non-nil, no field is inserted. Then the minibuffer is used for prompting
+  and the value is bound to ~NAME~.
+- ~(r PROMPT <NAME> <NOINSERT>)~ Insert region or act like ~(p ...)~.
+- ~(r> PROMPT <NAME> <NOINSERT>)~ Act like ~(r ...)~, but indent region.
 
 Furthermore Tempel supports syntax extensions:
 
- - ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
- - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
- - ~q~ Quits the containing template when jumped to.
+- ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
+- ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
+- ~q~ Quits the containing template when jumped to.
 
 Use caution with templates which execute arbitrary code!
 
@@ -1618,6 +1717,7 @@ macOS specific settings.
  '("=" . meow-query-replace)
  '("+" . meow-query-replace-regexp)
  '("^" . meow-last-buffer)
+ '("/" . consult-line)
  '("a" . +meow-insert)
  '("A" . +meow-insert-at-first-non-whitespace)
  '("b" . meow-block)
@@ -1664,7 +1764,7 @@ macOS specific settings.
  '("x" . +meow-save)
  '("y" . meow-replace)
  '("Y" . meow-yank-pop)
- '("z" . meow-start-kmacro-or-insert-counter)
+ '("z" . meow-beacon-start)
  '("Z" . meow-end-or-call-kmacro))
 #+end_src
 
@@ -1684,11 +1784,12 @@ macOS specific settings.
  '("5" . ctl-x-5-prefix)
  '("8" . insert-char)
  '("9" . grandview-tab-map)
- '("?" . describe-keymap)
- '("/" . describe-symbol)
+ '("/" . xref-find-references)
  '(";" . comment-line)
- '("," . beginning-of-buffer)
- '("." . end-of-buffer)
+ '("," . xref-go-back)
+ '("." . xref-find-definitions)
+ '("<" . beginning-of-buffer)
+ '(">" . end-of-buffer)
  '("a" . grandview-apps-map)
  '("e" . dired-jump)
  '("E" . eval-expression)
@@ -1770,9 +1871,10 @@ These keybindings are available when the current major mode doesn't define that 
   - ~+files-find-user-files~
 
 #+begin_src emacs-lisp
+(use-package files :ensure nil)
+
 (setq large-file-warning-threshold 50000000)
 (setq permanently-enabled-local-variables '(lexical-binding encoding))
-(setq auto-save-default nil)
 (setq +files-user-dirs-alist
       '(((title . "  Share")        (path . "/mnt/HDD/Share"))
         ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
@@ -1782,8 +1884,11 @@ These keybindings are available when the current major mode doesn't define that 
         ((title . "  Photos")       (path . "~/Pictures"))
         ((title . "  Downloads")    (path . "~/Downloads"))))
 (setq confirm-kill-processes nil)
-(auto-save-visited-mode)
-(setopt auto-save-visited-interval 300)
+
+(with-eval-after-load 'meow ;; before this no file is edited
+  (setq auto-save-default nil)
+  (auto-save-visited-mode)
+  (setopt auto-save-visited-interval 300))
 
 (bind-keys
  :map grandview-files-map
@@ -1879,12 +1984,12 @@ find-library RET dired~. Even better, we can introspect the C code of Emwacs
 itself as long as the ~find-function-C-source-directory~ is set properly.
 
 #+begin_src emacs-lisp
-(use-package find-func :ensure t)
+(use-package find-func :ensure t :after-call minibuffer-setup-hook)
+
+(bind-key "l" 'find-library grandview-files-map)
 
 (when (eq system-type 'gnu/linux)
   (setq find-function-C-source-directory "~/Code/emacs/src"))
-(bind-keys :map grandview-files-map
-           ("l" . find-library))
 #+end_src
 
 ** Recent files (recentf.el)
@@ -1895,10 +2000,10 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 Keep a record of all recently opened files.
 
 #+begin_src emacs-lisp
-(use-package recentf :ensure nil)
+(use-package recentf :ensure nil :after-call meow-keypad-mode-hook)
 
-(once '(:before after-find-file)
-  (setq recentf-max-saved-items 100)
+(with-eval-after-load 'recentf
+  (setq recentf-max-saved-items 300)
   (recentf-mode 1))
 #+end_src
 
@@ -1912,9 +2017,9 @@ be a subtle reminder of what you were doing the last time you
 visited that file, allowing you to pick up from there.
 
 #+begin_src emacs-lisp
-(use-package saveplace :ensure nil)
+(use-package saveplace :ensure nil :after-call find-file-hook)
 
-(once '(:hooks find-file-hook)
+(with-eval-after-load 'saveplace
   (setq save-place-file (locate-user-emacs-file "saveplace"))
   (setq save-place-forget-unreadable-files t)
   (save-place-mode 1))
@@ -1930,9 +2035,9 @@ changes.  A change can happen externally or by some other tool
 inside of Emacs (e.g. kill a Magit diff).
 
 #+begin_src emacs-lisp
-(use-package autorevert :ensure nil)
+(use-package autorevert :ensure nil :after-call after-find-file)
 
-(once '(:hooks find-file-hook)
+(with-eval-after-load 'autorevert
   (setq auto-revert-verbose t)
   (global-auto-revert-mode))
 #+end_src
@@ -1946,14 +2051,12 @@ inside of Emacs (e.g. kill a Magit diff).
 inside of an Emacs buffer.  It is simply superb!
 
 #+begin_src emacs-lisp
-(use-package dired :ensure nil)
+(use-package dired :ensure nil :after-call pre-command-hook)
 (use-package dired-x :ensure nil)
 (use-package dired-aux :ensure nil)
 (use-package diredfl :ensure t)
 
-(add-hook 'dired-mode-hook 'diredfl-mode)
-(add-hook 'dirvish-directory-view-mode-hook 'diredfl-mode)
-(once '(:packages diredfl)
+(with-eval-after-load 'diredfl
   (set-face-attribute 'diredfl-dir-name nil :bold t)
   (add-hook 'enable-theme-functions
             (lambda (_theme)
@@ -1963,7 +2066,8 @@ inside of an Emacs buffer.  It is simply superb!
 (setq dired-listing-switches
       "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
 
-(once '(:before dired-noselect dired-jump dirvish-curr)
+(with-eval-after-load 'dired
+  (add-hook 'dired-mode-hook 'diredfl-mode)
   (setq mouse-1-click-follows-link nil)
   (setq dired-mouse-drag-files t)                   ; added in Emacs 29
   (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
@@ -2006,7 +2110,7 @@ Bulk renaming files like a breeze.
 #+begin_src emacs-lisp
 (use-package wdired :ensure nil)
 
-(once '(:packages dired)
+(with-eval-after-load 'dired
   (setq wdired-allow-to-change-permissions t)
   (setq wdired-create-parent-directories t)
   (bind-keys :map dired-mode-map
@@ -2030,7 +2134,7 @@ Bulk renaming files like a breeze.
 #+begin_src emacs-lisp
 (use-package image-dired :ensure nil)
 
-(once '(:packages image-dired)
+(with-eval-after-load 'image-dired
   (setq image-dired-thumb-size 256)
   (setq image-dired-marking-shows-next nil)
   (bind-keys :map image-dired-thumbnail-mode-map
@@ -2057,26 +2161,26 @@ that if you install it from Melpa.
 ;; (use-package dirvish :ensure t) ; for normal user, install from Melpa
 (use-package dirvish
   :load-path "~/.cache/emacs/elpa/dirvish"
-  :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions"))
+  :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions")
+  :after-call after-init-hook)
 
-(require 'dirvish)
-(dirvish-override-dired-mode)
-(dirvish-side-follow-mode) ;; `project-current' is buggy in Emacs 31
-(dirvish-peek-mode)
-(add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
-(setq dirvish-attributes
-      '(vc-state file-size git-msg subtree-state nerd-icons collapse file-time))
-(setopt dirvish-subtree-state-style 'nerd)
-(setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
-(setq dirvish-header-line-height '(25 . 35))
-(setq dirvish-mode-line-height 21)
-(setq dirvish-side-width 38)
-(setq dirvish-header-line-format '(:left (path) :right (free-space)))
-(setq dirvish-path-separators (list "  " "  " "  "))
-(appendq! dirvish-preview-disabled-exts '("lockb" "sqlite" "db"))
-
-(once '(:hooks dirvish-setup-hook)
+(with-eval-after-load 'dirvish
   (require 'dirvish-extras)
+  (dirvish-override-dired-mode)
+  (dirvish-side-follow-mode) ;; `project-current' is buggy in Emacs 31
+  (dirvish-peek-mode)
+  (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
+  (add-hook 'dirvish-directory-view-mode-hook 'diredfl-mode)
+  (setq dirvish-attributes
+        '(vc-state file-size git-msg subtree-state nerd-icons collapse file-time))
+  (setopt dirvish-subtree-state-style 'nerd)
+  (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
+  (setq dirvish-header-line-height '(25 . 35))
+  (setq dirvish-mode-line-height 21)
+  (setq dirvish-side-width 38)
+  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
+  (setq dirvish-path-separators (list "  " "  " "  "))
+  (appendq! dirvish-preview-disabled-exts '("lockb" "sqlite" "db"))
   (setopt dirvish-quick-access-entries
           '(("o" "~/"                          "Home")
             ("d" "/opt/dotfiles/"              "Dotfiles")
@@ -2088,39 +2192,38 @@ that if you install it from Melpa.
             ("s" "/mnt/HDD/Share/"             "Shared files")
             ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
             ("t" "~/.local/share/Trash/files/" "Trash")
-            ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/"))))
-
-(bind-keys :map dirvish-mode-map
-           ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
-           ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
-           ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
-           ("<mouse-8>" . dired-do-shell-command)             ; side button for shell command execution
-           ("SPC" . consult-buffer)
-           ("s-n" . dirvish-history-go-forward)
-           ("s-p" . dirvish-history-go-backward)
-           ("h"   . dirvish-history-jump)
-           ("^"   . dirvish-history-last)
-           ("TAB" . dirvish-subtree-toggle)
-           ("a"   . dirvish-quick-access)
-           ("f"   . dirvish-file-info-menu)
-           ("v"   . dirvish-vc-menu)
-           ("*"   . dirvish-mark-menu)
-           ("N"   . dirvish-narrow)
-           ("s-e" . dirvish-emerge-menu)
-           ("s-t" . dirvish-layout-toggle)
-           ("s-s" . dirvish-setup-menu)
-           ("s-j" . dirvish-fd-jump)
-           ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
-           ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
-           ([remap dired-do-copy] . dirvish-yank-menu)
-           :map mode-specific-map
-           ("e" . dirvish-dwim)
-           :map grandview-files-map
-           ("e" . dirvish)
-           ("f" . dirvish-fd)
-           ("n" . dirvish-side)
-           ("o" . dirvish-quick-access)
-           ("b" . dirvish-fd-jump))
+            ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/")))
+  (bind-keys :map dirvish-mode-map
+             ("<mouse-1>" . dirvish-subtree-toggle-or-open)     ; left click for expand/collapse dir or open file
+             ("<mouse-2>" . dired-mouse-find-file-other-window) ; middle click for opening file / entering dir in other window
+             ("<mouse-3>" . dired-mouse-find-file)              ; right click for opening file / entering dir
+             ("<mouse-8>" . dired-do-shell-command)             ; side button for shell command execution
+             ("SPC" . consult-buffer)
+             ("s-n" . dirvish-history-go-forward)
+             ("s-p" . dirvish-history-go-backward)
+             ("h"   . dirvish-history-jump)
+             ("^"   . dirvish-history-last)
+             ("TAB" . dirvish-subtree-toggle)
+             ("a"   . dirvish-quick-access)
+             ("f"   . dirvish-file-info-menu)
+             ("v"   . dirvish-vc-menu)
+             ("*"   . dirvish-mark-menu)
+             ("N"   . dirvish-narrow)
+             ("s-e" . dirvish-emerge-menu)
+             ("s-t" . dirvish-layout-toggle)
+             ("s-s" . dirvish-setup-menu)
+             ("s-j" . dirvish-fd-jump)
+             ([remap dired-sort-toggle-or-edit] . dirvish-quicksort)
+             ([remap dired-do-redisplay] . dirvish-ls-switches-menu)
+             ([remap dired-do-copy] . dirvish-yank-menu)
+             :map mode-specific-map
+             ("e" . dirvish-dwim)
+             :map grandview-files-map
+             ("e" . dirvish)
+             ("f" . dirvish-fd)
+             ("n" . dirvish-side)
+             ("o" . dirvish-quick-access)
+             ("b" . dirvish-fd-jump)))
 #+end_src
 
 ** Project management (project.el)
@@ -2274,7 +2377,7 @@ With a universal prefix to choose project anyway."
 #+begin_src emacs-lisp
 (use-package tramp :ensure nil)
 
-(once '(:packages tramp)
+(with-eval-after-load 'tramp
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "/ssh:buzz:") "direct-async-process" t))
   (setq tramp-verbose 0)
@@ -2298,10 +2401,14 @@ buffers with very long lines. What “very long” means is, of course,
 configurable: M-x find-library so-long covers several customisation options,
 though I find that the defaults require no further intervention from my part.
 
-#+begin_src emacs-lisp
-(use-package so-long :ensure nil)
+=so-long-mode= Files with long lines have huge performance impact for file preview
+(in our case =dirvish.el=), so we ensure the =global-so-long-mode= is enabled before
+=dirvish= is loaded.
 
-(once '(:hooks dired-mode-hook) (global-so-long-mode))
+#+begin_src emacs-lisp
+(use-package so-long :ensure nil :after-call dired-mode-hook)
+
+(with-eval-after-load 'so-long (global-so-long-mode))
 #+end_src
 
 ** Fill line (fill.el)
@@ -2427,7 +2534,7 @@ sure this is a good approach."
 (use-package rime :ensure t)
 
 (setq default-input-method "rime")
-(once '(:packages rime)
+(with-eval-after-load 'rime
   (when (eq system-type 'darwin)
     (setq rime-librime-root (expand-file-name "librime" user-emacs-directory))
     (setq rime-emacs-module-header-root "/opt/homebrew/include"))
@@ -2663,7 +2770,7 @@ look like which can be described briefly as follows:
 #+begin_src emacs-lisp
 (use-package org :ensure nil)
 
-(once '(:packages org)
+(with-eval-after-load 'org
   (add-hook 'org-mode-hook '+org-font-setup)
   (add-hook 'org-mode-hook 'org-indent-mode)
   (add-hook 'org-tab-first-hook 'org-end-of-line)
@@ -2854,7 +2961,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (use-package ob-makefile :ensure nil)
 (use-package ob-csharp :vc (:url "https://github.com/samwdp/ob-csharp"))
 
-(once '(:packages org)
+(with-eval-after-load 'org
   (autoload 'org-babel-execute:C "ob-C")
   (autoload 'org-babel-expand:C "ob-C")
   (autoload 'org-babel-execute:cpp "ob-C")
@@ -2879,7 +2986,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 #+begin_src emacs-lisp
 (use-package org-src :ensure nil)
 
-(once '(:packages org-src)
+(with-eval-after-load 'org-src
   (setq org-src-window-setup 'split-window-right)
   (push '("conf-unix" . conf-unix) org-src-lang-modes))
 #+end_src
@@ -2916,7 +3023,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 #+begin_src emacs-lisp
 (use-package org-habit :ensure nil)
 
-(once '(:packages org)
+(with-eval-after-load 'org
   (appendq! org-modules '(org-habit))
   (setq org-habit-graph-column 60))
 #+end_src
@@ -2931,10 +3038,10 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 #+begin_src emacs-lisp
 (use-package org-tree-slide :ensure t)
 
-(once '(:packages org)
-   (bind-key "C-c |" 'org-tree-slide-mode 'org-mode-map))
+(with-eval-after-load 'org
+  (bind-key "C-c |" 'org-tree-slide-mode 'org-mode-map))
 
-(once '(:packages org-tree-slide)
+(with-eval-after-load 'org-tree-slide
   (setq org-tree-slide-activate-message " ")
   (setq org-tree-slide-deactivate-message " ")
   (setq org-tree-slide-modeline-display nil)
@@ -3052,7 +3159,7 @@ Huge thanks to @blahgeek and @jdtsmith!
 (use-package eglot-tempel :vc (:url "https://github.com/fejfighter/eglot-tempel"))
 (use-package eglot-booster :vc (:url "https://github.com/jdtsmith/eglot-booster"))
 
-(once '(:packages eglot)
+(with-eval-after-load 'eglot
   (setq eglot-autoshutdown t)
   (setq eglot-send-changes-idle-time 0)
   (add-hook 'eglot-mode-hook '+eglot-setup-eldoc)
@@ -3110,18 +3217,20 @@ Sharper is a Transient-based menu for the dotnet CLI. It aims to cover the most
 common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file.
 
 #+begin_src emacs-lisp
-(use-package csharp-ts-mode :ensure nil)
+(use-package csharp-mode :ensure nil)
 (use-package sharper :ensure t)
-(once '(:hooks csharp-mode-hook)
-  (require 'sharper))
 
-;; A temporary fix for dotnet-sdk installation path on Apple Silicon machines
-(when (and (eq system-type 'darwin)
-           (string-match "aarch64-.*" system-configuration))
-  (setenv "DYLD_FALLBACK_LIBRARY_PATH" "/usr/local/lib:/usr/local/lib64:/opt/homebrew/lib")
-  (setenv "DOTNET_ROOT" "/usr/local/share/dotnet"))
-
+(add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.[a]?xaml\\'" . nxml-mode))
+
+(with-eval-after-load 'csharp-mode
+  (setq csharp-ts-mode-indent-offset 2)
+  (require 'sharper)
+  ;; A temporary fix for dotnet-sdk installation path on Apple Silicon machines
+  (when (and (eq system-type 'darwin)
+             (string-match "aarch64-.*" system-configuration))
+    (setenv "DYLD_FALLBACK_LIBRARY_PATH" "/usr/local/lib:/usr/local/lib64:/opt/homebrew/lib")
+    (setenv "DOTNET_ROOT" "/usr/local/share/dotnet")))
 #+end_src
 
 *** Python
@@ -3136,6 +3245,15 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 
 (setq python-indent-offset 2)
 (setq python-indent-guess-indent-offset-verbose nil)
+#+end_src
+
+*** Lisp | Elisp
+:PROPERTIES:
+:CUSTOM_ID: Programming-Programming_languages-Lisp-C5129A90
+:END:
+
+#+begin_src emacs-lisp
+(setq lisp-indent-offset nil)
 #+end_src
 
 *** Lua
@@ -3186,12 +3304,16 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 #+begin_src emacs-lisp
 (use-package vue-ts-mode :vc (:url "https://github.com/8uff3r/vue-ts-mode"))
 
-(once '(:packages eglot)
-  (add-to-list 'eglot-server-programs +eglot-vue-ts-lsp-program))
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs +vue-ts-eglot-lsp-option))
 
-(add-hook 'vue-ts-mode-hook #'eglot-ensure)
+(with-eval-after-load 'copilot
+  (add-to-list
+   'copilot-indentation-alist '(vue-ts-mode vue-ts-mode-indent-offset)))
 
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . vue-ts-mode))
+(add-hook 'vue-ts-mode-hook #'eglot-ensure)
+(setq vue-ts-mode-indent-offset 2)
 #+end_src
 
 **** Autoload
@@ -3202,7 +3324,7 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defcustom +eglot-vue-ts-lsp-program
+(defcustom +vue-ts-eglot-lsp-option
   '((vue-ts-mode typescript-ts-mode) .
     ("vue-language-server" "--stdio"
      :initializationOptions
@@ -3259,6 +3381,25 @@ manually seems a better option."
 (setq sh-basic-offset 2)
 #+end_src
 
+** Show help / diagnostic info at point (eldoc.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-Show_help__diagnose_info_at_point_(eldoc.el)-1660EC79
+:END:
+
+For languages like emacs-lisp, this package shows function arglist or variable
+docstring in echo area.  For other programming languages, thanks to the
+=eldoc-documentation-functions'= hook it provides, any help or diagnostic info
+that are relevent to the symbol (whatever it is) under the cursor will be
+displayed in the minibuffer.
+
+If the information string is more than one line, by default eldoc will
+automatically expand and shrink the minibuffer, which I don't like very much.
+So I turn =eldoc-echo-area-use-multiline-p= off.
+
+#+begin_src emacs-lisp
+(setq eldoc-echo-area-use-multiline-p nil)
+#+end_src
+
 ** Compiler (compile.el)
 :PROPERTIES:
 :CUSTOM_ID: Programming-Compiler_(compile.el)-34E57C9D
@@ -3280,7 +3421,7 @@ Run compiler as inferior of Emacs, parse error messages.
 #+begin_src emacs-lisp
 (use-package jupyter :ensure t)
 
-(once '(:packages jupyter)
+(with-eval-after-load 'jupyter
   (require 'ob-jupyter)
   (org-babel-jupyter-override-src-block "python")
   (setq org-babel-default-header-args:python
@@ -3312,7 +3453,7 @@ optional minor mode which can apply this command automatically on save.
 
 (bind-key "f" '+format-buffer grandview-prog-map)
 
-(once '(:packages reformatter)
+(with-eval-after-load 'reformatter
   (reformatter-define lua-format
     :program "stylua"
     :args '("--indent-width" "2" "-")
@@ -3346,12 +3487,12 @@ optional minor mode which can apply this command automatically on save.
 (defun +reformatter-eslint-root ()
   "Up traverse filesystem for a directory containing eslint config."
   (locate-dominating-file
-     default-directory
-     (lambda (directory)
-       (seq-find
-        (lambda (project-marker)
-          (file-exists-p (expand-file-name project-marker directory)))
-        '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs" "package.json")))))
+   default-directory
+   (lambda (directory)
+     (seq-find
+      (lambda (project-marker)
+        (file-exists-p (expand-file-name project-marker directory)))
+      '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs" "package.json")))))
 
 ;;;###autoload
 (defun +format-buffer ()
@@ -3472,15 +3613,18 @@ If called with prefix arg, prompt for a major mode for the buffer."
 :PROPERTIES:
 :CUSTOM_ID: User_interface_extras-9ff97526
 :END:
-** Less prominent for unfocused window (auto-dim-other-buffers.el)
+** Highlight focused window (auto-dim-other-buffers.el)
 :PROPERTIES:
-:CUSTOM_ID: User_interface-Make_(auto-dim-other-buffers.el)-73a27abb
+:CUSTOM_ID: User_interface-Highlight_focused_window_(auto-dim-other-buffers.el)-5EB08984
 :END:
 
-#+begin_src emacs-lisp
-(use-package auto-dim-other-buffers :ensure t)
+Just dim other windows out so that we know better which window is the focused
+one.  We only load this package after we have more than 1 windows.
 
-(once '(:hooks window-configuration-change-hook)
+#+begin_src emacs-lisp
+(use-package auto-dim-other-buffers :ensure t :after-call split-window)
+
+(with-eval-after-load 'auto-dim-other-buffers
   (auto-dim-other-buffers-mode))
 #+end_src
 
@@ -3518,14 +3662,14 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
       tabspaces-include-buffers '("*scratch*" "*Messages*")
       tabspaces-remove-to-default t)
 
-(once '(:packages tabspaces)
+(with-eval-after-load 'tabspaces
   (bind-keys :map tab-prefix-map
              ("C" . tabspaces-clear-buffers)
              ("R" . tabspaces-remove-selected-buffer)
              ("k" . tabspaces-kill-buffers-close-workspace)
              ("s" . tabspaces-switch-or-create-workspace)))
 
-(once '(:packages consult)
+(with-eval-after-load 'consult
   (consult-customize consult--source-buffer :hidden t :default nil)
   (defvar consult--source-workspace
     (list :name "Workspace Buffers"
@@ -3595,7 +3739,7 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
 #+begin_src emacs-lisp
 (use-package transient :ensure nil)
 
-(once '(:packages transient)
+(with-eval-after-load 'transient
   (setq transient-enable-popup-navigation nil)
   (setq transient-default-level 7)
   (setq transient-show-popup -0.2)
@@ -3804,7 +3948,7 @@ Another great package from Prot!
 (use-package pulsar :ensure t)
 
 (pulsar-global-mode)
-(once '(:packages pulsar)
+(with-eval-after-load 'pulsar
   (appendq! pulsar-pulse-functions
             (list 'windmove-left 'windmove-right
                   'windmove-up 'windmove-down
@@ -3823,7 +3967,7 @@ style icons with image format.
 #+begin_src emacs-lisp
 (use-package vscode-icon :ensure t)
 
-(once '(:packages vscode-icon)
+(with-eval-after-load 'vscode-icon
   (push '("jpg" . "image") vscode-icon-file-alist)
   (push '("7z" . "zip") vscode-icon-file-alist)
   (push '("mkv" . "video") vscode-icon-file-alist)
@@ -3841,9 +3985,9 @@ easy to understand how many matches there are in the current buffer
 for your search query.
 
 #+begin_src emacs-lisp
-(use-package anzu :ensure t)
+(use-package anzu :ensure t :after-call isearch-mode)
 
-(once '(:hooks pre-command-hook)
+(with-eval-after-load 'anzu
   (global-anzu-mode)
   (bind-key [remap query-replace] 'anzu-query-replace)
   (bind-key [remap query-replace-regexp] 'anzu-query-replace-regexp))
@@ -3861,11 +4005,10 @@ Moreover, the search status information in the echo area and some keybindings
 are slightly simplified.
 
 #+begin_src emacs-lisp
-(use-package isearch-mb :ensure t)
+(use-package isearch-mb :ensure t :after-call isearch-mode)
 
-(isearch-mb-mode)
-
-(once '(:packages isearch-mb)
+(with-eval-after-load 'isearch-mb
+  (isearch-mb-mode)
   (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
   (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
   (bind-keys :map isearch-mb-minibuffer-map
@@ -3878,9 +4021,9 @@ are slightly simplified.
 :END:
 
 #+begin_src emacs-lisp
-(use-package writeroom-mode :ensure t)
+(use-package writeroom-mode :ensure t :after-call org-mode-hook markdown-mode-hook)
 
-(once '(:before pre-command-hook)
+(with-eval-after-load 'writeroom-mode
   (setq writeroom-width 128
         writeroom-bottom-divider-width 0
         writeroom-fringes-outside-margins t
@@ -3889,9 +4032,7 @@ are slightly simplified.
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
         writeroom-mode-line t)
-  (global-writeroom-mode))
-
-(add-hook 'org-mode-hook #'+visual-fill-center-text)
+  (add-hook 'org-mode-hook #'+visual-fill-center-text))
 #+end_src
 
 *** Autoload
@@ -3919,8 +4060,8 @@ are slightly simplified.
 (use-package git-gutter :ensure t)
 
 (setq git-gutter:modified-sign "⏽"
-       git-gutter:added-sign "⏽"
-       git-gutter:deleted-sign "⏽")
+      git-gutter:added-sign "⏽"
+      git-gutter:deleted-sign "⏽")
 #+end_src
 
 * Utils
@@ -3937,10 +4078,10 @@ through the ~embark-act~ command (which you should bind to a convenient key),
 offering you relevant actions to use on a target determined by the context.
 
 #+begin_src emacs-lisp
-(use-package embark :ensure t)
-(use-package embark-consult :ensure t)
+(use-package embark :ensure t :after-call display-buffer minibuffer-setup-hook)
+(use-package embark-consult :ensure t :after embark)
 
-(once '(:hooks pre-command-hook)
+(with-eval-after-load 'embark
   (setq embark-quit-after-action t)
   (bind-keys :map global-map
              ("C-." . embark-act)
@@ -3959,7 +4100,7 @@ offering you relevant actions to use on a target determined by the context.
 
 (bind-key "s-`" '+vterm-toggle)
 
-(once '(:packages vterm)
+(with-eval-after-load 'vterm
   (+vterm-mux-mode)
   (setq vterm-max-scrollback 5000)
   (add-hook 'vterm-copy-mode-hook
@@ -4145,7 +4286,7 @@ Used as a hook function added to `kill-buffer-hook'."
 (use-package magit :ensure t)
 
 (bind-key "C-M-g" 'magit-status-here)
-(once '(:packages magit)
+(with-eval-after-load 'magit
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 68)
@@ -4169,11 +4310,9 @@ This package displays ElDoc documentations in a childframe. The childframe is
 selectable and scrollable with mouse, even though the cursor is hidden.
 
 #+begin_src emacs-lisp
-(use-package eldoc-box :ensure t)
+(use-package eldoc-box :ensure t :after-call flymake-mode)
 
-(setq eldoc-echo-area-use-multiline-p nil)
-(once '(:hooks minibuffer-setup-hook)
-  (require 'eldoc-box)
+(with-eval-after-load 'eldoc-box
   (bind-key "p" 'eldoc-box-help-at-point grandview-prog-map))
 #+end_src
 
@@ -4190,21 +4329,20 @@ made for this package and built-in help buffer:
 - focus newly opened help buffer (same behaviour as helpful.el)
 
 #+begin_src emacs-lisp
-(use-package helpful :ensure t)
+(use-package helpful :ensure t :after-call meow-keypad-mode-hook)
 
 (bind-keys :map global-map
-           ("C-h K" . describe-keymap)    ; overrides `Info-goto-emacs-key-command-node'
-           ("C-h C-f" . helpful-callable) ; overrides default behavior of `meow'
-           ("C-h C-v" . helpful-variable) ; overrides default behavior of `meow'
-           ("C-h k" . helpful-key))       ; overrides default behavior of `meow'
+           ("C-h C-s" . helpful-symbol)
+           ("C-h K" . describe-keymap)
+           ("C-h C-f" . helpful-callable)
+           ("C-h C-v" . helpful-variable)
+           ("C-h k" . helpful-key))
 
-(once '(:hooks minibuffer-setup-hook)
-  (require 'helpful)
+(with-eval-after-load 'helpful
   (bind-keys
    :map helpful-mode-map
    ("M-n" . (lambda () (interactive) (forward-button 1 nil 1 t)))
-   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t))))
-  (meow-leader-define-key '("/" . helpful-symbol)))
+   ("M-p" . (lambda () (interactive) (backward-button 1 nil 1 t)))))
 #+end_src
 
 ** Emacs Manual (info.el)
@@ -4215,7 +4353,7 @@ made for this package and built-in help buffer:
 #+begin_src emacs-lisp
 (use-package info :ensure nil)
 
-(once '(:packages info)
+(with-eval-after-load 'info
   (bind-keys :map Info-mode-map
              ("n" . next-line)
              ("p" . previous-line)
@@ -4234,7 +4372,7 @@ made for this package and built-in help buffer:
 (use-package man :ensure nil)
 
 (setq Man-notify-method 'newframe)
-(once '(:packages man)
+(with-eval-after-load 'man
   (bind-keys :map Man-mode-map ("q" . kill-this-buffer)))
 #+end_src
 
@@ -4257,10 +4395,10 @@ Some additions I've added to rg transient:
 + press =SPC p p= to search in current project, no ask for confirmation
 
 #+begin_src emacs-lisp
-(use-package rg :ensure t)
+(use-package rg :ensure t :after-call find-file-hook)
 
-(once '(:hooks find-file-hook)
-  (+rg-setup) ; for lazy loading
+(with-eval-after-load 'rg
+  (+rg-setup)
   (bind-key "s" 'rg-project-all-files-no-ask grandview-prog-map))
 #+end_src
 
@@ -4298,7 +4436,7 @@ regexp .etc).
 #+begin_src emacs-lisp
 (use-package wgrep :ensure t)
 
-(once '(:packages wgrep)
+(with-eval-after-load 'wgrep
   (setq wgrep-auto-save-buffer t)
   (setq wgrep-change-readonly-file t))
 #+end_src
@@ -4309,12 +4447,10 @@ regexp .etc).
 :END:
 
 #+begin_src emacs-lisp
-(use-package pdf-tools :ensure t)
+(use-package pdf-tools :ensure t :after-call doc-view-mode-hook)
 
-(once '(:hooks doc-view-mode-hook)
-  (pdf-tools-install))
-
-(once '(:packages pdf-tools)
+(with-eval-after-load 'pdf-tools
+  (pdf-tools-install)
   (setq-default pdf-view-display-size 'fit-page)
   (setq pdf-annot-activate-created-annotations t) ; automatically annotate highlights
   (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0))) ; turn off cua so copy works

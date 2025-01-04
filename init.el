@@ -127,16 +127,7 @@ debugging code blocks in a org config file."
                (setq buffer-file-coding-system 'binary)
                (insert-file-contents-literally path)
                (buffer-substring-no-properties (point-min) (point-max)))))
-  (decode-coding-string str 'utf-8)))
-
-(defun grandview--log (&optional label string)
-  "Simple logging command.
-Optional LABEL and STRING are echoed out."
-  (let* ((label-str (cond ((symbolp label) (symbol-name label))
-                          ((stringp label) label)
-                          (t "GRANDVIEW")))
-         (label (propertize label-str 'face 'font-lock-builtin-face)))
-    (prog1 nil (message "%s" (format "%s: %s" label string)))))
+    (decode-coding-string str 'utf-8)))
 
 (defun grandview--init-path (type)
   "Get grandview's init path according to TYPE."
@@ -226,8 +217,6 @@ When FORCE, ensure the tangle process and autoloads generation."
 
 (let ((debug (or (getenv-internal "DEBUG") init-file-debug))
       file-name-handler-alist)
-  (use-package bind-key :ensure t) ; for `bind-keys' macro
-  (use-package once :vc (:url "https://github.com/emacs-magus/once"))
   ;; Load user config
   (when (file-exists-p (grandview--init-path 'user))
     (load (grandview--init-path 'user) (not debug) t))
