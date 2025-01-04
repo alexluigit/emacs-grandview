@@ -3138,6 +3138,22 @@ Some number of BLANK-LINES will be shown below the header."
 After proper configuration, Emacs can become a powerful and modern developing
 environment.
 
+** Github Copilot client (copilot.el)
+:PROPERTIES:
+:CUSTOM_ID: Programming-Github_Copilot_client-17D3F5E6
+:END:
+
+#+begin_src emacs-lisp
+(use-package copilot
+  :vc (:url "https://github.com/copilot-emacs/copilot.el"))
+
+(with-eval-after-load 'copilot
+  (bind-keys :map copilot-completion-map
+             ("<tab>" . copilot-accept-completion)
+             ("TAB" . copilot-accept-completion)
+             ("S-TAB" . copilot-accept-completion-by-line)))
+#+end_src
+
 ** Client for LSP servers (eglot.el)
 :PROPERTIES:
 :CUSTOM_ID: Programming-Client_for_LSP_servers_(eglot.el)-857CD702
