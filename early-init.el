@@ -42,6 +42,7 @@
  use-short-answers t ; y/n for yes/no
  ring-bell-function #'ignore ; Do NOT ring the bell
  package-user-dir (locate-user-emacs-file "elpa"))
+(push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
 
 (load custom-file 'noerror 'silent)   ; Load user's customization
 (tool-bar-mode -1)                    ; Disable toolbar

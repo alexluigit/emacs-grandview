@@ -302,7 +302,7 @@ doing.
 
 #+end_src
 
-** Package manager (use-package.el)
+** Package manager
 :PROPERTIES:
 :CUSTOM_ID: *GRANDVIEW_CORE*-Package_manager_(use-package.el)-BA8957EF
 :END:
@@ -315,6 +315,7 @@ Nonetheless, we still use it together with =package.el= to act as our package
 manager, there are several reasons for that:
 
 + Both of them are built-in to Emacs (we use emacs30).
++ =use-package= is able to adjust the package loading order using ~:after~ keyword.
 + =use-package= now support the ~:vc~ keyword to install package from source.
 + For our use cases, the package configs are maintained out side of =use-package=
   anyway, so I guess it's fine to use them the "wrong" way.
@@ -392,9 +393,9 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
          (use-package-process-keywords name rest state))))))
 #+end_src
 
-** Basic editing commands (simple.el)
+** Basic editing utilities
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_commands_(simple.el)-1717816F
+:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_utilities-014C6289
 :END:
 
 =simple.el= consists of a grab-bag of basic Emacs commands not specifically
@@ -404,6 +405,8 @@ related to some major mode or to file-handling.
 - Recenter the screen and highlight the keywords after we call ~next/previous-error~
 
 #+begin_src emacs-lisp
+(use-package simple :ensure nil :after meow)
+
 (with-eval-after-load 'simple
   (define-key messages-buffer-mode-map (kbd "SPC") nil)
   (add-hook 'next-error-hook #'recenter)
@@ -412,7 +415,7 @@ related to some major mode or to file-handling.
 
 *** Tab for Indentation (indent.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_commands_(simple.el)-Tab_for_Indentation_(indent.el)-4CD31D0E
+:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_utilities-Tab_for_Indentation_(indent.el)-94EA8C2C
 :END:
 
 I believe tabs, in the sense of inserting the tab character, are best suited for
@@ -435,10 +438,59 @@ whatever you have typed in.
 (setq-default indent-tabs-mode nil)
 #+end_src
 
+*** Syntax highlighting powered by tree-sitter (treesit.el)
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_utilities-Syntax_highlighting_powered_by_tree-sitter_(treesit.el)-510E9B19
+:END:
+
+=treesit.el= (built-in with Emacs29+) is an Emacs binding for Tree-sitter, an
+incremental parsing system.
+
+It aims to be the foundation for a new breed of Emacs packages that understand
+code structurally. For example:
+
+- Faster, fine-grained code highlighting.
+- More flexible code folding.
+- Structural editing (like Paredit, or even better) for non-Lisp code.
+- More informative indexing for imenu.
+
+After setting the ~treesit-language-source-alist~, try =M-x
+treesit-install-language-grammar=.
+
+See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for
+details.
+
+#+begin_src emacs-lisp
+(setq treesit-language-source-alist
+      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (cmake "https://github.com/uyha/tree-sitter-cmake")
+        (c-sharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
+        (css "https://github.com/tree-sitter/tree-sitter-css")
+        (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+        (go "https://github.com/tree-sitter/tree-sitter-go")
+        (html "https://github.com/tree-sitter/tree-sitter-html")
+        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+        (json "https://github.com/tree-sitter/tree-sitter-json")
+        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
+        (make "https://github.com/alemuller/tree-sitter-make")
+        (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+        (python "https://github.com/tree-sitter/tree-sitter-python")
+        (toml "https://github.com/tree-sitter/tree-sitter-toml")
+        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+        (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+        (clojure "https://github.com/sogaiu/tree-sitter-clojure")
+        (rust "https://github.com/tree-sitter/tree-sitter-rust")
+        (vue "https://github.com/ikatyang/tree-sitter-vue")))
+
+(setq treesit-font-lock-level 2)
+;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
+#+end_src
+
 *** Autoload
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_commands_(simple.el)-Autoload-5585560A
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+simple.el"
+:CUSTOM_ID: *GRANDVIEW_CORE*-Basic_editing_utilities-Autoload-CB63851F
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Basic_editing_utilities.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -521,9 +573,9 @@ Version: 2020-06-26"
       (put this-command 'state 0)))))
 #+end_src
 
-** Modal editing (meow.el)
+** Modal Editing On Wish - meow!
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing_(meow.el)-665390E0
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_Editing_On_Wish_-_meow!-91A999A7
 :END:
 
 Unlike =evil-mode=, which tries to create a whole vim emulation in emacs, =meow=
@@ -531,9 +583,10 @@ only focus on bringing the goodness of modal editing to vanilla emacs.
 
 You may noticed that I didn't include any keybindings of meow here, that's
 because it can be very lengthy and should be configured separately, see
-[[#*Keybindings*-36788c8a][Keybindings]] for details.
+[[id:F8B8CE71-1459-45FD-84A1-E3B87A6C8B52][Keybindings]] for details.  A very good meow tutorial is built-in with meow, just
+type =M-x meow-tutor= and enjoy your learning trip!
 
-If you want to know more about meow or modal editing in general, check out [[https://www.github.com/DoglooksGood/meow][meow]].
+Check out [[https://www.github.com/DoglooksGood/meow][meow]] for more about meow or modal editing in general.
 
 #+begin_src emacs-lisp
 (use-package meow :ensure t :after-call pre-command-hook)
@@ -554,7 +607,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
         '((meow-replace . meow-yank)
           (meow-reverse . back-to-indentation)
           (meow-change . meow-change-char)
-          (+meow-save . +meow-save-line)
+          (meow-save . +meow-save-line)
           (meow-kill . meow-kill-whole-line)
           (meow-pop-selection . meow-pop-grab)
           (meow-beacon-change . meow-beacon-change-char)
@@ -572,7 +625,7 @@ If you want to know more about meow or modal editing in general, check out [[htt
 
 *** Keymaps for leader key
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing_(meow.el)-Keymaps_for_leader_key-745F1081
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_Editing_On_Wish_-_meow!-Keymaps_for_leader_key-BB71F003
 :END:
 
 Being able to use =SPC= as the *leader* key is one of the killing features of modal
@@ -612,7 +665,7 @@ We defined a few keymaps in *grandview* and bind them to the leader key (=SPC=).
 
 *** Quick goto char (avy.el)
 :PROPERTIES:
-:CUSTOM_ID: Text_editing-Quick_goto_char_(avy.el)-4EE5B5A4
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_Editing_On_Wish_-_meow!-Quick_goto_char_(avy.el)-A6E2CA08
 :END:
 
 Jump to any visible text with a few strokes.
@@ -627,7 +680,7 @@ Jump to any visible text with a few strokes.
 
 *** Symbol pairs (embrace.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing_(meow.el)-Symbol_pairs_(embrace.el)-482818A0
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_Editing_On_Wish_-_meow!-Symbol_pairs_(embrace.el)-1B51AEDC
 :END:
 
 =embrace.el= is a package for symbol pairs insert/change/delete which resembles to
@@ -654,10 +707,205 @@ has been bound to =meow-inner-of-thing=.)
         (?` . ("`" . "`"))))
 #+end_src
 
+*** *KEYBINDINGS*
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_Editing_On_Wish_-_meow!-*KEYBINDINGS*-C1FB414D
+:ID:       F8B8CE71-1459-45FD-84A1-E3B87A6C8B52
+:END:
+
+This section contains *core* keybindings of *Grandview*, feel free to adjust it to
+your liking.  Since this part contains so many core keybindings, it's not a good
+idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
+
+**** Orientation
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing-*KEYBINDINGS*-Orientation-91E5C7D6
+:END:
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
+this convention, but it doesn't mean emacs are not able to tell the
+difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
+On terminal, we rebind =<f3>= to =C-i=, so make sure you have relevant settings in
+your terminal emulator's settings.
+
+#+begin_src emacs-lisp
+(define-key input-decode-map [?\C-i] [C-i])
+#+end_src
+
+macOS specific settings.
+
+#+begin_src emacs-lisp
+(setq ns-command-modifier 'super)
+(setq ns-alternate-modifier 'meta)
+#+end_src
+
+**** INSERT
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing-*KEYBINDINGS*-INSERT-64CE5D70
+:END:
+
+#+begin_src emacs-lisp
+(define-key meow-insert-state-keymap (kbd "S-<backspace>") 'meow-kill-whole-line)
+(define-key meow-insert-state-keymap (kbd "<C-i>") 'meow-right)
+(define-key meow-insert-state-keymap (kbd "C-o") 'meow-left)
+#+end_src
+
+**** NORMAL
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing-*KEYBINDINGS*-NORMAL-9539453F
+:END:
+
+#+begin_src emacs-lisp
+(meow-normal-define-key
+ '("0" . meow-digit-argument)
+ '("1" . meow-digit-argument)
+ '("2" . meow-digit-argument)
+ '("3" . meow-digit-argument)
+ '("4" . meow-digit-argument)
+ '("5" . meow-digit-argument)
+ '("6" . meow-digit-argument)
+ '("7" . meow-digit-argument)
+ '("8" . meow-digit-argument)
+ '("9" . meow-digit-argument)
+ '("<escape>" . meow-escape-or-normal-modal)
+ '("<backspace>" . meow-pop-selection)
+ '(";" . meow-cancel-selection)
+ '("," . meow-inner-of-thing)
+ '("." . meow-bounds-of-thing)
+ '("%" . +meow-insert-at-indentation)
+ '("-" . negative-argument)
+ '("=" . meow-query-replace)
+ '("+" . meow-query-replace-regexp)
+ '("^" . meow-last-buffer)
+ '("a" . meow-append)
+ '("A" . meow-insert)
+ '("b" . meow-back-symbol)
+ '("B" . meow-block)
+ '("c" . meow-change)
+ '("C" . meow-change-save)
+ '("d" . meow-delete)
+ '("D" . meow-backward-delete)
+ '("e" . meow-end-of-thing)
+ '("E" . meow-beginning-of-thing)
+ '("f" . meow-next-symbol)
+ '("F" . meow-till)
+ '("g" . meow-grab)
+ '("G" . meow-sync-grab)
+ '("h" . embrace-add)
+ '("H" . embrace-commander)
+ '("i" . meow-right)
+ '("I" . meow-right-expand)
+ '("j" . +simple-join-line)
+ '("J" . meow-join)
+ '("k" . meow-kill)
+ '("K" . meow-C-k)
+ '("l" . meow-line)
+ '("L" . +simple-mark-inner-line)
+ '("m" . meow-mark-word)
+ '("M" . meow-mark-symbol)
+ '("n" . meow-next)
+ '("N" . meow-open-below)
+ '("o" . meow-left)
+ '("O" . meow-left-expand)
+ '("p" . meow-prev)
+ '("P" . meow-open-above)
+ '("q" . quit-window)
+ '("Q" . meow-kmacro-lines)
+ '("r" . meow-reverse)
+ '("R" . undo-redo)
+ '("s" . meow-search)
+ '("S" . meow-pop-search)
+ '("t" . avy-goto-char-timer)
+ '("T" . avy-resume)
+ '("u" . meow-undo)
+ '("U" . meow-undo-in-selection)
+ '("v" . meow-visit)
+ '("w" . meow-next-word)
+ '("W" . meow-back-word)
+ '("x" . meow-save)
+ '("X" . meow-replace)
+ '("y" . meow-yank)
+ '("Y" . meow-yank-pop)
+ '("z" . meow-beacon-start)
+ '("Z" . meow-end-or-call-kmacro))
+#+end_src
+
+**** LEADER
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing-*KEYBINDINGS*-LEADER-46208E7C
+:END:
+
+#+begin_src emacs-lisp
+(meow-leader-define-key
+ '("0" . delete-window)
+ '("1" . delete-other-windows)
+ '("2" . split-window-below)
+ '("3" . split-window-right)
+ '("4" . ctl-x-4-prefix)
+ '("5" . ctl-x-5-prefix)
+ '("8" . insert-char)
+ '("9" . grandview-tab-map)
+ '("/" . xref-find-references)
+ '(";" . comment-line)
+ '("," . xref-go-back)
+ '("." . xref-find-definitions)
+ '("<" . beginning-of-buffer)
+ '(">" . end-of-buffer)
+ '("a" . grandview-util-map)
+ '("e" . dired-jump)
+ '("E" . eval-expression)
+ '("f" . grandview-file-map)
+ '("i" . ibuffer)
+ '("k" . kill-current-buffer)
+ '("n" . +project-find-file)
+ '("o" . grandview-prog-map)
+ '("p" . grandview-project-map)
+ '("r" . grandview-reg-map)
+ '("t" . grandview-mct-map)
+ '("w" . grandview-workspace-map)
+ '("z" . window-toggle-side-windows))
+
+(define-key grandview-util-map (kbd "d") 'toggle-debug-on-error)
+(define-key grandview-util-map (kbd "o") '+frame-opacity-set)
+(define-key grandview-util-map (kbd "t") 'toggle-frame-maximized)
+(define-key grandview-util-map (kbd "=") 'count-words)
+(define-key grandview-util-map (kbd "m") '+show-messages)
+#+end_src
+
+**** GLOBAL
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing-*KEYBINDINGS*-GLOBAL-09270393
+:END:
+
+All major bindings work globally.
+
+#+begin_src emacs-lisp
+(define-key global-map (kbd "<f3>") '+simple-pop-local-mark-ring)
+(define-key global-map (kbd "s-SPC") '+monocle-mode) ; replaced `just-one-space'
+(define-key global-map (kbd "S-SPC") 'toggle-input-method)
+(define-key global-map (kbd "s-u") '+toggle-letter-case)
+(define-key global-map (kbd "<C-i>") '+simple-pop-local-mark-ring)
+(define-key global-map (kbd "C-o") 'pop-global-mark)
+(define-key global-map (kbd "s-o") 'other-window)
+(define-key global-map (kbd "M-n") 'scroll-up-command)
+(define-key global-map (kbd "M-p") 'scroll-down-command)
+(define-key global-map (kbd "s-n") 'forward-paragraph)
+(define-key global-map (kbd "s-p") 'backward-paragraph)
+(define-key minibuffer-local-map (kbd "<mouse-8>") 'exit-minibuffer)
+(define-key minibuffer-local-map (kbd "S-<backspace>") 'meow-kill-whole-line)
+(define-key minibuffer-local-map (kbd "<f3>") 'forward-char)
+(define-key minibuffer-local-map (kbd "<C-i>") 'forward-char)
+(define-key minibuffer-local-map (kbd "C-o") 'backward-char)
+(define-key meow-insert-state-keymap (kbd "<f3>") 'meow-right)
+(define-key image-map (kbd "o") nil)
+(define-key image-map (kbd "w") 'image-save)
+#+end_src
+
 *** Autoload
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_editing_(meow.el)-Autoload-B5578363
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+meow.el"
+:CUSTOM_ID: *GRANDVIEW_CORE*-Modal_Editing_On_Wish_-_meow!-Autoload-A45FBA6B
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Modal_Editing_On_Wish_-_meow!.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -689,92 +937,22 @@ has been bound to =meow-inner-of-thing=.)
   :override #'meow--maybe-highlight-num-positions
   (ignore))
 
+;;;###autoload
+(defun +meow-insert-at-indentation ()
+  "Insert at first non-whitespace point at current line."
+  (interactive)
+  (back-to-indentation)
+  (meow-insert))
+
+;;;###autoload
 (defun +meow-save-line ()
-  "Fallback command for `+meow-save'."
+  "Fallback command for `meow-save'."
   (interactive)
   (let ((beg (if (eobp)
                  (line-beginning-position 0)
                (line-beginning-position)))
         (end (line-beginning-position 2)))
     (kill-ring-save beg end)))
-
-;;;###autoload
-(defun +meow-save ()
-  (interactive)
-  (save-excursion
-    (meow--with-selection-fallback
-     (meow--prepare-region-for-kill)
-     (call-interactively 'kill-ring-save))))
-
-;;;###autoload
-(defun +meow-escape ()
-  (interactive)
-  (cond
-   ((minibufferp)
-    (keyboard-escape-quit))
-   ((region-active-p)
-    (meow-cancel))
-   (t (call-interactively 'execute-extended-command))))
-
-;;;###autoload
-(defun +meow-insert ()
-  (interactive)
-  (meow--switch-state 'insert))
-
-;;;###autoload
-(defun +meow-insert-at-first-non-whitespace ()
-  (interactive)
-  (back-to-indentation)
-  (meow-insert))
-#+end_src
-
-** Tree-sitter utilities (treesit.el)
-:PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Tree-sitter_utilities_(treesit.el)-25389B5C
-:END:
-
-=treesit.el= (built-in with Emacs29+) is an Emacs binding for Tree-sitter, an
-incremental parsing system.
-
-It aims to be the foundation for a new breed of Emacs packages that understand
-code structurally. For example:
-
-- Faster, fine-grained code highlighting.
-- More flexible code folding.
-- Structural editing (like Paredit, or even better) for non-Lisp code.
-- More informative indexing for imenu.
-
-After setting the ~treesit-language-source-alist~, try =M-x
-treesit-install-language-grammar=.
-
-See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for
-details.
-
-#+begin_src emacs-lisp
-(setq treesit-language-source-alist
-      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-        (cmake "https://github.com/uyha/tree-sitter-cmake")
-        (c-sharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
-        (css "https://github.com/tree-sitter/tree-sitter-css")
-        (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-        (go "https://github.com/tree-sitter/tree-sitter-go")
-        (html "https://github.com/tree-sitter/tree-sitter-html")
-        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-        (json "https://github.com/tree-sitter/tree-sitter-json")
-        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
-        (make "https://github.com/alemuller/tree-sitter-make")
-        (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-        (python "https://github.com/tree-sitter/tree-sitter-python")
-        (toml "https://github.com/tree-sitter/tree-sitter-toml")
-        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-        (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-        (clojure "https://github.com/sogaiu/tree-sitter-clojure")
-        (rust "https://github.com/tree-sitter/tree-sitter-rust")
-        (vue "https://github.com/ikatyang/tree-sitter-vue")))
-
-(setq treesit-font-lock-level 2)
-;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 #+end_src
 
 ** User interface basics
@@ -782,14 +960,15 @@ details.
 :CUSTOM_ID: *GRANDVIEW_CORE*-User_interface_basics-E839D998
 :END:
 
-Show current key strokes in echo area after 0.25s
+This section contain configs in relation to basic user interface such as scroll
+behavior, font settings , theme, etc.
 
-Disable bidirectional text scanning for a modest performance boost. I've set
-this to ~nil~ in the past, but the ~bidi-display-reordering~'s docs say that is an
-undefined state and suggest the value ~left-to-right~ to be just as good.
+Here are some basic tweaks:
 
-Do not display continuation lines
-Do not disable the ~erase-buffer~ command
++ Show current key strokes in echo area after 0.25s
++ Disable bidirectional text scanning for a modest performance boost.
++ Do not display continuation lines
++ Do not disable the ~erase-buffer~ command
 
 By default, page scrolling should keep the point at the same visual
 position, rather than force it to the top or bottom of the
@@ -819,7 +998,7 @@ direction (use =C-l= to reposition it).
 (put 'erase-buffer 'disabled nil)
 #+end_src
 
-** Themes
+*** Themes
 :PROPERTIES:
 :CUSTOM_ID: *GRANDVIEW_CORE*-Themes-50D1DD34
 :END:
@@ -872,7 +1051,7 @@ Recommended themes (using their package names):
 (add-hook 'after-init-hook (lambda () (load-theme grandview-theme t)))
 #+end_src
 
-** Fonts and icons
+*** Fonts and icons
 :PROPERTIES:
 :CUSTOM_ID: *GRANDVIEW_CORE*-Fonts_and_icons-0D293CB5
 :END:
@@ -928,7 +1107,7 @@ that by evaluating:
 
 *** Autoload
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Fonts_and_icons.el"
+:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+User_interface_basics.el"
 :CUSTOM_ID: User_interface_extras-Fonts_(fonts.el)-Autoload-647703e6
 :END:
 
@@ -991,9 +1170,13 @@ that by evaluating:
     (overlay-put ov 'face 'font-lock-comment-face)))
 #+end_src
 
-** Buffer management (ibuffer.el)
+** Use Emacs like a Desktop Environment
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Buffer_management_(ibuffer.el)-F9D02547
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-27021E67
+:END:
+*** Buffer management (ibuffer.el)
+:PROPERTIES:
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Buffer_management_(ibuffer.el)-A8949DB4
 :END:
 
 =ibuffer.el= ships with Emacs and it provides a drop-in replacement for
@@ -1033,13 +1216,13 @@ control over the buffer list and is more powerful overall.
   (define-key ibuffer-mode-map (kbd "/ g") 'ibuffer-filter-by-content))
 #+end_src
 
-** Window management (window.el)
+*** Window management (window.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Window_management_(window.el)-36635CB3
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Window_management_(window.el)-44E28AAB
 :END:
-*** Window selection (windmove.el)
+**** Window selection (windmove.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Window_commands_(window.el)-Window_selection_(windmove.el)-21CAE86A
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Window_management_(window.el)-Window_selection_(windmove.el)-FB8AAD3E
 :END:
 
 Directional window-selection routines.
@@ -1054,9 +1237,9 @@ Directional window-selection routines.
   (define-key 'grandview-workspace-map (kbd "C-w l") 'windmove-swap-states-left))
 #+end_src
 
-*** Window placement
+**** Window placement
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Window_commands_(window.el)-Window_placement-D348F2AB
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Window_management_(window.el)-Window_placement-21F98031
 :END:
 
 The =display-buffer-alist= is intended as a rule-set for controlling the display
@@ -1101,9 +1284,9 @@ rendering/line scan work for Emacs in non-focused windows.
   (setq split-width-threshold 120))
 #+end_src
 
-*** Autoload
+**** Autoload
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Window_commands_(window.el)-Autoload-4F36BABF
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Window_management_(window.el)-Autoload-4BF907F7
 :header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+window.el"
 :END:
 
@@ -1144,9 +1327,9 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
       (switch-to-buffer buf))))
 #+end_src
 
-** Frame parameters (frame.el)
+*** Frame parameters (frame.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Frame_parameters_(frame.el)-2D110926
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Frame_parameters_(frame.el)-5095A33C
 :END:
 
 - Remove title bar on macOS
@@ -1162,7 +1345,7 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
   (add-hook 'window-configuration-change-hook #'+frame-opacity-auto))
 #+end_src
 
-*** Autoload
+**** Autoload
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+frame.el"
 :CUSTOM_ID: *User_interface*-Frame_(frame.el)-Autoload-e5168c36
@@ -1219,9 +1402,9 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
     (set-cursor-color +frame-cursor-saved-color)))
 #+end_src
 
-** Running Emacs as server process (server.el)
+*** Running Emacs as server process (server.el)
 :PROPERTIES:
-:CUSTOM_ID: *GRANDVIEW_CORE*-Running_Emacs_as_server_process_(server.el)-51BFA66E
+:CUSTOM_ID: *GRANDVIEW_CORE*-Use_Emacs_like_a_Desktop_Environment-Running_Emacs_as_server_process_(server.el)-1C3A01AF
 :END:
 
 This library allows Emacs to operate as a server for other processes.
@@ -1470,6 +1653,7 @@ word, which usually consists of only 2 characters.
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">")
+  (define-key grandview-mct-map (kbd "l") 'consult-line)
   (define-key grandview-mct-map (kbd "/") 'consult-line-multi)
   (define-key grandview-mct-map (kbd "t") 'consult-mark)
   (define-key grandview-mct-map (kbd "T") 'consult-global-mark)
@@ -1488,6 +1672,12 @@ word, which usually consists of only 2 characters.
   (define-key grandview-mct-map (kbd "c") 'consult-complex-command)
   (define-key grandview-mct-map (kbd "C") 'consult-mode-command)
   (define-key grandview-mct-map (kbd "M") 'consult-minor-mode-menu))
+
+(with-eval-after-load 'meow
+  (meow-normal-define-key
+   '("/" . consult-line)
+   '("V" . consult-global-mark))
+  (meow-leader-define-key '("SPC" . consult-buffer)))
 #+end_src
 
 ** Candidate annotation (marginalia.el)
@@ -1781,205 +1971,6 @@ org-mode
 ;; mode: lisp-data
 ;; outline-regexp: "[a-z]"
 ;; End:
-#+end_src
-
-* *KEYBINDINGS*
-:PROPERTIES:
-:CUSTOM_ID: *KEYBINDINGS*-25F7552F
-:END:
-
-This section contains all core keybindings of *Grandview*, feel free to adjust it
-to your liking.  Since this part contains so many core keybindings, it's not a
-good idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
-
-** Orientation
-:PROPERTIES:
-:CUSTOM_ID: Keybindings-Orientation-D2EEBCF8
-:END:
-
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
-this convention, but it doesn't mean emacs are not able to tell the
-difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
-On terminal, we rebind =<f3>= to =C-i=, so make sure you have relevant settings in
-your terminal emulator's settings.
-
-#+begin_src emacs-lisp
-(define-key input-decode-map [?\C-i] [C-i])
-#+end_src
-
-macOS specific settings.
-
-#+begin_src emacs-lisp
-(setq ns-command-modifier 'super)
-(setq ns-alternate-modifier 'meta)
-#+end_src
-
-** INSERT
-:PROPERTIES:
-:CUSTOM_ID: *Keybindings*-INSERT-3d96728e
-:END:
-
-#+begin_src emacs-lisp
-(define-key meow-insert-state-keymap (kbd "S-<backspace>") 'meow-kill-whole-line)
-(define-key meow-insert-state-keymap (kbd "<C-i>") 'meow-right)
-(define-key meow-insert-state-keymap (kbd "C-o") 'meow-left)
-#+end_src
-
-** NORMAL
-:PROPERTIES:
-:CUSTOM_ID: *Keybindings*-NORMAL-e105b916
-:END:
-
-#+begin_src emacs-lisp
-(meow-normal-define-key
- '("0" . meow-digit-argument)
- '("1" . meow-digit-argument)
- '("2" . meow-digit-argument)
- '("3" . meow-digit-argument)
- '("4" . meow-digit-argument)
- '("5" . meow-digit-argument)
- '("6" . meow-digit-argument)
- '("7" . meow-digit-argument)
- '("8" . meow-digit-argument)
- '("9" . meow-digit-argument)
- '("<escape>" . +meow-escape)
- '("<backspace>" . meow-pop-selection)
- '("," . meow-inner-of-thing)
- '("." . meow-bounds-of-thing)
- '("<" . meow-beginning-of-thing)
- '(">" . meow-end-of-thing)
- '("-" . negative-argument)
- '("=" . meow-query-replace)
- '("+" . meow-query-replace-regexp)
- '("^" . meow-last-buffer)
- '("/" . consult-line)
- '("a" . +meow-insert)
- '("A" . +meow-insert-at-first-non-whitespace)
- '("b" . meow-block)
- '("B" . meow-to-block)
- '("c" . meow-change)
- '("C" . meow-change-save)
- '("d" . meow-delete)
- '("e" . meow-line)
- '("E" . +simple-mark-inner-line)
- '("f" . meow-find)
- '("F" . forward-sexp)
- '("g" . meow-grab)
- '("G" . meow-sync-grab)
- '("h" . embrace-commander)
- '("i" . meow-right)
- '("I" . meow-right-expand)
- '("j" . +simple-join-line)
- '("J" . meow-join)
- '("k" . meow-kill)
- '("K" . meow-C-k)
- '("l" . consult-goto-line)
- '("L" . meow-kmacro-lines)
- '("m" . meow-mark-word)
- '("M" . meow-mark-symbol)
- '("n" . meow-next)
- '("N" . meow-open-below)
- '("o" . meow-left)
- '("O" . meow-left-expand)
- '("p" . meow-prev)
- '("P" . meow-open-above)
- '("q" . quit-window)
- '("r" . meow-reverse)
- '("R" . repeat)
- '("s" . meow-search)
- '("S" . meow-pop-search)
- '("t" . avy-goto-char-timer)
- '("T" . avy-resume)
- '("u" . undo)
- '("U" . undo-redo)
- '("v" . consult-mark)
- '("V" . consult-global-mark)
- '("w" . meow-next-word)
- '("W" . meow-back-word)
- '("x" . +meow-save)
- '("y" . meow-replace)
- '("Y" . meow-yank-pop)
- '("z" . meow-beacon-start)
- '("Z" . meow-end-or-call-kmacro))
-#+end_src
-
-** LEADER
-:PROPERTIES:
-:CUSTOM_ID: *Keybindings*-LEADER-ab120692
-:END:
-
-#+begin_src emacs-lisp
-(meow-leader-define-key
- '("SPC" . consult-buffer)
- '("0" . delete-window)
- '("1" . delete-other-windows)
- '("2" . split-window-below)
- '("3" . split-window-right)
- '("4" . ctl-x-4-prefix)
- '("5" . ctl-x-5-prefix)
- '("8" . insert-char)
- '("9" . grandview-tab-map)
- '("/" . xref-find-references)
- '(";" . comment-line)
- '("," . xref-go-back)
- '("." . xref-find-definitions)
- '("<" . beginning-of-buffer)
- '(">" . end-of-buffer)
- '("a" . grandview-util-map)
- '("e" . dired-jump)
- '("E" . eval-expression)
- '("f" . grandview-file-map)
- '("i" . ibuffer)
- '("k" . kill-current-buffer)
- '("n" . +project-find-file)
- '("o" . grandview-prog-map)
- '("p" . grandview-project-map)
- '("r" . grandview-reg-map)
- '("t" . grandview-mct-map)
- '("w" . grandview-workspace-map)
- '("z" . window-toggle-side-windows))
-
-(define-key grandview-util-map (kbd "d") 'toggle-debug-on-error)
-(define-key grandview-util-map (kbd "o") '+frame-opacity-set)
-(define-key grandview-util-map (kbd "t") 'toggle-frame-maximized)
-(define-key grandview-util-map (kbd "=") 'count-words)
-(define-key grandview-util-map (kbd "m") '+show-messages)
-#+end_src
-
-** GLOBAL
-:PROPERTIES:
-:CUSTOM_ID: *Keybindings*-GLOBAL-4055cc3f
-:END:
-
-All major bindings work globally.
-
-#+begin_src emacs-lisp
-(define-key global-map (kbd "<f3>") '+simple-pop-local-mark-ring)
-(define-key global-map (kbd "s-SPC") '+monocle-mode) ; replaced `just-one-space'
-(define-key global-map (kbd "S-SPC") 'toggle-input-method)
-(define-key global-map (kbd "s-u") '+toggle-letter-case)
-(define-key global-map (kbd "<C-i>") '+simple-pop-local-mark-ring)
-(define-key global-map (kbd "C-o") 'pop-global-mark)
-(define-key global-map (kbd "s-o") 'other-window)
-(define-key global-map (kbd "M-n") 'scroll-up-command)
-(define-key global-map (kbd "M-p") 'scroll-down-command)
-(define-key global-map (kbd "s-n") 'forward-paragraph)
-(define-key global-map (kbd "s-p") 'backward-paragraph)
-(define-key minibuffer-local-map (kbd "<mouse-8>") 'exit-minibuffer)
-(define-key minibuffer-local-map (kbd "S-<backspace>") 'meow-kill-whole-line)
-(define-key minibuffer-local-map (kbd "<f3>") 'forward-char)
-(define-key minibuffer-local-map (kbd "<C-i>") 'forward-char)
-(define-key minibuffer-local-map (kbd "C-o") 'backward-char)
-(define-key meow-insert-state-keymap (kbd "<f3>") 'meow-right)
-(define-key image-map (kbd "o") nil)
-(define-key image-map (kbd "w") 'image-save)
-#+end_src
-
-These keybindings are available when the current major mode doesn't define that key.
-
-#+begin_src emacs-lisp
-(meow-motion-overwrite-define-key '("<escape>" . +meow-escape))
 #+end_src
 
 * File management
@@ -2916,7 +2907,7 @@ look like which can be described briefly as follows:
   (setq org-log-into-drawer t)
   (setq org-image-actual-width nil)
   (setq org-display-remote-inline-images 'download)
-  (define-key org-mode-map (kbd "C-c C-x h") 'consult-org-heading)
+  (define-key org-mode-map (kbd "C-c C-h") 'consult-org-heading)
   (define-key org-mode-map (kbd "C-c l") 'org-insert-last-stored-link))
 #+end_src
 
@@ -4091,7 +4082,8 @@ Another great package from Prot!
             (list 'windmove-left 'windmove-right
                   'windmove-up 'windmove-down
                   'previous-window-any-frame
-                  'next-window-any-frame '+meow-save)))
+                  'next-window-any-frame
+                  'meow-save 'meow-replace)))
 #+end_src
 
 ** VSCode style icons (vscode-icon.el)
@@ -4666,8 +4658,6 @@ Here are the local variables in this file.
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
   (setq-local org-edit-src-content-indentation 0)
   (setq-local +org-id-auto t))
-
-(push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
 
 (provide 'grandview)
 ;;; grandview.el ends here
