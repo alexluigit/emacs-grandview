@@ -543,6 +543,50 @@ details.
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 #+end_src
 
+*** Global keybindings
+:PROPERTIES:
+:CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
+:END:
+
+For historical reason, terminal can not tell the difference between some key
+storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
+this convention, but it doesn't mean emacs are not able to tell the
+difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
+On terminal, we rebind =<f7>= to =C-i=, so make sure you have relevant settings in
+your terminal emulator's settings.
+
+#+begin_src emacs-lisp
+(define-key input-decode-map [?\C-i] [C-i])
+#+end_src
+
+macOS specific settings.
+
+#+begin_src emacs-lisp
+(setq ns-command-modifier 'super)
+(setq ns-alternate-modifier 'meta)
+#+end_src
+
+
+These bindings work globally.
+
+#+begin_src emacs-lisp
+(define-key global-map (kbd "s-SPC") '+monocle-mode) ; replaced `just-one-space'
+(define-key global-map (kbd "S-SPC") 'toggle-input-method)
+(define-key global-map (kbd "s-u") '+toggle-letter-case)
+(define-key global-map (kbd "s-o") 'other-window)
+(define-key global-map (kbd "M-n") 'scroll-up-command)
+(define-key global-map (kbd "M-p") 'scroll-down-command)
+(define-key global-map (kbd "s-n") 'forward-paragraph)
+(define-key global-map (kbd "s-p") 'backward-paragraph)
+(define-key minibuffer-local-map (kbd "S-<backspace>") 'kill-whole-line)
+(define-key minibuffer-local-map (kbd "<mouse-8>") 'exit-minibuffer)
+(define-key minibuffer-local-map (kbd "<f7>") 'forward-char)
+(define-key minibuffer-local-map (kbd "<C-i>") 'forward-char)
+(define-key minibuffer-local-map (kbd "C-o") 'backward-char)
+(define-key image-map (kbd "o") nil)
+(define-key image-map (kbd "w") 'image-save)
+#+end_src
+
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
@@ -576,13 +620,6 @@ details.
     (set-text-properties 0 (length clip) nil clip)
     (when (string-suffix-p "\n" clip)
       (goto-char (line-beginning-position)))))
-
-;;;###autoload
-(defun +simple-pop-local-mark-ring ()
-  "Move cursor to last mark position of current buffer.
-Call this repeatedly will cycle all positions in `mark-ring'."
-  (interactive)
-  (set-mark-command t))
 
 ;;;###autoload
 (defun +simple-join-line ()
@@ -645,38 +682,7 @@ type =M-x meow-tutor= and enjoy your learning trip!
 Check out [[https://www.github.com/DoglooksGood/meow][meow]] for more about meow or modal editing in general.
 
 #+begin_src emacs-lisp
-(use-package meow :ensure t :after-call pre-command-hook)
-
-(meow-global-mode)
-
-(with-eval-after-load 'meow
-  (setq meow-visit-sanitize-completion nil)
-  (setq meow-use-clipboard t)
-  (setq meow-esc-delay 0.001)
-  (setq meow-keypad-start-keys '((?c . ?c) (?x . ?x) (?h . ?h)))
-  (setq meow-keypad-describe-delay 0.5)
-  (setq meow-select-on-change t)
-  (setq meow-cursor-type-normal 'box)
-  (setq meow-cursor-type-insert '(bar . 2))
-  (setq meow-cursor-type-default 'hbar)
-  (setq meow-selection-command-fallback
-        '((meow-replace . meow-yank)
-          (meow-reverse . back-to-indentation)
-          (meow-change . meow-change-char)
-          (meow-save . +meow-save-line)
-          (meow-kill . meow-kill-whole-line)
-          (meow-pop-selection . meow-pop-grab)
-          (meow-beacon-change . meow-beacon-change-char)
-          (meow-cancel . keyboard-quit)
-          (meow-delete . meow-C-d)))
-  (setq meow-char-thing-table
-        '((?r . round) (?b . square) (?c . curly) (?s . string) (?e . symbol)
-          (?w . window) (?B . buffer) (?p . paragraph) (?< . line) (?> . line)
-          (?d . defun) (?i . indent) (?x . extend) (?. . sentence)))
-  (appendq! meow-mode-state-list
-            '((helpful-mode . normal)
-              (Man-mode . normal)
-              (message-buffer-mode . normal))))
+(use-package meow :ensure t :after-call pre-command-hook :autoload meow-define-keys)
 #+end_src
 
 *** Keymaps for leader key
@@ -717,6 +723,12 @@ We defined a few keymaps in *grandview* and bind them to the leader key (=SPC=).
 (defalias 'grandview-workspace-map tab-prefix-map)
 (defalias 'grandview-reg-map ctl-x-r-map)
 (defalias 'grandview-project-map project-prefix-map)
+
+(define-key grandview-util-map (kbd "d") 'toggle-debug-on-error)
+(define-key grandview-util-map (kbd "o") '+frame-opacity-set)
+(define-key grandview-util-map (kbd "t") 'toggle-frame-maximized)
+(define-key grandview-util-map (kbd "=") 'count-words)
+(define-key grandview-util-map (kbd "m") '+show-messages)
 #+end_src
 
 *** Quick goto char (avy.el)
@@ -772,38 +784,17 @@ This section contains *core* keybindings of *Grandview*, feel free to adjust it 
 your liking.  Since this part contains so many core keybindings, it's not a good
 idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
 
-**** Orientation
-:PROPERTIES:
-:CUSTOM_ID: h:A8AA0EF4-27AA-44EA-A933-EFBC1009B16C
-:END:
-
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
-this convention, but it doesn't mean emacs are not able to tell the
-difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
-On terminal, we rebind =<f3>= to =C-i=, so make sure you have relevant settings in
-your terminal emulator's settings.
-
-#+begin_src emacs-lisp
-(define-key input-decode-map [?\C-i] [C-i])
-#+end_src
-
-macOS specific settings.
-
-#+begin_src emacs-lisp
-(setq ns-command-modifier 'super)
-(setq ns-alternate-modifier 'meta)
-#+end_src
-
 **** INSERT
 :PROPERTIES:
 :CUSTOM_ID: h:CE42BEF3-7ED7-46DF-B4AC-B32AAFBAE529
 :END:
 
 #+begin_src emacs-lisp
-(define-key meow-insert-state-keymap (kbd "S-<backspace>") 'meow-kill-whole-line)
-(define-key meow-insert-state-keymap (kbd "<C-i>") 'meow-right)
-(define-key meow-insert-state-keymap (kbd "C-o") 'meow-left)
+(meow-define-keys 'insert
+  '("S-<backspace>" . meow-kill-whole-line)
+  '("<f7>" . meow-right)
+  '("<C-i>" . meow-right)
+  '("C-o" . meow-left))
 #+end_src
 
 **** NORMAL
@@ -812,7 +803,7 @@ macOS specific settings.
 :END:
 
 #+begin_src emacs-lisp
-(meow-normal-define-key
+(meow-define-keys 'normal
  '("0" . meow-digit-argument)
  '("1" . meow-digit-argument)
  '("2" . meow-digit-argument)
@@ -824,15 +815,18 @@ macOS specific settings.
  '("8" . meow-digit-argument)
  '("9" . meow-digit-argument)
  '("<escape>" . meow-escape-or-normal-modal)
- '("<backspace>" . meow-pop-selection)
- '(";" . meow-cancel-selection)
+ '("<backspace>" . meow-cancel-selection)
+ '(";" . meow-pop-selection)
  '("," . meow-inner-of-thing)
  '("." . meow-bounds-of-thing)
+ '("<" . meow-beginning-of-thing)
+ '(">" . meow-end-of-thing)
  '("%" . +meow-insert-at-indentation)
  '("-" . negative-argument)
  '("=" . meow-query-replace)
  '("+" . meow-query-replace-regexp)
  '("^" . meow-last-buffer)
+ '("'" . meow-reverse)
  '("a" . meow-append)
  '("A" . meow-insert)
  '("b" . meow-back-symbol)
@@ -841,14 +835,16 @@ macOS specific settings.
  '("C" . meow-change-save)
  '("d" . meow-delete)
  '("D" . meow-backward-delete)
- '("e" . meow-end-of-thing)
- '("E" . meow-beginning-of-thing)
+ ;; TODO
+ ;; '("e" . +meow-enclose-thing)
+ ;; '("E" . +meow-surround-thing)
+ '("e" . embrace-add)
+ '("E" . embrace-commander)
  '("f" . meow-next-symbol)
  '("F" . meow-till)
  '("g" . meow-grab)
  '("G" . meow-sync-grab)
- '("h" . embrace-add)
- '("H" . embrace-commander)
+ '("h" . mark-paragraph)
  '("i" . meow-right)
  '("I" . meow-right-expand)
  '("j" . +simple-join-line)
@@ -867,8 +863,8 @@ macOS specific settings.
  '("P" . meow-open-above)
  '("q" . quit-window)
  '("Q" . meow-kmacro-lines)
- '("r" . meow-reverse)
- '("R" . undo-redo)
+ '("r" . undo-redo)
+ '("R" . repeat)
  '("s" . meow-search)
  '("S" . meow-pop-search)
  '("t" . avy-goto-char-timer)
@@ -879,11 +875,11 @@ macOS specific settings.
  '("w" . meow-next-word)
  '("W" . meow-back-word)
  '("x" . meow-save)
- '("X" . meow-replace)
+ '("X" . meow-save-append)
  '("y" . meow-yank)
  '("Y" . meow-yank-pop)
- '("z" . meow-beacon-start)
- '("Z" . meow-end-or-call-kmacro))
+ '("z" . meow-pop-to-mark)
+ '("Z" . meow-unpop-to-mark))
 #+end_src
 
 **** LEADER
@@ -892,7 +888,7 @@ macOS specific settings.
 :END:
 
 #+begin_src emacs-lisp
-(meow-leader-define-key
+(meow-define-keys 'leader
  '("0" . delete-window)
  '("1" . delete-other-windows)
  '("2" . split-window-below)
@@ -920,41 +916,52 @@ macOS specific settings.
  '("t" . grandview-mct-map)
  '("w" . grandview-workspace-map)
  '("z" . window-toggle-side-windows))
-
-(define-key grandview-util-map (kbd "d") 'toggle-debug-on-error)
-(define-key grandview-util-map (kbd "o") '+frame-opacity-set)
-(define-key grandview-util-map (kbd "t") 'toggle-frame-maximized)
-(define-key grandview-util-map (kbd "=") 'count-words)
-(define-key grandview-util-map (kbd "m") '+show-messages)
 #+end_src
 
-**** GLOBAL
-:PROPERTIES:
-:CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
-:END:
+**** MOTION
 
-All major bindings work globally.
+Do not use =ESC= key as a prefix.
 
 #+begin_src emacs-lisp
-(define-key global-map (kbd "<f3>") '+simple-pop-local-mark-ring)
-(define-key global-map (kbd "s-SPC") '+monocle-mode) ; replaced `just-one-space'
-(define-key global-map (kbd "S-SPC") 'toggle-input-method)
-(define-key global-map (kbd "s-u") '+toggle-letter-case)
-(define-key global-map (kbd "<C-i>") '+simple-pop-local-mark-ring)
-(define-key global-map (kbd "C-o") 'pop-global-mark)
-(define-key global-map (kbd "s-o") 'other-window)
-(define-key global-map (kbd "M-n") 'scroll-up-command)
-(define-key global-map (kbd "M-p") 'scroll-down-command)
-(define-key global-map (kbd "s-n") 'forward-paragraph)
-(define-key global-map (kbd "s-p") 'backward-paragraph)
-(define-key minibuffer-local-map (kbd "<mouse-8>") 'exit-minibuffer)
-(define-key minibuffer-local-map (kbd "S-<backspace>") 'meow-kill-whole-line)
-(define-key minibuffer-local-map (kbd "<f3>") 'forward-char)
-(define-key minibuffer-local-map (kbd "<C-i>") 'forward-char)
-(define-key minibuffer-local-map (kbd "C-o") 'backward-char)
-(define-key meow-insert-state-keymap (kbd "<f3>") 'meow-right)
-(define-key image-map (kbd "o") nil)
-(define-key image-map (kbd "w") 'image-save)
+(meow-define-keys 'motion '("<escape>" . ignore))
+#+end_src
+
+*** Configuration
+
+Here I'm adjusting some meow's behavior that I'm not quite used to:
+
++ Disable meow's region expand mechanism and its visual hint.
++ When region is active, =meow-yank= behaves the same as =meow-replace=.
++ When region is inactive, =meow-save= saves a line.
++ When region is inactive, =meow-kill= kills a line.
++ When region is inactive, =meow-cancel-selection= moves cursor to the first
+  non-whitespace character on this line.
++ When region is inactive, =meow-reverse= moves cursor to the end of line.
+
+#+begin_src emacs-lisp
+(setq meow-visit-sanitize-completion nil)
+(setq meow-use-clipboard t)
+(setq meow-esc-delay 0.001)
+(setq meow-keypad-start-keys '((?c . ?c) (?x . ?x) (?h . ?h)))
+(setq meow-keypad-describe-delay 0.5)
+(setq meow-select-on-change t)
+(setq meow-cursor-type-normal 'box)
+(setq meow-cursor-type-insert '(bar . 2))
+(setq meow-cursor-type-default 'hbar)
+(setq meow-selection-command-fallback
+      '((meow-change . meow-change-char)
+        (meow-kill . meow-kill-whole-line)
+        (meow-cancel-selection . back-to-indentation)
+        (meow-pop-selection . meow-pop-grab)
+        (meow-beacon-change . meow-beacon-change-char)
+        (meow-reverse . move-end-of-line)
+        (meow-save . +meow-save-line)))
+(setq meow-char-thing-table
+      '((?r . round) (?b . square) (?c . curly) (?s . string) (?e . symbol) (?w . window)
+        (?B . buffer) (?p . paragraph) (?d . defun) (?i . indent) (?. . sentence) (?l . line)))
+
+;; Finally, enable meow globally.
+(meow-global-mode)
 #+end_src
 
 *** Autoload
@@ -965,8 +972,14 @@ All major bindings work globally.
 
 #+begin_src emacs-lisp
 ;;;###autoload
+(defadvice! meow-yank-ad (fn &rest _)
+  "When region is active, do `meow-replace', otherwise just `meow-yank'."
+  :around #'meow-yank
+  (if (region-active-p) (meow-replace) (funcall fn)))
+
+;;;###autoload
 (defadvice! meow-search-ad (&rest _)
-  "Do not highlight number positions."
+  "Center point after search."
   :after #'meow-search
   (recenter))
 
@@ -981,14 +994,8 @@ All major bindings work globally.
     (run-with-timer 0.05 nil 'insert text)))
 
 ;;;###autoload
-(defadvice! meow-insert-exit-ad (&rest _)
-  "Quit `completion-in-region-mode' after `meow-insert-exit'."
-  :after #'meow-insert-exit
-  (completion-in-region-mode -1))
-
-;;;###autoload
 (defadvice! meow-inhibit-highlight-num-positions-ad (&rest _)
-  "Do not highlight number positions."
+  "Do not show cursor movement indices."
   :override #'meow--maybe-highlight-num-positions
   (ignore))
 
@@ -1268,10 +1275,14 @@ control over the buffer list and is more powerful overall.
   (define-key ibuffer-mode-map (kbd "/ g") 'ibuffer-filter-by-content))
 #+end_src
 
-*** Window management (window.el)
+*** Window management
 :PROPERTIES:
 :CUSTOM_ID: h:1A9091D5-B8A4-4135-9415-9823ABF0AF3C
 :END:
+
+#+begin_src emacs-lisp
+(define-key 'grandview-workspace-map (kbd "C-s") 'recenter)
+#+end_src
 
 **** Window selection (windmove.el)
 :PROPERTIES:
@@ -1290,7 +1301,7 @@ Directional window-selection routines.
   (define-key 'grandview-workspace-map (kbd "C-w l") 'windmove-swap-states-left))
 #+end_src
 
-**** Window placement
+**** Window placement (window.el)
 :PROPERTIES:
 :CUSTOM_ID: h:72ECA0DF-D43C-4E28-92A9-CB830B99B85A
 :END:
@@ -1340,7 +1351,7 @@ rendering/line scan work for Emacs in non-focused windows.
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:7BAA0631-CBD3-4BED-BB6B-D6BE35BDBA73
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+window.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Window_management.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4268,8 +4279,8 @@ offering you relevant actions to use on a target determined by the context.
   (define-key vterm-mode-map (kbd "s-,") '+vterm-prev)
   (define-key vterm-mode-map (kbd "s-n") 'vterm-next-prompt)
   (define-key vterm-mode-map (kbd "s-p") 'vterm-previous-prompt)
-  (define-key vterm-mode-map (kbd "C-<backspace>") '+vterm-send-F4)
   (define-key vterm-mode-map (kbd "C-/") '+vterm-send-F6)
+  (define-key vterm-mode-map (kbd "C-<backspace>") '+vterm-send-F8)
   (define-key vterm-mode-map (kbd "C-,") '+vterm-send-F10)
   (define-key vterm-mode-map (kbd "C-.") '+vterm-send-F11)
   (define-key vterm-mode-map (kbd "C-;") '+vterm-send-F12)
@@ -4312,10 +4323,10 @@ offering you relevant actions to use on a target determined by the context.
     (apply fn args)))
 
 ;;;###autoload
-(defadvice! +vterm-backword-char-a (fn &rest args)
+(defadvice! +vterm-backward-char-a (fn &rest args)
   :around #'meow-right
   (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f3>" nil nil nil)
+      (vterm-send-key "<f7>" nil nil nil)
     (apply fn args)))
 
 (defun +vterm--disable-side-window (fn &rest args)
@@ -4325,14 +4336,14 @@ offering you relevant actions to use on a target determined by the context.
     (apply fn args)))
 
 ;;;###autoload
-(defun +vterm-send-F4 ()
-  (interactive)
-  (vterm-send-key "<f4>" nil nil nil))
-
-;;;###autoload
 (defun +vterm-send-F6 ()
   (interactive)
   (vterm-send-key "<f6>" nil nil nil))
+
+;;;###autoload
+(defun +vterm-send-F8 ()
+  (interactive)
+  (vterm-send-key "<f8>" nil nil nil))
 
 ;;;###autoload
 (defun +vterm-send-F10 ()
@@ -4490,10 +4501,6 @@ made for this package and built-in help buffer:
 (define-key global-map (kbd "C-h C-f") 'helpful-callable)
 (define-key global-map (kbd "C-h C-v") 'helpful-variable)
 (define-key global-map (kbd "C-h k") 'helpful-key)
-
-(with-eval-after-load 'helpful
-  (define-key helpful-mode-map (kbd "M-n") (lambda () (interactive) (forward-button 1 nil 1 t)))
-  (define-key helpful-mode-map (kbd "M-p") (lambda () (interactive) (backward-button 1 nil 1 t))))
 #+end_src
 
 ** Emacs Manual (info.el)
