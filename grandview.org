@@ -68,22 +68,12 @@ package initialization process, such as =package-enable-at-startup=,
 :END:
 
 The main responsibility of my =init.el= is to arrange the tangling procedure of
-the =grandview.org= file.  Secondly, a few handy macros were defined (taken from
-=doom-emacs=) to be used in elisp code blocks of this =.org= file, you'll see them
-appear in this file a couple of times.
-
-+ =appendq!=: append lists to a symbol.
-+ =delq!=: delete an element from a list.
-+ =pushnew!=: add items to a list if they aren't there.
-+ =prependq!=: prepend lists to somewhere.
+the =grandview.org= file.
 
 In addition, several custom options were introduced in this file:
 
-+ ~grandview-home~: Path to the repository of grandview.
 + ~grandview-envs~: Use these environment variables in GUI emacs.
 + ~grandview-cache-dir~: Cache directory for grandview.
-+ ~grandview-org-file~: Path for grandview main config .org file.
-+ ~grandview-gc-cons-threshold~: The value for ~gc-cons-threshold~.
 
 You'll see other custom option such as ~grandview-fixed-font~ in the following
 sections.
@@ -127,13 +117,12 @@ Here is a example of =user.el=:
 :CUSTOM_ID: h:95B6B174-9877-4DCB-B298-86B3B889A11F
 :END:
 
-This file holds *both* source code and documentation of this project (see:
-https://en.wikipedia.org/wiki/Literate_programming). Thus, to configure your
-Emacs using this project, all you have to do is edit this file, and ~M-x
-restart-emacs~ to apply the new settings, nothing else.  If you are new to
-=org-mode=, check out the video: https://www.youtube.com/watch?v=0-brF21ShRk, or
-read their documentation: https://orgmode.org/.  Try move the cursor to one of
-the headings in this file and press =Tab= to fold / unfold the node would be a
+This file holds *both* source code and documentation of this project. See:
+[[https://en.wikipedia.org/wiki/Literate_programming][Literate programming]].  Thus, to configure your Emacs using this project, all you
+have to do is edit this file, and ~M-x restart-emacs~ to apply the new settings,
+nothing else.  If you are new to =org-mode=, check out the video: [[https://www.youtube.com/watch?v=0-brF21ShRk][Org mode Intro]],
+or read their documentation: https://orgmode.org/.  Try move the cursor to one
+of the headings in this file and press =Tab= to fold / unfold the node would be a
 good start.
 
 The elisp source blocks in this file is tangled to a regular =grandview.el= file
@@ -196,7 +185,6 @@ git clone https://www.github.com/alexluigit/emacs-grandview
 ## move the repo to ~/.config/emacs, which conforms to the XDG spec
 mv ~/emacs-grandview ~/.config/emacs/
 ## or use symlink
-# mv ~/emacs-grandview ~/Code/emacs-grandview
 # ln -sf ~/Code/emacs-grandview ~/.config/emacs
 ## or you can put it to ~/.emacs.d, it's an old convention
 # mv ~/emacs-grandview ~/.emacs.d
@@ -238,7 +226,7 @@ section. This script will be tangled to *~/.local/bin/rem*, so make sure
 #+name: grandview-cache
 #+begin_src emacs-lisp :var type="main" :tangle no
 (pcase type
-  ("home" (format "%s" grandview-home))
+  ("home" (file-name-directory user-init-file))
   ("main" (format "%s" grandview-cache-dir))
   ("pkg-repos" (format "%s" package-user-dir)))
 #+end_src
@@ -274,7 +262,7 @@ eval $emacs_cmd
 Here are the available flags of this command.
 
 + ~-r~: Before restarting, re-tangle this org file.
-+ ~-P <NAME>~: Before restarting, delete cache of package *NAME*.
++ ~-p <NAME>~: Before restarting, delete cache of package *NAME*.
 + ~-P~: Before restarting, delete all package caches.
 + ~-d~: use =--debug-init= flag for the daemon.
 
@@ -370,7 +358,7 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
                        ;; exist or is unreadable, Emacs throws up file-missing
                        ;; errors, so we set it to a directory we know exists and
                        ;; is readable.
-                       (let ((default-directory grandview-cache-dir))
+                       (let ((default-directory user-emacs-directory))
                          (require ',name))
                      ((debug error)
                       (message "Failed to load deferred package %s: %s" ',name e)))
@@ -391,6 +379,74 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
            (nconc (assq ',name grandview--deferred-packages-alist)
                   '(,@hooks)))
          (use-package-process-keywords name rest state))))))
+#+end_src
+
+*** Macros for configuring packages
+:PROPERTIES:
+:CUSTOM_ID: h:3407EAC6-5A0B-4B67-8237-DAFF12B63F63
+:END:
+
+A few handy macros (taken from =doom-emacs=) were defined to be used in elisp code
+blocks of this =.org= file, you'll see them appear in this file a couple of times.
+These macros are also accessible in =user.el=.
+
++ =appendq!=: append lists to a symbol.
++ =delq!=: delete an element from a list.
++ =pushnew!=: add items to a list if they aren't there.
++ =prependq!=: prepend lists to somewhere.
++ =defadvice!=: Drop-in replacement for =advice-add=.
+
+#+begin_src lisp :tangle (expand-file-name "grandview-macros.el" grandview-cache-dir)
+;;; grandview-macros.el --- handy macros for configuring packages -*- lexical-binding: t -*-
+
+;;; Commentary:
+
+;;; Auto generated by function `grandview-tangle', do not edit.
+
+;;; Code:
+
+(defmacro appendq! (sym &rest lists)
+  "Append LISTS to SYM in place."
+  `(setq ,sym (append ,sym ,@lists)))
+
+(defmacro delq! (elt list)
+  "`delq' ELT from LIST in-place."
+  `(setq ,list (delq ,elt ,list)))
+
+(defmacro pushnew! (place &rest values)
+  "Push VALUES sequentially into PLACE, if they aren't already present.
+This is a variadic `cl-pushnew'."
+  (let ((var (make-symbol "result")))
+    `(dolist (,var (list ,@values) (with-no-warnings ,place))
+       (cl-pushnew ,var ,place :test #'equal))))
+
+(defmacro prependq! (sym &rest lists)
+  "Prepend LISTS to SYM in place."
+  `(setq ,sym (append ,@lists ,sym)))
+
+(defmacro defadvice! (symbol arglist &optional docstring &rest body)
+  "Define an advice called SYMBOL and add it to PLACES.
+ARGLIST is as in `defun'.  WHERE is a keyword as passed to `advice-add', and
+PLACE is the function to which to add the advice, like in `advice-add'.
+DOCSTRING and BODY are as in `defun'.
+\(fn SYMBOL ARGLIST &optional DOCSTRING &rest [WHERE PLACES...] BODY\)"
+  (declare (doc-string 3) (indent defun))
+  (unless (stringp docstring)
+    (push docstring body)
+    (setq docstring nil))
+  (let (where-alist)
+    (while (keywordp (car body))
+      (push `(cons ,(pop body)
+                   (let ((l ,(pop body))) (if (proper-list-p l) l (list l))))
+            where-alist))
+    `(progn
+       (defun ,symbol ,arglist ,docstring ,@body)
+       (dolist (targets (list ,@(nreverse where-alist)))
+         (dolist (target (cdr targets))
+           (advice-add target (car targets) #',symbol))))))
+
+(provide 'grandview-macros)
+;;; grandview-macros.el ends here
 #+end_src
 
 ** Basic editing utilities
@@ -490,7 +546,7 @@ details.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Basic_editing_utilities.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Basic_editing_utilities.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -904,7 +960,7 @@ All major bindings work globally.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:3050E51B-BD81-4574-B257-232C450D998B
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Modal_Editing_On_Wish_-_meow!.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Modal_Editing_On_Wish_-_meow!.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1077,9 +1133,6 @@ Please make sure the font you choose can be recognized by Emacs, you can varify
 that by evaluating:
 
 #+begin_src emacs-lisp
-(member "<Your Font Name>" (font-family-list))
-
-;; for example
 (member "Sarasa Mono SC" (font-family-list))
 #+end_src
 
@@ -1106,7 +1159,7 @@ that by evaluating:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:38943ED3-0842-4327-9998-3E331FAA76DB
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+User_interface_basics.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+User_interface_basics.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1287,7 +1340,7 @@ rendering/line scan work for Emacs in non-focused windows.
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:7BAA0631-CBD3-4BED-BB6B-D6BE35BDBA73
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+window.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+window.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1348,7 +1401,7 @@ managers such as DWM, BSPWM refer to this state as 'monocle'."
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:5FD0BB42-46A7-4814-8F35-A7FF80DAFBB3
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+frame.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+frame.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1429,6 +1482,15 @@ Note that any number of clients may dispatch files to Emacs to be edited.
   (select-frame-set-input-focus (selected-frame)))
 #+end_src
 
+** COMMENT Persistent sessions (desktop.el)
+:PROPERTIES:
+:CUSTOM_ID: h:FD3E91E4-0457-47EA-B98E-E8D0ECD7524F
+:END:
+
+#+begin_src emacs-lisp
+(desktop-save-mode 1)
+#+end_src
+
 * Completion framework
 :PROPERTIES:
 :CUSTOM_ID: h:50E17583-1B94-4453-83B8-6E05260EA03D
@@ -1490,7 +1552,7 @@ What my minibuffer config does:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:2DA0D02F-765C-47AE-8118-A4CA24FE9CB5
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+minibuffer.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+minibuffer.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1584,7 +1646,7 @@ rather than all of the =dired-*= noise.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:60693C7D-8538-4B1C-83B2-E79C21E72A20
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+orderless.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+orderless.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -1788,7 +1850,7 @@ completion."
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:BD8323BA-61B7-4216-8A63-B907DA7288C7
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+tempel.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+tempel.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2006,9 +2068,6 @@ org-mode
         ((title . "  Downloads")    (path . "~/Downloads"))))
 (setq confirm-kill-processes nil)
 
-;; trust this .org file | this option is added in emacs30.1
-(push grandview-org-file trusted-content)
-
 (with-eval-after-load 'meow ;; files usually edited in `meow-insert-mode'
   (setq auto-save-default nil)
   (auto-save-visited-mode)
@@ -2025,7 +2084,7 @@ org-mode
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:89CC46D7-7265-4442-BBFE-6627EFE1EB9C
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+files.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+files.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2052,9 +2111,9 @@ org-mode
 
 ;;;###autoload
 (defun +files-edit-grandview-config ()
-  "Edit `grandview-org-file'."
+  "Edit grandview's org file."
   (interactive)
-  (find-file grandview-org-file))
+  (find-file grandview--dot-org))
 
 ;;;###autoload
 (defun +files-rename-file-and-buffer (name)
@@ -2383,7 +2442,7 @@ that if you install it from Melpa.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:0C70EF8E-00DB-4201-8110-83FD08E51D68
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+project.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+project.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2636,7 +2695,7 @@ you change your mind).
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:36712AF7-6246-43B1-9F42-ACE9A0FD3ED9
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+ediff.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+ediff.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2690,7 +2749,7 @@ sure this is a good approach."
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:6B8B3E46-1951-4840-B3B3-4667AD69C2FA
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+rime.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+rime.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2781,7 +2840,7 @@ of characters.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:AED70F01-7494-4652-B763-76FA41DF7902
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+eletric.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+eletric.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -2917,11 +2976,31 @@ look like which can be described briefly as follows:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:D1E76232-405A-40C8-87B1-B553DBB57F43
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+org.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+org.el"
 :END:
 
 #+begin_src emacs-lisp
 (require 'org-faces)
+
+;;;###autoload
+(defadvice! org-toggle-comment-ad (fn &rest args)
+  "Drop-in replacement for `org-toggle-comment'.
+This allows `org-toggle-comment' to toggle comment for all the
+entries with the same level in the active region while behaves
+the same when the region is inactive.  This is useful for
+debugging code blocks in a org config file."
+  :around #'org-toggle-comment
+  (if (region-active-p)
+      (progn
+        (exchange-point-and-mark)
+        (let ((end (region-end)) last-point)
+          (while (< (point) end)
+            (setq last-point (point))
+            (apply fn args)
+            (org-forward-heading-same-level 1)
+            (when (eq last-point (point))
+              (org-forward-element)))))
+    (apply fn args)))
 
 ;;;###autoload
 (defadvice! org-fill-paragraph-ad (&rest _)
@@ -2980,7 +3059,7 @@ look like which can be described briefly as follows:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:7269F6A0-67A5-4672-A32C-70711E30F3C5
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+org-id.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+org-id.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3130,7 +3209,8 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:13354F6E-FF7A-43DE-8DC4-43AF25D0DEA9
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+org-tree-slide.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+org-tree-slide.el"
+:CUSTOM_ID: Org_mode-Slide_(org-tree-slide.el)-Autoload-7ff9d878
 :END:
 
 #+begin_src emacs-lisp
@@ -3261,7 +3341,7 @@ Huge thanks to @blahgeek and @jdtsmith!
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:BE13EC8F-A1C9-47C2-8EBC-CB34CA7E9546
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+eglot.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+eglot.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3401,7 +3481,7 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 **** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:3711C8CE-5305-4F82-9905-0A8DB2F843A8
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Vue.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Vue.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3560,7 +3640,7 @@ optional minor mode which can apply this command automatically on save.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:91FB5726-4A78-403A-8DF6-3D0B2644C6B4
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+reformatter.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+reformatter.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3608,7 +3688,7 @@ optional minor mode which can apply this command automatically on save.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:AE26DC0C-1792-4840-A2B4-DFDC227BA78C
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+flymake.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+flymake.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3616,7 +3696,7 @@ optional minor mode which can apply this command automatically on save.
 (defun +flymake-enable ()
   "Inhibit `flymake-mode' under certain circumstances."
   (unless (or (equal default-directory
-                     (or (file-name-directory grandview-org-file)
+                     (or (file-name-directory grandview--dot-org)
                          user-emacs-directory))
               (eq (current-buffer) (get-buffer "*scratch*")))
     (flymake-mode +1)))
@@ -3647,7 +3727,7 @@ prompt for a major mode instead.  Simple yet super effective!
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:DB49C042-A133-4B4B-9773-36016E5009B1
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+scratch.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+scratch.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3768,7 +3848,7 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+tabspaces.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+tabspaces.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -3855,7 +3935,7 @@ in ~+mode-line-format~.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:E77C4AD0-D38E-43D5-AFAC-C3135D88A444
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+Custom_Mode_line.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Custom_Mode_line.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4116,7 +4196,7 @@ are slightly simplified.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:FC7300FE-855C-4AC5-9272-689829C7D4D7
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+writeroom-mode.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+writeroom-mode.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4201,7 +4281,7 @@ offering you relevant actions to use on a target determined by the context.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:B05AAF84-FA1E-42FC-8C55-C7C9AD951D7E
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+vterm.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+vterm.el"
 :END:
 
 #+begin_src emacs-lisp
@@ -4475,7 +4555,7 @@ Some additions I've added to rg transient:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:EF6C06C9-5720-41F2-970C-8E221EA70B92
-:header-args:emacs-lisp: :tangle "/tmp/grandview/autoloads/+rg.el"
+:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+rg.el"
 :END:
 
 The purpose of wrapping =rg-define-toggle/search= is to avoid executing them
@@ -4543,15 +4623,6 @@ regexp .etc).
       '((img . nov-render-img)
         (title . nov-render-title)
         (b . shr-tag-b)))
-#+end_src
-
-** COMMENT Persistent sessions (desktop.el)
-:PROPERTIES:
-:CUSTOM_ID: h:FD3E91E4-0457-47EA-B98E-E8D0ECD7524F
-:END:
-
-#+begin_src emacs-lisp
-(desktop-save-mode 1)
 #+end_src
 
 * About

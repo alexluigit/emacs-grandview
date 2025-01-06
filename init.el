@@ -1,9 +1,5 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
-(defcustom grandview-home "~/.config/emacs/"
-  "Path to place the repository of grandview."
-  :group 'grandview :type 'string)
-
 (defcustom grandview-envs
   (let ((config-home (expand-file-name "~/.config"))
         (data-home (expand-file-name "~/.local/share")))
@@ -20,80 +16,14 @@
   "Use these environment variables in GUI emacs."
   :group 'grandview :type 'list)
 
-(defcustom grandview-cache-dir "/tmp/grandview/"
+(defcustom grandview-cache-dir
+  (expand-file-name "grandview/" user-emacs-directory)
   "Cache directory for grandview.
 This path is added to your `load-path'."
   :group 'grandview :type 'string)
 
-(defcustom grandview-org-file
-  (concat (file-name-directory user-init-file) "grandview.org")
-  "Path for grandview main config .org file."
-  :group 'grandview :type 'string)
-
-(defcustom grandview-gc-cons-threshold 134217728 ; 128mb
-  "The default value to use for `gc-cons-threshold'.
-If you experience freezing, decrease this.  If you experience
-stuttering, increase this."
-  :group 'grandview :type 'integer)
-
-(defmacro appendq! (sym &rest lists)
-  "Append LISTS to SYM in place."
-  `(setq ,sym (append ,sym ,@lists)))
-
-(defmacro delq! (elt list)
-  "`delq' ELT from LIST in-place."
-  `(setq ,list (delq ,elt ,list)))
-
-(defmacro pushnew! (place &rest values)
-  "Push VALUES sequentially into PLACE, if they aren't already present.
-This is a variadic `cl-pushnew'."
-  (let ((var (make-symbol "result")))
-    `(dolist (,var (list ,@values) (with-no-warnings ,place))
-       (cl-pushnew ,var ,place :test #'equal))))
-
-(defmacro prependq! (sym &rest lists)
-  "Prepend LISTS to SYM in place."
-  `(setq ,sym (append ,@lists ,sym)))
-
-(defmacro defadvice! (symbol arglist &optional docstring &rest body)
-  "Define an advice called SYMBOL and add it to PLACES.
-ARGLIST is as in `defun'.  WHERE is a keyword as passed to `advice-add', and
-PLACE is the function to which to add the advice, like in `advice-add'.
-DOCSTRING and BODY are as in `defun'.
-\(fn SYMBOL ARGLIST &optional DOCSTRING &rest [WHERE PLACES...] BODY\)"
-  (declare (doc-string 3) (indent defun))
-  (unless (stringp docstring)
-    (push docstring body)
-    (setq docstring nil))
-  (let (where-alist)
-    (while (keywordp (car body))
-      (push `(cons ,(pop body)
-                   (let ((l ,(pop body))) (if (proper-list-p l) l (list l))))
-            where-alist))
-    `(progn
-       (defun ,symbol ,arglist ,docstring ,@body)
-       (dolist (targets (list ,@(nreverse where-alist)))
-         (dolist (target (cdr targets))
-           (advice-add target (car targets) #',symbol))))))
-
-(defadvice! org-toggle-comment-ad (fn &rest args)
-  "Drop-in replacement for `org-toggle-comment'.
-This allows `org-toggle-comment' to toggle comment for all the
-entries with the same level in the active region while behaves
-the same when the region is inactive.  This is useful for
-debugging code blocks in a org config file."
-  :around #'org-toggle-comment
-  (if (region-active-p)
-      (progn
-        (exchange-point-and-mark)
-        (let ((end (region-end)) last-point)
-          (while (< (point) end)
-            (setq last-point (point))
-            (apply fn args)
-            (org-forward-heading-same-level 1)
-            (when (eq last-point (point))
-              (org-forward-element)))))
-    (apply fn args)))
+(defvar grandview--dot-org
+  (expand-file-name "grandview.org" (file-name-directory user-init-file)))
 
 (defun grandview--readfile (path)
   "Return the decoded text in PATH as multibyte string."
@@ -104,17 +34,19 @@ debugging code blocks in a org config file."
                (buffer-substring-no-properties (point-min) (point-max)))))
     (decode-coding-string str 'utf-8)))
 
-(defun grandview--init-path (type)
+(defun grandview--path (type)
   "Get grandview's init path according to TYPE."
   (pcase type
-    ('main (concat grandview-cache-dir "grandview.el"))
-    ('def-el (concat grandview-cache-dir "grandview-loaddefs.el"))
-    ('def-dir (concat grandview-cache-dir "autoloads/"))
-    ('user (concat (file-name-directory grandview-org-file) "user.el"))))
+    ('main (expand-file-name "grandview.el" grandview-cache-dir))
+    ('main-md5 (expand-file-name "grandview.el.md5" grandview-cache-dir))
+    ('def-el (expand-file-name "grandview-loaddefs.el" grandview-cache-dir))
+    ('def-dir (expand-file-name "autoloads/" grandview-cache-dir))
+    ('def-md5 (expand-file-name "grandview-autoloads.md5" grandview-cache-dir))
+    ('user (expand-file-name "user.el" (file-name-directory user-init-file)))))
 
 (defun grandview--gen-tangle-path ()
   "Prepare metadata for `grandview-tangle'."
-  (with-current-buffer (find-file-noselect grandview-org-file)
+  (with-current-buffer (find-file-noselect grandview--dot-org)
     (goto-char (point-min))
     (save-excursion
       (widen)
@@ -122,36 +54,45 @@ debugging code blocks in a org config file."
        (lambda ()
          (org-with-point-at (point)
            (when (string= (org-get-heading) "Autoload")
-             (let* ((title (save-excursion (org-up-heading-safe) (org-get-heading)))
+             (let* ((title (save-excursion
+                             (org-up-heading-safe) (org-get-heading)))
                     (memo (ignore-errors
-                            (substring title (1+ (string-match "(\\(.*\\))" title))
-                                       (match-end 1))))
-                    (name (or memo (replace-regexp-in-string (regexp-quote " ") "_" title t t)))
+                            (substring
+                             title (1+ (string-match "(\\(.*\\))" title))
+                             (match-end 1))))
+                    (name (or memo (replace-regexp-in-string
+                                    (regexp-quote " ") "_" title t t)))
                     (.el? (ignore-errors (string= ".el" (substring name -3))))
                     (tangle-path (concat ":tangle \""
-                                         (grandview--init-path 'def-dir)
+                                         (grandview--path 'def-dir)
                                          "+" name (if .el? "" ".el") "\"")))
                (org-entry-put nil "header-args:emacs-lisp" tangle-path)))))))
     (save-buffer)
     (kill-this-buffer)))
 
 (defun grandview--tangle (&optional force)
-  "Tangle `grandview-org-file' when FORCE or its md5 changed."
-  (let* ((md5-file (concat grandview-cache-dir "init.md5"))
-         (old-md5 (when (file-exists-p md5-file) (grandview--readfile md5-file)))
-         (new-md5 (secure-hash 'md5 (grandview--readfile grandview-org-file)))
+  "Tangle grandview.org to grandview.el.
+The tanglement only happens when the hashed md5 string changed after
+last change or FORCE is non nil."
+  (let* ((md5-file (grandview--path 'main-md5))
+         (old-md5 (when (file-exists-p md5-file)
+                    (grandview--readfile md5-file)))
+         (new-md5 (secure-hash 'md5 (grandview--readfile
+                                     grandview--dot-org)))
          org-confirm-babel-evaluate find-file-hook
          kill-buffer-hook write-file-functions)
     (when (or force (not (string= old-md5 new-md5)))
-      (when (file-exists-p (grandview--init-path 'main))
-        (delete-file (grandview--init-path 'main)))
+      (when (file-exists-p (grandview--path 'main))
+        (delete-file (grandview--path 'main)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
         (write-region (point-min) (point-max) md5-file))
       (require 'ob-tangle)
-      (org-babel-tangle-file grandview-org-file (grandview--init-path 'main))
-      (cl-loop for lib in (directory-files-recursively (grandview--init-path 'def-dir) "\\.el$")
+      (org-babel-tangle-file
+       grandview--dot-org (grandview--path 'main))
+      (cl-loop for lib in (directory-files-recursively
+                           (grandview--path 'def-dir) "\\.el$")
                do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
                     (insert-file-contents lib)
@@ -160,10 +101,10 @@ debugging code blocks in a org config file."
 (defun grandview--gen-autoload (&optional force)
   "Generate autoload files for Grandview.
 Only do it when FORCE or contents in autoload directory changed."
-  (let* ((autoload-md5 (concat grandview-cache-dir "autoload.md5"))
+  (let* ((autoload-md5 (grandview--path 'def-md5))
          (old-md5 (when (file-exists-p autoload-md5)
                     (grandview--readfile autoload-md5)))
-         (def-dir (grandview--init-path 'def-dir))
+         (def-dir (grandview--path 'def-dir))
          (all-el-files (directory-files-recursively def-dir "\\.el$"))
          (files-as-str (with-temp-buffer
                          (dolist (file all-el-files)
@@ -172,14 +113,14 @@ Only do it when FORCE or contents in autoload directory changed."
          (new-md5 (secure-hash 'md5 files-as-str)))
     (when (or force (not (string= old-md5 new-md5)))
       (let ((generate-autoload-file nil) (inhibit-message t))
-        (loaddefs-generate def-dir (grandview--init-path 'def-el)))
+        (loaddefs-generate def-dir (grandview--path 'def-el)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
         (write-region (point-min) (point-max) autoload-md5)))))
 
 (defun grandview-tangle (&optional force)
-  "Tangle and generate autoloads for `grandview-org-file'.
+  "Tangle and generate grandview's autoloads.
 When FORCE, ensure the tangle process and autoloads generation."
   (grandview--gen-tangle-path)
   (grandview--tangle force)
@@ -187,25 +128,23 @@ When FORCE, ensure the tangle process and autoloads generation."
 
 (let ((debug (or (getenv-internal "DEBUG") init-file-debug))
       file-name-handler-alist)
-  ;; Load user config
-  (when (file-exists-p (grandview--init-path 'user))
-    (load (grandview--init-path 'user) (not debug) t))
-  ;; Tangle and load Grandview
-  ;; "Initiate spin!" -- Joseph Cooper
-  (add-to-list 'load-path grandview-cache-dir)
   (unless (file-exists-p grandview-cache-dir)
-    (make-directory (grandview--init-path 'def-dir) t)
-    (grandview-tangle t))
+    (make-directory (grandview--path 'def-dir) t)
+    (grandview-tangle t)) ; "Initiate spin!" -- Joseph Cooper
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  ;; Setup PATH
+  (add-to-list 'load-path grandview-cache-dir)
+  (require 'grandview-macros nil (not debug))
+  (when (file-exists-p (grandview--path 'user))
+    (load (grandview--path 'user) (not debug) t))
   (pcase-dolist (`(,name . ,value) grandview-envs)
     (setenv name value)
     (when (string-equal "PATH" name)
-      (setq exec-path (append (parse-colon-path value) (list exec-directory)))
+      (setq exec-path (append (parse-colon-path value)
+                              (list exec-directory)))
       (setq-default eshell-path-env value)))
   (require 'grandview-loaddefs nil (not debug))
   (require 'grandview nil (not debug))
-  ;; Setup garbage collection
   (add-function :after after-focus-change-function
-                (lambda () (unless (frame-focus-state) (garbage-collect))))
-  (setq gc-cons-threshold grandview-gc-cons-threshold))
+                (lambda () (unless (frame-focus-state)
+                        (garbage-collect))))
+  (setq gc-cons-threshold 134217728))
