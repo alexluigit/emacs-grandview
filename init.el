@@ -1,26 +1,7 @@
 ;;; init.el --- -*- lexical-binding: t -*-
 
-(defcustom grandview-envs
-  (let ((config-home (expand-file-name "~/.config"))
-        (data-home (expand-file-name "~/.local/share")))
-    `(("XDG_CONFIG_HOME" . ,config-home)
-      ("XDG_DATA_HOME" . ,data-home)
-      ("GNUPGHOME" . ,(expand-file-name "gnupg" data-home))
-      ("PATH" . ,(string-join
-                  (list (expand-file-name "python/bin" data-home)
-                        "/opt/homebrew/bin" "/opt/homebrew/sbin"
-                        "/usr/local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
-                        (expand-file-name "~/.local/bin")
-                        (expand-file-name "cargo/bin" data-home)
-                        (expand-file-name "go/bin" data-home)) ":"))))
-  "Use these environment variables in GUI emacs."
-  :group 'grandview :type 'list)
-
-(defcustom grandview-cache-dir
-  (expand-file-name "grandview/" user-emacs-directory)
-  "Cache directory for grandview.
-This path is added to your `load-path'."
-  :group 'grandview :type 'string)
+(defvar grandview--cache
+  (expand-file-name "grandview/" user-emacs-directory))
 
 (defvar grandview--dot-org
   (expand-file-name "grandview.org" (file-name-directory user-init-file)))
@@ -37,12 +18,11 @@ This path is added to your `load-path'."
 (defun grandview--path (type)
   "Get grandview's init path according to TYPE."
   (pcase type
-    ('main (expand-file-name "grandview.el" grandview-cache-dir))
-    ('main-md5 (expand-file-name "grandview.el.md5" grandview-cache-dir))
-    ('def-el (expand-file-name "grandview-loaddefs.el" grandview-cache-dir))
-    ('def-dir (expand-file-name "autoloads/" grandview-cache-dir))
-    ('def-md5 (expand-file-name "grandview-autoloads.md5" grandview-cache-dir))
-    ('user (expand-file-name "user.el" (file-name-directory user-init-file)))))
+    ('main (expand-file-name "grandview.el" grandview--cache))
+    ('main-md5 (expand-file-name "grandview.el.md5" grandview--cache))
+    ('def-el (expand-file-name "grandview-loaddefs.el" grandview--cache))
+    ('def-dir (expand-file-name "autoloads/" grandview--cache))
+    ('def-md5 (expand-file-name "grandview-autoloads.md5" grandview--cache))))
 
 (defun grandview--gen-tangle-path ()
   "Prepare metadata for `grandview-tangle'."
@@ -128,23 +108,13 @@ When FORCE, ensure the tangle process and autoloads generation."
 
 (let ((debug (or (getenv-internal "DEBUG") init-file-debug))
       file-name-handler-alist)
-  (unless (file-exists-p grandview-cache-dir)
+  (unless (file-exists-p grandview--cache)
     (make-directory (grandview--path 'def-dir) t)
     (grandview-tangle t)) ; "Initiate spin!" -- Joseph Cooper
+  (add-to-list 'load-path grandview--cache)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (add-to-list 'load-path grandview-cache-dir)
   (require 'grandview-macros nil (not debug))
-  (when (file-exists-p (grandview--path 'user))
-    (load (grandview--path 'user) (not debug) t))
-  (pcase-dolist (`(,name . ,value) grandview-envs)
-    (setenv name value)
-    (when (string-equal "PATH" name)
-      (setq exec-path (append (parse-colon-path value)
-                              (list exec-directory)))
-      (setq-default eshell-path-env value)))
+  (require 'grandview-custom nil (not debug))
   (require 'grandview-loaddefs nil (not debug))
   (require 'grandview nil (not debug))
-  (add-function :after after-focus-change-function
-                (lambda () (unless (frame-focus-state)
-                        (garbage-collect))))
   (setq gc-cons-threshold 134217728))
