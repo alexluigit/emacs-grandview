@@ -9,12 +9,25 @@
 :CUSTOM_ID: h:1AECDD3A-9714-41E1-BA21-8BCAFED96CD3
 :END:
 
-*Emacs grandview* is my literate Emacs configuration.  If you're seeing this
-document on github, you may find the "table of contents" button, which sits in
-the up right corner of the README container box, is helpful when trying to
-navigate in different sections of a long document like this.
+*Emacs grandview* is my literate Emacs configuration.  If you're viewing this
+document on GitHub, the "table of contents" button in the upper-right corner of
+the README container box can help you navigate its sections.
 
-** Project structrue
+** Features
+:PROPERTIES:
+:CUSTOM_ID: h:E84BE1F8-9771-4C99-9B79-B68D1F830798
+:END:
+
++ Modal editing based on =meow=, not =evil= at all.
++ Manage all your config in a single file.
++ Use built-in emacs packages whenever applicable.
++ Light-weighted & lighting fast startup speed.
++ ... etc.
+
+** How does it work?
+:PROPERTIES:
+:CUSTOM_ID: h:93E5268D-CFDD-4DBF-A793-0CC5812DE181
+:END:
 
 The structure of this project is pretty straightforward:
 
@@ -37,6 +50,79 @@ package initialization process, such as =package-enable-at-startup=,
 
 The main responsibility of my =init.el= is to arrange the tangling of
 =grandview.org= file and load it.
+
+*** This =.org= file
+:PROPERTIES:
+:CUSTOM_ID: h:95B6B174-9877-4DCB-B298-86B3B889A11F
+:END:
+
+This file holds *both* source code and documentation of this project. See:
+[[https://en.wikipedia.org/wiki/Literate_programming][Literate programming]].  If you are new to =org-mode=, check out the video: [[https://www.youtube.com/watch?v=0-brF21ShRk][Org mode
+Intro]], or read their documentation: https://orgmode.org/.  Try move the cursor
+to one of the headings in this file and press =Tab= to fold / unfold the node
+would be a good start.
+
+After modifying code blocks in this file, you can apply changes immediately with
+~M-x restart-emacs~. Upon restart, your old configuration will be replaced, and
+Emacs will apply the latest configuration. This behavior mirrors that of a
+regular Emacs configuration, even if not using literate programming.  However,
+before restarting, ensure all parentheses are balanced to avoid startup issues.
+
+The elisp source blocks in this file is tangled to =grandview.el= which is then
+evaluated by Emacs.  Sections named *Extras* are tangled to separate files, and
+corresponding autoloads are generated.  Specifically, the =grandview-tangle=
+function collects all *;;;###autoload* markers in code blocks and generates
+=loaddefs= for them. You also don't need to manually enter the tangle path for the
+*Extras* section, =grandview-tangle= will do it automatically.
+
+The incredibly useful =org-toggle-comment= command (bound to =SPC c ;= by default)
+makes configuration management a breeze.  When debugging problematic code within
+one or more sections, simply comment out those sections and restart Emacs. The
+configurations within those sections will be ignored, as they won't be tangled
+during the startup process.
+
+The tangled directory typically looks like this:
+(Do not edit these files by hand since all of them are auto generated)
+
+#+begin_example
+tree ~/.cache/emacs/grandview
+
+├── autoloads
+│   ├── +eglot.el
+│   ├── +eletric.el
+│   ├── +file-utils.el
+│   ├── +flymake.el
+│   ├── +font-setup.el
+│   ├── +frame-cursor-dim-mode.el
+│   ├── +frame-opacity-set.el
+│   ├── +meow.el
+│   ├── +minibuffer.el
+│   ├── +mode-line-mode.el
+│   ├── +orderless.el
+│   ├── +org-id.el
+│   ├── +org-tree-slide.el
+│   ├── +org.el
+│   ├── +project.el
+│   ├── +reformatter.el
+│   ├── +rg.el
+│   ├── +rime.el
+│   ├── +scratch.el
+│   ├── +simple.el
+│   ├── +tabspaces.el
+│   ├── +tempel.el
+│   ├── +vc.el
+│   ├── +vterm.el
+│   ├── +vue.el
+│   ├── +window-in-other-frames.el
+│   ├── +window-monocle-mode.el
+│   └── +writeroom-mode.el
+├── grandview-custom.el
+├── grandview-loaddefs.el
+├── grandview-loaddefs.md5
+├── grandview-macros.el
+├── grandview.el
+└── grandview.el.md5
+#+end_example
 
 *** User private config | grandview options (init.grandview.el)
 :PROPERTIES:
@@ -73,84 +159,6 @@ Here is an example of =init.grandview.el=:
 ;; ... other customizations
 #+end_src
 
-*** This =.org= file
-:PROPERTIES:
-:CUSTOM_ID: h:95B6B174-9877-4DCB-B298-86B3B889A11F
-:END:
-
-This file holds *both* source code and documentation of this project. See:
-[[https://en.wikipedia.org/wiki/Literate_programming][Literate programming]].  Thus, to configure your Emacs using this project, all you
-have to do is edit this file, and ~M-x restart-emacs~ to apply the new settings,
-nothing else.  If you are new to =org-mode=, check out the video: [[https://www.youtube.com/watch?v=0-brF21ShRk][Org mode Intro]],
-or read their documentation: https://orgmode.org/.  Try move the cursor to one
-of the headings in this file and press =Tab= to fold / unfold the node would be a
-good start.
-
-The elisp source blocks in this file is tangled to a regular =grandview.el= file
-which is then evaluated by Emacs.
-
-Sections named *Autoload* are tangled to separate files upon which corresponding
-autoloads are generated.  You don't have to manually type in the tangle path of
-the Autoload section, grandview has done it for you automatically.
-
-After you modify the contents of code blocks in this file, you may want to apply
-these changes immediately, just ~M-x ~restart-emacs~, after restart the old config
-is automatically replaced by the newly generated one, and the newly opened emacs
-will apply the latest config.  It is the same behavior you would expect with a
-regular emacs config which don't follow the literate programming fashion.  A
-caveat is that before doing so you'd better have a quick look to check if all
-the parentheses are balanced, otherwise emacs won't start correctly.
-
-Thanks to the magical ~org-toggle-comment~ command (binds to =C-c ;= by default),
-manage the config becomes easy peasy.  When you find that your code in one or
-more sections is problematic and try to debug it, just comment out these
-sections then do ~restart-emacs~, all the configuartions in these sections are
-ignored (not being tangled at the first place actually).
-
-The tangled directory looks something like this:
-
-(Do not edit these files by hand since all of them are auto generated)
-
-#+begin_src bash :tangle no
-tree ~/.cache/emacs/grandview
-
-├── autoloads
-│   ├── +Basic_editing_utilities.el
-│   ├── +Custom_Mode_line.el
-│   ├── +Fonts_and_icons.el
-│   ├── +Frame_opacity.el
-│   ├── +Less_distracting_cursor.el
-│   ├── +Modal_Editing_On_Wish_-_meow!.el
-│   ├── +Monocle_mode.el
-│   ├── +Place_window_in_other_frames.el
-│   ├── +Vue.el
-│   ├── +ediff.el
-│   ├── +eglot.el
-│   ├── +eletric.el
-│   ├── +files.el
-│   ├── +flymake.el
-│   ├── +minibuffer.el
-│   ├── +orderless.el
-│   ├── +org-id.el
-│   ├── +org-tree-slide.el
-│   ├── +org.el
-│   ├── +project.el
-│   ├── +reformatter.el
-│   ├── +rg.el
-│   ├── +rime.el
-│   ├── +scratch.el
-│   ├── +tabspaces.el
-│   ├── +tempel.el
-│   ├── +vterm.el
-│   └── +writeroom-mode.el
-├── grandview-custom.el
-├── grandview-loaddefs.el
-├── grandview-loaddefs.md5
-├── grandview-macros.el
-├── grandview.el
-└── grandview.el.md5
-#+end_src
-
 ** Installation
 :PROPERTIES:
 :CUSTOM_ID: h:B45EA3C7-3DE3-42A1-AAD6-45FC9A5A6FBB
@@ -165,6 +173,7 @@ You might need these commands when using =emacs-grandview=.
 | rg          | grep command, but faster    |
 | git         | Version control backend     |
 | gls (macOS) | GNU's ls, in built on Linux |
+| pass        | Simple password store       |
 |-------------+-----------------------------|
 
 Make sure to backup your old emacs config before installation.
@@ -203,13 +212,11 @@ please feel free to ask any questions!
 :CUSTOM_ID: h:2DCD6D3B-6759-4E78-AF50-5B23FA77C603
 :END:
 
-Although Emacs already provided functionalities like ~unload-feature~ and
-~remove-hook~ to eliminate the side effects of certain packages or user
-configurations, most of the time it's still easier to reload your Emacs
-configurations through a complete restart.  Although emacs comes with the
-~restart-emacs~ command, however, when Emacs hangs up, =M-x= or keybindings is not
-accessible to us, in this case, a shell script to restart Emacs from terminal
-can be very handy.
+Emacs offers =unload-feature= and =remove-hook= to mitigate the side effects of
+packages or user configurations.  However, a full Emacs restart, often achieved
+through the =restart-emacs= command, remains the simpler solution.  When Emacs
+freezes, preventing access to keybindings, a shell script to restart Emacs from
+the terminal becomes invaluable.
 
 *** Source
 :PROPERTIES:
@@ -615,24 +622,54 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
          (use-package-process-keywords name rest state))))))
 #+end_src
 
-** Basic editing utilities
+** Editing basics
 :PROPERTIES:
 :CUSTOM_ID: h:0EFB6EF1-C52F-4EC8-8257-F3C21300AC0A
 :END:
 
-=simple.el= consists of a grab-bag of basic Emacs commands not specifically
-related to some major mode or to file-handling.
+GNU Emacs is an extensible, customizable, free/libre text editor (and
+more).  This section introduces several built-in packages that provide
+fundamental text editing commands and features.
 
-- Unbind =SPC= in /*messages*/ buffer since we use it as the leader key
-- Recenter the screen and highlight the keywords after we call ~next/previous-error~
+*** Keyboard orientation (keyboard.c)
+:PROPERTIES:
+:CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
+:END:
+
+For historical reason, utilities lives in terminal (such as bash, vim, etc.) can
+not tell the difference between some key storkes. For example, =C-i= and =tab=, =C-m=
+and =Return=.  By default, emacs follow this convention, but it doesn't mean it is
+not able to tell the difference.  In a GUI environment, I remapped the =[?\C-i]=
+key sequence so that emacs is able to see =Tab= and =C-i= as different keycodes.  In
+terms of terminal emulator (alacritty in my case), I instruct it to translate
+=C-i= to =<f7>=, after that various commands from different terminal applications
+(such as shell, vim) can then wired to =C-i= through the =<f7>= outlet.
+
+To understand what happens under the hook, you may want to checkout the
+~input-decode-map~ and [[https://en.wikipedia.org/wiki/Escape_sequence][escape sequences]].
 
 #+begin_src emacs-lisp
-(use-package simple :ensure nil :after meow)
+(when (display-graphic-p)
+  (define-key input-decode-map [?\C-i] [C-i]))
+#+end_src
 
-(with-eval-after-load 'simple
-  (define-key messages-buffer-mode-map (kbd "SPC") nil)
-  (add-hook 'next-error-hook #'recenter)
-  (setq next-error-message-highlight t)) ; added in Emacs 28.1
+Here is how I do with my alacritty configuration:
+
+#+begin_src toml :tangle no
+[keyboard]
+bindings = [
+# ...
+# Ctrl-i => F7
+{ chars = "\u001B[18~", key = "I", mods = "Control" }
+# ...
+]
+#+end_src
+
+Modifier settings for macOS, we use the default though.
+
+#+begin_src emacs-lisp
+(setq ns-command-modifier 'super)
+(setq ns-alternate-modifier 'meta)
 #+end_src
 
 *** Tab for Indentation (indent.el)
@@ -658,6 +695,164 @@ whatever you have typed in.
 (setq-default tab-always-indent t)
 (setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
 (setq-default indent-tabs-mode nil)
+#+end_src
+
+*** Line wrap and sentences (fill.el)
+:PROPERTIES:
+:CUSTOM_ID: h:065A996E-9860-46BE-BC54-B12EC8414752
+:END:
+
+The =fill.el= library is a tiny wrapper around some Emacs settings and modes that
+are scrattered around several files, which control (i) how paragraphs or
+comments in programming modes should be wrapped to a given column count, and
+(ii) what constitutes a sentence. Although ~fill-column~ variable is not defined
+in =fill.el=, I believe put them all together here make things easier to track.
+
+With regard to paragraphs, I find that a double space is the best way to delimit
+sentences in source form, where a monospaced typeface is customary. There is no
+worry that this will be shown on a website or rendered version of a document,
+because processors know how to handle spacing. We do this to make phrases easier
+to tell apart, but also to render unambiguous commands like forward-sentence.
+
+#+begin_src emacs-lisp
+(use-package fill :ensure nil)
+
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+(setq-default fill-column 80)
+(setq colon-double-space nil)
+(setq adaptive-fill-mode t)
+(setq sentence-end-double-space t)
+(setq sentence-end-without-period nil)
+#+end_src
+
+*** Built-in editing utilities (simple.el)
+:PROPERTIES:
+:CUSTOM_ID: h:FB996162-B528-4AD8-A114-660D515D6F23
+:END:
+
+=simple.el= consists of a grab-bag of basic Emacs commands not specifically
+related to some major mode or to file-handling.
+
++ Unbind =SPC= in /*messages*/ buffer since we use it as the leader key
++ Add a command to toggle the letter case of the word under cursor
++ Add a command to mark the inner line
++ Bind =M-n/p= | =s-n/p= globally for page scrolling | paragraph navigation.
+
+#+begin_src emacs-lisp
+(use-package simple :ensure nil :after meow)
+
+;; these bindings work globally.
+(bind! global-map
+  "S-SPC" #'toggle-input-method
+  "s-u" #'+simple-toggle-letter-case
+  "M-n" #'scroll-up-command
+  "M-p" #'scroll-down-command
+  "s-n" #'forward-paragraph
+  "s-p" #'backward-paragraph)
+
+(with-eval-after-load 'simple
+  (define-key messages-buffer-mode-map (kbd "SPC") nil)
+  (setq next-error-message-highlight t)) ; added in Emacs 28.1
+#+end_src
+
+**** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
+:header-args:emacs-lisp: :tangle (expand-file-name "+simple.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defadvice! delete-backward-char-ad (fn &rest args)
+  "Do not try to delete char when the last char is read-only."
+  :around #'delete-backward-char
+  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
+
+;;;###autoload
+(defadvice! next-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `next-error-no-select'."
+  :around #'next-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+;;;###autoload
+(defadvice! previous-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `previous-error-no-select'."
+  :around #'previous-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+;;;###autoload
+(defadvice! yank-ad (&rest _)
+  "Make `yank' behave like paste (p) command in vim."
+  :before #'yank
+  (when-let* ((clip (condition-case nil (current-kill 0 t) (error ""))))
+    (set-text-properties 0 (length clip) nil clip)
+    (when (string-suffix-p "\n" clip)
+      (goto-char (line-beginning-position)))))
+
+;;;###autoload
+(defun +simple-join-line ()
+  "Join the current line with the line beneath it."
+  (interactive)
+  (delete-indentation 1))
+
+;;;###autoload
+(defun +simple-mark-inner-line ()
+  "Mark inner line and move cursor to bol."
+  (interactive)
+  (save-window-excursion
+    (move-end-of-line 1)
+    (set-mark-command nil)
+    (back-to-indentation)))
+
+;; Copied from `xah-fly-keys'
+;;;###autoload
+(defun +simple-toggle-letter-case ()
+  "Toggle the letter case of current word or selection.
+Always cycle in this order: Init Caps, ALL CAPS, all lower.
+URL `http://xahlee.info/emacs/emacs/modernization_upcase-word.html'"
+  (interactive)
+  (let ((deactivate-mark nil) xbeg xend)
+    (if (region-active-p)
+        (setq xbeg (region-beginning) xend (region-end))
+      (save-excursion
+        (skip-chars-backward "[:alnum:]")
+        (setq xbeg (point))
+        (skip-chars-forward "[:alnum:]")
+        (setq xend (point))))
+    (when (not (eq last-command this-command))
+      (put this-command 'state 0))
+    (cond
+     ((equal 0 (get this-command 'state))
+      (upcase-initials-region xbeg xend)
+      (put this-command 'state 1))
+     ((equal 1 (get this-command 'state))
+      (upcase-region xbeg xend)
+      (put this-command 'state 2))
+     ((equal 2 (get this-command 'state))
+      (downcase-region xbeg xend)
+      (put this-command 'state 0)))))
+#+end_src
+
+*** Long line text (so-long.el)
+:PROPERTIES:
+:CUSTOM_ID: h:F19F714D-1B7B-47A1-AE22-5DF737822996
+:END:
+
+Consistent performance is the reason to enable =global-so-long-mode=, built into
+Emacs versions >= 27, which allows the active major mode to gracefully adapt to
+buffers with very long lines. What “very long” means is, of course,
+configurable: M-x find-library so-long covers several customisation options,
+though I find that the defaults require no further intervention from my part.
+
+=so-long-mode= Files with long lines have huge performance impact for file preview
+(in our case =dirvish.el=), so we ensure the =global-so-long-mode= is enabled before
+=dirvish= is loaded.
+
+#+begin_src emacs-lisp
+(use-package so-long :ensure nil :after-call dired-mode-hook)
+
+(with-eval-after-load 'so-long (global-so-long-mode))
 #+end_src
 
 *** Syntax highlighting powered by tree-sitter (treesit.el)
@@ -709,136 +904,7 @@ details.
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 #+end_src
 
-*** Editor basics
-:PROPERTIES:
-:CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
-:END:
-
-For historical reason, terminal can not tell the difference between some key
-storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
-this convention, but it doesn't mean emacs are not able to tell the
-difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
-In terms of terminal emulator (alacritty in my case), I instruct it to translate
-=C-i= to =<f7>=, after that various commands from different terminal applications
-(such as shell, vim) can then wired to =C-i= through the =<f7>= outlet.
-
-#+begin_src emacs-lisp
-(when (display-graphic-p)
-  (define-key input-decode-map [?\C-i] [C-i]))
-#+end_src
-
-Here is how I do with my alacritty configuration:
-
-#+begin_src toml :tangle no
-[keyboard]
-bindings = [
-# ...
-# Ctrl-i => F7
-{ chars = "\u001B[18~", key = "I", mods = "Control" }
-# ...
-]
-#+end_src
-
-Modifier settings for macOS, we use the default though.
-
-#+begin_src emacs-lisp
-(setq ns-command-modifier 'super)
-(setq ns-alternate-modifier 'meta)
-#+end_src
-
-These bindings work globally.
-
-#+begin_src emacs-lisp
-(bind! global-map
-  "S-SPC" #'toggle-input-method
-  "s-u" #'+toggle-letter-case
-  "s-o" 'other-window
-  "M-n" 'scroll-up-command
-  "M-p" 'scroll-down-command
-  "s-n" 'forward-paragraph
-  "s-p" 'backward-paragraph)
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
-:header-args:emacs-lisp: :tangle (expand-file-name "+Basic_editing_utilities.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
-(defadvice! delete-backward-char-ad (fn &rest args)
-  "Do not try to delete char when the last char is read-only."
-  :around #'delete-backward-char
-  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
-
-;;;###autoload
-(defadvice! next-error-no-select-ad (fn &rest args)
-  "Do not open new window when calling `next-error-no-select'."
-  :around #'next-error-no-select
-  (let ((split-width-threshold nil)) (apply fn args)))
-
-;;;###autoload
-(defadvice! previous-error-no-select-ad (fn &rest args)
-  "Do not open new window when calling `previous-error-no-select'."
-  :around #'previous-error-no-select
-  (let ((split-width-threshold nil)) (apply fn args)))
-
-;;;###autoload
-(defadvice! yank-ad (&rest _)
-  "Make `yank' behave like paste (p) command in vim."
-  :before #'yank
-  (when-let* ((clip (condition-case nil (current-kill 0 t) (error ""))))
-    (set-text-properties 0 (length clip) nil clip)
-    (when (string-suffix-p "\n" clip)
-      (goto-char (line-beginning-position)))))
-
-;;;###autoload
-(defun +simple-join-line ()
-  "Join the current line with the line beneath it."
-  (interactive)
-  (delete-indentation 1))
-
-;;;###autoload
-(defun +simple-mark-inner-line ()
-  "Mark inner line and move cursor to bol."
-  (interactive)
-  (save-window-excursion
-    (move-end-of-line 1)
-    (set-mark-command nil)
-    (back-to-indentation)))
-
-;; Copied from `xah-fly-keys'
-;;;###autoload
-(defun +toggle-letter-case ()
-  "Toggle the letter case of current word or selection.
-Always cycle in this order: Init Caps, ALL CAPS, all lower.
-URL `http://xahlee.info/emacs/emacs/modernization_upcase-word.html'
-Version: 2020-06-26"
-  (interactive)
-  (let ((deactivate-mark nil) $p1 $p2)
-    (if (region-active-p)
-        (setq $p1 (region-beginning) $p2 (region-end))
-      (save-excursion
-        (skip-chars-backward "[:alpha:]")
-        (setq $p1 (point))
-        (skip-chars-forward "[:alpha:]")
-        (setq $p2 (point))))
-    (when (not (eq last-command this-command))
-      (put this-command 'state 0))
-    (cond
-     ((equal 0 (get this-command 'state))
-      (upcase-initials-region $p1 $p2)
-      (put this-command 'state 1))
-     ((equal 1 (get this-command 'state))
-      (upcase-region $p1 $p2)
-      (put this-command 'state 2))
-     ((equal 2 (get this-command 'state))
-      (downcase-region $p1 $p2)
-      (put this-command 'state 0)))))
-#+end_src
-
-** Modal Editing On Wish - meow!
+** Modal Editing On Wish (meow.el)
 :PROPERTIES:
 :CUSTOM_ID: h:CDB8D834-C18F-4B3E-BAE8-98BBDFE5095B
 :END:
@@ -909,9 +975,9 @@ has been bound to =meow-inner-of-thing=.)
 :CUSTOM_ID: h:95E86308-81E7-4A9F-B457-1EE8F8F80896
 :END:
 
-This section contains *core* keybindings of *Grandview*, feel free to adjust it to
-your liking.  Since this part contains so many core keybindings, it's not a good
-idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
+This section defines the core keybindings for =emacs-grandview=.  Feel free to
+customize them to your preferences.  It's recommended to avoid commenting out
+this section as it contains essential keybindings.
 
 **** NORMAL
 :PROPERTIES:
@@ -1043,9 +1109,9 @@ To make it consistent, we bind =C-i= and =C-o= in insert mode to do the same job
 :END:
 
 Being able to use =SPC= as the *leader* key is one of the killing features of modal
-editing.  Prees =SPC x SPC f= in sequence takes 4 keystroke indeed, which looks
-longer than =C-x C-f=, but it is objectively easier than holding the control key
-while press another letter key.  Using modifiers (ctrl/shift/alt etc.)  in your
+editing.  Prees =SPC x f= in sequence takes 3 keystroke indeed, which looks longer
+than =C-x C-f=, but it is objectively easier than holding the control key while
+press another letter key.  Using modifiers (ctrl/shift/alt etc.)  in your
 shortcuts too much usually intensify the risk of getting repetitive strain
 injury (RSI).  Maximize the usage of leader key will help to reduce RSI for
 those who use the keyboard for long periods of time.
@@ -1071,7 +1137,7 @@ those who use the keyboard for long periods of time.
   (cons "f" grandview-file-map)
   '("i" . ibuffer)
   '("k" . kill-current-buffer)
-  '("n" . +project-find-file)
+  '("n" . project-find-file)
   (cons "o" grandview-prog-map)
   (cons "p" grandview-project-map)
   (cons "r" grandview-reg-map)
@@ -1133,10 +1199,10 @@ Here I'm adjusting some meow's behavior that I'm not quite used to:
 (meow-global-mode)
 #+end_src
 
-*** Autoload
+*** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:3050E51B-BD81-4574-B257-232C450D998B
-:header-args:emacs-lisp: :tangle (expand-file-name "+Modal_Editing_On_Wish_-_meow!.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+meow.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1247,7 +1313,7 @@ Recommended themes (using their package names):
 (add-hook 'after-init-hook (lambda () (load-theme grandview-custom-theme t)))
 #+end_src
 
-*** Fonts and icons
+*** Fonts and icons (font-setup)
 :PROPERTIES:
 :CUSTOM_ID: h:B50A7C8A-7553-46CF-92B8-56865009C681
 :END:
@@ -1277,10 +1343,10 @@ Setup fonts.
 (+font-setup)
 #+end_src
 
-***** Autoload
+***** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:38943ED3-0842-4327-9998-3E331FAA76DB
-:header-args:emacs-lisp: :tangle (expand-file-name "+Fonts_and_icons.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+font-setup.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1379,7 +1445,7 @@ Setup fonts.
 (fringe-mode '(1 . 1))
 #+end_src
 
-**** Frame opacity
+**** Frame opacity (frame-opacity-set)
 :PROPERTIES:
 :CUSTOM_ID: h:DEEA194F-9E63-45BF-98FA-0E5A44D03023
 :END:
@@ -1392,9 +1458,9 @@ are beneath emacs frames.
 (bind! grandview-app-map "o" #'+frame-opacity-set)
 #+end_src
 
-***** Autoload
+***** Extras
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+Frame_opacity.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+frame-opacity-set.el" grandview--def-dir)
 :CUSTOM_ID: h:AC3B6E27-5E40-4B4C-A40C-E1DD1CEE0E61
 :END:
 
@@ -1428,7 +1494,7 @@ are beneath emacs frames.
              (+frame-opacity--adjust (if (eq opa low) high low))))))
 #+end_src
 
-**** Less distracting cursor
+**** Less distracting cursor (frame-cursor-dim-mode)
 :PROPERTIES:
 :CUSTOM_ID: h:A926706F-208A-445E-9ED3-018000FF921C
 :END:
@@ -1436,9 +1502,9 @@ are beneath emacs frames.
 In some scenario the blinking cursor is quite annoying.  Use
 =+frame-cursor-dim-mode= to temporarily use a almost invisible cursor.
 
-***** Autoload
+***** Extras
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+Less_distracting_cursor.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+frame-cursor-dim-mode.el" grandview--def-dir)
 :CUSTOM_ID: h:FDEE294E-7DB1-4D72-B7D4-C062203E31D8
 :END:
 
@@ -1466,7 +1532,7 @@ In some scenario the blinking cursor is quite annoying.  Use
     (set-cursor-color +frame-cursor-saved-color)))
 #+end_src
 
-*** Scrolling
+*** Scrolling behavior
 :PROPERTIES:
 :CUSTOM_ID: h:33978C23-2375-4C80-9D5B-E78BCCB7F53E
 :END:
@@ -1504,6 +1570,118 @@ direction (use =C-l= to reposition it).
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
 (put 'erase-buffer 'disabled nil)
+#+end_src
+
+*** Transient commands (transient.el)
+:PROPERTIES:
+:CUSTOM_ID: h:6C19254F-E941-4E51-A443-3F8A7D796589
+:END:
+
+=transient.el= implements support for powerful keyboard-driven menus.  Such menus
+can be used as simple visual command dispatchers.  More complex menus take
+advantage of infix arguments, which are somewhat similar to prefix arguments,
+but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
+
+#+begin_src emacs-lisp
+(use-package transient :ensure nil)
+
+(with-eval-after-load 'transient
+  (setq transient-enable-popup-navigation nil)
+  (setq transient-default-level 7)
+  (setq transient-show-popup -0.2)
+  (transient-bind-q-to-quit)
+  (setq transient-display-buffer-action '(display-buffer-below-selected))
+  (define-key transient-map (kbd "<escape>") 'transient-quit-all)
+  (define-key transient-sticky-map (kbd "ESC") 'transient-quit-all))
+#+end_src
+
+** Get help in emacs
+:PROPERTIES:
+:CUSTOM_ID: h:B5C5A759-2EF0-4B56-8E18-B1AD5E3D3D96
+:END:
+
+This section details how to access help information within Emacs, including
+relevant configurations and guides.
+
+*** Emacs Manual (info.el)
+:PROPERTIES:
+:CUSTOM_ID: h:59DC4309-57FF-4762-8ECC-96826FC36D96
+:END:
+
+The keybinding =SPC h i= (or =C-h i= if meow-keypad-mode is not enabled) opens the
+Info documentation tree, which covers almost all topics about Emacs itself and
+installed packages (provided corresponding .info documents are available). I've
+added some keybindings to simplify navigation within this tree.
+
+#+begin_src emacs-lisp
+(use-package info :ensure nil)
+
+(with-eval-after-load 'info
+  (bind! Info-mode-map
+    "n" 'next-line
+    "p" 'previous-line
+    "C-n" 'Info-next
+    "C-p" 'Info-prev
+    "s-n" 'forward-paragraph
+    "s-p" 'backward-paragraph))
+#+end_src
+
+*** Man page (man.el)
+:PROPERTIES:
+:CUSTOM_ID: h:E15D7EFF-09E4-481B-8B4C-8AE08F46A65E
+:END:
+
+=man.el= lets you view command man pages directly within Emacs, instead of using
+the command-line tool. The powerful document navigation and text manipulation
+tools we've already set up make reading manuals much easier.
+
+#+begin_src emacs-lisp
+(use-package man :ensure nil)
+
+(setq Man-notify-method 'newframe)
+(with-eval-after-load 'man
+  (define-key Man-mode-map (kbd "q") 'kill-this-buffer))
+#+end_src
+
+*** Helpful (helpful.el)
+:PROPERTIES:
+:CUSTOM_ID: h:9B7AA6E6-C7BE-41CD-B523-CB34BB185E0A
+:END:
+
+=helpful.el= provides a better help buffer.  It's always a good thing for us to be
+able to read the source code of the symbol we are looking at since it tells more
+information than its docstring.  Again, because we use =meow=, the actual prefix
+to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
+=helpful-symbol=.
+
+#+begin_src emacs-lisp
+(use-package helpful :ensure t :after-call meow-keypad-mode-hook)
+
+(bind! global-map
+  "C-h C-s" 'helpful-symbol
+  "C-h K" 'describe-keymap
+  "C-h C-f" 'helpful-callable
+  "C-h C-v" 'helpful-variable
+  "C-h k" 'helpful-key)
+#+end_src
+
+*** Find libraries (find-func.el)
+:PROPERTIES:
+:CUSTOM_ID: h:386D803D-CA14-4ACE-A7A6-F5B137E7C353
+:END:
+
+This packages provides the ~find-library~ command which allows us browsing the
+source code of Emacs efficiently, want to have to look on =dired.el=? Just ~M-x
+find-library RET dired~. Even better, we can introspect the C code of Emacs
+itself as long as the ~find-function-C-source-directory~ is set properly.
+
+#+begin_src emacs-lisp
+(use-package find-func :ensure nil :after-call minibuffer-setup-hook)
+
+(define-key grandview-file-map (kbd "l") 'find-library)
+
+(when (eq system-type 'gnu/linux)
+  (setq find-function-C-source-directory "~/Code/emacs/src"))
 #+end_src
 
 ** Use Emacs like a Desktop Environment
@@ -1605,6 +1783,8 @@ suggests that a simpler method is just as effective for my case.
 Disable ~cursor-in-non-selected-windows~ and ~highlight-nonselected-windows~
 reduces rendering/line scan work for Emacs in non-focused windows.
 
+=SPC w o= and =s-o= to switch focus other window.
+
 #+begin_src emacs-lisp
 (use-package window :ensure nil)
 
@@ -1633,9 +1813,15 @@ reduces rendering/line scan work for Emacs in non-focused windows.
   (setq switch-to-buffer-in-dedicated-window 'pop)
   (setq split-height-threshold nil)
   (setq split-width-threshold 120))
+(define-key grandview-window-map (kbd "o") 'other-window)
+;; there are situations when we want to switch windows while typing
+(define-key global-map (kbd "s-o") 'other-window)
 #+end_src
 
 **** Adjust window size
+:PROPERTIES:
+:CUSTOM_ID: h:16A1B935-F687-42D1-A3D1-EED84A7A493D
+:END:
 
 =window.el= provides 4 commands to adjust the size of a window.  Prefix them with
 1-9 to do the adjustment multiple times at once.  Also don't forget that =r= in
@@ -1675,7 +1861,7 @@ section in =meow-tutor=).
   "l" #'windmove-swap-states-left)
 #+end_src
 
-**** Place window in other frames
+**** Place window in other frames (window-in-other-frames)
 :PROPERTIES:
 :CUSTOM_ID: h:C2DBDFAB-F845-402A-9380-DC7C4BC74E8A
 :END:
@@ -1689,10 +1875,10 @@ in other frame when debugging emacs packages.
 (bind! grandview-window-map "m" #'+window-show-messages-other-frame)
 #+end_src
 
-***** Autoload
+***** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:5FD0BB42-46A7-4814-8F35-A7FF80DAFBB3
-:header-args:emacs-lisp: :tangle (expand-file-name "+Place_window_in_other_frames.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+window-in-other-frames.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1713,7 +1899,7 @@ If ERASE is non-nil, erase the buffer before switching to it."
         (switch-to-buffer "*Messages*")))))
 #+end_src
 
-**** Monocle mode
+**** Maximize | restore window size (window-monocle-mode)
 :PROPERTIES:
 :CUSTOM_ID: h:5BE7214A-B950-4F9B-951E-C45882829C0F
 :END:
@@ -1724,10 +1910,10 @@ A command to maximize / restore a window.
 (define-key grandview-window-map (kbd "w") #'+window-monocle-mode)
 #+end_src
 
-***** Autoload
+***** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:7BAA0631-CBD3-4BED-BB6B-D6BE35BDBA73
-:header-args:emacs-lisp: :tangle (expand-file-name "+Monocle_mode.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+window-monocle-mode.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1798,14 +1984,17 @@ more on how fast you can bring them into focus.  This is, of course, a matter of
 realigning priorities, as we still wish to control every aspect of the
 interface.
 
-The auto completion functionality (especially in the minibuffer) is a one of the
-fundamental components in *Grandview*.  Unless you encounter one or more issues
-related to package configs in this section, I would *NOT* advise you to comment
-out this section entirely, because debugging emacs often involves with manually
-typing commands in the minibuffer.  That said, feel free to tweak configuartions
-in this section.
+Auto-completion, particularly in the minibuffer, is a core feature of this
+setup.  Unless you experience package configuration problems in this section,
+avoid commenting it out entirely. Debugging Emacs frequently requires manual
+command entry in the minibuffer, making this functionality essential.  However,
+feel free to adjust the configurations within this section as needed.
 
-** Minibuffer and completion functions (minibuffer.el)
+** Setup minibuffer
+:PROPERTIES:
+:CUSTOM_ID: h:CDA5E090-037A-4CCB-BA10-215137E0DB8B
+:END:
+*** Minibuffer and completion functions (minibuffer.el)
 :PROPERTIES:
 :CUSTOM_ID: h:97388408-518C-4774-968C-23C71CFE8599
 :END:
@@ -1852,7 +2041,7 @@ What my minibuffer config does:
   "C-o" 'backward-char)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:2DA0D02F-765C-47AE-8118-A4CA24FE9CB5
 :header-args:emacs-lisp: :tangle (expand-file-name "+minibuffer.el" grandview--def-dir)
@@ -1871,7 +2060,7 @@ What my minibuffer config does:
         (complete-with-action action candidates string pred)))))
 #+end_src
 
-** Minibuffer history (savehist.el)
+*** Minibuffer history (savehist.el)
 :PROPERTIES:
 :CUSTOM_ID: h:F88C364F-4C13-4C6E-B9A1-20F6CFBDC24F
 :END:
@@ -1889,7 +2078,11 @@ Keeps a record of actions involving the minibuffer.
   (savehist-mode))
 #+end_src
 
-** Vertical completion candidates (vertico.el)
+** Completion in minibuffer
+:PROPERTIES:
+:CUSTOM_ID: h:40B8F500-A2B8-4569-9B32-B8D36369F518
+:END:
+*** Vertical completion candidates (vertico.el)
 :PROPERTIES:
 :CUSTOM_ID: h:0ABB48B0-A43D-4F71-9B2E-5B0C885B82FD
 :END:
@@ -1908,7 +2101,7 @@ window as a constant value.
 (with-eval-after-load 'vertico (vertico-mode 1))
 #+end_src
 
-** Match candidates made easy (orderless.el)
+*** Match candidates made easy (orderless.el)
 :PROPERTIES:
 :CUSTOM_ID: h:C20C20F0-CA95-4CC3-BCF3-42525A72A99F
 :END:
@@ -1946,7 +2139,7 @@ rather than all of the =dired-*= noise.
           +orderless-pinyin-dispatcher)))
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:60693C7D-8538-4B1C-83B2-E79C21E72A20
 :header-args:emacs-lisp: :tangle (expand-file-name "+orderless.el" grandview--def-dir)
@@ -1983,7 +2176,7 @@ rather than all of the =dired-*= noise.
     `(orderless-without-literal . ,(substring pattern 1))))
 #+end_src
 
-** Useful commands using completion (consult.el)
+*** Useful commands using completion (consult.el)
 :PROPERTIES:
 :CUSTOM_ID: h:BD952A54-C221-4AE9-BEEC-4B0F24272F33
 :END:
@@ -2037,16 +2230,13 @@ word, which usually consists of only 2 characters.
     "m" 'consult-bookmark
     "c" 'consult-complex-command
     "C" 'consult-mode-command
-    "M" 'consult-minor-mode-menu))
-
-(with-eval-after-load 'meow
-  (meow-normal-define-key
-   '("/" . consult-line)
-   '("V" . consult-global-mark))
-  (meow-leader-define-key '("SPC" . consult-buffer)))
+    "M" 'consult-minor-mode-menu)
+  (meow-define-keys 'normal '("/" . consult-line) '("V" . consult-global-mark))
+  (meow-define-keys 'motion '("/" . consult-line))
+  (meow-define-keys 'leader '("SPC" . consult-buffer)))
 #+end_src
 
-** Candidate annotation (marginalia.el)
+*** Candidate annotation (marginalia.el)
 :PROPERTIES:
 :CUSTOM_ID: h:A08A5E53-E279-4950-AA96-09022CF50A0F
 :END:
@@ -2063,7 +2253,11 @@ framework-agnostic, so it works with Selectrum, Icomplete, vertico, and Embark.
   (setq marginalia-align 'left))
 #+end_src
 
-** Completion overlay region function (corfu.el)
+** Completion in regular buffers
+:PROPERTIES:
+:CUSTOM_ID: h:69DD7D9B-3D1E-4CB4-933B-7E83FDC30538
+:END:
+*** Completion overlay region function (corfu.el)
 :PROPERTIES:
 :CUSTOM_ID: h:908C6FBC-B6C2-43D3-B696-859B32DAF6ED
 :END:
@@ -2088,7 +2282,7 @@ pop-up window.
   (global-corfu-mode))
 #+end_src
 
-** Completion at point Extensions (cape.el)
+*** Completion at point Extensions (cape.el)
 :PROPERTIES:
 :CUSTOM_ID: h:E3567F74-AFCB-43EE-9A86-7FBF740CFDE3
 :END:
@@ -2128,7 +2322,7 @@ in the form of Capfs (~completion-at-point-functions~).
   (define-key grandview-search-map (kbd "s") grandview-cape-map))
 #+end_src
 
-** Snippet (tempel.el)
+*** Snippet (tempel.el)
 :PROPERTIES:
 :CUSTOM_ID: h:B5025BD7-D74F-4DCF-BA55-1B1E8BD42106
 :END:
@@ -2151,7 +2345,7 @@ completion."
 (add-hook 'text-mode-hook '+tempel-setup-capf)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:BD8323BA-61B7-4216-8A63-B907DA7288C7
 :header-args:emacs-lisp: :tangle (expand-file-name "+tempel.el" grandview--def-dir)
@@ -2171,7 +2365,7 @@ completion."
               (cons #'tempel-complete completion-at-point-functions)))
 #+end_src
 
-*** Templates
+**** Templates
 :PROPERTIES:
 :CUSTOM_ID: h:160AE5D1-274F-432D-B5BF-DA1DE00A889F
 :END:
@@ -2344,227 +2538,11 @@ org-mode
 :CUSTOM_ID: h:2F4217E3-BF28-4F5D-B8F6-389562DF634A
 :END:
 
-** File/Directory handling functions (files.el)
+** Working with directories
 :PROPERTIES:
-:CUSTOM_ID: h:79DC4C05-4541-498C-918D-5769455C429C
+:CUSTOM_ID: h:92C67806-B5D1-47BB-87D9-3E62A5D6615B
 :END:
-
-+ Save modified buffers automatically
-+ Utilities:
-  - ~+files-find-dotfiles~
-  - ~+files-edit-grandview-config~
-  - ~+files-sudo-find~
-  - ~+files-rename-file-and-buffer~
-  - ~+files-find-user-files~
-
-#+begin_src emacs-lisp
-(use-package files :ensure nil)
-
-(setq large-file-warning-threshold 50000000)
-(setq permanently-enabled-local-variables '(lexical-binding encoding))
-(setq +files-user-dirs-alist
-      '(((title . "  Share")        (path . "/mnt/HDD/Share"))
-        ((title . "  Coding")       (path . "/mnt/HDD/Dev"))
-        ((title . "󰂺  Books")        (path . "/mnt/HDD/Book"))
-        ((title . "  Videos")       (path . "/mnt/HDD/Video"))
-        ((title . "  Notes")        (path . "~/Documents/notes"))
-        ((title . "  Photos")       (path . "~/Pictures"))
-        ((title . "  Downloads")    (path . "~/Downloads"))))
-(setq confirm-kill-processes nil)
-
-(with-eval-after-load 'meow ;; files usually edited in `meow-insert-mode'
-  (setq auto-save-default nil)
-  (auto-save-visited-mode)
-  (setopt auto-save-visited-interval 300))
-
-(bind! grandview-file-map
-  "w" 'save-buffer ; [SPC x s] in Colemak is painful to press
-  "g" '+files-edit-grandview-config
-  "." '+files-find-dotfiles
-  "s" '+files-sudo-find
-  "r" '+files-rename-file-and-buffer
-  "u" '+files-find-user-files)
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:89CC46D7-7265-4442-BBFE-6627EFE1EB9C
-:header-args:emacs-lisp: :tangle (expand-file-name "+files.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-(defcustom +files-dotfiles-repo "/opt/dotfiles/"
-  "Path for user dotfiles."
-  :group 'grandview :type 'string)
-
-(defcustom +files-user-dirs-alist
-  '(((title . "  Photos")       (path . "~/Pictures/"))
-    ((title . "  Videos")       (path . "~/Video/"))
-    ((title . "  Downloads")    (path . "~/Downloads/")))
-  "Doc."
-  :group 'grandview :type '(repeat list))
-
-(defun +files--in-directory (dir &optional prompt)
-  "Use `fd' to list files in DIR."
-  (let* ((default-directory dir)
-         (command "fd -H -t f -0")
-         (output (shell-command-to-string command))
-         (files-raw (split-string output "\0" t))
-         (files (+minibuffer-append-metadata 'file files-raw))
-         (file (completing-read (or prompt "Open file: ") files)))
-    (find-file (concat dir "/" file))))
-
-;;;###autoload
-(defun +files-edit-grandview-config ()
-  "Edit grandview's org file."
-  (interactive)
-  (find-file grandview--dot-org))
-
-;;;###autoload
-(defun +files-rename-file-and-buffer (name)
-  "Apply NAME to current file and rename its buffer.
-Do not try to make a new directory or anything fancy."
-  (interactive
-   (list (read-string "Rename current file: " (buffer-file-name))))
-  (let* ((file (buffer-file-name)))
-    (if (vc-registered file)
-        (vc-rename-file file name)
-      (rename-file file name))
-    (set-visited-file-name name t t)))
-
-;;;###autoload
-(defun +files-find-dotfiles ()
-  "Open files in dotfiles repo."
-  (interactive)
-  (unless +files-dotfiles-repo
-    (user-error "`+files-dotfiles-repo' is undefined"))
-  (+files--in-directory +files-dotfiles-repo " Dotfiles: "))
-
-;;;###autoload
-(defun +files-sudo-find ()
-  "Reopen current file as root."
-  (interactive)
-  (let ((file (buffer-file-name)))
-    (find-file (if (file-writable-p file)
-                   file
-                 (concat "/sudo::" file)))))
-
-;;;###autoload
-(defun +files-find-user-files ()
-  "Open files in directories defined in `+files-user-dirs-alist'."
-  (interactive)
-  (let* ((cands-raw
-          (mapcar (lambda (i) (cdr (assq 'title i))) +files-user-dirs-alist))
-         (get-item (lambda (s field)
-                     (cl-dolist (i +files-user-dirs-alist)
-                       (when (string= s (cdr (assq 'title i)))
-                         (cl-return (cdr (assq field i)))))))
-         (annotation
-          (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
-         (cands (+minibuffer-append-metadata annotation cands-raw))
-         (title (completing-read "Open: " cands nil t))
-         (path (funcall get-item title 'path)))
-    (+files--in-directory path (concat title ": "))))
-#+end_src
-
-** Find libraries (find-func.el)
-:PROPERTIES:
-:CUSTOM_ID: h:386D803D-CA14-4ACE-A7A6-F5B137E7C353
-:END:
-
-This packages provides the ~find-library~ command which allows us browsing the
-source code of Emacs efficiently, want to have to look on =dired.el=? Just ~M-x
-find-library RET dired~. Even better, we can introspect the C code of Emwacs
-itself as long as the ~find-function-C-source-directory~ is set properly.
-
-#+begin_src emacs-lisp
-(use-package find-func :ensure t :after-call minibuffer-setup-hook)
-
-(define-key grandview-file-map (kbd "l") 'find-library)
-
-(when (eq system-type 'gnu/linux)
-  (setq find-function-C-source-directory "~/Code/emacs/src"))
-#+end_src
-
-** Image viewer (image-mode.el)
-
-View images inside emacs.  Just rebind some keys here.
-
-#+begin_src emacs-lisp
-(use-package image-mode :ensure nil)
-
-(with-eval-after-load 'image-mode
-  (bind! image-mode-map
-    "," 'image-bob
-    "." 'image-eob
-    "-" 'image-decrease-size
-    "=" 'image-increase-size
-    "n" 'image-next-line
-    "p" 'image-previous-line
-    "C-n" 'image-next-file
-    "C-p" 'image-previous-file
-    "i n" 'image-next-file
-    "i p" 'image-previous-file))
-#+end_src
-
-** Recent files (recentf.el)
-:PROPERTIES:
-:CUSTOM_ID: h:9500079C-EA85-46E9-A8E3-084F611A4DDA
-:END:
-
-*recentf.el* keep a record of recently opened files.
-
-The =recentf-cleanup= command, as its name suggest, cleans up the recent files
-list.  That is, remove duplicates, non-kept, and excluded files.  In order to
-keep our recent file list always up-to-date, running it once whenever the mode
-is activate, which is the default behavior, is not enough.  Hence, we set it to
-do the cleaning task every 5 minutes.
-
-#+begin_src emacs-lisp
-(use-package recentf :ensure nil :after-call meow-keypad-mode-hook)
-
-(with-eval-after-load 'recentf
-  (setq recentf-max-saved-items 300)
-  (setq recentf-auto-cleanup 300)
-  (recentf-mode 1))
-#+end_src
-
-** Restore file place (saveplace.el)
-:PROPERTIES:
-:CUSTOM_ID: h:0963A7D0-58A0-428E-9277-7296E80C43EE
-:END:
-
-Just remember where the point is in any given file.  This can often
-be a subtle reminder of what you were doing the last time you
-visited that file, allowing you to pick up from there.
-
-#+begin_src emacs-lisp
-(use-package saveplace :ensure nil :after-call find-file-hook)
-
-(with-eval-after-load 'saveplace
-  (setq save-place-file (locate-user-emacs-file "saveplace"))
-  (setq save-place-forget-unreadable-files t)
-  (save-place-mode 1))
-#+end_src
-
-** Auto refresh file content (autorevert.el)
-:PROPERTIES:
-:CUSTOM_ID: h:0F47CCEA-83F8-4A20-A7FA-E6EB7478ED57
-:END:
-
-This mode ensures that the buffer is updated whenever the file
-changes.  A change can happen externally or by some other tool
-inside of Emacs (e.g. kill a Magit diff).
-
-#+begin_src emacs-lisp
-(use-package autorevert :ensure nil :after-call after-find-file)
-
-(with-eval-after-load 'autorevert
-  (setq auto-revert-verbose t)
-  (global-auto-revert-mode))
-#+end_src
-
-** Dired (dired.el)
+*** Dired - DIRectory EDitor (dired.el)
 :PROPERTIES:
 :CUSTOM_ID: h:6A72D4DB-61C0-418E-98C2-56FE0DB68E91
 :END:
@@ -2622,7 +2600,7 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-omit-files (concat dired-omit-files "\\|^\\..*$")))
 #+end_src
 
-** Writable Dired (wdired.el)
+*** Batch rename files made easy (wdired.el)
 :PROPERTIES:
 :CUSTOM_ID: h:39A09526-7F38-4DA8-BE81-DC02D32FDC58
 :END:
@@ -2638,7 +2616,7 @@ Bulk renaming files like a breeze.
   (define-key dired-mode-map (kbd "i") 'wdired-change-to-wdired-mode))
 #+end_src
 
-** Use dired to browse and manipulate images (image-dired.el)
+*** Browse images using Dired (image-dired.el)
 :PROPERTIES:
 :CUSTOM_ID: h:398861A3-9FBA-43EA-A54F-3C06C4902C7D
 :END:
@@ -2665,7 +2643,7 @@ Bulk renaming files like a breeze.
     "o" 'image-dired-backward-image))
 #+end_src
 
-** A polished dired with batteries included (dirvish.el)
+*** A polished dired with batteries included (dirvish.el)
 :PROPERTIES:
 :CUSTOM_ID: h:AAFF178E-C115-4A55-8B8F-BE287515CDCE
 :END:
@@ -2746,150 +2724,154 @@ that if you install it from Melpa.
   (bind! mode-specific-map "e" 'dirvish-dwim))
 #+end_src
 
-** Project management (project.el)
+*** Project management (project.el)
 :PROPERTIES:
 :CUSTOM_ID: h:29675BEC-05AD-4591-8D74-B7284820D7FC
 :END:
 
+In Emacs, a *project* is a collection of files and directories sharing a common
+root, identified by a special file or directory.  By default, ~.git/~ directories
+are recognized as project roots due to built-in support for Git via =vc.el=.
+
+To switch projects, use =SPC p p= (=project-switch-project=). This command presents
+a list of registered projects and an option to choose a new directory. If a
+directory with a recognizable root is selected, it's added to the project
+list. After selecting a project, a list of common actions appears; these are
+defined by the =project-switch-commands= user option and accessed through =SPC p=
+followed by a final key (e.g., =SPC p /= for =project-dired=, as configured in the
+=grandview-project-map=).
+
+If any =project.el= command is invoked outside a project, it will first prompt for
+a project before executing its action. For example, =project-find-file= will
+prompt for a project, switch to it, and then prompt for a file within that
+project.
+
+When inside a project, project-level commands become available. For instance,
+=SPC p f= (=project-find-file=) searches for a file inside the current project, and
+=SPC p b= (=project-switch-to-buffer=) switches to a buffer belonging to that
+project.  Refer to the =grandview-project-map= for a complete list of available
+commands.
+
 #+begin_src emacs-lisp
 (use-package project :ensure nil)
 
-(setq project-switch-commands
-      '((project-find-file "File" ?\r)
-        (+project-find-subdir "Subdir" ?s)
-        (project-dired "Dired" ?d)
-        (+project-retrieve-tag "Tag switch" ?t)
-        (+project-magit-status "Magit" ?m)
-        (+project-commit-log "Log VC" ?l)))
-(setq +project-commit-log-limit 25)
+(with-eval-after-load 'project
+  (setopt project-vc-merge-submodules nil)
+  (setopt project-switch-commands
+          '((project-find-file "Find file")
+            (project-find-dir "Find directory")
+            (project-dired "Dired at root")
+            (project-vc-dir "VC-project"))))
 
 (bind! grandview-project-map
-  "l" '+project-commit-log
-  "m" '+project-magit-status
-  "s" '+project-find-subdir
-  "t" '+project-retrieve-tag)
+  "/" '+project-dired
+  "p" '+project-switch)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:0C70EF8E-00DB-4201-8110-83FD08E51D68
 :header-args:emacs-lisp: :tangle (expand-file-name "+project.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
-(require 'cl-lib)
 (require 'project)
-(require 'vc)
 
-(defcustom +project-commit-log-limit 25
-  "Limit commit logs for project to N entries by default.
-A value of 0 means 'unlimited'."
-  :type 'integer
-  :group 'ale)
-
-;;;###autoload
-(cl-defmethod project-root ((project (head local)))
-  "Project root for PROJECT with HEAD and LOCAL."
-  (if (< emacs-major-version 29)
-      (cdr-safe project)
-    (car (project-roots project))))
-
-;; Copied from Manuel Uberti and tweaked accordingly:
-;; <https://www.manueluberti.eu/emacs/2020/11/14/extending-project/>.
-(defun +project--project-files-in-directory (dir)
-  "Use `fd' to list files in DIR."
-  (unless (executable-find "fd")
-    (error "Cannot find 'fd' command is shell environment $PATH"))
-  (let* ((default-directory dir)
-         (localdir (file-local-name (expand-file-name dir)))
-         (command (format "fd -t f -H -0 . %s" localdir)))
-    (project--remote-file-names
-     (split-string (shell-command-to-string command) "\0" t))))
-
-(cl-defmethod project-files ((project (head vc)) &optional dirs)
-  "Override `project-files' to use `fd' in local projects.
-Project root for PROJECT with HEAD and VC, plus optional
-DIRS."
-  (mapcan #'+project--project-files-in-directory
-          (or dirs (list (project-root project)))))
-
-(defun +project--directory-subdirs (dir)
-  "Return list of subdirectories in DIR."
-  (cl-remove-if (lambda (x) (string-match-p "\\.git" x))
-                (cl-remove-if-not (lambda (x) (file-directory-p x))
-                                  (directory-files-recursively dir ".*" t t))))
+(defun +project--switch (directory &optional command)
+  "Do the work of `project-switch-project' in the given DIRECTORY.
+With optional COMMAND, run it in DIRECTORY."
+  (let ((command (or (when (functionp command) command)
+                     (if (symbolp project-switch-commands)
+                         project-switch-commands
+                       (project--switch-project-command))))
+        (buffer (current-buffer)))
+    (unwind-protect
+        (progn
+          (setq-local project-current-directory-override directory)
+          (call-interactively command))
+      (with-current-buffer buffer
+        (kill-local-variable 'project-current-directory-override)))))
 
 ;;;###autoload
-(defun +project-find-subdir ()
-  "Find subdirectories in the current project, using completion."
-  (interactive)
-  (let* ((pr (project-current t))
-         (dir (project-root pr))
-         (dirs-raw (+project--directory-subdirs dir))
-         (subdirs (+minibuffer-append-metadata 'file dirs-raw))
-         (directory (completing-read "Select Project subdir: " subdirs)))
-    (dired directory)))
-
-;;;###autoload
-(defun +project-commit-log (&optional arg)
-  "Print commit log for the current project.
-With optional prefix ARG (\\[universal-argument]) shows expanded
-commit messages and corresponding diffs.
-
-The log is limited to the integer specified by
-`+project-commit-log-limit'.  A value of 0 means
-'unlimited'."
-  (interactive "P")
-  (let* ((pr (project-current t))
-         (dir (cdr pr))
-         (default-directory dir) ; otherwise fails at spontaneous M-x calls
-         (backend (vc-responsible-backend dir))
-         (num +project-commit-log-limit)
-         (int (if (numberp num) num (error "%s is not a number" n)))
-         (limit (if (= int 0) t int))
-         (diffs (if arg 'with-diff nil))
-         (vc-log-short-style (unless diffs '(directory))))
-    (vc-print-log-internal backend (list dir) nil nil limit diffs)))
-
-;;;###autoload
-(defun +project-retrieve-tag ()
-  "Run `vc-retrieve-tag' on project and switch to the root dir.
-Basically switches to a new branch or tag."
-  (interactive)
-  (let* ((pr (project-current t))
-         (dir (cdr pr))
-         (default-directory dir) ; otherwise fails at spontaneous M-x calls
-         (name
-          (vc-read-revision "Tag name: "
-                            (list dir)
-                            (vc-responsible-backend dir))))
-    (vc-retrieve-tag dir name)
-    (project-dired)))
-
-(autoload 'magit-status "magit")
-
-;;;###autoload
-(defun +project-magit-status ()
-  "Run `magit-status' on project."
-  (interactive)
-  (let* ((pr (project-current t))
-         (dir (project-root pr)))
-    (magit-status dir)))
-
-;;;###autoload
-(defun +project-find-file (&optional force)
-  "Same as `project-find-file' except using magit for project
-choosing.
-With a universal prefix to choose project anyway."
-  (interactive "P")
-  (if (or force (null (project-current)))
-      (let ((current-prefix-arg '(4))
-            (display-buffer-alist '(("magit: .*" (display-buffer-same-window)))))
-        (call-interactively 'magit-status))
-    (project-find-file)))
+(defun +project-switch (directory)
+  "Switch to project DIRECTORY.
+If DIRECTORY exists in a frame, select it.  Otherwise switch to
+the project in DIRECTORY using `project-dired'."
+  (interactive (list (funcall project-prompter)))
+  (project--remember-dir directory)
+  (let ((name (file-name-nondirectory (directory-file-name directory))))
+    (if (member name (mapcar #'car (make-frame-names-alist)))
+        (select-frame-by-name name)
+      (+project--switch directory 'project-dired))))
 #+end_src
 
-** Working with remote files (tramp.el)
+** Extra file types
+:PROPERTIES:
+:CUSTOM_ID: h:71694E57-F59D-44AB-8F9D-4D28CAA9F24D
+:END:
+*** Image viewer (image-mode.el)
+:PROPERTIES:
+:CUSTOM_ID: h:DFD26558-B786-42E9-A1B3-5E9A22ADB73C
+:END:
+
+View images inside emacs.  Just rebind some keys here.
+
+#+begin_src emacs-lisp
+(use-package image-mode :ensure nil)
+
+(with-eval-after-load 'image-mode
+  (bind! image-mode-map
+    "," 'image-bob
+    "." 'image-eob
+    "-" 'image-decrease-size
+    "=" 'image-increase-size
+    "n" 'image-next-line
+    "p" 'image-previous-line
+    "C-n" 'image-next-file
+    "C-p" 'image-previous-file
+    "i n" 'image-next-file
+    "i p" 'image-previous-file))
+#+end_src
+
+*** Pdf reader (pdf-tools.el)
+:PROPERTIES:
+:CUSTOM_ID: h:8F56919D-146C-4EE0-AECF-5512A9B8F571
+:END:
+
+#+begin_src emacs-lisp
+(use-package pdf-tools :ensure t :after-call doc-view-mode-hook)
+
+(with-eval-after-load 'pdf-tools
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-annot-activate-created-annotations t) ; automatically annotate highlights
+  (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0))) ; turn off cua so copy works
+  (setq pdf-view-resize-factor 1.1) ; more fine-grained zooming
+  (bind! pdf-view-mode-map
+    "C-s" 'isearch-forward
+    "h" 'pdf-annot-add-highlight-markup-annotation
+    "t" 'pdf-annot-add-text-annotation
+    "D" 'pdf-annot-delete))
+#+end_src
+
+*** Epub reader (nov.el)
+:PROPERTIES:
+:CUSTOM_ID: h:9A0AC633-4FD9-4F1B-9246-023CF0711BA1
+:END:
+
+#+begin_src emacs-lisp
+(use-package nov :ensure t)
+
+(push '("\\.epub\\'" . nov-mode) auto-mode-alist)
+
+(with-eval-after-load 'nov
+  (setq nov-shr-rendering-functions
+        '((img . nov-render-img)
+          (title . nov-render-title)
+          (b . shr-tag-b))))
+#+end_src
+
+*** Working with remote files (tramp.el)
 :PROPERTIES:
 :CUSTOM_ID: h:04FB6C89-69E6-416F-BE7D-916308165779
 :END:
@@ -2906,62 +2888,269 @@ With a universal prefix to choose project anyway."
   (setopt tramp-use-ssh-controlmaster-options nil))
 #+end_src
 
-* Text editing
+** Automated actions
+:PROPERTIES:
+:CUSTOM_ID: h:93EFC399-993E-4F72-976E-5F793476071B
+:END:
+*** Auto refresh file content (autorevert.el)
+:PROPERTIES:
+:CUSTOM_ID: h:0F47CCEA-83F8-4A20-A7FA-E6EB7478ED57
+:END:
+
+This mode ensures that the buffer is updated whenever the file
+changes.  A change can happen externally or by some other tool
+inside of Emacs (e.g. kill a Magit diff).
+
+#+begin_src emacs-lisp
+(use-package autorevert :ensure nil :after-call after-find-file)
+
+(with-eval-after-load 'autorevert
+  (setq auto-revert-verbose t)
+  (global-auto-revert-mode))
+#+end_src
+
+*** Record recent opened files (recentf.el)
+:PROPERTIES:
+:CUSTOM_ID: h:9500079C-EA85-46E9-A8E3-084F611A4DDA
+:END:
+
+*recentf.el* keeps a record of recently opened files.
+
+The =recentf-cleanup= command, as its name suggest, cleans up the recent files
+list.  That is, remove duplicates, non-kept, and excluded files.  In order to
+keep our recent file list always up-to-date, running it once whenever the mode
+is activate, which is the default behavior, is not enough.  Hence, we set it to
+do the cleaning task every 5 minutes.
+
+#+begin_src emacs-lisp
+(use-package recentf :ensure nil :after-call meow-keypad-mode-hook)
+
+(with-eval-after-load 'recentf
+  (setq recentf-max-saved-items 300)
+  (setq recentf-auto-cleanup 300)
+  (recentf-mode 1))
+#+end_src
+
+*** Restore cursor position in files (saveplace.el)
+:PROPERTIES:
+:CUSTOM_ID: h:0963A7D0-58A0-428E-9277-7296E80C43EE
+:END:
+
+Just remember where the point is in any given file.  This can often
+be a subtle reminder of what you were doing the last time you
+visited that file, allowing you to pick up from there.
+
+#+begin_src emacs-lisp
+(use-package saveplace :ensure nil :after-call find-file-hook)
+
+(with-eval-after-load 'saveplace
+  (setq save-place-file (locate-user-emacs-file "saveplace"))
+  (setq save-place-forget-unreadable-files t)
+  (save-place-mode 1))
+#+end_src
+
+*** Automatically save modified files (auto-save-visited-mode)
+:PROPERTIES:
+:CUSTOM_ID: h:027CF6BF-B43E-4403-BA46-E2BCB639DA3B
+:END:
+
+With =auto-save-visited-mode= enabled, modified visited file buffers are
+automatically saved. The =auto-save-visited-interval= variable controls the
+frequency of these checks. In this configuration, modification checks occur
+every 5 minutes.
+
+#+begin_src emacs-lisp
+(use-package files :ensure nil)
+
+(with-eval-after-load 'meow ;; files usually edited in `meow-insert-mode'
+  (setq auto-save-default nil)
+  (auto-save-visited-mode)
+  (setopt auto-save-visited-interval 300))
+#+end_src
+
+** Utilities (file-utils)
+:PROPERTIES:
+:CUSTOM_ID: h:79DC4C05-4541-498C-918D-5769455C429C
+:END:
+
+This section introduces several file operation utilities.
+
+*** Find file with sudo | Rename file
+:PROPERTIES:
+:CUSTOM_ID: h:5CABCC01-3381-455A-A2A6-3E8DBD847537
+:END:
+
++ ~+files-sudo-find~: open file with sudo privilege
++ ~+files-rename-file-and-buffer~: rename current visited file and buffer name
+
+These two commands, ~+files-sudo-find~ and ~+files-rename-file-and-buffer~, are
+closely related because a failed file rename is often due to a permission issue.
+
+#+begin_src emacs-lisp
+(bind! grandview-file-map
+  "w" 'save-buffer ; [SPC x s] is painful to press
+  "r" '+files-rename-file-and-buffer
+  "s" '+files-sudo-find)
+#+end_src
+
+*** Find files in predefined locations
+:PROPERTIES:
+:CUSTOM_ID: h:05500C75-1E86-4560-90A0-3B78A110400D
+:END:
+
+A few commands for quick file access.
+
++ ~+files-open-grandview-config~: open =grandview.org= (this file)
++ ~+files-find-dotfiles~: find and open dotfiles
++ ~+files-find-user-files~: find files in user predefined locations
+
+#+begin_src emacs-lisp
+(use-package files :ensure nil)
+
+(setq large-file-warning-threshold 50000000)
+(setq permanently-enabled-local-variables '(lexical-binding encoding))
+(setq confirm-kill-processes nil)
+
+(bind! grandview-file-map
+  "g" '+files-open-grandview-config
+  "." '+files-find-dotfiles
+  "u" '+files-find-user-files)
+#+end_src
+
+*** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:89CC46D7-7265-4442-BBFE-6627EFE1EB9C
+:header-args:emacs-lisp: :tangle (expand-file-name "+file-utils.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+(defcustom +files-dotfiles-repo "/opt/dotfiles/"
+  "Path for user dotfiles."
+  :group 'grandview :type 'string)
+
+(defcustom +files-user-dirs-alist
+  '(((prompt . "Photos")       (path . "~/Pictures/"))
+    ((prompt . "Desktop")      (path . "~/Desktop"))
+    ((prompt . "GPT chats")    (path . "~/Documents/chats"))
+    ((prompt . "Notes")        (path . "~/Documents/notes"))
+    ((prompt . "Downloads")    (path . "~/Downloads/")))
+  "Doc."
+  :group 'grandview :type '(repeat list))
+
+(defun +files--in-directory (dir &optional prompt)
+  "Use `fd' to list files in DIR."
+  (let* ((default-directory dir)
+         (command "fd -H -t f -0")
+         (output (shell-command-to-string command))
+         (files-raw (split-string output "\0" t))
+         (files (+minibuffer-append-metadata 'file files-raw))
+         (file (completing-read (or prompt "Open file: ") files)))
+    (find-file (concat dir "/" file))))
+
+;;;###autoload
+(defun +files-rename-file-and-buffer (name)
+  "Apply NAME to current file and rename its buffer.
+Do not try to make a new directory or anything fancy."
+  (interactive
+   (list (read-string "Rename current file: " (buffer-file-name))))
+  (let* ((file (buffer-file-name)))
+    (if (vc-registered file)
+        (vc-rename-file file name)
+      (rename-file file name))
+    (set-visited-file-name name t t)))
+
+;;;###autoload
+(defun +files-sudo-find ()
+  "Reopen current file as root."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (find-file (if (file-writable-p file)
+                   file
+                 (concat "/sudo::" file)))))
+
+;;;###autoload
+(defun +files-open-grandview-config ()
+  "Edit grandview's org file."
+  (interactive)
+  (find-file grandview--dot-org))
+
+;;;###autoload
+(defun +files-find-dotfiles ()
+  "Open files in dotfiles repo."
+  (interactive)
+  (unless +files-dotfiles-repo
+    (user-error "`+files-dotfiles-repo' is undefined"))
+  (+files--in-directory +files-dotfiles-repo " Dotfiles: "))
+
+;;;###autoload
+(defun +files-find-user-files ()
+  "Open files in directories defined in `+files-user-dirs-alist'."
+  (interactive)
+  (let* ((cands-raw
+          (mapcar (lambda (i) (cdr (assq 'prompt i))) +files-user-dirs-alist))
+         (get-item (lambda (s field)
+                     (cl-dolist (i +files-user-dirs-alist)
+                       (when (string= s (cdr (assq 'prompt i)))
+                         (cl-return (cdr (assq field i)))))))
+         (annotation
+          (lambda (s) (marginalia--documentation (funcall get-item s 'path))))
+         (cands (+minibuffer-append-metadata annotation cands-raw))
+         (title (completing-read "Open: " cands nil t))
+         (path (funcall get-item title 'path)))
+    (+files--in-directory path (concat title ": "))))
+#+end_src
+
+* Editing enhancement
 :PROPERTIES:
 :CUSTOM_ID: h:401D8E76-D334-4E49-A670-8F04B6EA5B27
 :END:
 
-** Long line text (so-long.el)
+** Search | Query
 :PROPERTIES:
-:CUSTOM_ID: h:F19F714D-1B7B-47A1-AE22-5DF737822996
+:CUSTOM_ID: h:29B6B90B-9E1A-481E-A987-FEBF09AAFBBC
+:END:
+*** Interactive query replace (anzu.el)
+:PROPERTIES:
+:CUSTOM_ID: h:81C344C7-6981-4526-A34B-6EBAB2590CF0
 :END:
 
-Consistent performance is the reason to enable =global-so-long-mode=, built into
-Emacs versions >= 27, which allows the active major mode to gracefully adapt to
-buffers with very long lines. What “very long” means is, of course,
-configurable: M-x find-library so-long covers several customisation options,
-though I find that the defaults require no further intervention from my part.
-
-=so-long-mode= Files with long lines have huge performance impact for file preview
-(in our case =dirvish.el=), so we ensure the =global-so-long-mode= is enabled before
-=dirvish= is loaded.
+=anzu.el= provides a minor mode which displays 'current match/total
+matches' in the mode-line in various search modes.  This makes it
+easy to understand how many matches there are in the current buffer
+for your search query.
 
 #+begin_src emacs-lisp
-(use-package so-long :ensure nil :after-call dired-mode-hook)
+(use-package anzu :ensure t :after-call isearch-mode)
 
-(with-eval-after-load 'so-long (global-so-long-mode))
+(with-eval-after-load 'anzu
+  (global-anzu-mode)
+  (define-key global-map [remap query-replace] 'anzu-query-replace)
+  (define-key global-map [remap query-replace-regexp] 'anzu-query-replace-regexp))
 #+end_src
 
-** Fill line (fill.el)
+*** Alternative isearch UI (isearch-mb.el)
 :PROPERTIES:
-:CUSTOM_ID: h:065A996E-9860-46BE-BC54-B12EC8414752
+:CUSTOM_ID: h:EFA1CC25-8309-4639-A358-8F2B1BC1AE79
 :END:
 
-The =fill.el= library is a tiny wrapper around some Emacs settings and modes that
-are scrattered around several files, which control (i) how paragraphs or
-comments in programming modes should be wrapped to a given column count, and
-(ii) what constitutes a sentence. Although ~fill-column~ variable is not defined
-in =fill.el=, I believe put them all together here make things easier to track.
-
-With regard to paragraphs, I find that a double space is the best way to delimit
-sentences in source form, where a monospaced typeface is customary. There is no
-worry that this will be shown on a website or rendered version of a document,
-because processors know how to handle spacing. We do this to make phrases easier
-to tell apart, but also to render unambiguous commands like forward-sentence.
+This package provides an alternative isearch UI based on the minibuffer.  This
+allows editing the search string in arbitrary ways without any special maneuver;
+unlike standard isearch, cursor motion commands do not end the search.
+Moreover, the search status information in the echo area and some keybindings
+are slightly simplified.
 
 #+begin_src emacs-lisp
-(use-package fill :ensure nil)
+(use-package isearch-mb :ensure t :after-call isearch-mode)
 
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
-
-(setq-default fill-column 80)
-(setq colon-double-space nil)
-(setq adaptive-fill-mode t)
-(setq sentence-end-double-space t)
-(setq sentence-end-without-period nil)
+(with-eval-after-load 'isearch-mb
+  (isearch-mb-mode)
+  (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
+  (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
+  (define-key isearch-mb-minibuffer-map
+              [remap previous-matching-history-element] 'consult-isearch-history))
 #+end_src
 
-** Cross reference (xref.el)
+*** Cross reference (xref.el)
 :PROPERTIES:
 :CUSTOM_ID: h:9409CEEF-F5E0-46FF-9AF0-1159A5778FE1
 :END:
@@ -2993,122 +3182,136 @@ most frequently used are:
 (setq xref-search-program 'ripgrep)
 #+end_src
 
-** Interactive diff, patch, or merge conflict (ediff.el)
+*** Ripgrep (rg.el)
 :PROPERTIES:
-:CUSTOM_ID: h:C990DF9D-D266-4514-A1B6-B86F262036CA
+:CUSTOM_ID: h:DCD3F63B-2054-45A3-9579-34B921641468
 :END:
 
-This package provides a convenient way of simultaneous browsing through the
-differences between a pair (or a triple) of files or buffers.  The files being
-compared, file-A, file-B, and file-C (if applicable) are shown in separate
-windows (side by side, one above the another, or in separate frames), and the
-differences are highlighted as you step through them.  You can also copy
-difference regions from one buffer to another (and recover old differences if
-you change your mind).
+A search package based on the ripgrep command line tool.  It allows you to
+interactively create searches, doing automatic searches based on the editing
+context, refining and modifying search results and much more.  It is also highly
+configurable to be able to fit different users' needs.
+
+Some additions I've added to rg transient:
+
++ =C= key to toggle =--context 3= flag
+  show 3 lines of text before and after the keyword
++ =A= key to toggle =-A 5= flag
+  like =--context=, but only show text after the keyword
++ press =SPC o s= to search in current project, no ask for confirmation
 
 #+begin_src emacs-lisp
-(use-package ediff :ensure nil)
+(use-package rg :ensure t :after-call find-file-hook)
 
-(setq ediff-keep-variants nil)
-(setq ediff-make-buffers-readonly-at-startup nil)
-(setq ediff-merge-revisions-with-ancestor t)
-(setq ediff-show-clashes-only t)
-(setq ediff-split-window-function 'split-window-horizontally)
-(setq ediff-window-setup-function 'ediff-setup-windows-plain)
-;; Tweak those for safer identification and removal
-(setq ediff-combination-pattern
-      '("<<<<<<< grandv-ediff-combine Variant A" A
-        ">>>>>>> grandv-ediff-combine Variant B" B
-        "####### grandv-ediff-combine Ancestor" Ancestor
-        "======= grandv-ediff-combine End"))
+(with-eval-after-load 'rg
+  (+rg-setup)
+  (define-key grandview-prog-map (kbd "s") 'rg-project-all-files-no-ask))
 #+end_src
 
-*** Autoload
+**** Writable grep (wgrep.el)
 :PROPERTIES:
-:CUSTOM_ID: h:36712AF7-6246-43B1-9F42-ACE9A0FD3ED9
-:header-args:emacs-lisp: :tangle (expand-file-name "+ediff.el" grandview--def-dir)
+:CUSTOM_ID: h:39DE729A-046C-4CD1-B3A5-C807D366061E
 :END:
+
+With =wgrep= we can directly edit the results of a grep and save the changes to
+all affected buffers.  In principle, this is the same as what the built-in occur
+offers.  We can use it to operate on a list of matches by leveraging the full
+power of Emacs' editing capabilities (e.g. keyboard macros, query and replace a
+regexp .etc).
 
 #+begin_src emacs-lisp
-;;;###autoload
-(defun +ediff-flush-combination-pattern ()
-  "Remove my custom `ediff-combination-pattern' markers.
-This is a quick-and-dirty way to get rid of the markers that are
-left behind by `smerge-ediff' when combining the output of two
-diffs.  While this could be automated via a hook, I am not yet
-sure this is a good approach."
-  (interactive)
-  (flush-lines ".*grandv-ediff.*" (point-min) (point-max) nil))
+(use-package wgrep :ensure t)
+
+(with-eval-after-load 'wgrep
+  (setq wgrep-auto-save-buffer t)
+  (setq wgrep-change-readonly-file t))
 #+end_src
 
-** Input method (rime.el)
+**** Extras
 :PROPERTIES:
-:CUSTOM_ID: h:D97101B7-E8EB-4C7B-B097-E1E2ADCF72F9
+:CUSTOM_ID: h:EF6C06C9-5720-41F2-970C-8E221EA70B92
+:header-args:emacs-lisp: :tangle (expand-file-name "+rg.el" grandview--def-dir)
 :END:
 
-#+begin_src emacs-lisp
-(use-package rime :ensure t)
-
-(setq default-input-method "rime")
-(with-eval-after-load 'rime
-  (when (eq system-type 'darwin)
-    (setq rime-librime-root (expand-file-name "librime" user-emacs-directory))
-    (setq rime-emacs-module-header-root "/opt/homebrew/include"))
-  (setq rime-disable-predicates '(meow-normal-mode-p
-                                  meow-motion-mode-p
-                                  meow-keypad-mode-p
-                                  rime-predicate-after-alphabet-char-p))
-  (setq rime-inline-predicates '(rime-predicate-space-after-cc-p
-                                 rime-predicate-current-uppercase-letter-p))
-  (setq rime-show-candidate 'posframe)
-  (setq rime-posframe-style 'vertical)
-  (setq rime-posframe-properties '(:internal-border-width 10 :lines-truncate t))
-  (setq rime-title "ㄓ")
-  (setq rime-candidate-num-format-function #'+rime-candidate-num-fmt)
-  (custom-theme-set-faces
-   'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
-  (define-key rime-active-mode-map [tab] 'rime-send-keybinding)
-  (bind! rime-active-mode-map
-    "C-`" 'rime-send-keybinding
-    "C-k" 'rime-send-keybinding
-    "<C-i>" 'rime-send-keybinding
-    "C-o" 'rime-send-keybinding
-    "C-a" 'rime-send-keybinding
-    "C-e" 'rime-send-keybinding
-    "<escape>" (lambda () (interactive) (execute-kbd-macro (kbd "C-g")))))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:6B8B3E46-1951-4840-B3B3-4667AD69C2FA
-:header-args:emacs-lisp: :tangle (expand-file-name "+rime.el" grandview--def-dir)
-:END:
+The purpose of wrapping =rg-define-toggle/search= is to avoid executing them
+immediately, because these macros introduce dependencies that we don't need at
+startup.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defadvice! rime-return-a (fn &rest args)
-  "Make return key (commit script text) compatible with vterm."
-  :around #'rime-return
-  (interactive)
-  (if (eq major-mode 'vterm-mode)
-      (progn
-        (let ((input (rime-lib-get-input)))
-          (execute-kbd-macro (kbd "<escape>"))
-          (toggle-input-method)
-          (dotimes (i (length input))
-            (execute-kbd-macro (kbd (substring input i (+ i 1)))))
-          (toggle-input-method)))
-    (apply fn args)))
-
-;;;###autoload
-(defun +rime-candidate-num-fmt (num select-labels)
-  "Format for the number before each candidate."
-  (if select-labels
-      (format "%s " (nth (1- num) select-labels))
-    (format "%d. " num)))
+(defun +rg-setup ()
+  "Define toggles in `rg-mode'."
+  (rg-define-toggle "--context 3" (kbd "C"))
+  (rg-define-toggle "-A 5" (kbd "A"))
+  (rg-define-search rg-project-all-files-no-ask
+    :dir project :files "*"))
 #+end_src
 
-** Pair insertion (eletric.el)
+** Visual feedback
+:PROPERTIES:
+:CUSTOM_ID: h:5E45BE4B-5234-4A29-93F7-6D7BCF1F13DA
+:END:
+*** Show parentheses (paren.el)
+:PROPERTIES:
+:CUSTOM_ID: h:6443408B-A49C-4D29-B14F-998CDB289F76
+:END:
+
+Configure the mode that highlights matching delimiters or parentheses.  I
+consider this of utmost importance when working with languages such as elisp.
+
+Summary of what these do:
+
+- Activate the mode upon startup.
+- Show the matching delimiter/parenthesis if on screen, else show
+  nothing.  It is possible to highlight the expression enclosed by the
+  delimiters, by using either =mixed= or =expression=.  The latter always
+  highlights the entire balanced expression, while the former will only
+  do so if the matching delimiter is off screen.
+- =show-paren-when-point-in-periphery= lets you highlight parentheses even
+  if the point is in their vicinity.  This means the beginning or end of
+  the line, with space in between.  I used that for a long while and it
+  server me well.  Now that I have a better understanding of Elisp, I
+  disable it.
+- Do not highlight a match when the point is on the inside of the
+  parenthesis.
+
+#+begin_src emacs-lisp
+(setq show-paren-style 'parenthesis)
+(setq show-paren-when-point-in-periphery nil)
+(setq show-paren-when-point-inside-paren nil)
+(show-paren-mode)
+#+end_src
+
+*** Prettify symbols
+:PROPERTIES:
+:CUSTOM_ID: h:C5B6527C-E772-40DA-9142-F0AACA0B2AB9
+:END:
+
+#+begin_src emacs-lisp
+(add-hook 'prog-mode-hook 'prettify-symbols-mode)
+
+(setq-default prettify-symbols-alist
+              '(("<-" . ?←)
+                ("->" . ?→)
+                ("->>" . ?↠)
+                ("=>" . ?⇒)
+                ("/=" . ?≠)
+                ("!=" . ?≠)
+                ("==" . ?≡)
+                ("<=" . ?≤)
+                (">=" . ?≥)
+                ("=<<" . (?= (Br . Bl) ?≪))
+                (">>=" . (?≫ (Br . Bl) ?=))
+                ("<=<" . ?↢)
+                (">=>" . ?↣)))
+(setq prettify-symbols-unprettify-at-point 'right-edge)
+#+end_src
+
+** Input composer
+:PROPERTIES:
+:CUSTOM_ID: h:F7A967C9-D685-4B40-9EDB-FF2C334546D7
+:END:
+*** Pair insertion (eletric.el)
 :PROPERTIES:
 :CUSTOM_ID: h:CF2FA7CE-78D4-4941-B286-F1062994900C
 :END:
@@ -3169,7 +3372,7 @@ of characters.
 (electric-quote-mode -1)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:AED70F01-7494-4652-B763-76FA41DF7902
 :header-args:emacs-lisp: :tangle (expand-file-name "+eletric.el" grandview--def-dir)
@@ -3190,139 +3393,78 @@ of characters.
                    (,electric-pair-inhibit-predicate c)))))
 #+end_src
 
-** Parentheses (paren.el / rainbow-delimiters.el)
+*** Rime client for Emacs (rime.el)
 :PROPERTIES:
-:CUSTOM_ID: h:6443408B-A49C-4D29-B14F-998CDB289F76
-:END:
-
-Configure the mode that highlights matching delimiters or parentheses.
-I consider this of utmost importance when working with languages such as
-elisp.
-
-Summary of what these do:
-
-- Activate the mode upon startup.
-- Show the matching delimiter/parenthesis if on screen, else show
-  nothing.  It is possible to highlight the expression enclosed by the
-  delimiters, by using either =mixed= or =expression=.  The latter always
-  highlights the entire balanced expression, while the former will only
-  do so if the matching delimiter is off screen.
-- =show-paren-when-point-in-periphery= lets you highlight parentheses even
-  if the point is in their vicinity.  This means the beginning or end of
-  the line, with space in between.  I used that for a long while and it
-  server me well.  Now that I have a better understanding of Elisp, I
-  disable it.
-- Do not highlight a match when the point is on the inside of the
-  parenthesis.
-- Use rainbow color for delimiters
-
-#+begin_src emacs-lisp
-(use-package rainbow-delimiters :ensure t)
-
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-
-(setq show-paren-style 'parenthesis)
-(setq show-paren-when-point-in-periphery nil)
-(setq show-paren-when-point-inside-paren nil)
-(show-paren-mode)
-#+end_src
-
-** Prettify symbols (prog-mode.el)
-:PROPERTIES:
-:CUSTOM_ID: h:C5B6527C-E772-40DA-9142-F0AACA0B2AB9
+:CUSTOM_ID: h:D97101B7-E8EB-4C7B-B097-E1E2ADCF72F9
 :END:
 
 #+begin_src emacs-lisp
-(add-hook 'prog-mode-hook 'prettify-symbols-mode)
+(use-package rime :ensure t)
 
-(setq-default prettify-symbols-alist
-              '(("<-" . ?←)
-                ("->" . ?→)
-                ("->>" . ?↠)
-                ("=>" . ?⇒)
-                ("/=" . ?≠)
-                ("!=" . ?≠)
-                ("==" . ?≡)
-                ("<=" . ?≤)
-                (">=" . ?≥)
-                ("=<<" . (?= (Br . Bl) ?≪))
-                (">>=" . (?≫ (Br . Bl) ?=))
-                ("<=<" . ?↢)
-                (">=>" . ?↣)))
-(setq prettify-symbols-unprettify-at-point 'right-edge)
+(setq default-input-method "rime")
+(with-eval-after-load 'rime
+  (when (eq system-type 'darwin)
+    (setq rime-librime-root (expand-file-name "librime" user-emacs-directory))
+    (setq rime-emacs-module-header-root "/opt/homebrew/include"))
+  (setq rime-disable-predicates '(meow-normal-mode-p
+                                  meow-motion-mode-p
+                                  meow-keypad-mode-p
+                                  rime-predicate-after-alphabet-char-p))
+  (setq rime-inline-predicates '(rime-predicate-space-after-cc-p
+                                 rime-predicate-current-uppercase-letter-p))
+  (setq rime-show-candidate 'posframe)
+  (setq rime-posframe-style 'vertical)
+  (setq rime-posframe-properties '(:internal-border-width 10 :lines-truncate t))
+  (setq rime-title "ㄓ")
+  (setq rime-candidate-num-format-function #'+rime-candidate-num-fmt)
+  (custom-theme-set-faces
+   'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
+  (define-key rime-active-mode-map [tab] 'rime-send-keybinding)
+  (bind! rime-active-mode-map
+    "C-`" 'rime-send-keybinding
+    "C-k" 'rime-send-keybinding
+    "<C-i>" 'rime-send-keybinding
+    "C-o" 'rime-send-keybinding
+    "C-a" 'rime-send-keybinding
+    "C-e" 'rime-send-keybinding
+    "<escape>" (lambda () (interactive) (execute-kbd-macro (kbd "C-g")))))
 #+end_src
 
-** Ripgrep (rg.el)
+**** Extras
 :PROPERTIES:
-:CUSTOM_ID: h:DCD3F63B-2054-45A3-9579-34B921641468
+:CUSTOM_ID: h:6B8B3E46-1951-4840-B3B3-4667AD69C2FA
+:header-args:emacs-lisp: :tangle (expand-file-name "+rime.el" grandview--def-dir)
 :END:
-
-A search package based on the ripgrep command line tool.  It allows you to
-interactively create searches, doing automatic searches based on the editing
-context, refining and modifying search results and much more.  It is also highly
-configurable to be able to fit different users' needs.
-
-Some additions I've added to rg transient:
-
-+ =C= key to toggle =--context 3= flag
-  show 3 lines of text before and after the keyword
-+ =A= key to toggle =-A 5= flag
-  like =--context=, but only show text after the keyword
-+ press =SPC o s= to search in current project, no ask for confirmation
-
-#+begin_src emacs-lisp
-(use-package rg :ensure t :after-call find-file-hook)
-
-(with-eval-after-load 'rg
-  (+rg-setup)
-  (define-key grandview-prog-map (kbd "s") 'rg-project-all-files-no-ask))
-#+end_src
-
-*** Writable grep (wgrep.el)
-:PROPERTIES:
-:CUSTOM_ID: h:39DE729A-046C-4CD1-B3A5-C807D366061E
-:END:
-
-With =wgrep= we can directly edit the results of a grep and save the changes to
-all affected buffers.  In principle, this is the same as what the built-in occur
-offers.  We can use it to operate on a list of matches by leveraging the full
-power of Emacs' editing capabilities (e.g. keyboard macros, query and replace a
-regexp .etc).
-
-#+begin_src emacs-lisp
-(use-package wgrep :ensure t)
-
-(with-eval-after-load 'wgrep
-  (setq wgrep-auto-save-buffer t)
-  (setq wgrep-change-readonly-file t))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:EF6C06C9-5720-41F2-970C-8E221EA70B92
-:header-args:emacs-lisp: :tangle (expand-file-name "+rg.el" grandview--def-dir)
-:END:
-
-The purpose of wrapping =rg-define-toggle/search= is to avoid executing them
-immediately, because these macros introduce dependencies that we don't need at
-startup.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +rg-setup ()
-  "Define toggles in `rg-mode'."
-  (rg-define-toggle "--context 3" (kbd "C"))
-  (rg-define-toggle "-A 5" (kbd "A"))
-  (rg-define-search rg-project-all-files-no-ask
-    :dir project :files "*"))
+(defadvice! rime-return-a (fn &rest args)
+  "Make return key (commit script text) compatible with vterm."
+  :around #'rime-return
+  (interactive)
+  (if (eq major-mode 'vterm-mode)
+      (progn
+        (let ((input (rime-lib-get-input)))
+          (execute-kbd-macro (kbd "<escape>"))
+          (toggle-input-method)
+          (dotimes (i (length input))
+            (execute-kbd-macro (kbd (substring input i (+ i 1)))))
+          (toggle-input-method)))
+    (apply fn args)))
+
+;;;###autoload
+(defun +rime-candidate-num-fmt (num select-labels)
+  "Format for the number before each candidate."
+  (if select-labels
+      (format "%s " (nth (1- num) select-labels))
+    (format "%d. " num)))
 #+end_src
 
-* Org mode
+** Using org-mode
 :PROPERTIES:
 :CUSTOM_ID: h:D30BE4AD-1214-42E5-8634-A76D5CF5F9E7
 :END:
-
-** Org (org.el)
+*** Org (org.el)
 :PROPERTIES:
 :CUSTOM_ID: h:4EDF19C6-565A-4AD5-937E-E8749F4C1129
 :END:
@@ -3371,7 +3513,7 @@ look like which can be described briefly as follows:
   (define-key org-mode-map (kbd "C-c l") 'org-insert-last-stored-link))
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:D1E76232-405A-40C8-87B1-B553DBB57F43
 :header-args:emacs-lisp: :tangle (expand-file-name "+org.el" grandview--def-dir)
@@ -3444,7 +3586,7 @@ debugging code blocks in a org config file."
      '(org-tag ((t (:inherit (shadow) :weight bold :height 0.8)))))))
 #+end_src
 
-** Identifiers for org entries (org-id.el)
+*** Identifiers for org entries (org-id.el)
 :PROPERTIES:
 :CUSTOM_ID: h:F86F6861-E18B-4790-9B87-28F1A8B10465
 :END:
@@ -3457,7 +3599,7 @@ debugging code blocks in a org config file."
 (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:7269F6A0-67A5-4672-A32C-70711E30F3C5
 :header-args:emacs-lisp: :tangle (expand-file-name "+org-id.el" grandview--def-dir)
@@ -3493,7 +3635,7 @@ one."
   (+org-id--get))
 #+end_src
 
-** Literate programming (ob.el)
+*** Literate programming (ob.el)
 :PROPERTIES:
 :CUSTOM_ID: h:A02ABD13-186B-410D-B78D-D64CA5C7ED9F
 :END:
@@ -3526,7 +3668,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
         org-babel-default-header-args:shell '((:results . "output replace"))))
 #+end_src
 
-** Source code block (org-src.el)
+*** Source code block (org-src.el)
 :PROPERTIES:
 :CUSTOM_ID: h:34643643-4664-4119-AE64-FE72967C4F2C
 :END:
@@ -3539,7 +3681,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
   (push '("conf-unix" . conf-unix) org-src-lang-modes))
 #+end_src
 
-** Reveal invisible org elements (org-appear.el)
+*** Reveal invisible org elements (org-appear.el)
 :PROPERTIES:
 :CUSTOM_ID: h:C3F87A9F-23E5-4B3E-A4BF-E2637C7C8050
 :END:
@@ -3552,7 +3694,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (setq org-hide-emphasis-markers t)
 #+end_src
 
-** Modern org style
+*** Modern org style
 :PROPERTIES:
 :CUSTOM_ID: h:A8059D5E-D3A9-4345-88E4-883F3F099547
 :END:
@@ -3574,7 +3716,7 @@ I disabled its table unit prettifier and use =valign= instead.
 (add-hook 'org-mode-hook 'valign-mode)
 #+end_src
 
-** Habit (org-habit.el)
+*** Habit (org-habit.el)
 :PROPERTIES:
 :CUSTOM_ID: h:413F6EA4-0A0F-4101-8EC3-2BBBDFC33C38
 :END:
@@ -3587,7 +3729,7 @@ I disabled its table unit prettifier and use =valign= instead.
   (setq org-habit-graph-column 60))
 #+end_src
 
-** Slide (org-tree-slide.el)
+*** Slide (org-tree-slide.el)
 :PROPERTIES:
 :CUSTOM_ID: h:D1DB04F4-C2FF-42C3-ACCC-25D4189C6B30
 :END:
@@ -3610,15 +3752,13 @@ I disabled its table unit prettifier and use =valign= instead.
                     `(height ,(face-attribute 'org-level-1 :height))))
   (add-hook 'org-tree-slide-after-narrow-hook #'org-display-inline-images)
   (add-hook 'org-tree-slide-after-narrow-hook #'+frame-cursor-dim-mode)
-  ;; (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-hide-elements-h)
-  ;; (add-hook 'org-tree-slide-play-hook #'+org-tree-slide-hide-elements-h)
   (add-hook 'org-tree-slide-mode-hook #'+org-tree-slide-prettify-slide-h)
   (bind! org-tree-slide-mode-map
     "<left>" 'org-tree-slide-move-previous-tree
     "<right>" 'org-tree-slide-move-next-tree))
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:13354F6E-FF7A-43DE-8DC4-43AF25D0DEA9
 :header-args:emacs-lisp: :tangle (expand-file-name "+org-tree-slide.el" grandview--def-dir)
@@ -3663,15 +3803,6 @@ Some number of BLANK-LINES will be shown below the header."
     (overlay-put org-tree-slide--header-overlay 'display
                  (org-tree-slide--get-blank-lines blank-lines))))
 
-;; ;;;###autoload
-;; (defun +org-tree-slide-hide-elements-h ()
-;;   "Hide org constructs defined in `+org-tree-hide-elements'."
-;;   (dolist (reg +org-tree-hide-elements)
-;;     (save-excursion
-;;       (goto-char (point-min))
-;;       (while (re-search-forward reg nil t)
-;;         (org-fold-region (match-beginning 1) (match-end 0))))))
-
 ;;;###autoload
 (defun +org-tree-slide-prettify-slide-h ()
   "Set up the org window for presentation."
@@ -3698,23 +3829,11 @@ Some number of BLANK-LINES will be shown below the header."
 After proper configuration, Emacs can become a powerful and modern developing
 environment.
 
-** Github Copilot client (copilot.el)
+** Services
 :PROPERTIES:
-:CUSTOM_ID: h:29D887A7-7848-4AD7-AB6C-B1E6CE0073B0
+:CUSTOM_ID: h:CAED6558-08CD-4081-B9A9-9159B780C69F
 :END:
-
-#+begin_src emacs-lisp
-(use-package copilot
-  :vc (:url "https://github.com/copilot-emacs/copilot.el"))
-
-(with-eval-after-load 'copilot
-  (bind! copilot-completion-map
-    "<tab>" 'copilot-accept-completion
-    "TAB" 'copilot-accept-completion
-    "S-TAB" 'copilot-accept-completion-by-line))
-#+end_src
-
-** Client for LSP servers (eglot.el)
+*** Client for LSP servers (eglot.el)
 :PROPERTIES:
 :CUSTOM_ID: h:D1EA3177-9AE1-44EE-8C71-E45FE5BF3AB5
 :END:
@@ -3752,7 +3871,7 @@ Huge thanks to @blahgeek and @jdtsmith!
   "r" 'eglot-rename)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:BE13EC8F-A1C9-47C2-8EBC-CB34CA7E9546
 :header-args:emacs-lisp: :tangle (expand-file-name "+eglot.el" grandview--def-dir)
@@ -3766,6 +3885,259 @@ Huge thanks to @blahgeek and @jdtsmith!
               '(flymake-eldoc-function
                 eglot-signature-eldoc-function
                 eglot-hover-eldoc-function)))
+#+end_src
+
+*** Syntax checker (flymake.el)
+:PROPERTIES:
+:CUSTOM_ID: h:06C35376-E12F-4587-BD8E-B0EC021E2F08
+:END:
+
+#+begin_src emacs-lisp
+(use-package flymake :ensure nil)
+
+(add-hook 'prog-mode-hook '+flymake-enable)
+(add-hook 'text-mode-hook 'flymake-mode)
+(bind! grandview-prog-map
+  "e" 'flymake-goto-next-error
+  "E" 'flymake-goto-prev-error
+  "S" 'flymake-start)
+#+end_src
+
+**** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:AE26DC0C-1792-4840-A2B4-DFDC227BA78C
+:header-args:emacs-lisp: :tangle (expand-file-name "+flymake.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +flymake-enable ()
+  "Inhibit `flymake-mode' under certain circumstances."
+  (unless (or (equal default-directory
+                     (or (file-name-directory grandview--dot-org)
+                         user-emacs-directory))
+              (eq (current-buffer) (get-buffer "*scratch*")))
+    (flymake-mode +1)))
+#+end_src
+
+*** Compiler (compile.el)
+:PROPERTIES:
+:CUSTOM_ID: h:D6A16E5A-D417-4585-843F-92F206900B84
+:END:
+
+Run compiler as inferior of Emacs, parse error messages.
+
+#+begin_src emacs-lisp
+(bind! grandview-file-map
+  "p" 'compile
+  "P" 'recompile)
+#+end_src
+
+*** Formatter (reformatter.el)
+:PROPERTIES:
+:CUSTOM_ID: h:6E21C502-9ADA-452C-B4B9-C10D88CD42CB
+:END:
+
+=reformatter.el= (created by Purcell) lets you easily define an idiomatic command
+to reformat the current buffer using a command-line program, together with an
+optional minor mode which can apply this command automatically on save.
+
+#+begin_src emacs-lisp
+(use-package reformatter :ensure t)
+
+(define-key grandview-prog-map (kbd "f") '+format-buffer)
+
+(with-eval-after-load 'reformatter
+  (reformatter-define lua-format
+    :program "stylua"
+    :args '("--indent-width" "2" "-")
+    :lighter " styLua")
+  (reformatter-define python-format
+    :program "black"
+    :args '("-")
+    :lighter " blackFMT")
+  (reformatter-define vue-format
+    :program "eslint_d"
+    :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
+    :working-directory (+reformatter-eslint-root)
+    :lighter " eslint")
+  (reformatter-define typescript-format
+    :program "eslint_d"
+    :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
+    :working-directory (+reformatter-eslint-root)
+    :lighter " eslint"))
+#+end_src
+
+**** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:91FB5726-4A78-403A-8DF6-3D0B2644C6B4
+:header-args:emacs-lisp: :tangle (expand-file-name "+reformatter.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +reformatter-eslint-root ()
+  "Up traverse filesystem for a directory containing eslint config."
+  (locate-dominating-file
+   default-directory
+   (lambda (directory)
+     (seq-find
+      (lambda (project-marker)
+        (file-exists-p (expand-file-name project-marker directory)))
+      '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs" "package.json")))))
+
+;;;###autoload
+(defun +format-buffer ()
+  (interactive)
+  (let* ((mode-name
+          (string-remove-suffix
+           "-mode" (string-remove-suffix "-ts-mode" (format "%s" major-mode))))
+         (func-name (intern (format "%s-format-buffer" mode-name))))
+    (if (functionp func-name)
+        (funcall func-name)
+      (user-error
+       (format
+        "No available formatter for %s. Use `reformatter-define' to create it."
+        major-mode)))))
+#+end_src
+
+** Visual hints
+:PROPERTIES:
+:CUSTOM_ID: h:2C3D76D9-164E-43DF-BDA0-ED29F7CEC433
+:END:
+*** "Rainbow Parentheses" (rainbow-delimiters.el)
+:PROPERTIES:
+:CUSTOM_ID: h:5E41D973-4C55-41F7-98D7-7EDD69FBA923
+:END:
+
+=rainbow-delimiters= is a "rainbow parentheses"-like mode which highlights
+parentheses, brackets, and braces according to their depth.  Each successive
+level is highlighted in a different color.  This makes it easy to spot matching
+delimiters, orient yourself in the code, and tell which statements are at a
+given level.
+
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters :ensure t)
+
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+#+end_src
+
+*** Color name colorizer (rainbow-mode.el)
+:PROPERTIES:
+:CUSTOM_ID: h:A5576BEA-6543-4DF6-AAAF-A2F689D64BA7
+:END:
+
+This minor mode sets background color to strings that match color names,
+e.g. #0000ff is displayed in white with a blue background.
+
+#+begin_src emacs-lisp
+(use-package rainbow-mode :ensure t)
+
+(add-hook 'prog-mode-hook 'rainbow-mode)
+#+end_src
+
+*** Show diagnostic info at point (eldoc.el)
+:PROPERTIES:
+:CUSTOM_ID: h:88EA4FBD-F7DC-436C-8515-8095306CE126
+:END:
+
+For languages like emacs-lisp, this package shows function arglist or variable
+docstring in echo area.  For other programming languages, thanks to the
+=eldoc-documentation-functions'= hook it provides, any help or diagnostic info
+that are relevent to the symbol (whatever it is) under the cursor will be
+displayed in the minibuffer.
+
+If the information string is more than one line, by default eldoc will
+automatically expand and shrink the minibuffer, which I don't like very much.
+So I turn =eldoc-echo-area-use-multiline-p= off.
+
+#+begin_src emacs-lisp
+(setq eldoc-echo-area-use-multiline-p nil)
+#+end_src
+
+** DevTools
+:PROPERTIES:
+:CUSTOM_ID: h:2D8763CA-4A2A-4D6E-AFF7-C23521A67265
+:END:
+*** Jupyter (jupyter.el)
+:PROPERTIES:
+:CUSTOM_ID: h:76B9895A-72F7-4BB4-B46C-2F087FCA81E8
+:END:
+
+#+begin_src emacs-lisp
+(use-package jupyter :ensure t)
+
+(with-eval-after-load 'jupyter
+  (require 'ob-jupyter)
+  (org-babel-jupyter-override-src-block "python")
+  (setq org-babel-default-header-args:python
+        '((:async . "yes") (:kernel . "python3"))))
+#+end_src
+
+*** REST client (restclient.el)
+:PROPERTIES:
+:CUSTOM_ID: h:A25206AC-05E6-4F4D-A161-C295484936FF
+:END:
+
+#+begin_src emacs-lisp
+(use-package restclient :ensure t)
+#+end_src
+
+*** Scratch buffer (scratch)
+:PROPERTIES:
+:CUSTOM_ID: h:13503906-8D66-4DF7-93A3-EA726D9C1771
+:END:
+
+=+scratch= command produces a org-mode buffer with right header-args for current
+jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) will
+prompt for a major mode instead.  Simple yet super effective!
+
+#+begin_src emacs-lisp
+(define-key grandview-app-map (kbd "s") '+scratch)
+#+end_src
+
+**** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:DB49C042-A133-4B4B-9773-36016E5009B1
+:header-args:emacs-lisp: :tangle (expand-file-name "+scratch.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+(defun +scratch--list-modes ()
+  "List known major modes."
+  (cl-loop for sym the symbols of obarray
+           for name = (symbol-name sym)
+           when (and (functionp sym)
+                     (not (member sym minor-mode-list))
+                     (string-match "-mode$" name)
+                     (not (string-match "--" name)))
+           collect (substring name 0 -5)))
+
+;;;###autoload
+(defun +scratch (query-for-mode)
+  "Create or switch to an org-mode scratch buffer.
+A jupyter session is attached to the buffer.
+If called with prefix arg, prompt for a major mode for the buffer."
+  (interactive "P")
+  (let ((buf (get-buffer "*Grandview-scratch*")))
+    (unless buf
+      (let* ((new-buf (generate-new-buffer "*Grandview-scratch*"))
+             (jpt-session "base")
+             (text (concat "#+PROPERTY: header-args:python :session "
+                           jpt-session))
+             (mode "org"))
+        (with-current-buffer new-buf
+          (when query-for-mode
+            (setq mode (completing-read
+                        "Mode: " (+scratch--list-modes) nil t nil nil))
+            (setq text (format "Scratch buffer for: %s" mode)))
+          (insert text)
+          (funcall (intern (concat mode "-mode")))
+          (setq-local org-image-actual-width '(1024))
+          (unless (string= mode "org") (comment-region (point-min) (point-max)))
+          (insert "\n\n")
+          (setq buf new-buf))))
+    (pop-to-buffer buf)))
 #+end_src
 
 ** Programming languages
@@ -3898,7 +4270,7 @@ me, so I change them to my liking.
    web-mode-style-padding 0))
 #+end_src
 
-**** Vue
+**** vue
 :PROPERTIES:
 :CUSTOM_ID: h:FDC89DB8-32D0-4794-898D-E273028D0FB8
 :END:
@@ -3922,10 +4294,10 @@ switch to =vue-ts-mode= in the future.
    'copilot-indentation-alist '(vue-mode web-mode-code-indent-offset)))
 #+end_src
 
-***** Autoload
+***** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:3711C8CE-5305-4F82-9905-0A8DB2F843A8
-:header-args:emacs-lisp: :tangle (expand-file-name "+Vue.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vue.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3987,387 +4359,194 @@ better option."
 (setq sh-basic-offset 2)
 #+end_src
 
-** Show help / diagnostic info at point (eldoc.el)
+* Utilities & Libraries
 :PROPERTIES:
-:CUSTOM_ID: h:88EA4FBD-F7DC-436C-8515-8095306CE126
+:CUSTOM_ID: h:6019F888-2F43-40CD-89C6-03D542D48FA4
 :END:
 
-For languages like emacs-lisp, this package shows function arglist or variable
-docstring in echo area.  For other programming languages, thanks to the
-=eldoc-documentation-functions'= hook it provides, any help or diagnostic info
-that are relevent to the symbol (whatever it is) under the cursor will be
-displayed in the minibuffer.
-
-If the information string is more than one line, by default eldoc will
-automatically expand and shrink the minibuffer, which I don't like very much.
-So I turn =eldoc-echo-area-use-multiline-p= off.
-
-#+begin_src emacs-lisp
-(setq eldoc-echo-area-use-multiline-p nil)
-#+end_src
-
-** Compiler (compile.el)
+** AI
 :PROPERTIES:
-:CUSTOM_ID: h:D6A16E5A-D417-4585-843F-92F206900B84
+:CUSTOM_ID: h:3F098843-7B8B-4BC0-B729-314C0B40D296
 :END:
-
-Run compiler as inferior of Emacs, parse error messages.
-
-#+begin_src emacs-lisp
-(bind! grandview-file-map
-  "p" 'compile
-  "P" 'recompile)
-#+end_src
-
-** Jupyter (jupyter.el)
+*** Github Copilot client (copilot.el)
 :PROPERTIES:
-:CUSTOM_ID: h:76B9895A-72F7-4BB4-B46C-2F087FCA81E8
+:CUSTOM_ID: h:29D887A7-7848-4AD7-AB6C-B1E6CE0073B0
 :END:
 
 #+begin_src emacs-lisp
-(use-package jupyter :ensure t)
+(use-package copilot
+  :vc (:url "https://github.com/copilot-emacs/copilot.el"))
 
-(with-eval-after-load 'jupyter
-  (require 'ob-jupyter)
-  (org-babel-jupyter-override-src-block "python")
-  (setq org-babel-default-header-args:python
-        '((:async . "yes") (:kernel . "python3"))))
+(with-eval-after-load 'copilot
+  (bind! copilot-completion-map
+    "<tab>" 'copilot-accept-completion
+    "TAB" 'copilot-accept-completion
+    "S-TAB" 'copilot-accept-completion-by-line))
 #+end_src
 
-** Colorizer (rainbow-mode.el)
+*** Interact with GPTs (gptel)
 :PROPERTIES:
-:CUSTOM_ID: h:A5576BEA-6543-4DF6-AAAF-A2F689D64BA7
+:CUSTOM_ID: h:D088502B-CC12-4E4B-A994-6B248AEB453F
 :END:
 
-#+begin_src emacs-lisp
-(use-package rainbow-mode :ensure t)
+=gptel= is a great package from *@karthink*.  It looks very promising as a LLM chat
+client.  The only tweak I made about it is to let gptel knows how to place the
+newly opened chat window:
+1. the chat buffer should never interrupt the existing window layout, i.e,
+   always create a new window for the chat.
+2. always put the chat window at rightmost of the frame.
 
-(add-hook 'prog-mode-hook 'rainbow-mode)
+It's also worth mentioning that the acquisition of apikey for the chat client is
+handled by the =password-store= library, it expects that your apikey is
+accessiable by the =pass= command.
+
+#+begin_src emacs-lisp
+(use-package gptel :ensure t)
+
+(with-eval-after-load 'gptel
+  (setq
+   gptel-display-buffer-action
+   `(display-buffer-in-direction
+     (body-function . ,#'select-window) (direction . rightmost))
+   gptel-default-mode 'org-mode
+   gptel-model 'google/gemini-2.0-flash-exp:free
+   gptel-backend
+   (gptel-make-openai "OpenRouter"
+     :host "openrouter.ai"
+     :endpoint "/api/v1/chat/completions"
+     :key (lambda () (require 'password-store) (password-store-get "openrouter_apikey"))
+     :stream t
+     :models '(google/gemini-2.0-flash-exp:free)))
+  (add-hook 'gptel-mode-hook #'visual-line-mode))
+
+(defvar-keymap grandview-gptel-map
+  :doc "Summon gpt models."
+  :parent grandview-app-map
+  "n" #'gptel ; start [n]ew dialog
+  "a" #'gptel-add
+  "f" #'gptel-add-file
+  "s" #'gptel-send
+  "r" #'gptel-rewrite
+  "t" #'gptel-org-set-topic
+  "p" #'gptel-org-set-properties
+  "o" #'gptel-menu ; change [o]ptions
+  "m" #'gptel-mode)
+
+;; a key for AI
+(bind! grandview-app-map "a" grandview-gptel-map)
 #+end_src
 
-** Formatter (reformatter.el)
+** Version Control
 :PROPERTIES:
-:CUSTOM_ID: h:6E21C502-9ADA-452C-B4B9-C10D88CD42CB
+:CUSTOM_ID: h:805C7D86-52FA-4C21-9180-A408F38D5B95
+:END:
+*** Built-in vc library (vc.el)
+:PROPERTIES:
+:CUSTOM_ID: h:052B95EE-5D87-4A0C-99D4-FFF2D0D40087
 :END:
 
-=reformatter.el= (created by Purcell) lets you easily define an idiomatic command
-to reformat the current buffer using a command-line program, together with an
-optional minor mode which can apply this command automatically on save.
+=vc.el= provides seamless integration of version control systems within Emacs,
+allowing you to perform common version control operations directly from the
+editor.  Press =SPC a v= to access the available commands.
+
+Extras:
+  + Rename the buffer of =vc-print-root-log= to mention the project.
 
 #+begin_src emacs-lisp
-(use-package reformatter :ensure t)
+(use-package vc :ensure nil)
 
-(define-key grandview-prog-map (kbd "f") '+format-buffer)
-
-(with-eval-after-load 'reformatter
-  (reformatter-define lua-format
-    :program "stylua"
-    :args '("--indent-width" "2" "-")
-    :lighter " styLua")
-  (reformatter-define python-format
-    :program "black"
-    :args '("-")
-    :lighter " blackFMT")
-  (reformatter-define vue-format
-    :program "eslint_d"
-    :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
-    :working-directory (+reformatter-eslint-root)
-    :lighter " eslint")
-  (reformatter-define typescript-format
-    :program "eslint_d"
-    :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
-    :working-directory (+reformatter-eslint-root)
-    :lighter " eslint"))
+(define-key grandview-app-map (kbd "v") vc-prefix-map)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
-:CUSTOM_ID: h:91FB5726-4A78-403A-8DF6-3D0B2644C6B4
-:header-args:emacs-lisp: :tangle (expand-file-name "+reformatter.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
-(defun +reformatter-eslint-root ()
-  "Up traverse filesystem for a directory containing eslint config."
-  (locate-dominating-file
-   default-directory
-   (lambda (directory)
-     (seq-find
-      (lambda (project-marker)
-        (file-exists-p (expand-file-name project-marker directory)))
-      '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs" "package.json")))))
-
-;;;###autoload
-(defun +format-buffer ()
-  (interactive)
-  (let* ((mode-name
-          (string-remove-suffix
-           "-mode" (string-remove-suffix "-ts-mode" (format "%s" major-mode))))
-         (func-name (intern (format "%s-format-buffer" mode-name))))
-    (if (functionp func-name)
-        (funcall func-name)
-      (user-error
-       (format
-        "No available formatter for %s. Use `reformatter-define' to create it."
-        major-mode)))))
-#+end_src
-
-** Syntax checker (flymake.el)
-:PROPERTIES:
-:CUSTOM_ID: h:06C35376-E12F-4587-BD8E-B0EC021E2F08
-:END:
-
-#+begin_src emacs-lisp
-(use-package flymake :ensure nil)
-
-(add-hook 'prog-mode-hook '+flymake-enable)
-(add-hook 'text-mode-hook 'flymake-mode)
-(bind! grandview-prog-map
-  "e" 'flymake-goto-next-error
-  "E" 'flymake-goto-prev-error
-  "S" 'flymake-start)
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:AE26DC0C-1792-4840-A2B4-DFDC227BA78C
-:header-args:emacs-lisp: :tangle (expand-file-name "+flymake.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vc.el" grandview--def-dir)
+:CUSTOM_ID: h:931E886F-B8C7-42BD-A1F1-16DA75406593
 :END:
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +flymake-enable ()
-  "Inhibit `flymake-mode' under certain circumstances."
-  (unless (or (equal default-directory
-                     (or (file-name-directory grandview--dot-org)
-                         user-emacs-directory))
-              (eq (current-buffer) (get-buffer "*scratch*")))
-    (flymake-mode +1)))
+(defadvice! +vc-rename-root-log-a (&rest _)
+  "Rename the buffer of `vc-print-root-log' to mention the project."
+  :after #'vc-print-root-log
+  (when-let* ((root (vc-root-dir))
+              ((progn (project-known-project-roots)
+                      (consp project--list)))
+              ((member root (mapcar #'car project--list))))
+    (rename-buffer (format "*vc-root-log: %s*" root))))
 #+end_src
 
-** REST client (restclient.el)
+*** Git porcelain (magit.el)
 :PROPERTIES:
-:CUSTOM_ID: h:A25206AC-05E6-4F4D-A161-C295484936FF
+:CUSTOM_ID: h:2F3C245E-4DE8-46F4-9168-0B45BED441E1
 :END:
 
 #+begin_src emacs-lisp
-(use-package restclient :ensure t)
+(use-package magit :ensure t)
+
+(define-key grandview-app-map (kbd "m") 'magit-status-here)
+(with-eval-after-load 'magit
+  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  (setq magit-define-global-key-bindings nil)
+  (setq git-commit-summary-max-length 68)
+  (setq git-commit-known-pseudo-headers
+        '("Signed-off-by" "Acked-by" "Modified-by" "Cc"
+          "Suggested-by" "Reported-by" "Tested-by" "Reviewed-by"))
+  (setq git-commit-style-convention-checks
+        '(non-empty-second-line overlong-summary-line))
+  (setq magit-diff-refine-hunk t)
+  (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
+  (define-key magit-diff-section-base-map (kbd "<C-return>") 'magit-diff-visit-file-other-window))
 #+end_src
 
-** Scratch buffer (scratch.el)
+*** Interactive diff, patch, or merge conflict (ediff.el)
 :PROPERTIES:
-:CUSTOM_ID: h:13503906-8D66-4DF7-93A3-EA726D9C1771
+:CUSTOM_ID: h:C990DF9D-D266-4514-A1B6-B86F262036CA
 :END:
 
-=+scratch= command produces a org-mode buffer with right header-args for current
-jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) will
-prompt for a major mode instead.  Simple yet super effective!
+This package provides a convenient way of simultaneous browsing through the
+differences between a pair (or a triple) of files or buffers.  The files being
+compared, file-A, file-B, and file-C (if applicable) are shown in separate
+windows (side by side, one above the another, or in separate frames), and the
+differences are highlighted as you step through them.  You can also copy
+difference regions from one buffer to another (and recover old differences if
+you change your mind).
 
 #+begin_src emacs-lisp
-(define-key grandview-app-map (kbd "s") '+scratch)
+(use-package ediff :ensure nil)
+
+(setq ediff-keep-variants nil)
+(setq ediff-make-buffers-readonly-at-startup nil)
+(setq ediff-merge-revisions-with-ancestor t)
+(setq ediff-show-clashes-only t)
+(setq ediff-split-window-function 'split-window-horizontally)
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+;; Tweak those for safer identification and removal
+(setq ediff-combination-pattern
+      '("<<<<<<< grandv-ediff-combine Variant A" A
+        ">>>>>>> grandv-ediff-combine Variant B" B
+        "####### grandv-ediff-combine Ancestor" Ancestor
+        "======= grandv-ediff-combine End"))
 #+end_src
 
-*** Autoload
+*** Hunk indicator (git-gutter.el)
 :PROPERTIES:
-:CUSTOM_ID: h:DB49C042-A133-4B4B-9773-36016E5009B1
-:header-args:emacs-lisp: :tangle (expand-file-name "+scratch.el" grandview--def-dir)
+:CUSTOM_ID: h:0969690B-0AF3-46AE-8A9E-F61150723E9F
 :END:
 
 #+begin_src emacs-lisp
-(defun +scratch--list-modes ()
-  "List known major modes."
-  (cl-loop for sym the symbols of obarray
-           for name = (symbol-name sym)
-           when (and (functionp sym)
-                     (not (member sym minor-mode-list))
-                     (string-match "-mode$" name)
-                     (not (string-match "--" name)))
-           collect (substring name 0 -5)))
+(use-package git-gutter :ensure t)
 
-;;;###autoload
-(defun +scratch (query-for-mode)
-  "Create or switch to an org-mode scratch buffer.
-A jupyter session is attached to the buffer.
-If called with prefix arg, prompt for a major mode for the buffer."
-  (interactive "P")
-  (let ((buf (get-buffer "*Grandview-scratch*")))
-    (unless buf
-      (let* ((new-buf (generate-new-buffer "*Grandview-scratch*"))
-             (jpt-session "base")
-             (text (concat "#+PROPERTY: header-args:python :session "
-                           jpt-session))
-             (mode "org"))
-        (with-current-buffer new-buf
-          (when query-for-mode
-            (setq mode (completing-read
-                        "Mode: " (+scratch--list-modes) nil t nil nil))
-            (setq text (format "Scratch buffer for: %s" mode)))
-          (insert text)
-          (funcall (intern (concat mode "-mode")))
-          (setq-local org-image-actual-width '(1024))
-          (unless (string= mode "org") (comment-region (point-min) (point-max)))
-          (insert "\n\n")
-          (setq buf new-buf))))
-    (pop-to-buffer buf)))
+(setq git-gutter:modified-sign "⏽"
+      git-gutter:added-sign "⏽"
+      git-gutter:deleted-sign "⏽")
 #+end_src
 
-* User interface
+** Interface enhancement
 :PROPERTIES:
 :CUSTOM_ID: h:6762E5C6-D007-452E-8328-47EF50515A8B
 :END:
-
-** Highlight focused window (auto-dim-other-buffers.el)
-:PROPERTIES:
-:CUSTOM_ID: h:1F76247C-9DAE-4BA7-B6B0-CEF3A8870EFA
-:END:
-
-Just dim other windows out so that we know better which window is the focused
-one.  We only load this package after we have more than 1 windows.
-
-#+begin_src emacs-lisp
-(use-package auto-dim-other-buffers :ensure t :after-call split-window)
-
-(with-eval-after-load 'auto-dim-other-buffers
-  (auto-dim-other-buffers-mode))
-#+end_src
-
-** Workspaces (tabspaces.el)
-:PROPERTIES:
-:CUSTOM_ID: h:AF5996B4-03F2-439A-8EA9-4087A2C152C9
-:END:
-
-Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces.
-
-- General tab bar customization
-- Enable ~tabspaces-mode~
-- Create some default workspaces
-- Filter buffers for consult tabspaces
-- Rename the first tab (generated by tab-bar itself) to =Default=
-
-#+begin_src emacs-lisp
-(use-package tabspaces :ensure t)
-
-(require 'tabspaces)
-(tabspaces-mode 1)
-(add-hook 'server-after-make-frame-hook #'+tabspaces-setup)
-
-(setq tab-bar-separator " "
-      tab-bar-close-button-show nil
-      tab-bar-close-last-tab-choice 'tab-bar-mode-disable
-      tab-bar-tab-name-format-function #'+tabspaces-tab-name-format-comfortable
-      tab-bar-format '(+tabspaces-format-menu-bar
-                       tab-bar-format-tabs
-                       tab-bar-separator
-                       tab-bar-format-align-right
-                       tab-bar-format-global)
-      tabspaces-keymap-prefix nil
-      tabspaces-default-tab "Default"
-      tabspaces-include-buffers '("*scratch*" "*Messages*")
-      tabspaces-remove-to-default t)
-
-(bind! grandview-tab-map
-  "C" 'tabspaces-clear-buffers
-  "R" 'tabspaces-remove-selected-buffer
-  "k" 'tabspaces-kill-buffers-close-workspace
-  "s" 'tabspaces-switch-or-create-workspace)
-
-(with-eval-after-load 'consult
-  (consult-customize consult--source-buffer :hidden t :default nil)
-  (defvar consult--source-workspace
-    (list :name "Workspace Buffers"
-          :narrow ?w
-          :history 'buffer-name-history
-          :category 'buffer
-          :state #'consult--buffer-state
-          :default t
-          :items (lambda () (consult--buffer-query
-                             :predicate #'tabspaces--local-buffer-p
-                             :sort 'visibility
-                             :as #'buffer-name)))
-    "Set Workspace buffer list for consult buffer.")
-  (add-to-list 'consult-buffer-sources 'consult--source-workspace))
-#+end_src
-
-*** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
-:header-args:emacs-lisp: :tangle (expand-file-name "+tabspaces.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-(defcustom +tabspaces-startup-workspaces nil
-  "Workspaces being created at startup."
-  :group 'grandview :type 'alist)
-
-;;;###autoload
-(defun +tabspaces-format-menu-bar ()
-  "Produce the Menu button for the tab bar that shows the menu bar."
-  `((menu-bar menu-item (propertize " 𝝺" 'face 'tab-bar)
-              tab-bar-menu-bar :help "Menu Bar")))
-
-;;;###autoload
-(defun +tabspaces-tab-name-format-comfortable (tab i)
-  (propertize (concat " " (tab-bar-tab-name-format-default tab i) " ")
-              'face (funcall tab-bar-tab-face-function tab)))
-
-(defun +tabspaces-create-workspace (name &optional path)
-  "Setup the workspace with name NAME and startup path PATH."
-  (if (member name (tabspaces--list-tabspaces))
-      (progn (tab-bar-switch-to-tab name)
-             (when (and (not (get-buffer name)) path) (dirvish path)))
-    (tab-bar-new-tab)
-    (tab-bar-rename-tab name)
-    (when path (dirvish path))))
-
-;;;###autoload
-(defun +tabspaces-setup ()
-  "Setup tabspaces when a frame is created as well."
-  (cl-loop for (name . path) in +tabspaces-startup-workspaces
-           do (+tabspaces-create-workspace name path))
-  (tab-bar-select-tab 1)
-  (tab-bar-rename-tab "Default"))
-#+end_src
-
-** Transient commands (transient.el)
-:PROPERTIES:
-:CUSTOM_ID: h:6C19254F-E941-4E51-A443-3F8A7D796589
-:END:
-
-=transient.el= implements support for powerful keyboard-driven menus.  Such menus
-can be used as simple visual command dispatchers.  More complex menus take
-advantage of infix arguments, which are somewhat similar to prefix arguments,
-but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
-
-#+begin_src emacs-lisp
-(use-package transient :ensure nil)
-
-(with-eval-after-load 'transient
-  (setq transient-enable-popup-navigation nil)
-  (setq transient-default-level 7)
-  (setq transient-show-popup -0.2)
-  (transient-bind-q-to-quit)
-  (setq transient-display-buffer-action '(display-buffer-below-selected))
-  (define-key transient-map (kbd "<escape>") 'transient-quit-all)
-  (define-key transient-sticky-map (kbd "ESC") 'transient-quit-all))
-#+end_src
-
-** Eldoc in childframe (eldoc-box.el)
-:PROPERTIES:
-:CUSTOM_ID: h:93A4474C-DD68-4017-BA27-0E45E369804F
-:END:
-
-This package displays ElDoc documentations in a childframe. The childframe is
-selectable and scrollable with mouse, even though the cursor is hidden.
-
-#+begin_src emacs-lisp
-(use-package eldoc-box :ensure t :after-call flymake-mode)
-
-(with-eval-after-load 'eldoc-box
-  (define-key grandview-prog-map (kbd "p") 'eldoc-box-help-at-point))
-#+end_src
-
-** Custom Mode line
+*** Composable mode line (mode-line-mode)
 :PROPERTIES:
 :CUSTOM_ID: h:9C974B19-F47B-4758-87BD-A889965D7239
 :END:
@@ -4391,10 +4570,10 @@ in ~+mode-line-format~.
 (+mode-line-mode)
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:E77C4AD0-D38E-43D5-AFAC-C3135D88A444
-:header-args:emacs-lisp: :tangle (expand-file-name "+Custom_Mode_line.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+mode-line-mode.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4523,7 +4702,154 @@ The SEGMENTs are defined by `+mode-line-define'."
     (remove-hook 'compilation-mode-hook #'+mode-line-disable-locally)))
 #+end_src
 
-** Pixel scrolling (pixel-scroll.el)
+*** Right-click with keyboard (embark.el)
+:PROPERTIES:
+:CUSTOM_ID: h:80BF3F35-E8B5-4710-88AD-3942261EF07B
+:END:
+
+This package provides a sort of right-click contextual menu for Emacs, accessed
+through the ~embark-act~ command (which I bind to =C-.=), offering you relevant
+actions to use on a target determined by the context.
+
+#+begin_src emacs-lisp
+(use-package embark :ensure t :after-call display-buffer minibuffer-setup-hook)
+(use-package embark-consult :ensure t :after embark)
+
+(with-eval-after-load 'embark
+  (setq embark-quit-after-action t)
+  (define-key global-map (kbd "C-.") 'embark-act)
+  (define-key minibuffer-local-map (kbd "C-.") 'embark-act)
+  (define-key minibuffer-local-map (kbd "C-,") 'embark-become))
+#+end_src
+
+*** Highlight focused window (auto-dim-other-buffers.el)
+:PROPERTIES:
+:CUSTOM_ID: h:1F76247C-9DAE-4BA7-B6B0-CEF3A8870EFA
+:END:
+
+Just dim other windows out so that we know better which window is the focused
+one.  We only load this package after we have more than 1 windows.
+
+#+begin_src emacs-lisp
+(use-package auto-dim-other-buffers :ensure t :after-call split-window)
+
+(with-eval-after-load 'auto-dim-other-buffers
+  (auto-dim-other-buffers-mode))
+#+end_src
+
+*** Workspaces (tabspaces.el)
+:PROPERTIES:
+:CUSTOM_ID: h:AF5996B4-03F2-439A-8EA9-4087A2C152C9
+:END:
+
+Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces.
+
+- General tab bar customization
+- Enable ~tabspaces-mode~
+- Create some default workspaces
+- Filter buffers for consult tabspaces
+- Rename the first tab (generated by tab-bar itself) to =Default=
+
+#+begin_src emacs-lisp
+(use-package tabspaces :ensure t)
+
+(require 'tabspaces)
+(tabspaces-mode 1)
+(add-hook 'server-after-make-frame-hook #'+tabspaces-setup)
+
+(setq tab-bar-separator " "
+      tab-bar-close-button-show nil
+      tab-bar-close-last-tab-choice 'tab-bar-mode-disable
+      tab-bar-tab-name-format-function #'+tabspaces-tab-name-format-comfortable
+      tab-bar-format '(+tabspaces-format-menu-bar
+                       tab-bar-format-tabs
+                       tab-bar-separator
+                       tab-bar-format-align-right
+                       tab-bar-format-global)
+      tabspaces-keymap-prefix nil
+      tabspaces-default-tab "Default"
+      tabspaces-include-buffers '("*scratch*" "*Messages*")
+      tabspaces-remove-to-default t)
+
+(bind! grandview-tab-map
+  "C" 'tabspaces-clear-buffers
+  "R" 'tabspaces-remove-selected-buffer
+  "k" 'tabspaces-kill-buffers-close-workspace
+  "s" 'tabspaces-switch-or-create-workspace)
+
+(with-eval-after-load 'consult
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (defvar consult--source-workspace
+    (list :name "Workspace Buffers"
+          :narrow ?w
+          :history 'buffer-name-history
+          :category 'buffer
+          :state #'consult--buffer-state
+          :default t
+          :items (lambda () (consult--buffer-query
+                             :predicate #'tabspaces--local-buffer-p
+                             :sort 'visibility
+                             :as #'buffer-name)))
+    "Set Workspace buffer list for consult buffer.")
+  (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+#+end_src
+
+**** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
+:header-args:emacs-lisp: :tangle (expand-file-name "+tabspaces.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+(defcustom +tabspaces-startup-workspaces nil
+  "Workspaces being created at startup."
+  :group 'grandview :type 'alist)
+
+;;;###autoload
+(defun +tabspaces-format-menu-bar ()
+  "Produce the Menu button for the tab bar that shows the menu bar."
+  `((menu-bar menu-item (propertize " 𝝺" 'face 'tab-bar)
+              tab-bar-menu-bar :help "Menu Bar")))
+
+;;;###autoload
+(defun +tabspaces-tab-name-format-comfortable (tab i)
+  (propertize (concat " " (tab-bar-tab-name-format-default tab i) " ")
+              'face (funcall tab-bar-tab-face-function tab)))
+
+(defun +tabspaces-create-workspace (name &optional path)
+  "Setup the workspace with name NAME and startup path PATH."
+  (if (member name (tabspaces--list-tabspaces))
+      (progn (tab-bar-switch-to-tab name)
+             (when (and (not (get-buffer name)) path) (dirvish path)))
+    (tab-bar-new-tab)
+    (tab-bar-rename-tab name)
+    (when path (dirvish path))))
+
+;;;###autoload
+(defun +tabspaces-setup ()
+  "Setup tabspaces when a frame is created as well."
+  (cl-loop for (name . path) in +tabspaces-startup-workspaces
+           do (+tabspaces-create-workspace name path))
+  (tab-bar-select-tab 1)
+  (tab-bar-rename-tab "Default"))
+#+end_src
+
+*** Eldoc in childframe (eldoc-box.el)
+:PROPERTIES:
+:CUSTOM_ID: h:93A4474C-DD68-4017-BA27-0E45E369804F
+:END:
+
+This package displays ElDoc documentations in a childframe. The childframe is
+selectable and scrollable with mouse, even though the cursor is hidden.
+
+#+begin_src emacs-lisp
+(use-package eldoc-box :ensure t :after-call flymake-mode)
+
+(with-eval-after-load 'eldoc-box
+  (define-key grandview-prog-map (kbd "p") 'eldoc-box-help-at-point))
+#+end_src
+
+*** Pixel scrolling (pixel-scroll.el)
 :PROPERTIES:
 :CUSTOM_ID: h:E59DA6AB-6266-4CFA-BA46-97A4A8382F11
 :END:
@@ -4536,12 +4862,19 @@ need to add =--with-xinput2= in build flags to enable this feature.
   (pixel-scroll-precision-mode 1))
 #+end_src
 
-** Pulse highlight on demand or after select functions (pulsar.el)
+*** Pulse highlight on demand (pulsar.el)
 :PROPERTIES:
 :CUSTOM_ID: h:F45A1F5E-7445-4427-B27F-CAF6EB415744
 :END:
 
-Another great package from Prot!
+=pulsar.el= is another great package from Prot.  This is a small package that
+temporarily highlights the current line after a given function is invoked.
+
+What we do here is to notify =pulsar= that I want the highlight also happens in
+the following scenario:
+
++ On switching to a different window, e.g. after invoking =windmove-left=.
++ On navigating through errors / warnings, e.g. after invoking =next-error=.
 
 #+begin_src emacs-lisp
 (use-package pulsar :ensure t)
@@ -4553,57 +4886,19 @@ Another great package from Prot!
                   'windmove-up 'windmove-down
                   'previous-window-any-frame
                   'next-window-any-frame
+                  'next-error
                   'meow-save 'meow-replace)))
 #+end_src
 
-** Interactive query replace (anzu.el)
-:PROPERTIES:
-:CUSTOM_ID: h:81C344C7-6981-4526-A34B-6EBAB2590CF0
-:END:
-
-=anzu.el= provides a minor mode which displays 'current match/total
-matches' in the mode-line in various search modes.  This makes it
-easy to understand how many matches there are in the current buffer
-for your search query.
-
-#+begin_src emacs-lisp
-(use-package anzu :ensure t :after-call isearch-mode)
-
-(with-eval-after-load 'anzu
-  (global-anzu-mode)
-  (define-key global-map [remap query-replace] 'anzu-query-replace)
-  (define-key global-map [remap query-replace-regexp] 'anzu-query-replace-regexp))
-#+end_src
-
-** Alternative isearch UI (isearch-mb.el)
-:PROPERTIES:
-:CUSTOM_ID: h:EFA1CC25-8309-4639-A358-8F2B1BC1AE79
-:END:
-
-This package provides an alternative isearch UI based on the minibuffer.  This
-allows editing the search string in arbitrary ways without any special maneuver;
-unlike standard isearch, cursor motion commands do not end the search.
-Moreover, the search status information in the echo area and some keybindings
-are slightly simplified.
-
-#+begin_src emacs-lisp
-(use-package isearch-mb :ensure t :after-call isearch-mode)
-
-(with-eval-after-load 'isearch-mb
-  (isearch-mb-mode)
-  (add-to-list 'isearch-mb--with-buffer #'consult-isearch-history)
-  (add-to-list 'isearch-mb--after-exit #'anzu-isearch-query-replace)
-  (define-key isearch-mb-minibuffer-map
-              [remap previous-matching-history-element] 'consult-isearch-history))
-#+end_src
-
-** Distraction-free writing (writeroom-mode.el)
+*** Distraction-free writing (writeroom-mode.el)
 :PROPERTIES:
 :CUSTOM_ID: h:30BCB780-6A36-45D4-8A5F-DC207C8587BB
 :END:
 
 #+begin_src emacs-lisp
 (use-package writeroom-mode :ensure t :after-call org-mode-hook markdown-mode-hook)
+
+(add-hook 'org-mode-hook #'+visual-fill-center-text)
 
 (with-eval-after-load 'writeroom-mode
   (setq writeroom-width 128
@@ -4613,11 +4908,10 @@ are slightly simplified.
         writeroom-major-modes '(text-mode prog-mode conf-mode special-mode Info-mode)
         writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
         writeroom-maximize-window nil
-        writeroom-mode-line t)
-  (add-hook 'org-mode-hook #'+visual-fill-center-text))
+        writeroom-mode-line t))
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:FC7300FE-855C-4AC5-9272-689829C7D4D7
 :header-args:emacs-lisp: :tangle (expand-file-name "+writeroom-mode.el" grandview--def-dir)
@@ -4633,64 +4927,24 @@ are slightly simplified.
   (visual-fill-column-mode 1))
 #+end_src
 
-** Hunk indicator (git-gutter.el)
+** Knowledge management
 :PROPERTIES:
-:CUSTOM_ID: h:0969690B-0AF3-46AE-8A9E-F61150723E9F
+:CUSTOM_ID: h:0C192736-DDAD-4638-8611-AB8A58B3BA3B
+:END:
+*** Note taking tool (denote.el)
+:PROPERTIES:
+:CUSTOM_ID: h:B392C4E0-C2DF-4B59-B164-A106F05EA1A1
 :END:
 
 #+begin_src emacs-lisp
-(use-package git-gutter :ensure t)
-
-(setq git-gutter:modified-sign "⏽"
-      git-gutter:added-sign "⏽"
-      git-gutter:deleted-sign "⏽")
+(use-package denote :ensure t)
 #+end_src
 
-** COMMENT VSCode style icons (vscode-icon.el)
+** Integration
 :PROPERTIES:
-:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
+:CUSTOM_ID: h:E558471C-2534-4ABA-B898-905EB09F779F
 :END:
-
-Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
-style icons with image format.  I keep this package only for the purpose of
-testing my =dirvish-icons= library.
-
-#+begin_src emacs-lisp
-(use-package vscode-icon :ensure t)
-
-(with-eval-after-load 'vscode-icon
-  (push '("jpg" . "image") vscode-icon-file-alist)
-  (push '("7z" . "zip") vscode-icon-file-alist)
-  (push '("mkv" . "video") vscode-icon-file-alist)
-  (push '("epub" . "storybook") vscode-icon-file-alist))
-#+end_src
-
-* Utils
-:PROPERTIES:
-:CUSTOM_ID: h:D57D39A0-DFEB-48BF-BBCB-832522B6DF9B
-:END:
-
-** Keyboard version right-click (embark.el)
-:PROPERTIES:
-:CUSTOM_ID: h:80BF3F35-E8B5-4710-88AD-3942261EF07B
-:END:
-
-This package provides a sort of right-click contextual menu for Emacs, accessed
-through the ~embark-act~ command (which you should bind to a convenient key),
-offering you relevant actions to use on a target determined by the context.
-
-#+begin_src emacs-lisp
-(use-package embark :ensure t :after-call display-buffer minibuffer-setup-hook)
-(use-package embark-consult :ensure t :after embark)
-
-(with-eval-after-load 'embark
-  (setq embark-quit-after-action t)
-  (define-key global-map (kbd "C-.") 'embark-act)
-  (define-key minibuffer-local-map (kbd "C-.") 'embark-act)
-  (define-key minibuffer-local-map (kbd "C-,") 'embark-become))
-#+end_src
-
-** Vterm (vterm.el)
+*** Vterm (vterm.el)
 :PROPERTIES:
 :CUSTOM_ID: h:B49FA4E0-EB36-4734-AF25-54D6E6EFEBA6
 :END:
@@ -4722,7 +4976,7 @@ offering you relevant actions to use on a target determined by the context.
     "S-<escape>" 'vterm-copy-mode-done))
 #+end_src
 
-*** Autoload
+**** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:B05AAF84-FA1E-42FC-8C55-C7C9AD951D7E
 :header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
@@ -4866,152 +5120,23 @@ Used as a hook function added to `kill-buffer-hook'."
     (remove-hook 'kill-buffer-hook #'+vterm--kill-buffer)))
 #+end_src
 
-** Git porcelain (magit.el)
+*** COMMENT VSCode style icons (vscode-icon.el)
 :PROPERTIES:
-:CUSTOM_ID: h:2F3C245E-4DE8-46F4-9168-0B45BED441E1
+:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
 :END:
 
-#+begin_src emacs-lisp
-(use-package magit :ensure t)
-
-(define-key grandview-app-map (kbd "m") 'magit-status-here)
-(with-eval-after-load 'magit
-  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
-  (setq magit-define-global-key-bindings nil)
-  (setq git-commit-summary-max-length 68)
-  (setq git-commit-known-pseudo-headers
-        '("Signed-off-by" "Acked-by" "Modified-by" "Cc"
-          "Suggested-by" "Reported-by" "Tested-by" "Reviewed-by"))
-  (setq git-commit-style-convention-checks
-        '(non-empty-second-line overlong-summary-line))
-  (setq magit-diff-refine-hunk t)
-  (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
-  (define-key magit-diff-section-base-map (kbd "<C-return>") 'magit-diff-visit-file-other-window))
-#+end_src
-
-** Helpful (helpful.el)
-:PROPERTIES:
-:CUSTOM_ID: h:9B7AA6E6-C7BE-41CD-B523-CB34BB185E0A
-:END:
-
-=helpful.el= provides a better help buffer.  It's always a good thing for us to be
-able to read the source code of the symbol we are looking at since it tells more
-information than its docstring.  Again, because we are using =meow=, the actual
-prefix to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
-=helpful-symbol=.
+Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
+style icons with image format.  I keep this package only for the purpose of
+testing my =dirvish-icons= library.
 
 #+begin_src emacs-lisp
-(use-package helpful :ensure t :after-call meow-keypad-mode-hook)
+(use-package vscode-icon :ensure t)
 
-(bind! global-map
-  "C-h C-s" 'helpful-symbol
-  "C-h K" 'describe-keymap
-  "C-h C-f" 'helpful-callable
-  "C-h C-v" 'helpful-variable
-  "C-h k" 'helpful-key)
-#+end_src
-
-** Emacs Manual (info.el)
-:PROPERTIES:
-:CUSTOM_ID: h:59DC4309-57FF-4762-8ECC-96826FC36D96
-:END:
-
-#+begin_src emacs-lisp
-(use-package info :ensure nil)
-
-(with-eval-after-load 'info
-  (bind! Info-mode-map
-    "n" 'next-line
-    "p" 'previous-line
-    "C-n" 'Info-next
-    "C-p" 'Info-prev
-    "s-n" 'forward-paragraph
-    "s-p" 'backward-paragraph))
-#+end_src
-
-** Man page (man.el)
-:PROPERTIES:
-:CUSTOM_ID: h:E15D7EFF-09E4-481B-8B4C-8AE08F46A65E
-:END:
-
-#+begin_src emacs-lisp
-(use-package man :ensure nil)
-
-(setq Man-notify-method 'newframe)
-(with-eval-after-load 'man
-  (define-key Man-mode-map (kbd "q") 'kill-this-buffer))
-#+end_src
-
-** Pdf reader (pdf-tools.el)
-:PROPERTIES:
-:CUSTOM_ID: h:8F56919D-146C-4EE0-AECF-5512A9B8F571
-:END:
-
-#+begin_src emacs-lisp
-(use-package pdf-tools :ensure t :after-call doc-view-mode-hook)
-
-(with-eval-after-load 'pdf-tools
-  (pdf-tools-install)
-  (setq-default pdf-view-display-size 'fit-page)
-  (setq pdf-annot-activate-created-annotations t) ; automatically annotate highlights
-  (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0))) ; turn off cua so copy works
-  (setq pdf-view-resize-factor 1.1) ; more fine-grained zooming
-  (bind! pdf-view-mode-map
-    "C-s" 'isearch-forward
-    "h" 'pdf-annot-add-highlight-markup-annotation
-    "t" 'pdf-annot-add-text-annotation
-    "D" 'pdf-annot-delete))
-#+end_src
-
-** Epub reader (nov.el)
-:PROPERTIES:
-:CUSTOM_ID: h:9A0AC633-4FD9-4F1B-9246-023CF0711BA1
-:END:
-
-#+begin_src emacs-lisp
-(use-package nov :ensure t)
-(push '("\\.epub\\'" . nov-mode) auto-mode-alist)
-(setq nov-shr-rendering-functions
-      '((img . nov-render-img)
-        (title . nov-render-title)
-        (b . shr-tag-b)))
-#+end_src
-
-** Interact with AI (gptel)
-:PROPERTIES:
-:CUSTOM_ID: h:D088502B-CC12-4E4B-A994-6B248AEB453F
-:END:
-
-#+begin_src emacs-lisp
-(use-package gptel :ensure t)
-
-(with-eval-after-load 'gptel
-  (setq
-   gptel-model 'google/gemini-2.0-flash-exp:free
-   gptel-default-mode 'org-mode
-   gptel-backend
-   (gptel-make-openai "OpenRouter"
-     :host "openrouter.ai"
-     :endpoint "/api/v1/chat/completions"
-     :key (lambda () (require 'password-store) (password-store-get "openrouter_apikey"))
-     :stream t
-     :models '(google/gemini-2.0-flash-exp:free))))
-
-(defvar-keymap grandview-gptel-map
-  :doc "Summon gpt models."
-  :parent grandview-app-map
-  "n" #'gptel ; start [n]ew dialog
-  "a" #'gptel-add
-  "f" #'gptel-add-file
-  "s" #'gptel-send
-  "r" #'gptel-rewrite
-  "t" #'gptel-org-set-topic
-  "p" #'gptel-org-set-properties
-  "o" #'gptel-menu ; change [o]ptions
-  "m" #'gptel-mode)
-
-;; a key for AI
-(bind! grandview-app-map "a" grandview-gptel-map)
+(with-eval-after-load 'vscode-icon
+  (push '("jpg" . "image") vscode-icon-file-alist)
+  (push '("7z" . "zip") vscode-icon-file-alist)
+  (push '("mkv" . "video") vscode-icon-file-alist)
+  (push '("epub" . "storybook") vscode-icon-file-alist))
 #+end_src
 
 * About

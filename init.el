@@ -35,7 +35,7 @@
       (org-map-entries
        (lambda ()
          (org-with-point-at (point)
-           (when (string= (org-get-heading) "Autoload")
+           (when (string= (org-get-heading) "Extras")
              (let* ((title (save-excursion
                              (org-up-heading-safe) (org-get-heading)))
                     (memo (ignore-errors
