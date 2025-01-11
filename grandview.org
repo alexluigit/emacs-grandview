@@ -2353,6 +2353,27 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
   (setq find-function-C-source-directory "~/Code/emacs/src"))
 #+end_src
 
+** Image viewer (image-mode.el)
+
+View images inside emacs.  Just rebind some keys here.
+
+#+begin_src emacs-lisp
+(use-package image-mode :ensure nil)
+
+(with-eval-after-load 'image-mode
+  (bind! image-mode-map
+    "," 'image-bob
+    "." 'image-eob
+    "-" 'image-decrease-size
+    "=" 'image-increase-size
+    "n" 'image-next-line
+    "p" 'image-previous-line
+    "C-n" 'image-next-file
+    "C-p" 'image-previous-file
+    "i n" 'image-next-file
+    "i p" 'image-previous-file))
+#+end_src
+
 ** Recent files (recentf.el)
 :PROPERTIES:
 :CUSTOM_ID: h:9500079C-EA85-46E9-A8E3-084F611A4DDA
@@ -3707,36 +3728,66 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 (setq js-indent-level 2)
 #+end_src
 
-*** Vue
+*** Web template (web-mode.el)
 :PROPERTIES:
 :CUSTOM_ID: h:D9E48633-7EE3-42CB-B0CA-C9CC6F71E7D6
 :END:
 
+=web-mode.el= is an emacs major mode for editing web templates aka HTML files
+embedding parts (CSS/JavaScript) and blocks (pre rendered by client/server side
+engines).  It is compatible with many template engines: PHP, JSP, ASP, Django,
+React/JSX, Angularjs, ejs, etc.
+
+The default indent level and text padding (to the left edge) is a bit strange to
+me, so I change them to my liking.
+
 #+begin_src emacs-lisp
-(use-package vue-ts-mode :vc (:url "https://github.com/8uff3r/vue-ts-mode"))
+(use-package web-mode :ensure t)
+
+(with-eval-after-load 'web-mode
+  (setq
+   web-mode-markup-indent-offset 2
+   web-mode-css-indent-offset 2
+   web-mode-code-indent-offset 2
+   web-mode-part-padding 0
+   web-mode-script-padding 0
+   web-mode-style-padding 0))
+#+end_src
+
+**** Vue
+:PROPERTIES:
+:CUSTOM_ID: h:FDC89DB8-32D0-4794-898D-E273028D0FB8
+:END:
+
+Template tags in vue's template can become very complicated, that's the reason I
+still use =web-mode= to edit .vue files, after all it comes with a lot of features
+which =vue-ts-mode= (see: [[https://github.com/8uff3r/vue-ts-mode][vue-ts-mode]]) failed to provide for now.  Maybe I'll
+switch to =vue-ts-mode= in the future.
+
+#+begin_src emacs-lisp
+(define-derived-mode vue-mode web-mode "Vue")
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . vue-mode))
+
+(add-hook 'vue-mode-hook #'eglot-ensure)
 
 (with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs +vue-ts-eglot-lsp-option))
+  (add-to-list 'eglot-server-programs +vue-eglot-option))
 
 (with-eval-after-load 'copilot
   (add-to-list
-   'copilot-indentation-alist '(vue-ts-mode vue-ts-mode-indent-offset)))
-
-(add-to-list 'auto-mode-alist '("\\.vue\\'" . vue-ts-mode))
-(add-hook 'vue-ts-mode-hook #'eglot-ensure)
-(setq vue-ts-mode-indent-offset 2)
+   'copilot-indentation-alist '(vue-mode web-mode-code-indent-offset)))
 #+end_src
 
-**** Autoload
+***** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:3711C8CE-5305-4F82-9905-0A8DB2F843A8
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Vue.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+Vue.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defcustom +vue-ts-eglot-lsp-option
-  '((vue-ts-mode typescript-ts-mode) .
+(defcustom +vue-eglot-option
+  '((vue-mode typescript-ts-mode) .
     ("vue-language-server" "--stdio"
      :initializationOptions
      (:typescript
@@ -3882,9 +3933,7 @@ optional minor mode which can apply this command automatically on save.
     :program "eslint_d"
     :args (list "--stdin" "--fix-to-stdout" "--stdin-filename" (buffer-file-name))
     :working-directory (+reformatter-eslint-root)
-    :lighter " eslint")
-  (add-hook 'vue-ts-mode-hook #'vue-format-on-save-mode)
-  (add-hook 'vue-ts-mode-hook #'typescript-format-on-save-mode))
+    :lighter " eslint"))
 #+end_src
 
 *** Autoload
@@ -4364,24 +4413,6 @@ Another great package from Prot!
                   'meow-save 'meow-replace)))
 #+end_src
 
-** VSCode style icons (vscode-icon.el)
-:PROPERTIES:
-:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
-:END:
-
-Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
-style icons with image format.
-
-#+begin_src emacs-lisp
-(use-package vscode-icon :ensure t)
-
-(with-eval-after-load 'vscode-icon
-  (push '("jpg" . "image") vscode-icon-file-alist)
-  (push '("7z" . "zip") vscode-icon-file-alist)
-  (push '("mkv" . "video") vscode-icon-file-alist)
-  (push '("epub" . "storybook") vscode-icon-file-alist))
-#+end_src
-
 ** Interactive query replace (anzu.el)
 :PROPERTIES:
 :CUSTOM_ID: h:81C344C7-6981-4526-A34B-6EBAB2590CF0
@@ -4470,6 +4501,25 @@ are slightly simplified.
 (setq git-gutter:modified-sign "⏽"
       git-gutter:added-sign "⏽"
       git-gutter:deleted-sign "⏽")
+#+end_src
+
+** COMMENT VSCode style icons (vscode-icon.el)
+:PROPERTIES:
+:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
+:END:
+
+Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
+style icons with image format.  I keep this package only for the purpose of
+testing my =dirvish-icons= library.
+
+#+begin_src emacs-lisp
+(use-package vscode-icon :ensure t)
+
+(with-eval-after-load 'vscode-icon
+  (push '("jpg" . "image") vscode-icon-file-alist)
+  (push '("7z" . "zip") vscode-icon-file-alist)
+  (push '("mkv" . "video") vscode-icon-file-alist)
+  (push '("epub" . "storybook") vscode-icon-file-alist))
 #+end_src
 
 * Utils
@@ -4803,16 +4853,17 @@ made for this package and built-in help buffer:
 #+begin_src emacs-lisp
 (use-package gptel :ensure t)
 
-(setq
- gptel-model 'google/gemini-2.0-flash-exp:free
- gptel-default-mode 'org-mode
- gptel-backend
- (gptel-make-openai "OpenRouter"
-   :host "openrouter.ai"
-   :endpoint "/api/v1/chat/completions"
-   :key (lambda () (require 'password-store) (password-store-get "openrouter_apikey"))
-   :stream t
-   :models '(google/gemini-2.0-flash-exp:free)))
+(with-eval-after-load 'gptel
+  (setq
+   gptel-model 'google/gemini-2.0-flash-exp:free
+   gptel-default-mode 'org-mode
+   gptel-backend
+   (gptel-make-openai "OpenRouter"
+     :host "openrouter.ai"
+     :endpoint "/api/v1/chat/completions"
+     :key (lambda () (require 'password-store) (password-store-get "openrouter_apikey"))
+     :stream t
+     :models '(google/gemini-2.0-flash-exp:free))))
 
 (defvar-keymap grandview-gptel-map
   :doc "Summon gpt models."
