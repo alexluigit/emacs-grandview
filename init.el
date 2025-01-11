@@ -3,6 +3,9 @@
 (defvar grandview--cache
   (expand-file-name "grandview/" user-emacs-directory))
 
+(defvar grandview--def-dir
+  (expand-file-name "autoloads/" grandview--cache))
+
 (defvar grandview--dot-org
   (expand-file-name "grandview.org" (file-name-directory user-init-file)))
 
@@ -21,8 +24,7 @@
     ('main (expand-file-name "grandview.el" grandview--cache))
     ('main-md5 (expand-file-name "grandview.el.md5" grandview--cache))
     ('def-el (expand-file-name "grandview-loaddefs.el" grandview--cache))
-    ('def-dir (expand-file-name "autoloads/" grandview--cache))
-    ('def-md5 (expand-file-name "grandview-autoloads.md5" grandview--cache))))
+    ('def-md5 (expand-file-name "grandview-loaddefs.md5" grandview--cache))))
 
 (defun grandview--gen-tangle-path ()
   "Prepare metadata for `grandview-tangle'."
@@ -43,10 +45,11 @@
                     (name (or memo (replace-regexp-in-string
                                     (regexp-quote " ") "_" title t t)))
                     (.el? (ignore-errors (string= ".el" (substring name -3))))
-                    (tangle-path (concat ":tangle \""
-                                         (grandview--path 'def-dir)
-                                         "+" name (if .el? "" ".el") "\"")))
-               (org-entry-put nil "header-args:emacs-lisp" tangle-path)))))))
+                    (f-name (concat "+" name (if .el? "" ".el")))
+                    (tg-path (format
+                              ":tangle (expand-file-name \"%s\" grandview--def-dir)"
+                              f-name)))
+               (org-entry-put nil "header-args:emacs-lisp" tg-path)))))))
     (save-buffer)
     (kill-this-buffer)))
 
@@ -72,7 +75,7 @@ last change or FORCE is non nil."
       (org-babel-tangle-file
        grandview--dot-org (grandview--path 'main))
       (cl-loop for lib in (directory-files-recursively
-                           (grandview--path 'def-dir) "\\.el$")
+                           grandview--def-dir "\\.el$")
                do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
                     (insert-file-contents lib)
@@ -84,8 +87,8 @@ Only do it when FORCE or contents in autoload directory changed."
   (let* ((autoload-md5 (grandview--path 'def-md5))
          (old-md5 (when (file-exists-p autoload-md5)
                     (grandview--readfile autoload-md5)))
-         (def-dir (grandview--path 'def-dir))
-         (all-el-files (directory-files-recursively def-dir "\\.el$"))
+         (all-el-files (directory-files-recursively
+                        grandview--def-dir "\\.el$"))
          (files-as-str (with-temp-buffer
                          (dolist (file all-el-files)
                            (insert-file-contents file))
@@ -93,7 +96,8 @@ Only do it when FORCE or contents in autoload directory changed."
          (new-md5 (secure-hash 'md5 files-as-str)))
     (when (or force (not (string= old-md5 new-md5)))
       (let ((generate-autoload-file nil) (inhibit-message t))
-        (loaddefs-generate def-dir (grandview--path 'def-el)))
+        (loaddefs-generate grandview--def-dir
+                           (grandview--path 'def-el)))
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
@@ -109,7 +113,7 @@ When FORCE, ensure the tangle process and autoloads generation."
 (let ((debug (or (getenv-internal "DEBUG") init-file-debug))
       file-name-handler-alist)
   (unless (file-exists-p grandview--cache)
-    (make-directory (grandview--path 'def-dir) t)
+    (make-directory grandview--def-dir t)
     (grandview-tangle t)) ; "Initiate spin!" -- Joseph Cooper
   (add-to-list 'load-path grandview--cache)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)

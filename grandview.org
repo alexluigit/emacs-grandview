@@ -718,12 +718,25 @@ For historical reason, terminal can not tell the difference between some key
 storkes. For example, =C-i= and =tab=, =C-m= and =Return=, etc. By default, emacs follow
 this convention, but it doesn't mean emacs are not able to tell the
 difference. On GUI, we can use ~input-decode-map~ to give =C-i= different meaning.
-On terminal, we rebind =<f7>= to =C-i=, so make sure you have relevant settings in
-your terminal emulator's settings.
+In terms of terminal emulator (alacritty in my case), I instruct it to translate
+=C-i= to =<f7>=, after that various commands from different terminal applications
+(such as shell, vim) can then wired to =C-i= through the =<f7>= outlet.
 
 #+begin_src emacs-lisp
 (when (display-graphic-p)
   (define-key input-decode-map [?\C-i] [C-i]))
+#+end_src
+
+Here is how I do with my alacritty configuration:
+
+#+begin_src toml :tangle no
+[keyboard]
+bindings = [
+# ...
+# Ctrl-i => F7
+{ chars = "\u001B[18~", key = "I", mods = "Control" }
+# ...
+]
 #+end_src
 
 Modifier settings for macOS, we use the default though.
@@ -749,7 +762,7 @@ These bindings work globally.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Basic_editing_utilities.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+Basic_editing_utilities.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1123,7 +1136,7 @@ Here I'm adjusting some meow's behavior that I'm not quite used to:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:3050E51B-BD81-4574-B257-232C450D998B
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Modal_Editing_On_Wish_-_meow!.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+Modal_Editing_On_Wish_-_meow!.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1842,7 +1855,7 @@ What my minibuffer config does:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:2DA0D02F-765C-47AE-8118-A4CA24FE9CB5
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+minibuffer.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+minibuffer.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1936,7 +1949,7 @@ rather than all of the =dired-*= noise.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:60693C7D-8538-4B1C-83B2-E79C21E72A20
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+orderless.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+orderless.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -2141,7 +2154,7 @@ completion."
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:BD8323BA-61B7-4216-8A63-B907DA7288C7
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+tempel.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+tempel.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -2376,7 +2389,7 @@ org-mode
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:89CC46D7-7265-4442-BBFE-6627EFE1EB9C
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+files.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+files.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -2760,7 +2773,7 @@ that if you install it from Melpa.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:0C70EF8E-00DB-4201-8110-83FD08E51D68
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+project.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+project.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3013,7 +3026,7 @@ you change your mind).
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:36712AF7-6246-43B1-9F42-ACE9A0FD3ED9
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+ediff.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+ediff.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3068,7 +3081,7 @@ sure this is a good approach."
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:6B8B3E46-1951-4840-B3B3-4667AD69C2FA
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+rime.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+rime.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3159,7 +3172,7 @@ of characters.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:AED70F01-7494-4652-B763-76FA41DF7902
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+eletric.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+eletric.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3287,7 +3300,7 @@ regexp .etc).
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:EF6C06C9-5720-41F2-970C-8E221EA70B92
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+rg.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+rg.el" grandview--def-dir)
 :END:
 
 The purpose of wrapping =rg-define-toggle/search= is to avoid executing them
@@ -3361,7 +3374,7 @@ look like which can be described briefly as follows:
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:D1E76232-405A-40C8-87B1-B553DBB57F43
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+org.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+org.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3447,7 +3460,7 @@ debugging code blocks in a org config file."
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:7269F6A0-67A5-4672-A32C-70711E30F3C5
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+org-id.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+org-id.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3608,7 +3621,7 @@ I disabled its table unit prettifier and use =valign= instead.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:13354F6E-FF7A-43DE-8DC4-43AF25D0DEA9
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+org-tree-slide.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+org-tree-slide.el" grandview--def-dir)
 :CUSTOM_ID: Org_mode-Slide_(org-tree-slide.el)-Autoload-7ff9d878
 :END:
 
@@ -3742,7 +3755,7 @@ Huge thanks to @blahgeek and @jdtsmith!
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:BE13EC8F-A1C9-47C2-8EBC-CB34CA7E9546
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+eglot.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+eglot.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4070,7 +4083,7 @@ optional minor mode which can apply this command automatically on save.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:91FB5726-4A78-403A-8DF6-3D0B2644C6B4
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+reformatter.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+reformatter.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4119,7 +4132,7 @@ optional minor mode which can apply this command automatically on save.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:AE26DC0C-1792-4840-A2B4-DFDC227BA78C
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+flymake.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+flymake.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4152,13 +4165,13 @@ jupyter kernel.  Use it with =SPC f s=, doing it with a prefix argument (=C-u=) 
 prompt for a major mode instead.  Simple yet super effective!
 
 #+begin_src emacs-lisp
-(define-key grandview-util-map (kbd "s") '+scratch)
+(define-key grandview-app-map (kbd "s") '+scratch)
 #+end_src
 
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:DB49C042-A133-4B4B-9773-36016E5009B1
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+scratch.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+scratch.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4279,7 +4292,7 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+tabspaces.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+tabspaces.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4381,7 +4394,7 @@ in ~+mode-line-format~.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:E77C4AD0-D38E-43D5-AFAC-C3135D88A444
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Custom_Mode_line.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+Custom_Mode_line.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4607,7 +4620,7 @@ are slightly simplified.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:FC7300FE-855C-4AC5-9272-689829C7D4D7
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+writeroom-mode.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+writeroom-mode.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4712,7 +4725,7 @@ offering you relevant actions to use on a target determined by the context.
 *** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:B05AAF84-FA1E-42FC-8C55-C7C9AD951D7E
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+vterm.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
