@@ -1,54 +1,22 @@
-#+TITLE: Emacs Grandview
 #+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
 #+STARTUP: showall
-
-* Overview
+#+html: <img src="https://github.com/user-attachments/assets/fbe6214a-7283-4e95-93c6-387ca332e553" align="center" width="100%">
+-----
+* Introduction
 :PROPERTIES:
 :CUSTOM_ID: h:1AECDD3A-9714-41E1-BA21-8BCAFED96CD3
 :END:
-** Screenshots
-:PROPERTIES:
-:CUSTOM_ID: h:E576E55C-B129-42CC-BE83-09221F922E40
-:END:
 
-*** File manager
-:PROPERTIES:
-:CUSTOM_ID: h:1EE04408-E38E-4B45-8CBD-88DA74E2BDB8
-:END:
-[[https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png][https://user-images.githubusercontent.com/16313743/169456875-ed5af1e7-57cd-4203-96e9-9038119721b9.png]]
+*Emacs grandview* is my literate Emacs configuration.  If you're seeing this
+document on github, you may find the "table of contents" button, which sits in
+the up right corner of the README container box, is helpful when trying to
+navigate in different sections of a long document like this.
 
-*** IDE
-:PROPERTIES:
-:CUSTOM_ID: h:FB80E836-BBA4-426B-8229-C4304DBEED8B
-:END:
-[[https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png][https://user-images.githubusercontent.com/16313743/169660050-b66d09b7-617e-46a0-a2a9-138c570d1336.png]]
+** Project structrue
 
-*** Org-mode
-:PROPERTIES:
-:CUSTOM_ID: h:31D50107-120F-4B7C-8E85-A139A712C23F
-:END:
-[[https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png][https://user-images.githubusercontent.com/16313743/169660518-bb1fd05c-089a-41db-830d-43784ae14d6d.png]]
-
-*** Lightning fast startup
-:PROPERTIES:
-:CUSTOM_ID: h:82AAA786-8F45-4D42-AA97-07EAE86FB26C
-:END:
-[[https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png][https://user-images.githubusercontent.com/16313743/169660620-c5f7bef5-499a-4ea2-8a39-3e0f2801cb24.png]]
-
-** Introduction
-:PROPERTIES:
-:CUSTOM_ID: h:4784C101-BDA0-479D-B44D-0709D4B028F3
-:END:
-
-*Emacs grandview* is my literate Emacs configuration which has a pretty
-straightforward project structure:
-
-+ Early init:              =early-init.el=
-+ Init:                    =init.el=
-+ User config (optional):  =user.el=
-+ Main config file:        =grandview.org= (This file)
+The structure of this project is pretty straightforward:
 
 *** The early init file (early-init.el)
 :PROPERTIES:
