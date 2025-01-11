@@ -377,6 +377,55 @@ I'm better off do it the regular way.
 ;;; grandview-custom.el ends here
 #+end_src
 
+*** Pre-defined keymaps
+:PROPERTIES:
+:CUSTOM_ID: h:E5232E0D-670F-487F-BA8C-50396998807A
+:END:
+
+We defined a few keymaps for you to use in the following configurations.  When
+used with =meow=, they are bind as different prefixes under leader key (=SPC=).  See
+[[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Meow > Keybindings > Leader]]
+
++ =grandview-file-map=:       File manipulations, dired, etc.
++ =grandview-search-map=:     Commands relate to search.
++ =grandview-prog-map=:       Commands relate to programming.
++ =grandview-window-map=:     Commands relate to window management.
++ =grandview-tab-map=:        Commands relate to tab / workspaces.
++ =grandview-app-map=:        Useful application / utils such as set frame opacity, etc.
++ =grandview-reg-map=:        Commands for various registers.
++ =grandview-project-map=:    Project commands.
+
+#+begin_src emacs-lisp
+(defvar-keymap grandview-file-map
+  :doc "File and directory manipulations.")
+
+(defvar-keymap grandview-search-map
+  :doc "Search everything using minibuffer.")
+
+(defvar-keymap grandview-prog-map
+  :doc "Programming related commands.")
+
+(defvar-keymap grandview-project-map
+  :doc "Project commands."
+  :parent project-prefix-map)
+
+(defvar-keymap grandview-window-map
+  :doc "Window management commands.")
+
+(defvar-keymap grandview-tab-map
+  :doc "Tab|Workspace commands."
+  :parent tab-prefix-map)
+
+(defvar-keymap grandview-app-map
+  :doc "Useful applications and utilities."
+  "d" #'toggle-debug-on-error
+  "=" #'count-words)
+
+(defvar-keymap grandview-reg-map
+  :doc "Commands for various registers."
+  :parent ctl-x-r-map)
+#+end_src
+
 *** Macros for configuring packages
 :PROPERTIES:
 :CUSTOM_ID: h:3407EAC6-5A0B-4B67-8237-DAFF12B63F63
@@ -833,57 +882,6 @@ has been bound to =meow-inner-of-thing=.)
         (?` . ("`" . "`"))))
 #+end_src
 
-*** Keymaps for leader key
-:PROPERTIES:
-:CUSTOM_ID: h:E5232E0D-670F-487F-BA8C-50396998807A
-:END:
-
-Being able to use =SPC= as the *leader* key is one of the killing features of modal
-editing.  Prees =SPC x SPC f= in sequence takes 4 keystroke indeed, which looks
-longer than =C-x C-f=, but it is objectively easier than holding the control key
-while press another letter key (=C-c C-c=).  Using modifiers (ctrl/shift/alt etc.)
-in your shortcuts too much usually intensify the risk of getting repetitive
-strain injury (RSI).  Maximize the usage of leader key will help to reduce RSI
-for those who use the keyboard for long periods of time.
-
-We defined a few keymaps in *grandview* and bind them to the leader key (=SPC=).
-
-+ =grandview-file-map=:       File manipulations, dired, etc.
-+ =grandview-mct-map=:        "Minibuffer and Completions in Tandem"
-+ =grandview-prog-map=:       Programming related commands
-+ =grandview-workspace-map=:  Commands related to windows/workspaces
-+ =grandview-util-map=:       Useful utils such as, set frame opacity, etc.
-+ =grandview-reg-map=:        Commands for various registers.
-+ =grandview-project-map=:    Project commands.
-
-#+begin_src emacs-lisp
-(defvar-keymap grandview-mct-map
-  :doc "Minibuffer and completions in tandem.")
-
-(defvar-keymap grandview-file-map
-  :doc "File and directory manipulations.")
-
-(defvar-keymap grandview-prog-map
-  :doc "Programming related commands.")
-
-(defvar-keymap grandview-project-map
-  :doc "Project commands."
-  :parent project-prefix-map)
-
-(defvar-keymap grandview-workspace-map
-  :doc "Window|Tab|Workspace commands."
-  :parent tab-prefix-map)
-
-(defvar-keymap grandview-util-map
-  :doc "Useful utils."
-  "d" #'toggle-debug-on-error
-  "=" #'count-words)
-
-(defvar-keymap grandview-reg-map
-  :doc "Commands for various registers."
-  :parent ctl-x-r-map)
-#+end_src
-
 *** Keybindings
 :PROPERTIES:
 :CUSTOM_ID: h:95E86308-81E7-4A9F-B457-1EE8F8F80896
@@ -893,23 +891,33 @@ This section contains *core* keybindings of *Grandview*, feel free to adjust it 
 your liking.  Since this part contains so many core keybindings, it's not a good
 idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
 
-**** INSERT
-:PROPERTIES:
-:CUSTOM_ID: h:CE42BEF3-7ED7-46DF-B4AC-B32AAFBAE529
-:END:
-
-#+begin_src emacs-lisp
-(meow-define-keys 'insert
-  '("S-<backspace>" . meow-kill-whole-line)
-  '("<f7>" . meow-right)
-  '("<C-i>" . meow-right)
-  '("C-o" . meow-left))
-#+end_src
-
 **** NORMAL
 :PROPERTIES:
 :CUSTOM_ID: h:B82246F0-CABC-48E4-AE8F-FDAAD6CFDC4F
 :END:
+
+One of the big differences between *emacs* and *vim* is their keybinding style.  I'm
+not talking about the modal editing part but the style of how they assign
+certain key to its corresponding command.  For example, in *vim* / *evil-mode*, =j= is
+the key to move to next line, the rational for that is the command 'move to next
+line' is so frequently used and we should assign a home row key to it.  For a
+very long period of time I had never doubted that since vim is so widely
+accepted, until I became a colemak user.  At the moment I switched to colemak, I
+realized that the =hjkl= paradigm in *vim* / *evil-mode* has 2 flaws:
+
+1. It is *not* keyboard-layout agnostic.
+2. The key letters such as =j= / =k= tell us nothing about the relationship between
+   the keycode and the command it calls.
+
+While their counterpart, the emacs keybinding naming convention, has a rather
+reasonable linkage between the key itself and its corresponding command.  =C-n=
+calls command =next-line=, the letter =n= in the =C-n= is meaningful thus making it
+easier for people to understand and memorize.
+
+The following =meow-normal-state-keymap= is arranged in a way that conforms the
+principle mentioned above, e.g. =n/p= for command =meow-next/prev=.  Also, I
+introduced key pair =i/o= for moving cursor forward/backward with one character
+(mnemonic: move [i]n and [o]ut).
 
 #+begin_src emacs-lisp
 (meow-define-keys 'normal
@@ -950,7 +958,7 @@ idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
   '("e" . embrace-add)
   '("E" . embrace-commander)
   '("f" . meow-next-symbol)
-  '("F" . meow-till)
+  '("F" . meow-find)
   '("g" . meow-grab)
   '("G" . meow-sync-grab)
   '("h" . mark-paragraph)
@@ -972,12 +980,12 @@ idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
   '("P" . meow-open-above)
   '("q" . quit-window)
   '("Q" . meow-kmacro-lines)
-  '("r" . undo-redo)
-  '("R" . repeat)
+  '("r" . repeat)
+  '("R" . undo-redo)
   '("s" . meow-search)
   '("S" . meow-pop-search)
   '("t" . avy-goto-char-timer)
-  '("T" . avy-resume)
+  '("T" . meow-till)
   '("u" . meow-undo)
   '("U" . meow-undo-in-selection)
   '("v" . meow-visit)
@@ -991,10 +999,34 @@ idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
   '("Z" . meow-unpop-to-mark))
 #+end_src
 
+**** INSERT
+:PROPERTIES:
+:CUSTOM_ID: h:CE42BEF3-7ED7-46DF-B4AC-B32AAFBAE529
+:END:
+
+In normal mode, we use =i= / =o= key to move cursor forward or backward 1 character.
+To make it consistent, we bind =C-i= and =C-o= in insert mode to do the same job.
+
+#+begin_src emacs-lisp
+(meow-define-keys 'insert
+  '("S-<backspace>" . meow-kill-whole-line)
+  '("<f7>" . meow-right)
+  '("<C-i>" . meow-right)
+  '("C-o" . meow-left))
+#+end_src
+
 **** LEADER
 :PROPERTIES:
 :CUSTOM_ID: h:5D69FCEA-9C0B-4EB9-8C03-E0AF1A4EB46C
 :END:
+
+Being able to use =SPC= as the *leader* key is one of the killing features of modal
+editing.  Prees =SPC x SPC f= in sequence takes 4 keystroke indeed, which looks
+longer than =C-x C-f=, but it is objectively easier than holding the control key
+while press another letter key.  Using modifiers (ctrl/shift/alt etc.)  in your
+shortcuts too much usually intensify the risk of getting repetitive strain
+injury (RSI).  Maximize the usage of leader key will help to reduce RSI for
+those who use the keyboard for long periods of time.
 
 #+begin_src emacs-lisp
 (meow-define-keys 'leader
@@ -1011,6 +1043,7 @@ idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
   '("." . xref-find-definitions)
   '("<" . beginning-of-buffer)
   '(">" . end-of-buffer)
+  (cons "a" grandview-app-map)
   '("e" . dired-jump)
   '("E" . eval-expression)
   (cons "f" grandview-file-map)
@@ -1020,9 +1053,9 @@ idea to comment out (in =org-mode= using ~C-c ;~) this section entirely.
   (cons "o" grandview-prog-map)
   (cons "p" grandview-project-map)
   (cons "r" grandview-reg-map)
-  (cons "t" grandview-mct-map)
-  (cons "u" grandview-util-map)
-  (cons "w" grandview-workspace-map)
+  (cons "s" grandview-search-map)
+  (cons "t" grandview-tab-map)
+  (cons "w" grandview-window-map)
   '("z" . window-toggle-side-windows))
 #+end_src
 
@@ -1399,32 +1432,9 @@ control over the buffer list and is more powerful overall.
 :CUSTOM_ID: h:1A9091D5-B8A4-4135-9415-9823ABF0AF3C
 :END:
 
-#+begin_src emacs-lisp
-(define-key grandview-workspace-map (kbd "C-s") 'recenter)
-#+end_src
+Manage windows in Emacs.
 
-**** Window selection (windmove.el)
-:PROPERTIES:
-:CUSTOM_ID: h:D0621A73-5618-478E-B8C9-59A798B3BA15
-:END:
-
-Directional window-selection routines.  Thanks to =meow-keypad-mode=, you don't
-need to press =C-w d= (take =windmove-swap-states-down= as example), the actual
-keystroke for this binding is =SPC w w d= (check out =KEYPAD AND MOTION MODE=
-section in =meow-tutor=).
-
-#+begin_src emacs-lisp
-(use-package windmove :ensure nil :after-call split-window)
-
-(with-eval-after-load 'windmove
-  (bind! grandview-workspace-map
-    "C-w d" 'windmove-swap-states-down
-    "C-w u" 'windmove-swap-states-up
-    "C-w r" 'windmove-swap-states-right
-    "C-w l" 'windmove-swap-states-left))
-#+end_src
-
-**** Window placement (window.el)
+**** Window placement
 :PROPERTIES:
 :CUSTOM_ID: h:72ECA0DF-D43C-4E28-92A9-CB830B99B85A
 :END:
@@ -1438,8 +1448,8 @@ For each buffer action in it we can define several functions for selecting the
 appropriate window.  These are executed in sequence, but my usage thus far
 suggests that a simpler method is just as effective for my case.
 
-Disable ~cursor-in-non-selected-windows~ and ~highlight-nonselected-windows~ reduces
-rendering/line scan work for Emacs in non-focused windows.
+Disable ~cursor-in-non-selected-windows~ and ~highlight-nonselected-windows~
+reduces rendering/line scan work for Emacs in non-focused windows.
 
 #+begin_src emacs-lisp
 (use-package window :ensure nil)
@@ -1469,90 +1479,71 @@ rendering/line scan work for Emacs in non-focused windows.
   (setq switch-to-buffer-in-dedicated-window 'pop)
   (setq split-height-threshold nil)
   (setq split-width-threshold 120))
-
-(define-key global-map (kbd "s-SPC") #'+monocle-mode)
 #+end_src
 
-**** Autoload
-:PROPERTIES:
-:CUSTOM_ID: h:7BAA0631-CBD3-4BED-BB6B-D6BE35BDBA73
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Window_management.el"
-:END:
+**** Adjust window size
+
+=window.el= provides 4 commands to adjust the size of a window.  Prefix them with
+1-9 to do the adjustment multiple times at once.  Also don't forget that =r= in
+normal mode can =repeat= the last command, which may save a lot of key strokes for
+you.
 
 #+begin_src emacs-lisp
-(defvar +monocle--saved-window-configuration nil
-  "Last window configuration before enabling `+monocle-mode'.")
-
-;;;###autoload
-(define-minor-mode +monocle-mode
-  "Toggle between multiple windows and single window.
-This is the equivalent of maximising a window.  Tiling window
-managers such as DWM, BSPWM refer to this state as 'monocle'."
-  :global t
-  (let ((config +monocle--saved-window-configuration)
-        (buf (current-buffer)))
-    (if (one-window-p)
-        (when config
-          (set-window-configuration config))
-      (setq +monocle--saved-window-configuration (current-window-configuration))
-      (when (window-parameter nil 'window-side) (delete-window))
-      (delete-other-windows)
-      (switch-to-buffer buf))))
+(bind! grandview-window-map
+  "-" #'shrink-window
+  "=" #'enlarge-window
+  "," #'shrink-window-horizontally
+  "." #'enlarge-window-horizontally)
 #+end_src
 
-*** Frame management
-:PROPERTIES:
-:CUSTOM_ID: h:F715736C-9299-489F-96A4-C43C649C883A
-:END:
-
-- Remove title bar on macOS
-- Enter fullscreen automatically on macOS
-- Adjust frame opacity dynamically
-- Run garbage collector when emacs is out focus
+=SPC w c= to recenter current line.
 
 #+begin_src emacs-lisp
-(when  (eq system-type 'darwin)
-  (add-to-list 'default-frame-alist '(undecorated . t))
-  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
-
-(add-hook 'window-configuration-change-hook #'+frame-opacity-auto)
-
-(add-function :after after-focus-change-function
-              (lambda () (unless (frame-focus-state)
-                           (garbage-collect))))
-
-(bind! grandview-util-map
-  "o" #'+frame-opacity-set
-  "t" #'toggle-frame-maximized
-  "m" #'+show-messages-other-frame)
+(define-key grandview-window-map (kbd "c") 'recenter)
 #+end_src
 
-**** Frame margin (fringe.el)
+**** Window reorder (windmove.el)
 :PROPERTIES:
-:CUSTOM_ID: h:55DA6FDA-C0E0-44A3-8335-DD6D5D5C18E1
+:CUSTOM_ID: h:D0621A73-5618-478E-B8C9-59A798B3BA15
 :END:
 
-+ Redefine word wrap arrow at fringe
-+ Create a 20 pixel margin for emacs frame
+Directional window-selection routines.  Thanks to =meow-keypad-mode=, the actual
+keystroke for this binding is =SPC w d/u/r/l= (check out =KEYPAD AND MOTION MODE=
+section in =meow-tutor=).
 
 #+begin_src emacs-lisp
-(define-fringe-bitmap 'right-curly-arrow  [])
-(define-fringe-bitmap 'left-curly-arrow  [])
-(add-to-list 'default-frame-alist '(internal-border-width . 10))
-(add-to-list 'default-frame-alist '(left-fringe . 1))
-(add-to-list 'default-frame-alist '(right-fringe . 1))
-(fringe-mode '(1 . 1))
+(use-package windmove :ensure nil :after-call split-window)
+
+(bind! grandview-window-map
+  "d" #'windmove-swap-states-down
+  "u" #'windmove-swap-states-up
+  "r" #'windmove-swap-states-right
+  "l" #'windmove-swap-states-left)
 #+end_src
 
-**** Autoload
+**** Place window in other frames
+:PROPERTIES:
+:CUSTOM_ID: h:C2DBDFAB-F845-402A-9380-DC7C4BC74E8A
+:END:
+
+To prevent certain windows corrupting our delicately crafted frame layout, we
+can instuct them to open in other frames, when the task is done, close that
+frame (=C-x 5 2=) directly.  A good example would be showing the **Messages** buffer
+in other frame when debugging emacs packages.
+
+#+begin_src emacs-lisp
+(bind! grandview-window-map "m" #'+window-show-messages-other-frame)
+#+end_src
+
+***** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:5FD0BB42-46A7-4814-8F35-A7FF80DAFBB3
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+Frame_management.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+Place_window_in_other_frames.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +show-messages-other-frame (&optional erase)
+(defun +window-show-messages-other-frame (&optional erase)
   "Show *Messages* buffer in other frame.
 If ERASE is non-nil, erase the buffer before switching to it."
   (interactive "P")
@@ -1566,55 +1557,44 @@ If ERASE is non-nil, erase the buffer before switching to it."
       (with-selected-frame (make-frame)
         (set-window-parameter (selected-window) 'no-other-window t)
         (switch-to-buffer "*Messages*")))))
+#+end_src
 
-(defvar +frame-cursor-saved-color
-  (frame-parameter nil 'cursor-color))
+**** Monocle mode
+:PROPERTIES:
+:CUSTOM_ID: h:5BE7214A-B950-4F9B-951E-C45882829C0F
+:END:
 
-(defcustom +frame-cursor-dim-color "#606060"
-  "Cursor color for `+frame-cursor-dim-mode'."
-  :group 'cursor :type 'string)
+A command to maximize / restore a window.
 
-(defcustom +frame-opacity 100
-  "Default frame opacity."
-  :group 'grandview
-  :type 'integer)
+#+begin_src emacs-lisp
+(define-key grandview-window-map (kbd "w") #'+window-monocle-mode)
+#+end_src
 
-(defun +frame-opacity--adjust (opacity)
-  (pcase system-type
-    ('darwin (set-frame-parameter nil 'alpha `(,opacity ,opacity)))
-    (_ (set-frame-parameter nil 'alpha-background opacity))))
+***** Autoload
+:PROPERTIES:
+:CUSTOM_ID: h:7BAA0631-CBD3-4BED-BB6B-D6BE35BDBA73
+:header-args:emacs-lisp: :tangle (expand-file-name "+Monocle_mode.el" grandview--def-dir)
+:END:
 
-;;;###autoload
-(defun +frame-opacity-auto ()
-  "Setup frame opacity according to current major-mode."
-  (+frame-opacity--adjust +frame-opacity))
-
-;;;###autoload
-(defun +frame-opacity-set (&optional percent)
-  (interactive "P")
-  (cond ((or (and percent (not current-prefix-arg))
-             (numberp percent))
-         (setq +frame-opacity (* 10 percent))
-         (+frame-opacity--adjust +frame-opacity))
-        ((equal current-prefix-arg '(4))
-         (+frame-opacity--adjust +frame-opacity))
-        (t (let ((opa (frame-parameter nil 'alpha-background))
-                 (low 60) (high 100))
-             (+frame-opacity--adjust (if (eq opa low) high low))))))
+#+begin_src emacs-lisp
+(defvar +window-monocle--saved-window-configuration nil
+  "Last window configuration before enabling `+window-monocle-mode'.")
 
 ;;;###autoload
-(define-minor-mode +frame-cursor-dim-mode
-  "Enable dimmed `cursor-color' for current frame."
+(define-minor-mode +window-monocle-mode
+  "Toggle between multiple windows and single window.
+This is the equivalent of maximising a window.  Tiling window
+managers such as DWM, BSPWM refer to this state as 'monocle'."
   :global t
-  :lighter nil
-  :group 'cursor
-  (if +frame-cursor-dim-mode
-      (progn
-        (setq-local cursor-type nil)
-        (blink-cursor-mode -1)
-        (set-cursor-color +frame-cursor-dim-color))
-    (blink-cursor-mode +1)
-    (set-cursor-color +frame-cursor-saved-color)))
+  (let ((config +window-monocle--saved-window-configuration)
+        (buf (current-buffer)))
+    (if (one-window-p)
+        (when config
+          (set-window-configuration config))
+      (setq +window-monocle--saved-window-configuration (current-window-configuration))
+      (when (window-parameter nil 'window-side) (delete-window))
+      (delete-other-windows)
+      (switch-to-buffer buf))))
 #+end_src
 
 *** Running Emacs as server process (server.el)
@@ -1884,7 +1864,7 @@ word, which usually consists of only 2 characters.
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">")
-  (bind! grandview-mct-map
+  (bind! grandview-search-map
     "l" 'consult-line
     "/" 'consult-line-multi
     "t" 'consult-mark
@@ -1973,26 +1953,25 @@ in the form of Capfs (~completion-at-point-functions~).
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
   (add-hook 'completion-at-point-functions #'cape-keyword)
   (add-hook 'completion-at-point-functions #'cape-dict)
-  (define-prefix-command '+cape-map)
-  (defvar +cape-prefix-map (make-sparse-keymap))
-  (defalias '+cape-map +cape-prefix-map)
-  (define-key global-map (kbd "C-M-/") '+cape-map)             ; remapped `dabbrev-completion'
-  (bind! +cape-prefix-map
-    "c" 'completion-at-point ; capf
-    "t" 'complete-tag        ; etags
-    "d" 'cape-dabbrev        ; or dabbrev-completion
-    "f" 'cape-file
-    "k" 'cape-keyword
-    "s" 'cape-symbol
-    "a" 'cape-abbrev
-    "i" 'cape-ispell
-    "l" 'cape-line
-    "w" 'cape-dict
-    "\\" 'cape-tex
-    "_" 'cape-tex
-    "^" 'cape-tex
-    "&" 'cape-sgml
-    "r" 'cape-rfc1345))
+
+  (defvar-keymap grandview-cape-map
+    :parent grandview-search-map
+    "c" #'completion-at-point ; capf
+    "t" #'complete-tag        ; etags
+    "d" #'cape-dabbrev        ; or dabbrev-completion
+    "f" #'cape-file
+    "k" #'cape-keyword
+    "s" #'cape-symbol
+    "a" #'cape-abbrev
+    "i" #'cape-ispell
+    "l" #'cape-line
+    "w" #'cape-dict
+    "\\" #'cape-tex
+    "_" #'cape-tex
+    "^" #'cape-tex
+    "&" #'cape-sgml
+    "r" #'cape-rfc1345)
+  (define-key grandview-search-map (kbd "s") grandview-cape-map))
 #+end_src
 
 ** Snippet (tempel.el)
@@ -2609,7 +2588,8 @@ that if you install it from Melpa.
     "f" 'dirvish-fd
     "n" 'dirvish-side
     "o" 'dirvish-quick-access
-    "b" 'dirvish-fd-jump))
+    "b" 'dirvish-fd-jump)
+  (bind! mode-specific-map "e" 'dirvish-dwim))
 #+end_src
 
 ** Project management (project.el)
@@ -3350,8 +3330,7 @@ one."
 (defun +org-id-headlines ()
   "Add missing CUSTOM_ID to all headlines in current file."
   (interactive)
-  (org-map-entries
-   (lambda () (+org-id--get))))
+  (org-map-entries #'+org-id--get))
 
 ;;;###autoload
 (defun +org-id-headline ()
@@ -3534,12 +3513,12 @@ Some number of BLANK-LINES will be shown below the header."
   (cond (org-tree-slide-mode
          (text-scale-set +org-tree-slide-text-scale)
          (+frame-cursor-dim-mode +1)
-         (+monocle-mode +1)
+         (+window-monocle-mode +1)
          (when (fboundp 'writeroom-mode) (writeroom-mode +1))
          (ignore-errors (org-latex-preview '(4))))
         (t
          (text-scale-set 0)
-         (+monocle-mode -1)
+         (+window-monocle-mode -1)
          (+frame-cursor-dim-mode -1)
          (when (fboundp 'writeroom-mode) (writeroom-mode -1))
          (org-clear-latex-preview)
@@ -4122,12 +4101,11 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
       tabspaces-include-buffers '("*scratch*" "*Messages*")
       tabspaces-remove-to-default t)
 
-(with-eval-after-load 'tabspaces
-  (bind! grandview-workspace-map
-    "C" 'tabspaces-clear-buffers
-    "R" 'tabspaces-remove-selected-buffer
-    "k" 'tabspaces-kill-buffers-close-workspace
-    "s" 'tabspaces-switch-or-create-workspace))
+(bind! grandview-tab-map
+  "C" 'tabspaces-clear-buffers
+  "R" 'tabspaces-remove-selected-buffer
+  "k" 'tabspaces-kill-buffers-close-workspace
+  "s" 'tabspaces-switch-or-create-workspace)
 
 (with-eval-after-load 'consult
   (consult-customize consult--source-buffer :hidden t :default nil)
@@ -4598,21 +4576,18 @@ offering you relevant actions to use on a target determined by the context.
 (defvar +vterm-index 0
   "The index of current vterm buffer.")
 
-;;;###autoload
 (defadvice! +vterm-escape-a (fn &rest args)
   :around #'meow-insert-exit
   (if (derived-mode-p 'vterm-mode)
       (vterm-send-escape)
     (apply fn args)))
 
-;;;###autoload
 (defadvice! +vterm-kill-whole-line-a (fn &rest args)
   :around #'meow-kill-whole-line
   (if (derived-mode-p 'vterm-mode)
       (vterm-send-key "<f5>" nil nil nil)
     (apply fn args)))
 
-;;;###autoload
 (defadvice! +vterm-backward-char-a (fn &rest args)
   :around #'meow-right
   (if (derived-mode-p 'vterm-mode)
@@ -4625,27 +4600,22 @@ offering you relevant actions to use on a target determined by the context.
                (derived-mode-p 'vterm-mode))
     (apply fn args)))
 
-;;;###autoload
 (defun +vterm-send-F6 ()
   (interactive)
   (vterm-send-key "<f6>" nil nil nil))
 
-;;;###autoload
 (defun +vterm-send-F8 ()
   (interactive)
   (vterm-send-key "<f8>" nil nil nil))
 
-;;;###autoload
 (defun +vterm-send-F10 ()
   (interactive)
   (vterm-send-key "<f10>" nil nil nil))
 
-;;;###autoload
 (defun +vterm-send-F11 ()
   (interactive)
   (vterm-send-key "<f11>" nil nil nil))
 
-;;;###autoload
 (defun +vterm-send-F12 ()
   (interactive)
   (vterm-send-key "<f12>" nil nil nil))
@@ -4692,7 +4662,6 @@ project root directory as `default-directory'."
     (add-to-list '+vterm-buffers (vterm new-index))
     (meow-insert)))
 
-;;;###autoload
 (defun +vterm-next (&optional arg)
   "Select next vterm buffer.
 Create new one if no vterm buffer exists."
@@ -4704,7 +4673,6 @@ Create new one if no vterm buffer exists."
       (switch-to-buffer buf)
       (setq +vterm-index new-index))))
 
-;;;###autoload
 (defun +vterm-prev (&optional arg)
   "Select previous vterm buffer."
   (interactive "p")
@@ -4741,7 +4709,7 @@ Used as a hook function added to `kill-buffer-hook'."
 #+begin_src emacs-lisp
 (use-package magit :ensure t)
 
-(define-key global-map (kbd "C-M-g") 'magit-status-here)
+(define-key grandview-app-map (kbd "m") 'magit-status-here)
 (with-eval-after-load 'magit
   (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-define-global-key-bindings nil)
@@ -4867,18 +4835,19 @@ made for this package and built-in help buffer:
 
 (defvar-keymap grandview-gptel-map
   :doc "Summon gpt models."
-  :parent grandview-util-map
-  "g" #'gptel
+  :parent grandview-app-map
+  "n" #'gptel ; start [n]ew dialog
   "a" #'gptel-add
   "f" #'gptel-add-file
   "s" #'gptel-send
   "r" #'gptel-rewrite
   "t" #'gptel-org-set-topic
   "p" #'gptel-org-set-properties
-  "m" #'gpt-mode
-  "o" #'gptel-menu)
+  "o" #'gptel-menu ; change [o]ptions
+  "m" #'gptel-mode)
 
-(bind! grandview-util-map "g" grandview-gptel-map)
+;; a key for AI
+(bind! grandview-app-map "a" grandview-gptel-map)
 #+end_src
 
 * About
