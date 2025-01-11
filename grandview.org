@@ -70,16 +70,16 @@ package initialization process, such as =package-enable-at-startup=,
 The main responsibility of my =init.el= is to arrange the tangling of
 =grandview.org= file and load it.
 
-*** User config
+*** User private config | grandview options (init.grandview.el)
 :PROPERTIES:
 :CUSTOM_ID: h:9102F88E-A57C-48D2-A606-FF01002E4D98
 :END:
 
-=user.el= can be the place to put your *grandview* specific configuration or other
-arbitrary settings to load before loading =grandview.el=.  See [[#h:0EBF6C16-D48B-4BE3-85B6-39FC96982410][Customization
+=init.grandview.el= is the place to put your *grandview* specific configuration or
+other arbitrary settings to load before loading =grandview.el=.  See [[#h:0EBF6C16-D48B-4BE3-85B6-39FC96982410][Customization
 options]].
 
-Here is an example of =user.el=:
+Here is an example of =init.grandview.el=:
 
 #+begin_src emacs-lisp :tangle no
 ;; adjust font size
@@ -119,8 +119,11 @@ of the headings in this file and press =Tab= to fold / unfold the node would be 
 good start.
 
 The elisp source blocks in this file is tangled to a regular =grandview.el= file
-which is then evaluated by Emacs.  Sections named *Autoload* are tangled to
-separate files upon which corresponding autoloads are generated.
+which is then evaluated by Emacs.
+
+Sections named *Autoload* are tangled to separate files upon which corresponding
+autoloads are generated.  You don't have to manually type in the tangle path of
+the Autoload section, grandview has done it for you automatically.
 
 After you modify the contents of code blocks in this file, you may want to apply
 these changes immediately, just ~M-x ~restart-emacs~, after restart the old config
@@ -136,42 +139,73 @@ more sections is problematic and try to debug it, just comment out these
 sections then do ~restart-emacs~, all the configuartions in these sections are
 ignored (not being tangled at the first place actually).
 
+The tangled directory looks something like this:
+
+(Do not edit these files by hand since all of them are auto generated)
+
+#+begin_src bash :tangle no
+tree ~/.cache/emacs/grandview
+
+├── autoloads
+│   ├── +Basic_editing_utilities.el
+│   ├── +Custom_Mode_line.el
+│   ├── +Fonts_and_icons.el
+│   ├── +Frame_opacity.el
+│   ├── +Less_distracting_cursor.el
+│   ├── +Modal_Editing_On_Wish_-_meow!.el
+│   ├── +Monocle_mode.el
+│   ├── +Place_window_in_other_frames.el
+│   ├── +Vue.el
+│   ├── +ediff.el
+│   ├── +eglot.el
+│   ├── +eletric.el
+│   ├── +files.el
+│   ├── +flymake.el
+│   ├── +minibuffer.el
+│   ├── +orderless.el
+│   ├── +org-id.el
+│   ├── +org-tree-slide.el
+│   ├── +org.el
+│   ├── +project.el
+│   ├── +reformatter.el
+│   ├── +rg.el
+│   ├── +rime.el
+│   ├── +scratch.el
+│   ├── +tabspaces.el
+│   ├── +tempel.el
+│   ├── +vterm.el
+│   └── +writeroom-mode.el
+├── grandview-custom.el
+├── grandview-loaddefs.el
+├── grandview-loaddefs.md5
+├── grandview-macros.el
+├── grandview.el
+└── grandview.el.md5
+#+end_src
+
 ** Installation
 :PROPERTIES:
 :CUSTOM_ID: h:B45EA3C7-3DE3-42A1-AAD6-45FC9A5A6FBB
 :END:
 
-Make sure to backup your own emacs config before installation.
+You might need these commands when using =emacs-grandview=.
+
+|-------------+-----------------------------|
+| Package     | Description                 |
+|-------------+-----------------------------|
+| fd          | find command, but faster    |
+| rg          | grep command, but faster    |
+| git         | Version control backend     |
+| gls (macOS) | GNU's ls, in built on Linux |
+|-------------+-----------------------------|
+
+Make sure to backup your old emacs config before installation.
 
 #+begin_src shell :tangle no
 cp -r ~/.emacs.d ~/.emacs.d.bak
 #+end_src
 
-*** Dependencies
-:PROPERTIES:
-:CUSTOM_ID: h:33BF2C72-9505-4C59-877C-8495A625A372
-:END:
-
-Here are the dependencies of this project.
-
-|-------------------+-----------------------------+----------|
-| Package           | Description                 | Required |
-|-------------------+-----------------------------+----------|
-| =fd=                | A modern =find=               |          |
-| =rg=                | A modern =grep=               |          |
-| =git=               | Version control             |          |
-| =words=             | English words completion    | optional |
-| =noto-fonts-emoji=  | Font for emojis             | optional |
-| =Iosveka Nerd Font= | Default font                | optional |
-| =font-victor-mono=  | Default fixed pitch font    | optional |
-| =ttf-sarasa-gothic= | Default variable pitch font | optional |
-|-------------------+-----------------------------+----------|
-*** Tangling
-:PROPERTIES:
-:CUSTOM_ID: h:C5499A98-AF3B-4528-B557-407A18037E93
-:END:
-
-Clone the repo and tangle the config.
+Then clone the repo and start using it, enjoy!
 
 #+begin_src shell :tangle no
 git clone https://www.github.com/alexluigit/emacs-grandview
@@ -182,7 +216,8 @@ mv ~/emacs-grandview ~/.config/emacs/
 ## or you can put it to ~/.emacs.d, it's an old convention
 # mv ~/emacs-grandview ~/.emacs.d
 
-## hooray, enjoy the Emacs-Grandview
+# on macOS
+# /Applications/Emacs.app/Contents/MacOS/Emacs
 
 emacs
 
@@ -190,7 +225,12 @@ emacs
 ## Emacs by 'rem' bash command, see the "** Restart Emacs" section below.
 #+end_src
 
-** Restart Emacs
+Note: although this is a public project, it is also the emacs setups that I use
+day-to-day, so in principle I won't take too much time in reviewing / merging
+PRs (except document improvement or really interesting ideas).  Nonetheless,
+please feel free to ask any questions!
+
+** Restart script
 :PROPERTIES:
 :CUSTOM_ID: h:2DCD6D3B-6759-4E78-AF50-5B23FA77C603
 :END:
@@ -259,7 +299,7 @@ Here are the available flags of this command.
 + ~-P~: Before restarting, delete all package caches.
 + ~-d~: use =--debug-init= flag for the daemon.
 
-* GRANDVIEW CORE
+* CORE of grandview
 :PROPERTIES:
 :CUSTOM_ID: h:FB2572C2-4DDC-44A2-92C0-D8754305B2A7
 :END:
@@ -269,6 +309,13 @@ system (like =vim=) is powered by =meow= (thanks to *@DogLooksGood*!).  All the 
 user interface configs such as themes and fonts are also listed below.  Please
 *DO NOT* comment this entire section out unless you know exactly what you are
 doing.
+
+** Pre-init setups
+:PROPERTIES:
+:CUSTOM_ID: h:976B3AE1-6291-4123-9A3C-A19BC284FA51
+:END:
+
+Setting up the environment variables, package manager, etc.
 
 #+begin_src emacs-lisp
 ;;; grandview.el --- tangled from grandview.org  -*- lexical-binding: t -*-
@@ -282,13 +329,6 @@ doing.
 ;;; Code:
 
 #+end_src
-
-** Pre-init setups
-:PROPERTIES:
-:CUSTOM_ID: h:976B3AE1-6291-4123-9A3C-A19BC284FA51
-:END:
-
-Setting up the environment variables, package manager, etc.
 
 *** Customization options
 :PROPERTIES:
@@ -362,7 +402,7 @@ I'm better off do it the regular way.
 
 (when-let* ((user-cfg
              (expand-file-name
-              "user.el" (file-name-directory user-init-file)))
+              "init.grandview.el" (file-name-directory user-init-file)))
             ((file-exists-p user-cfg)))
   (load user-cfg 'noerror 'silent))
 
@@ -433,7 +473,7 @@ used with =meow=, they are bind as different prefixes under leader key (=SPC=). 
 
 A few handy macros were defined to be used in elisp code blocks of this =.org=
 file, you'll see them appear in this file a couple of times.  These macros are
-also accessible in =user.el=.
+also accessible in =init.grandview.el=.
 
 + =appendq!=: append lists to a symbol.
 + =delq!=: delete an element from a list.
@@ -714,7 +754,8 @@ On terminal, we rebind =<f7>= to =C-i=, so make sure you have relevant settings 
 your terminal emulator's settings.
 
 #+begin_src emacs-lisp
-(define-key input-decode-map [?\C-i] [C-i])
+(when (display-graphic-p)
+  (define-key input-decode-map [?\C-i] [C-i]))
 #+end_src
 
 Modifier settings for macOS, we use the default though.
@@ -848,7 +889,7 @@ Jump to any visible text with a few strokes.
 #+begin_src emacs-lisp
 (use-package avy :ensure t)
 
-(setq avy-timeout-seconds 0.3)
+(setq avy-timeout-seconds 0.4)
 (setq avy-all-windows nil)
 (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
 #+end_src
@@ -1170,42 +1211,7 @@ Here I'm adjusting some meow's behavior that I'm not quite used to:
 :END:
 
 This section contain configs in relation to basic user interface such as scroll
-behavior, font settings , theme, etc.
-
-Here are some basic tweaks:
-
-+ Show current key strokes in echo area after 0.25s
-+ Disable bidirectional text scanning for a modest performance boost.
-+ Do not display continuation lines
-+ Do not disable the ~erase-buffer~ command
-
-By default, page scrolling should keep the point at the same visual
-position, rather than force it to the top or bottom of the
-viewport.  This eliminates the friction of guessing where the point
-has warped to.
-
-As for per-line scrolling, I dislike the default behaviour of
-visually re-centring the point: it is too aggressive as a standard
-mode of interaction.  With the following setq-default, the point
-will stay at the top/bottom of the screen while moving in that
-direction (use =C-l= to reposition it).
-
-#+begin_src emacs-lisp
-(setq-default bidi-display-reordering 'left-to-right)
-(setq-default bidi-paragraph-direction 'left-to-right)
-(setq bidi-inhibit-bpa t)
-(setq-default truncate-lines t)
-(setq echo-keystrokes 0.25)
-(setq scroll-conservatively 101)
-(setq scroll-up-aggressively 0.01)
-(setq scroll-down-aggressively 0.01)
-(setq auto-window-vscroll nil)
-(setq scroll-step 1)
-(setq scroll-margin 1)
-(setq hscroll-step 1)
-(setq hscroll-margin 1)
-(put 'erase-buffer 'disabled nil)
-#+end_src
+behavior, font settings, theme, etc.
 
 *** Themes
 :PROPERTIES:
@@ -1284,30 +1290,16 @@ that by evaluating:
 (member "Sarasa Mono SC" (font-family-list))
 #+end_src
 
-#+begin_src emacs-lisp
-(if (daemonp)
-    (add-hook 'after-make-frame-functions #'+font-setup)
-  (+font-setup))
-#+end_src
-
-*** Icon library (nerd-icons.el)
-:PROPERTIES:
-:CUSTOM_ID: h:14F5303D-F1A6-48D0-83AF-E4F8F34EC946
-:END:
+Setup fonts.
 
 #+begin_src emacs-lisp
-(use-package nerd-icons :ensure t)
-
-(require 'nerd-icons)
-(setq nerd-icons-font-family "Iosevka Nerd Font")
-(when (memq system-type '(ms-dos cygwin windows-nt))
-  (setq nerd-icons-font-family "Iosevka NF"))
+(+font-setup)
 #+end_src
 
-*** Autoload
+***** Autoload
 :PROPERTIES:
 :CUSTOM_ID: h:38943ED3-0842-4327-9998-3E331FAA76DB
-:header-args:emacs-lisp: :tangle "/Users/alex/.cache/emacs/grandview/autoloads/+User_interface_basics.el"
+:header-args:emacs-lisp: :tangle (expand-file-name "+Fonts_and_icons.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1335,7 +1327,7 @@ that by evaluating:
          (dolist (charset '(kana han cjk-misc bopomofo))
            (set-fontset-font
             t charset (font-spec :family grandview-custom-cjk-font)))
-       (message "Font `%s' is not available" grandview-CJK-font)))))
+       (message "Font `%s' is not available" grandview-custom-cjk-font)))))
 
 ;;;###autoload
 (defun +font-cn-set-title (beg end)
@@ -1350,6 +1342,187 @@ that by evaluating:
   (remove-overlays beg end)
   (let ((ov (make-overlay beg end)))
     (overlay-put ov 'face 'font-lock-comment-face)))
+#+end_src
+
+**** Icon library (nerd-icons.el)
+:PROPERTIES:
+:CUSTOM_ID: h:14F5303D-F1A6-48D0-83AF-E4F8F34EC946
+:END:
+
+#+begin_src emacs-lisp
+(use-package nerd-icons :ensure t)
+
+(require 'nerd-icons)
+(setq nerd-icons-font-family "Iosevka Nerd Font")
+(when (memq system-type '(ms-dos cygwin windows-nt))
+  (setq nerd-icons-font-family "Iosevka NF"))
+#+end_src
+
+*** Frame display
+:PROPERTIES:
+:CUSTOM_ID: h:F715736C-9299-489F-96A4-C43C649C883A
+:END:
+
+- Remove title bar on macOS
+- Enter fullscreen automatically on macOS
+- Run garbage collector when emacs is out focus
+
+#+begin_src emacs-lisp
+(when  (eq system-type 'darwin)
+  (add-to-list 'default-frame-alist '(undecorated . t))
+  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
+
+(add-hook 'window-configuration-change-hook #'+frame-opacity-auto)
+
+(add-function :after after-focus-change-function
+              (lambda () (unless (frame-focus-state)
+                           (garbage-collect))))
+
+(bind! grandview-app-map "t" #'toggle-frame-maximized)
+#+end_src
+
+**** Frame margin (fringe.el)
+:PROPERTIES:
+:CUSTOM_ID: h:55DA6FDA-C0E0-44A3-8335-DD6D5D5C18E1
+:END:
+
++ Redefine word wrap arrow at fringe
++ Create a 20 pixel margin for emacs frame
+
+#+begin_src emacs-lisp
+(define-fringe-bitmap 'right-curly-arrow  [])
+(define-fringe-bitmap 'left-curly-arrow  [])
+(add-to-list 'default-frame-alist '(internal-border-width . 10))
+(add-to-list 'default-frame-alist '(left-fringe . 1))
+(add-to-list 'default-frame-alist '(right-fringe . 1))
+(fringe-mode '(1 . 1))
+#+end_src
+
+**** Frame opacity
+:PROPERTIES:
+:CUSTOM_ID: h:DEEA194F-9E63-45BF-98FA-0E5A44D03023
+:END:
+
+This module provides the =+frame-opacity-set= command to change the frame opactity
+on the fly.  It is useful when I want to see other application's windows that
+are beneath emacs frames.
+
+#+begin_src emacs-lisp
+(bind! grandview-app-map "o" #'+frame-opacity-set)
+#+end_src
+
+***** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "+Frame_opacity.el" grandview--def-dir)
+:CUSTOM_ID: h:AC3B6E27-5E40-4B4C-A40C-E1DD1CEE0E61
+:END:
+
+#+begin_src emacs-lisp
+(defcustom +frame-opacity 100
+  "Default frame opacity."
+  :group 'grandview
+  :type 'integer)
+
+(defun +frame-opacity--adjust (opacity)
+  (pcase system-type
+    ('darwin (set-frame-parameter nil 'alpha `(,opacity ,opacity)))
+    (_ (set-frame-parameter nil 'alpha-background opacity))))
+
+;;;###autoload
+(defun +frame-opacity-auto ()
+  "Setup frame opacity according to current major-mode."
+  (+frame-opacity--adjust +frame-opacity))
+
+;;;###autoload
+(defun +frame-opacity-set (&optional percent)
+  (interactive "P")
+  (cond ((or (and percent (not current-prefix-arg))
+             (numberp percent))
+         (setq +frame-opacity (* 10 percent))
+         (+frame-opacity--adjust +frame-opacity))
+        ((equal current-prefix-arg '(4))
+         (+frame-opacity--adjust +frame-opacity))
+        (t (let ((opa (frame-parameter nil 'alpha-background))
+                 (low 60) (high 100))
+             (+frame-opacity--adjust (if (eq opa low) high low))))))
+#+end_src
+
+**** Less distracting cursor
+:PROPERTIES:
+:CUSTOM_ID: h:A926706F-208A-445E-9ED3-018000FF921C
+:END:
+
+In some scenario the blinking cursor is quite annoying.  Use
+=+frame-cursor-dim-mode= to temporarily use a almost invisible cursor.
+
+***** Autoload
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "+Less_distracting_cursor.el" grandview--def-dir)
+:CUSTOM_ID: h:FDEE294E-7DB1-4D72-B7D4-C062203E31D8
+:END:
+
+#+begin_src emacs-lisp
+(defvar +frame-cursor-saved-color
+  (frame-parameter nil 'cursor-color))
+
+(defcustom +frame-cursor-dim-color "#606060"
+  "Cursor color for `+frame-dim-cursor-mode'."
+  :group 'cursor :type 'string)
+
+;;;###autoload
+(define-minor-mode +frame-cursor-dim-mode
+  "Enable dimmed `cursor-color' for current frame."
+  :global t
+  :lighter nil
+  :group 'cursor
+  (if +frame-cursor-dim-mode
+      (progn
+        (setq-local cursor-type nil)
+        (blink-cursor-mode -1)
+        (set-cursor-color +frame-cursor-dim-color))
+    (setq-local cursor-type meow-cursor-type-default)
+    (blink-cursor-mode +1)
+    (set-cursor-color +frame-cursor-saved-color)))
+#+end_src
+
+*** Scrolling
+:PROPERTIES:
+:CUSTOM_ID: h:33978C23-2375-4C80-9D5B-E78BCCB7F53E
+:END:
+
+Some tweaks for scrolling behaviors:
+
++ Show current key strokes in echo area after 0.25s
++ Disable bidirectional text scanning for a modest performance boost.
++ Do not display continuation lines
++ Do not disable the ~erase-buffer~ command
+
+By default, page scrolling should keep the point at the same visual
+position, rather than force it to the top or bottom of the
+viewport.  This eliminates the friction of guessing where the point
+has warped to.
+
+As for per-line scrolling, I dislike the default behaviour of
+visually re-centring the point: it is too aggressive as a standard
+mode of interaction.  With the following setq-default, the point
+will stay at the top/bottom of the screen while moving in that
+direction (use =C-l= to reposition it).
+
+#+begin_src emacs-lisp
+(setq-default bidi-display-reordering 'left-to-right)
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+(setq-default truncate-lines t)
+(setq echo-keystrokes 0.25)
+(setq scroll-conservatively 101)
+(setq scroll-up-aggressively 0.01)
+(setq scroll-down-aggressively 0.01)
+(setq auto-window-vscroll nil)
+(setq scroll-step 1)
+(setq scroll-margin 1)
+(setq hscroll-step 1)
+(setq hscroll-margin 1)
+(put 'erase-buffer 'disabled nil)
 #+end_src
 
 ** Use Emacs like a Desktop Environment
@@ -1647,9 +1820,9 @@ interface.
 The auto completion functionality (especially in the minibuffer) is a one of the
 fundamental components in *Grandview*.  Unless you encounter one or more issues
 related to package configs in this section, I would *NOT* advise you to comment
-out (in =org-mode= using ~C-c ;~) this section entirely, because debugging emacs
-often involves with manually typing commands in the minibuffer.  That said, feel
-free to tweak configuartions in this section.
+out this section entirely, because debugging emacs often involves with manually
+typing commands in the minibuffer.  That said, feel free to tweak configuartions
+in this section.
 
 ** Minibuffer and completion functions (minibuffer.el)
 :PROPERTIES:
@@ -3398,17 +3571,28 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (setq org-hide-emphasis-markers t)
 #+end_src
 
-** Modern org style (org-modern.el)
+** Modern org style
 :PROPERTIES:
 :CUSTOM_ID: h:A8059D5E-D3A9-4345-88E4-883F3F099547
 :END:
 
+=org-modern= adds some styling to your Org buffer, which gives it a modern look.
+I disabled its table unit prettifier and use =valign= instead.
+
 #+begin_src emacs-lisp
 (use-package org-modern :ensure t)
+(use-package valign :ensure t)
+
+(setq org-modern-star 'replace)
+(setq org-modern-table nil)
 
 (add-hook 'org-mode-hook 'org-modern-mode)
 (add-hook 'org-agenda-finalize-hook 'org-modern-agenda)
+
+(setq valign-fancy-bar t)
+(add-hook 'org-mode-hook 'valign-mode)
 #+end_src
+
 ** Habit (org-habit.el)
 :PROPERTIES:
 :CUSTOM_ID: h:413F6EA4-0A0F-4101-8EC3-2BBBDFC33C38
@@ -3792,9 +3976,9 @@ evaluate the code below:
 `(expand-file-name \"lib\" (string-trim-right
   (shell-command-to-string \"npm list -g -p typescript | head -n1\")))'
 It basically instructs npm to find the path by itself.  Run this npm
-query is quite expensive and slow, which makes emacs lag for a second
-everytime a new vue typescript project is opened.  Hence, set it
-manually seems a better option."
+query is quite expensive, which makes emacs lag for a second everytime a
+new vue typescript project is opened.  Hence, set it manually seems a
+better option."
   :type 'eglot-server-program)
 #+end_src
 
@@ -4729,12 +4913,11 @@ Used as a hook function added to `kill-buffer-hook'."
 :CUSTOM_ID: h:9B7AA6E6-C7BE-41CD-B523-CB34BB185E0A
 :END:
 
-Helpful.el provides a better help buffer. Here are some tweaks I
-made for this package and built-in help buffer:
-
-- disable auto jump to other end when cycle through buttons never
-- open new window when invoking =helpful-visit-references=.  auto
-- focus newly opened help buffer (same behaviour as helpful.el)
+=helpful.el= provides a better help buffer.  It's always a good thing for us to be
+able to read the source code of the symbol we are looking at since it tells more
+information than its docstring.  Again, because we are using =meow=, the actual
+prefix to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
+=helpful-symbol=.
 
 #+begin_src emacs-lisp
 (use-package helpful :ensure t :after-call meow-keypad-mode-hook)
