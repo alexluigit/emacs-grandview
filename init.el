@@ -32,24 +32,35 @@
     (goto-char (point-min))
     (save-excursion
       (widen)
-      (org-map-entries
-       (lambda ()
-         (org-with-point-at (point)
-           (when (string= (org-get-heading) "Extras")
-             (let* ((title (save-excursion
-                             (org-up-heading-safe) (org-get-heading)))
-                    (memo (ignore-errors
-                            (substring
-                             title (1+ (string-match "(\\(.*\\))" title))
-                             (match-end 1))))
-                    (name (or memo (replace-regexp-in-string
-                                    (regexp-quote " ") "_" title t t)))
-                    (.el? (ignore-errors (string= ".el" (substring name -3))))
-                    (f-name (concat "+" name (if .el? "" ".el")))
-                    (tg-path (format
-                              ":tangle (expand-file-name \"%s\" grandview--def-dir)"
-                              f-name)))
-               (org-entry-put nil "header-args:emacs-lisp" tg-path)))))))
+      (cl-labels
+          ((tangle-path-template ()
+             ":tangle (expand-file-name \"%s\" grandview--def-dir)")
+           (put-tangle-path (pkg)
+             (let* ((pfx+? (ignore-errors (string= "+" (substring pkg 0 1))))
+                    (.el? (ignore-errors
+                            (string= ".el" (substring pkg -3))))
+                    (f-name (concat (if pfx+? "" "+") pkg (if .el? "" ".el")))
+                    (path (format (tangle-path-template) f-name)))
+               (org-entry-put nil "header-args:emacs-lisp" path))))
+        (org-map-entries
+         (lambda ()
+           (org-with-point-at (point)
+             (when-let* ((heading (org-get-heading))
+                         ((string-prefix-p "Extras" heading)))
+               (cond
+                ((string-prefix-p "Extras ::: " heading)
+                 (put-tangle-path
+                   (cadr (string-split heading " ::: "))))
+		((string= heading "Extras")
+                 (let* ((title (save-excursion
+                                 (org-up-heading-safe) (org-get-heading)))
+                        (memo (ignore-errors
+                                (substring
+                                 title (1+ (string-match "(\\(.*\\))" title))
+                                 (match-end 1)))))
+                   (put-tangle-path
+                    (or memo (replace-regexp-in-string
+                              (regexp-quote " ") "_" title t t))))))))))))
     (save-buffer)
     (kill-this-buffer)))
 
@@ -76,9 +87,15 @@ last change or FORCE is non nil."
        grandview--dot-org (grandview--path 'main))
       (cl-loop for lib in (directory-files-recursively
                            grandview--def-dir "\\.el$")
+               for f-base = (file-name-base lib)
+               for f-name = (file-name-nondirectory lib)
+               for end-s =
+               (format "\n(provide '%s)\n;;; %s ends here" f-base f-name)
                do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
                     (insert-file-contents lib)
+                    (goto-char (point-max))
+                    (insert end-s)
                     (write-region nil nil lib))))))
 
 (defun grandview--gen-autoload (&optional force)
@@ -116,6 +133,7 @@ When FORCE, ensure the tangle process and autoloads generation."
     (make-directory grandview--def-dir t)
     (grandview-tangle t)) ; "Initiate spin!" -- Joseph Cooper
   (add-to-list 'load-path grandview--cache)
+  (add-to-list 'load-path grandview--def-dir)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
   (require 'grandview-macros nil (not debug))
   (require 'grandview-custom nil (not debug))

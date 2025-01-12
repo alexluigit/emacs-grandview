@@ -75,6 +75,10 @@ function collects all *;;;###autoload* markers in code blocks and generates
 =loaddefs= for them. You also don't need to manually enter the tangle path for the
 *Extras* section, =grandview-tangle= will do it automatically.
 
+To explicitly assign a library name to an *Extras* code block, use the format
+*Extras ::: LIB_NAME*. This declares the feature *LIB_NAME* (without loading it),
+which can then be required in other Elisp blocks using =(require 'LIB_NAME)=.
+
 The incredibly useful =org-toggle-comment= command (bound to =SPC c ;= by default)
 makes configuration management a breeze.  When debugging problematic code within
 one or more sections, simply comment out those sections and restart Emacs. The
@@ -752,36 +756,33 @@ related to some major mode or to file-handling.
   "s-p" #'backward-paragraph)
 
 (with-eval-after-load 'simple
+  (require '+simple)
   (define-key messages-buffer-mode-map (kbd "SPC") nil)
   (setq next-error-message-highlight t)) ; added in Emacs 28.1
 #+end_src
 
-**** Extras
+**** Extras ::: +simple.el
 :PROPERTIES:
 :CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
 :header-args:emacs-lisp: :tangle (expand-file-name "+simple.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
-;;;###autoload
 (defadvice! delete-backward-char-ad (fn &rest args)
   "Do not try to delete char when the last char is read-only."
   :around #'delete-backward-char
   (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
 
-;;;###autoload
 (defadvice! next-error-no-select-ad (fn &rest args)
   "Do not open new window when calling `next-error-no-select'."
   :around #'next-error-no-select
   (let ((split-width-threshold nil)) (apply fn args)))
 
-;;;###autoload
 (defadvice! previous-error-no-select-ad (fn &rest args)
   "Do not open new window when calling `previous-error-no-select'."
   :around #'previous-error-no-select
   (let ((split-width-threshold nil)) (apply fn args)))
 
-;;;###autoload
 (defadvice! yank-ad (&rest _)
   "Make `yank' behave like paste (p) command in vim."
   :before #'yank
@@ -809,8 +810,7 @@ related to some major mode or to file-handling.
 ;;;###autoload
 (defun +simple-toggle-letter-case ()
   "Toggle the letter case of current word or selection.
-Always cycle in this order: Init Caps, ALL CAPS, all lower.
-URL `http://xahlee.info/emacs/emacs/modernization_upcase-word.html'"
+Always cycle in this order: Init Caps, ALL CAPS, all lower."
   (interactive)
   (let ((deactivate-mark nil) xbeg xend)
     (if (region-active-p)
@@ -1313,7 +1313,7 @@ Recommended themes (using their package names):
 (add-hook 'after-init-hook (lambda () (load-theme grandview-custom-theme t)))
 #+end_src
 
-*** Fonts and icons (font-setup)
+*** Fonts and icons
 :PROPERTIES:
 :CUSTOM_ID: h:B50A7C8A-7553-46CF-92B8-56865009C681
 :END:
@@ -1343,10 +1343,10 @@ Setup fonts.
 (+font-setup)
 #+end_src
 
-***** Extras
+***** Extras ::: +font.el
 :PROPERTIES:
 :CUSTOM_ID: h:38943ED3-0842-4327-9998-3E331FAA76DB
-:header-args:emacs-lisp: :tangle (expand-file-name "+font-setup.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+font.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -1445,7 +1445,7 @@ Setup fonts.
 (fringe-mode '(1 . 1))
 #+end_src
 
-**** Frame opacity (frame-opacity-set)
+**** Frame opacity
 :PROPERTIES:
 :CUSTOM_ID: h:DEEA194F-9E63-45BF-98FA-0E5A44D03023
 :END:
@@ -1458,9 +1458,9 @@ are beneath emacs frames.
 (bind! grandview-app-map "o" #'+frame-opacity-set)
 #+end_src
 
-***** Extras
+***** Extras ::: +frame-opacity.el
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+frame-opacity-set.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+frame-opacity.el" grandview--def-dir)
 :CUSTOM_ID: h:AC3B6E27-5E40-4B4C-A40C-E1DD1CEE0E61
 :END:
 
@@ -1494,7 +1494,7 @@ are beneath emacs frames.
              (+frame-opacity--adjust (if (eq opa low) high low))))))
 #+end_src
 
-**** Less distracting cursor (frame-cursor-dim-mode)
+**** Less distracting cursor
 :PROPERTIES:
 :CUSTOM_ID: h:A926706F-208A-445E-9ED3-018000FF921C
 :END:
@@ -1502,9 +1502,9 @@ are beneath emacs frames.
 In some scenario the blinking cursor is quite annoying.  Use
 =+frame-cursor-dim-mode= to temporarily use a almost invisible cursor.
 
-***** Extras
+***** Extras ::: +frame-cursor-dim.el
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+frame-cursor-dim-mode.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+frame-cursor-dim.el" grandview--def-dir)
 :CUSTOM_ID: h:FDEE294E-7DB1-4D72-B7D4-C062203E31D8
 :END:
 
@@ -2968,7 +2968,7 @@ every 5 minutes.
   (setopt auto-save-visited-interval 300))
 #+end_src
 
-** Utilities (file-utils)
+** Utilities
 :PROPERTIES:
 :CUSTOM_ID: h:79DC4C05-4541-498C-918D-5769455C429C
 :END:
@@ -2991,6 +2991,35 @@ closely related because a failed file rename is often due to a permission issue.
   "w" 'save-buffer ; [SPC x s] is painful to press
   "r" '+files-rename-file-and-buffer
   "s" '+files-sudo-find)
+#+end_src
+
+**** Extras ::: +files.el
+:PROPERTIES:
+:CUSTOM_ID: h:CA90D351-61A4-408C-9BC5-6349E0679FA0
+:header-args:emacs-lisp: :tangle (expand-file-name "+files.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +files-rename-file-and-buffer (name)
+  "Apply NAME to current file and rename its buffer.
+Do not try to make a new directory or anything fancy."
+  (interactive
+   (list (read-string "Rename current file: " (buffer-file-name))))
+  (let* ((file (buffer-file-name)))
+    (if (vc-registered file)
+        (vc-rename-file file name)
+      (rename-file file name))
+    (set-visited-file-name name t t)))
+
+;;;###autoload
+(defun +files-sudo-find ()
+  "Reopen current file as root."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (find-file (if (file-writable-p file)
+                   file
+                 (concat "/sudo::" file)))))
 #+end_src
 
 *** Find files in predefined locations
@@ -3017,10 +3046,10 @@ A few commands for quick file access.
   "u" '+files-find-user-files)
 #+end_src
 
-*** Extras
+**** Extras ::: +files.el
 :PROPERTIES:
 :CUSTOM_ID: h:89CC46D7-7265-4442-BBFE-6627EFE1EB9C
-:header-args:emacs-lisp: :tangle (expand-file-name "+file-utils.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+files.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3046,27 +3075,6 @@ A few commands for quick file access.
          (files (+minibuffer-append-metadata 'file files-raw))
          (file (completing-read (or prompt "Open file: ") files)))
     (find-file (concat dir "/" file))))
-
-;;;###autoload
-(defun +files-rename-file-and-buffer (name)
-  "Apply NAME to current file and rename its buffer.
-Do not try to make a new directory or anything fancy."
-  (interactive
-   (list (read-string "Rename current file: " (buffer-file-name))))
-  (let* ((file (buffer-file-name)))
-    (if (vc-registered file)
-        (vc-rename-file file name)
-      (rename-file file name))
-    (set-visited-file-name name t t)))
-
-;;;###autoload
-(defun +files-sudo-find ()
-  "Reopen current file as root."
-  (interactive)
-  (let ((file (buffer-file-name)))
-    (find-file (if (file-writable-p file)
-                   file
-                 (concat "/sudo::" file)))))
 
 ;;;###autoload
 (defun +files-open-grandview-config ()
@@ -4364,6 +4372,239 @@ better option."
 :CUSTOM_ID: h:6019F888-2F43-40CD-89C6-03D542D48FA4
 :END:
 
+** Integration
+:PROPERTIES:
+:CUSTOM_ID: h:E558471C-2534-4ABA-B898-905EB09F779F
+:END:
+
+Emacs is notable for its integration with many common tools.  Not only can you
+invoke them from within the editor, Emacs usually helps you use their output
+more effectively.
+
+*** Vterm - performant terminal emulator in emacs
+:PROPERTIES:
+:CUSTOM_ID: h:B49FA4E0-EB36-4734-AF25-54D6E6EFEBA6
+:END:
+
+Emacs-libvterm (=vterm=) is a powerful terminal emulator that leverages an
+external library (libvterm) loaded as a dynamic module.  Using compiled code
+instead of Emacs Lisp, allows vterm to be fast, fully capable, and seamlessly
+handle large outputs.
+
+**** Poorman's terminal multiplexer
+:PROPERTIES:
+:CUSTOM_ID: h:B68077F6-09F1-4D8D-B5EE-7B1DCB0F44CD
+:END:
+
+=+vterm-mux-mode= is a custom minor mode designed to manage multiple =vterm=
+instances, serving as a minimalist terminal multiplexer.  The following commands
+facilitate the management of `vterm` instances, while the =+vterm-display-alist=
+user option dictates window placement of vterm instances.
+
++ =+vterm-new=: Creates a new vterm buffer.
++ =+vterm-next= / =+vterm-prev=: Navigate between vterm buffers.
++ =+vterm-toggle=: Toggles a vterm window. If used with a prefix argument, a new vterm buffer is created with the project root as the default directory.
+
+For more details, see my [[https://github.com/alexluigit/zenish][zsh profile]], which includes configurations for
+integrating vterm with zsh.
+
+#+begin_src emacs-lisp
+(use-package vterm :ensure t)
+
+(define-key global-map (kbd "s-`") '+vterm-toggle)
+
+(with-eval-after-load 'vterm
+  (+vterm-mux-mode)
+  (setq vterm-max-scrollback 5000)
+  (add-hook 'vterm-copy-mode-hook
+            (lambda () (if vterm-copy-mode (meow-normal-mode) (meow-insert-mode)))))
+#+end_src
+
+***** Extras ::: +vterm.el
+:PROPERTIES:
+:CUSTOM_ID: h:B05AAF84-FA1E-42FC-8C55-C7C9AD951D7E
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+(require 'vterm)
+
+(defcustom +vterm-display-alist
+  '((always . ((window-height . 0.2) (side . bottom))))
+  "Determine where to place vterm windows.")
+
+(defvar +vterm-buffers nil
+  "The list of non-dedicated vterm buffers.")
+
+(defvar +vterm-index 0
+  "The index of current vterm buffer.")
+
+(defun +vterm--get-win-params ()
+  "Parse `+vterm-display-alist' to get vterm display parameters."
+  `(("^\\*vterm.*"
+     (display-buffer-in-side-window)
+     (window-parameters . ((mode-line-format . none)))
+     ,@(cl-loop for (pred . pos) in +vterm-display-alist
+                thereis (and (funcall pred) pos)))))
+
+(defun +vterm--get-index (buf)
+  (let* ((name (buffer-name buf)))
+    (string-match "\\*vterm\\*\<\\([0-9]+\\)\>" name)
+    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
+
+;;;###autoload
+(defun +vterm-new ()
+  "Create new vterm buffer."
+  (interactive)
+  (let ((new-index (1+ (+vterm--get-index (car +vterm-buffers))))
+        (display-buffer-alist (+vterm--get-win-params)))
+    (add-to-list '+vterm-buffers (vterm new-index))
+    (meow-insert)))
+
+(defun +vterm-next (&optional arg)
+  "Select next vterm buffer.
+Create new one if no vterm buffer exists."
+  (interactive "P")
+  (let* ((curr-index (cl-position (current-buffer) +vterm-buffers))
+         (new-index (+ curr-index (or arg -1)))
+         (buf (nth new-index +vterm-buffers)))
+    (when buf
+      (switch-to-buffer buf)
+      (setq +vterm-index new-index))))
+
+(defun +vterm-prev (&optional arg)
+  "Select previous vterm buffer."
+  (interactive "p")
+  (+vterm-next arg))
+
+(defun +vterm--kill-buffer ()
+  "Remove killed buffer from `+vterm-buffers'.
+
+Used as a hook function added to `kill-buffer-hook'."
+  (let* ((buf (current-buffer))
+         (name (buffer-name buf)))
+    (when (string-prefix-p "*vterm" name)
+      (delq! buf +vterm-buffers))))
+
+;;;###autoload
+(defun +vterm-toggle (&optional project-root)
+  "Toggle vterm.
+If called with prefix argument, create a new vterm buffer with
+project root directory as `default-directory'."
+  (interactive "P")
+  (if (eq major-mode 'vterm-mode)
+      (delete-window)
+    (let* ((display-buffer-alist (+vterm--get-win-params))
+           (buf (nth +vterm-index +vterm-buffers))
+           (pr-root (or (ignore-errors
+                          (project-root (project-current)))
+                        default-directory))
+           (default-directory (if project-root pr-root default-directory))
+           (index (if buf (+vterm--get-index buf) 0)))
+      (add-to-list '+vterm-buffers (vterm index))
+      (meow-insert))))
+
+;;;###autoload
+(define-minor-mode +vterm-mux-mode
+  "Manage multiple vterm instance."
+  :global t
+  :group 'vterm
+  (if +vterm-mux-mode
+      (add-hook 'kill-buffer-hook #'+vterm--kill-buffer)
+    (remove-hook 'kill-buffer-hook #'+vterm--kill-buffer)))
+#+end_src
+
+**** Translate emacs keycode to vterm
+:PROPERTIES:
+:CUSTOM_ID: h:5A93DE31-FD9B-4DF0-BF49-3434E722A5DB
+:END:
+
+See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[http://github.com/alexluigit/zenish][zsh profile]].
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (bind! vterm-mode-map
+    "s-`" '+vterm-toggle
+    "s--" '+vterm-new
+    "s-." '+vterm-next
+    "s-," '+vterm-prev
+    "s-n" 'vterm-next-prompt
+    "s-p" 'vterm-previous-prompt
+    "C-/" '+vterm-send-F6
+    "C-<backspace>" '+vterm-send-F8
+    "C-," '+vterm-send-F10
+    "C-." '+vterm-send-F11
+    "C-;" '+vterm-send-F12
+    "S-SPC" nil
+    "S-<escape>" 'vterm-copy-mode
+    "S-<escape>" 'vterm-copy-mode-done))
+#+end_src
+
+***** Extras ::: +vterm.el
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
+:CUSTOM_ID: h:F8C913CE-EC1D-4CF5-8562-8FAE30296AF0
+:END:
+
+#+begin_src emacs-lisp
+(defadvice! +vterm-escape-a (fn &rest args)
+  :around #'meow-insert-exit
+  (if (derived-mode-p 'vterm-mode)
+      (vterm-send-escape)
+    (apply fn args)))
+
+(defadvice! +vterm-kill-whole-line-a (fn &rest args)
+  :around #'meow-kill-whole-line
+  (if (derived-mode-p 'vterm-mode)
+      (vterm-send-key "<f5>" nil nil nil)
+    (apply fn args)))
+
+(defadvice! +vterm-backward-char-a (fn &rest args)
+  :around #'meow-right
+  (if (derived-mode-p 'vterm-mode)
+      (vterm-send-key "<f7>" nil nil nil)
+    (apply fn args)))
+
+(defun +vterm-send-F6 ()
+  (interactive)
+  (vterm-send-key "<f6>" nil nil nil))
+
+(defun +vterm-send-F8 ()
+  (interactive)
+  (vterm-send-key "<f8>" nil nil nil))
+
+(defun +vterm-send-F10 ()
+  (interactive)
+  (vterm-send-key "<f10>" nil nil nil))
+
+(defun +vterm-send-F11 ()
+  (interactive)
+  (vterm-send-key "<f11>" nil nil nil))
+
+(defun +vterm-send-F12 ()
+  (interactive)
+  (vterm-send-key "<f12>" nil nil nil))
+#+end_src
+
+*** COMMENT VSCode style icons (vscode-icon.el)
+:PROPERTIES:
+:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
+:END:
+
+Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
+style icons with image format.  I keep this package only for the purpose of
+testing my =dirvish-icons= library.
+
+#+begin_src emacs-lisp
+(use-package vscode-icon :ensure t)
+
+(with-eval-after-load 'vscode-icon
+  (push '("jpg" . "image") vscode-icon-file-alist)
+  (push '("7z" . "zip") vscode-icon-file-alist)
+  (push '("mkv" . "video") vscode-icon-file-alist)
+  (push '("epub" . "storybook") vscode-icon-file-alist))
+#+end_src
+
 ** AI
 :PROPERTIES:
 :CUSTOM_ID: h:3F098843-7B8B-4BC0-B729-314C0B40D296
@@ -4450,7 +4691,7 @@ allowing you to perform common version control operations directly from the
 editor.  Press =SPC a v= to access the available commands.
 
 Extras:
-  + Rename the buffer of =vc-print-root-log= to mention the project.
++ Rename the buffer of =vc-print-root-log= to mention the project.
 
 #+begin_src emacs-lisp
 (use-package vc :ensure nil)
@@ -4546,7 +4787,7 @@ you change your mind).
 :PROPERTIES:
 :CUSTOM_ID: h:6762E5C6-D007-452E-8328-47EF50515A8B
 :END:
-*** Composable mode line (mode-line-mode)
+*** Composable mode line
 :PROPERTIES:
 :CUSTOM_ID: h:9C974B19-F47B-4758-87BD-A889965D7239
 :END:
@@ -4570,10 +4811,10 @@ in ~+mode-line-format~.
 (+mode-line-mode)
 #+end_src
 
-**** Extras
+**** Extras ::: +mode-line.el
 :PROPERTIES:
 :CUSTOM_ID: h:E77C4AD0-D38E-43D5-AFAC-C3135D88A444
-:header-args:emacs-lisp: :tangle (expand-file-name "+mode-line-mode.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+mode-line.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -4938,205 +5179,6 @@ the following scenario:
 
 #+begin_src emacs-lisp
 (use-package denote :ensure t)
-#+end_src
-
-** Integration
-:PROPERTIES:
-:CUSTOM_ID: h:E558471C-2534-4ABA-B898-905EB09F779F
-:END:
-*** Vterm (vterm.el)
-:PROPERTIES:
-:CUSTOM_ID: h:B49FA4E0-EB36-4734-AF25-54D6E6EFEBA6
-:END:
-
-#+begin_src emacs-lisp
-(use-package vterm :ensure t)
-
-(define-key global-map (kbd "s-`") '+vterm-toggle)
-
-(with-eval-after-load 'vterm
-  (+vterm-mux-mode)
-  (setq vterm-max-scrollback 5000)
-  (add-hook 'vterm-copy-mode-hook
-            (lambda () (if vterm-copy-mode (meow-normal-mode) (meow-insert-mode))))
-  (bind! vterm-mode-map
-    "s-`" '+vterm-toggle
-    "s--" '+vterm-new
-    "s-." '+vterm-next
-    "s-," '+vterm-prev
-    "s-n" 'vterm-next-prompt
-    "s-p" 'vterm-previous-prompt
-    "C-/" '+vterm-send-F6
-    "C-<backspace>" '+vterm-send-F8
-    "C-," '+vterm-send-F10
-    "C-." '+vterm-send-F11
-    "C-;" '+vterm-send-F12
-    "S-SPC" nil
-    "S-<escape>" 'vterm-copy-mode
-    "S-<escape>" 'vterm-copy-mode-done))
-#+end_src
-
-**** Extras
-:PROPERTIES:
-:CUSTOM_ID: h:B05AAF84-FA1E-42FC-8C55-C7C9AD951D7E
-:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-(require 'vterm)
-
-(defcustom +vterm-position-alist
-  '((always . ((window-height . 0.2) (side . bottom))))
-  "doc")
-
-(defvar +vterm-buffers nil
-  "The list of non-dedicated vterm buffers.")
-
-(defvar +vterm-index 0
-  "The index of current vterm buffer.")
-
-(defadvice! +vterm-escape-a (fn &rest args)
-  :around #'meow-insert-exit
-  (if (derived-mode-p 'vterm-mode)
-      (vterm-send-escape)
-    (apply fn args)))
-
-(defadvice! +vterm-kill-whole-line-a (fn &rest args)
-  :around #'meow-kill-whole-line
-  (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f5>" nil nil nil)
-    (apply fn args)))
-
-(defadvice! +vterm-backward-char-a (fn &rest args)
-  :around #'meow-right
-  (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f7>" nil nil nil)
-    (apply fn args)))
-
-(defun +vterm--disable-side-window (fn &rest args)
-  "Prevent vterm size adjust break selection."
-  (unless (and (region-active-p)
-               (derived-mode-p 'vterm-mode))
-    (apply fn args)))
-
-(defun +vterm-send-F6 ()
-  (interactive)
-  (vterm-send-key "<f6>" nil nil nil))
-
-(defun +vterm-send-F8 ()
-  (interactive)
-  (vterm-send-key "<f8>" nil nil nil))
-
-(defun +vterm-send-F10 ()
-  (interactive)
-  (vterm-send-key "<f10>" nil nil nil))
-
-(defun +vterm-send-F11 ()
-  (interactive)
-  (vterm-send-key "<f11>" nil nil nil))
-
-(defun +vterm-send-F12 ()
-  (interactive)
-  (vterm-send-key "<f12>" nil nil nil))
-
-(defun +vterm--get-win-params ()
-  "Parse `+vterm-position-alist' to get vterm display parameters."
-  `(("^\\*vterm.*"
-     (display-buffer-in-side-window)
-     (window-parameters . ((mode-line-format . none)))
-     ,@(cl-loop for (pred . pos) in +vterm-position-alist
-                thereis (and (funcall pred) pos)))))
-
-;;;###autoload
-(defun +vterm-toggle (&optional project-root)
-  "Toggle vterm.
-If called with prefix argument, create a new vterm buffer with
-project root directory as `default-directory'."
-  (interactive "P")
-  (if (eq major-mode 'vterm-mode)
-      (delete-window)
-    (let* ((display-buffer-alist (+vterm--get-win-params))
-           (buf (nth +vterm-index +vterm-buffers))
-           (pr-root (or (ignore-errors
-                          (project-root (project-current)))
-                        default-directory))
-           (default-directory (if project-root pr-root default-directory))
-           (index (if buf (+vterm--get-index buf) 0)))
-      (add-to-list '+vterm-buffers (vterm index))
-      (meow-insert))))
-
-(defun +vterm--get-index (buf)
-  (let* ((name (buffer-name buf)))
-    (string-match "\\*vterm\\*\<\\([0-9]+\\)\>" name)
-    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
-
-(declare-function meow-insert "meow-command")
-
-;;;###autoload
-(defun +vterm-new ()
-  "Create new vterm buffer."
-  (interactive)
-  (let ((new-index (1+ (+vterm--get-index (car +vterm-buffers))))
-        (display-buffer-alist (+vterm--get-win-params)))
-    (add-to-list '+vterm-buffers (vterm new-index))
-    (meow-insert)))
-
-(defun +vterm-next (&optional arg)
-  "Select next vterm buffer.
-Create new one if no vterm buffer exists."
-  (interactive "P")
-  (let* ((curr-index (cl-position (current-buffer) +vterm-buffers))
-         (new-index (+ curr-index (or arg -1)))
-         (buf (nth new-index +vterm-buffers)))
-    (when buf
-      (switch-to-buffer buf)
-      (setq +vterm-index new-index))))
-
-(defun +vterm-prev (&optional arg)
-  "Select previous vterm buffer."
-  (interactive "p")
-  (+vterm-next arg))
-
-(defun +vterm--kill-buffer ()
-  "Remove killed buffer from `+vterm-buffers'.
-
-Used as a hook function added to `kill-buffer-hook'."
-  (let* ((buf (current-buffer))
-         (name (buffer-name buf)))
-    (when (string-prefix-p "*vterm" name)
-      (delq! buf +vterm-buffers))))
-
-;;;###autoload
-(define-minor-mode +vterm-mux-mode
-  "Show/hide multiple vterm windows under control."
-  :global t
-  :group 'vterm
-  (if +vterm-mux-mode
-      (progn
-        (advice-add
-         'display-buffer-in-side-window :around '+vterm--disable-side-window)
-        (add-hook 'kill-buffer-hook #'+vterm--kill-buffer))
-    (advice-remove 'display-buffer-in-side-window '+vterm--disable-side-window)
-    (remove-hook 'kill-buffer-hook #'+vterm--kill-buffer)))
-#+end_src
-
-*** COMMENT VSCode style icons (vscode-icon.el)
-:PROPERTIES:
-:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
-:END:
-
-Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
-style icons with image format.  I keep this package only for the purpose of
-testing my =dirvish-icons= library.
-
-#+begin_src emacs-lisp
-(use-package vscode-icon :ensure t)
-
-(with-eval-after-load 'vscode-icon
-  (push '("jpg" . "image") vscode-icon-file-alist)
-  (push '("7z" . "zip") vscode-icon-file-alist)
-  (push '("mkv" . "video") vscode-icon-file-alist)
-  (push '("epub" . "storybook") vscode-icon-file-alist))
 #+end_src
 
 * About
