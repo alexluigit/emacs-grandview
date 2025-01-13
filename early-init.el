@@ -1,13 +1,12 @@
-;;; early-init.el --- -*- lexical-binding: t -*-
+;;; early-init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
 
-(when (native-comp-available-p)
-  (setq native-comp-eln-load-path
-        (append (list (expand-file-name "~/.cache/emacs/eln-cache/"))
-                (delete (expand-file-name "eln-cache/" user-emacs-directory)
-                        native-comp-eln-load-path))
-        native-comp-async-report-warnings-errors 'silent))
+;;; Commentary:
+;; Auto generated file, do not edit.
+
+;;; Code:
 
 (setq
+ native-comp-async-report-warnings-errors 'silent
  gc-cons-threshold most-positive-fixnum ; Inhibit garbage collection during startup
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
@@ -20,12 +19,6 @@
    ("nongnu" . "https://elpa.nongnu.org/nongnu/")
    ("melpa" . "https://melpa.org/packages/"))
  package-archive-priorities '(("melpa" . 3) ("gnu-elpa" . 2) ("nongnu" . 1))
- ad-redefinition-action 'accept ; Disable warnings from legacy advice system
- inhibit-startup-message t ; Reduce noise at startup
- inhibit-startup-echo-area-message user-login-name
- inhibit-default-init t
- initial-scratch-message nil
- inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
  auto-mode-case-fold nil ; Use case-sensitive `auto-mode-alist' for performance
  fast-but-imprecise-scrolling t ; More performant rapid scrolling over unfontified regions
  ffap-machine-p-known 'reject ; Don't ping things that look like domain names
@@ -42,7 +35,12 @@
  vc-follow-symlinks t ; Do not ask about symlink following
  use-short-answers t ; y/n for yes/no
  ring-bell-function #'ignore ; Do NOT ring the bell
- )
+ ad-redefinition-action 'accept ; Disable warnings from legacy advice system
+ inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
+ inhibit-startup-message t ; Reduce noise at startup
+ inhibit-startup-echo-area-message user-login-name
+ inhibit-default-init t
+ initial-scratch-message nil)
 
 (push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
 

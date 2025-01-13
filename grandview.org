@@ -9,9 +9,18 @@
 :CUSTOM_ID: h:1AECDD3A-9714-41E1-BA21-8BCAFED96CD3
 :END:
 
-*Emacs grandview* is my literate Emacs configuration.  If you're viewing this
-document on GitHub, the "table of contents" button in the upper-right corner of
-the README container box can help you navigate its sections.
+*Emacs grandview* is my GNU Emacs configuration.
+
+While you are welcome to use this repository as your own configuration, it's
+primarily intended to share my working setup for others to experiment with and
+learn from.  Detailed guides are provided in the sections below. Consequently,
+I'm unlikely to merge pull requests, except for documentation improvements or
+exceptionally innovative ideas.  Please feel free to ask any questions you may
+have.
+
+If you're viewing this document on GitHub, the "table of contents" button in the
+upper-right corner of the README container box can help you navigate its
+sections.
 
 ** Features
 :PROPERTIES:
@@ -24,34 +33,15 @@ the README container box can help you navigate its sections.
 + Light-weighted & lighting fast startup speed.
 + ... etc.
 
-** How does it work?
+** Usage Instructions
 :PROPERTIES:
 :CUSTOM_ID: h:93E5268D-CFDD-4DBF-A793-0CC5812DE181
 :END:
 
-The structure of this project is pretty straightforward:
+This section details the loading procedure for *grandview* and provides
+instructions for using this configuration.
 
-*** The early init file (early-init.el)
-:PROPERTIES:
-:CUSTOM_ID: h:610D1070-5D79-466F-A5A5-7068396F2D41
-:END:
-
-It is sometimes necessary to have customizations take effect during Emacs
-startup earlier than the normal init file is processed. Such customizations can
-be put in the early init file.  This file is loaded before the package system
-and GUI is initialized, so in it you can customize variables that affect the
-package initialization process, such as =package-enable-at-startup=,
-=package-load-list=, and =package-user-dir=.
-
-*** The initialization file (init.el)
-:PROPERTIES:
-:CUSTOM_ID: h:DF24DB4D-F3B6-47B2-AE76-F5728FF1CFB4
-:END:
-
-The main responsibility of my =init.el= is to arrange the tangling of
-=grandview.org= file and load it.
-
-*** This =.org= file
+*** This file (=grandview.org=)
 :PROPERTIES:
 :CUSTOM_ID: h:95B6B174-9877-4DCB-B298-86B3B889A11F
 :END:
@@ -63,7 +53,7 @@ to one of the headings in this file and press =Tab= to fold / unfold the node
 would be a good start.
 
 After modifying code blocks in this file, you can apply changes immediately with
-~M-x restart-emacs~. Upon restart, your old configuration will be replaced, and
+~M-x restart-emacs~.  Upon restart, your old configuration will be replaced, and
 Emacs will apply the latest configuration. This behavior mirrors that of a
 regular Emacs configuration, even if not using literate programming.  However,
 before restarting, ensure all parentheses are balanced to avoid startup issues.
@@ -94,14 +84,13 @@ tree ~/.cache/emacs/grandview
 ├── autoloads
 │   ├── +eglot.el
 │   ├── +eletric.el
-│   ├── +file-utils.el
-│   ├── +flymake.el
-│   ├── +font-setup.el
-│   ├── +frame-cursor-dim-mode.el
-│   ├── +frame-opacity-set.el
+│   ├── +files.el
+│   ├── +font.el
+│   ├── +frame-cursor-dim.el
+│   ├── +frame-opacity.el
 │   ├── +meow.el
 │   ├── +minibuffer.el
-│   ├── +mode-line-mode.el
+│   ├── +mode-line.el
 │   ├── +orderless.el
 │   ├── +org-id.el
 │   ├── +org-tree-slide.el
@@ -115,11 +104,11 @@ tree ~/.cache/emacs/grandview
 │   ├── +tabspaces.el
 │   ├── +tempel.el
 │   ├── +vc.el
+│   ├── +visual-fill-column.el
 │   ├── +vterm.el
 │   ├── +vue.el
 │   ├── +window-in-other-frames.el
-│   ├── +window-monocle-mode.el
-│   └── +writeroom-mode.el
+│   └── +window-monocle-mode.el
 ├── grandview-custom.el
 ├── grandview-loaddefs.el
 ├── grandview-loaddefs.md5
@@ -128,7 +117,9 @@ tree ~/.cache/emacs/grandview
 └── grandview.el.md5
 #+end_example
 
-*** User private config | grandview options (init.grandview.el)
+More details are in the [[#h:4E1A86EF-3A26-4308-A263-1447D5D3987E][Load tangled elisp file]] section.
+
+*** Private config | grandview options (=init.grandview.el=)
 :PROPERTIES:
 :CUSTOM_ID: h:9102F88E-A57C-48D2-A606-FF01002E4D98
 :END:
@@ -206,12 +197,7 @@ emacs
 ## Emacs by 'rem' bash command, see the "** Restart Emacs" section below.
 #+end_src
 
-Note: although this is a public project, it is also the emacs setups that I use
-day-to-day, so in principle I won't take too much time in reviewing / merging
-PRs (except document improvement or really interesting ideas).  Nonetheless,
-please feel free to ask any questions!
-
-** Restart script
+*** Restart script
 :PROPERTIES:
 :CUSTOM_ID: h:2DCD6D3B-6759-4E78-AF50-5B23FA77C603
 :END:
@@ -220,20 +206,17 @@ Emacs offers =unload-feature= and =remove-hook= to mitigate the side effects of
 packages or user configurations.  However, a full Emacs restart, often achieved
 through the =restart-emacs= command, remains the simpler solution.  When Emacs
 freezes, preventing access to keybindings, a shell script to restart Emacs from
-the terminal becomes invaluable.
+the terminal becomes invaluable.  Consequently, I created the following shell
+script, named =rem= (for "restart-emacs"). If you've followed the previous
+instructions, this script is already installed.  It will be located at
+*~/.local/bin/rem*, so ensure *~/.local/bin* is included in your *PATH*.
 
-*** Source
-:PROPERTIES:
-:CUSTOM_ID: h:BAC15BC3-840C-415A-ABD5-D40AD74853A4
-:END:
+These flags are supported by this script:
 
-Here is the source code for the =rem= (acronym for ~restart-emacs~) command.  The
-first elisp code block is consumed by the second code block to inject a few
-values such as file path into the actual shell script.
-
-You don't need to install this script if you have followed =Installation=
-section. This script will be tangled to *~/.local/bin/rem*, so make sure
-*~/.local/bin* is in your *PATH*.
++ ~-r~: Before restarting, re-tangle this org file.
++ ~-p <NAME>~: Before restarting, delete cache of package *NAME*.
++ ~-P~: Before restarting, delete all package caches.
++ ~-d~: pass =--debug-init= flag to emacs, for debugging purpose.
 
 #+name: grandview-cache
 #+begin_src emacs-lisp :var type="main" :tangle no
@@ -266,30 +249,293 @@ $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 eval $emacs_cmd
 #+end_src
 
-*** Usage
-:PROPERTIES:
-:CUSTOM_ID: h:0E7E2FDB-8AD8-4BF3-BAD4-2AD1FB43083C
-:END:
-
-Here are the available flags of this command.
-
-+ ~-r~: Before restarting, re-tangle this org file.
-+ ~-p <NAME>~: Before restarting, delete cache of package *NAME*.
-+ ~-P~: Before restarting, delete all package caches.
-+ ~-d~: use =--debug-init= flag for the daemon.
-
 * CORE of grandview
 :PROPERTIES:
 :CUSTOM_ID: h:FB2572C2-4DDC-44A2-92C0-D8754305B2A7
 :END:
 
-This section contains all the *core modules of grandview*.  The modal editing
-system (like =vim=) is powered by =meow= (thanks to *@DogLooksGood*!).  All the core
-user interface configs such as themes and fonts are also listed below.  Please
-*DO NOT* comment this entire section out unless you know exactly what you are
-doing.
+This section contains the core initialization files and modules for grandview.
+Here, you'll find configurations for the modal editing, user interface,
+including themes and fonts.  **Do not comment out this entire section without a
+thorough understanding of its function.**
 
-** Pre-init setups
+** The early-init file (early-init.el)
+:PROPERTIES:
+:CUSTOM_ID: h:610D1070-5D79-466F-A5A5-7068396F2D41
+:END:
+
+It is sometimes necessary to have customizations take effect during Emacs
+startup earlier than the normal init file is processed. Such customizations can
+be put in the early init file.  This file is loaded before the package system
+and GUI is initialized, so in it you can customize variables that affect the
+package initialization process.
+
+By setting =user-emacs-directory= to =~/.cache/emacs=, we prevent modules like
+=comp.c= and =package.el= from cluttering our primary Emacs directory, where
+=grandview.org= is located.  This configuration also (almost) ensures that
+subsequently loaded packages store their cache within =~/.cache/emacs=.
+
+These are some general setups for frames initialization and the basics of the
+toolkit.  In short, I disabled most of UI elements to keep things minimal.
+
+#+begin_src emacs-lisp :tangle (expand-file-name "early-init.el" (file-name-directory user-init-file))
+;;; early-init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Auto generated file, do not edit.
+
+;;; Code:
+
+(setq
+ native-comp-async-report-warnings-errors 'silent
+ gc-cons-threshold most-positive-fixnum ; Inhibit garbage collection during startup
+ user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
+ custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
+ package-user-dir (locate-user-emacs-file "elpa") ; Use `user-emacs-directory' we set above
+ package-quickstart nil ; Prevent package.el loading packages prior to their init-file
+ package-enable-at-startup t ; no need to call `package-initialize'
+ package-install-upgrade-built-in nil ; do not update built-in lib
+ package-archives
+ '(("gnu-elpa" . "https://elpa.gnu.org/packages/")
+   ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+   ("melpa" . "https://melpa.org/packages/"))
+ package-archive-priorities '(("melpa" . 3) ("gnu-elpa" . 2) ("nongnu" . 1))
+ auto-mode-case-fold nil ; Use case-sensitive `auto-mode-alist' for performance
+ fast-but-imprecise-scrolling t ; More performant rapid scrolling over unfontified regions
+ ffap-machine-p-known 'reject ; Don't ping things that look like domain names
+ frame-inhibit-implied-resize t ; Inhibit frame resizing for performance
+ idle-update-delay 1.0  ; slow down UI updates down
+ read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
+ process-adaptive-read-buffering nil
+ redisplay-skip-fontification-on-input t ; Inhibits it for better scrolling performance.
+ command-line-x-option-alist nil ; Remove irreleant command line options for faster startup
+ select-active-regions 'only ; Emacs hangs when large selections contain mixed line endings.
+ auto-save-list-file-prefix nil ; Disable auto-save
+ create-lockfiles nil ; Disable lockfiles
+ make-backup-files nil ; Disable backup files
+ vc-follow-symlinks t ; Do not ask about symlink following
+ use-short-answers t ; y/n for yes/no
+ ring-bell-function #'ignore ; Do NOT ring the bell
+ ad-redefinition-action 'accept ; Disable warnings from legacy advice system
+ inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
+ inhibit-startup-message t ; Reduce noise at startup
+ inhibit-startup-echo-area-message user-login-name
+ inhibit-default-init t
+ initial-scratch-message nil)
+
+(push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
+
+(load custom-file 'noerror 'silent)   ; Load user's customization
+(tool-bar-mode -1)                    ; Disable toolbar
+(tooltip-mode -1)                     ; Disable tooltips
+(menu-bar-mode -1)                    ; Disable menu bar
+(scroll-bar-mode -1)                  ; Disable scroll bar
+#+end_src
+
+** The initialization file (init.el)
+:PROPERTIES:
+:CUSTOM_ID: h:DF24DB4D-F3B6-47B2-AE76-F5728FF1CFB4
+:END:
+
+The =init.el= file is responsible for:
+
++ Defining the =grandview-tangle= function
++ Tangling =grandview.org= and loading the resulting Emacs Lisp file.
+
+*** Locate *grandview*'s files
+:PROPERTIES:
+:CUSTOM_ID: h:8236B22C-818F-48D5-A1E6-2D4579863C2F
+:END:
+
+You can find all the paths used by *grandview* here.
+
+#+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
+;;; init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Auto generated file, do not edit.
+
+;;; Code:
+
+(defvar grandview--cache
+  (expand-file-name "grandview/" user-emacs-directory))
+
+(defvar grandview--def-dir
+  (expand-file-name "autoloads/" grandview--cache))
+
+(defun grandview--path (type)
+  "Get grandview's init path according to TYPE."
+  (pcase type
+    ('g (expand-file-name "grandview.org" (file-name-directory user-init-file)))
+    ('main (expand-file-name "grandview.el" grandview--cache))
+    ('main-md5 (expand-file-name "grandview.el.md5" grandview--cache))
+    ('def-el (expand-file-name "grandview-loaddefs.el" grandview--cache))
+    ('def-md5 (expand-file-name "grandview-loaddefs.md5" grandview--cache))))
+#+end_src
+
+*** The =grandview-tangle= function
+:PROPERTIES:
+:CUSTOM_ID: h:9A75C0EA-7484-4B28-894C-B9A5415F5294
+:END:
+
+These are 2 helper functions for =grandview-tangle=.
+
++ =grandview--loaddefs-gen= ::
+
+  This function compares the MD5 hash of the previously generated *loaddefs* file
+  located in =grandview--def-dir= with the MD5 hash of the latest version of
+  *loaddefs*.  If the hashes do not match, indicating changes in one or more
+  *Extras* code blocks, the function regenerates =grandview-loaddefs.el=.  This
+  prevents unnecessary calls to =loaddefs-generate=.
+
++ =grandview--put-tangle-path= ::
+
+  This function ensures the tangle path attribute for each *Extras* code block is
+  put correctly.
+
+#+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
+(defun grandview--readfile (path)
+  "Return the decoded text in PATH as multibyte string."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (setq buffer-file-coding-system 'binary)
+    (when (file-exists-p path) (insert-file-contents-literally path))
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun grandview--put-tangle-path (file-name)
+  "Prepare metadata for `grandview-tangle' in FILE-NAME."
+  (with-current-buffer (find-file-noselect file-name)
+    (goto-char (point-min))
+    (save-excursion
+      (widen)
+      (cl-labels
+          ((tangle-path-template ()
+             ":tangle (expand-file-name \"%s\" grandview--def-dir)")
+           (put-tangle-path (pkg)
+             (let* ((pfx+? (ignore-errors (string= "+" (substring pkg 0 1))))
+                    (.el? (ignore-errors
+                            (string= ".el" (substring pkg -3))))
+                    (f-name (concat (if pfx+? "" "+") pkg (if .el? "" ".el")))
+                    (path (format (tangle-path-template) f-name)))
+               (org-entry-put nil "header-args:emacs-lisp" path))))
+        (org-map-entries
+         (lambda ()
+           (org-with-point-at (point)
+             (when-let* ((heading (org-get-heading))
+                         ((string-prefix-p "Extras" heading)))
+               (cond
+                ((string-prefix-p "Extras ::: " heading)
+                 (put-tangle-path
+                  (cadr (string-split heading " ::: "))))
+                ((string= heading "Extras")
+                 (let* ((title (save-excursion
+                                 (org-up-heading-safe) (org-get-heading)))
+                        (memo (ignore-errors
+                                (substring
+                                 title (1+ (string-match "(\\(.*\\))" title))
+                                 (match-end 1)))))
+                   (put-tangle-path
+                    (or memo (replace-regexp-in-string
+                              (regexp-quote " ") "_" title t t))))))))))))
+    (save-buffer)
+    (kill-this-buffer)))
+
+(defun grandview--loaddefs-gen (&optional force)
+  "Generate autoload files for Grandview.
+Only do it when FORCE or contents in autoload directory changed."
+  (let* ((autoload-md5 (grandview--path 'def-md5))
+         (old-md5 (grandview--readfile autoload-md5))
+         (all-el-files (directory-files-recursively
+                        grandview--def-dir "\\.el$"))
+         (files-as-str (with-temp-buffer
+                         (dolist (file all-el-files)
+                           (insert-file-contents file))
+                         (buffer-string)))
+         (new-md5 (secure-hash 'md5 files-as-str)))
+    (when (or force (not (string= old-md5 new-md5)))
+      (let ((generate-autoload-file nil) (inhibit-message t))
+        (loaddefs-generate grandview--def-dir
+                           (grandview--path 'def-el)))
+      (with-temp-buffer
+        (erase-buffer)
+        (insert new-md5)
+        (write-region (point-min) (point-max) autoload-md5)))))
+#+end_src
+
+The =grandview-tangle= function, defined here, employs the same MD5 checking
+mechanism as =grandview--loaddefs-gen=.  This ensures that changes to the
+=grandview.org= file are captured by =grandview-tangle= upon killing Emacs.
+
+It is not an interactive command that users can call with =M-x=; instead, it is
+called automatically when needed. You can safely ignore it.
+
+#+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
+(defun grandview-tangle (&optional force)
+  "Tangle grandview.org to grandview.el.
+The tanglement only happens when the hashed md5 string changed after
+last change or FORCE is non nil."
+  (let* ((g-org (grandview--path 'g))
+         (md5-file (grandview--path 'main-md5))
+         (old-md5 (grandview--readfile md5-file))
+         (new-md5 (secure-hash 'md5 (grandview--readfile g-org)))
+         find-file-hook kill-buffer-hook write-file-functions)
+    (when (or force (not (string= old-md5 new-md5)))
+      (require 'org)
+      (grandview--put-tangle-path g-org)
+      (with-temp-buffer
+        (erase-buffer)
+        (insert new-md5)
+        (write-region (point-min) (point-max) md5-file))
+      (let (org-confirm-babel-evaluate)
+        (org-babel-tangle-file
+         g-org (grandview--path 'main)))
+      (cl-loop for lib in (directory-files-recursively
+                           grandview--def-dir "\\.el$")
+               for f-base = (file-name-base lib)
+               for f-name = (file-name-nondirectory lib)
+               for end-s =
+               (format "\n(provide '%s)\n;;; %s ends here" f-base f-name)
+               do (with-temp-buffer
+                    (insert ";;; -*- lexical-binding: t -*-\n\n")
+                    (insert-file-contents lib)
+                    (goto-char (point-max))
+                    (insert end-s)
+                    (write-region nil nil lib)))
+      (grandview--loaddefs-gen force))))
+#+end_src
+
+*** Load tangled elisp file
+:PROPERTIES:
+:CUSTOM_ID: h:4E1A86EF-3A26-4308-A263-1447D5D3987E
+:END:
+
+If the directory =grandview--cache= does not exist (either due to first-time use
+or deletion, such as with =rem -r=), tangling =grandview.org= and loading the
+resulting Emacs Lisp files will occur.  Otherwise, it assumes all necessary
+files are generated and can be required directly.  Additionally, the
+=grandview-tangle= function is hooked to =kill-emacs-hook=. This means the md5 check
+happens whenever Emacs is killed, ensuring tangling occurs whenever the content
+of =grandview.org= changes and the latest configuration is used upon restart. This
+design avoids tangling =grandview.org= every time Emacs launches, which can be
+slow due to the heaviness of =org.el=.
+
+#+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
+(let ((debug (or (getenv-internal "DEBUG") init-file-debug))
+      file-name-handler-alist)
+  (unless (file-exists-p grandview--cache)
+    (make-directory grandview--def-dir t)
+    (grandview-tangle t)) ; "Initiate spin!" -- Joseph Cooper
+  (add-to-list 'load-path grandview--cache)
+  (add-to-list 'load-path grandview--def-dir)
+  (add-hook 'kill-emacs-hook #'grandview-tangle -90)
+  (require 'grandview-macros nil (not debug))
+  (require 'grandview-custom nil (not debug))
+  (require 'grandview-loaddefs nil (not debug))
+  (require 'grandview nil (not debug))
+  (setq gc-cons-threshold 134217728))
+#+end_src
+
+** Pre-load setups
 :PROPERTIES:
 :CUSTOM_ID: h:976B3AE1-6291-4123-9A3C-A19BC284FA51
 :END:
@@ -607,7 +853,8 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
                          (require ',name))
                      ((debug error)
                       (message "Failed to load deferred package %s: %s" ',name e)))
-                   (when-let (deferral-list (assq ',name grandview--deferred-packages-alist))
+                   (when-let* ((deferral-list
+                                (assq ',name grandview--deferred-packages-alist)))
                      (dolist (hook (cdr deferral-list))
                        (advice-remove hook #',fn)
                        (remove-hook hook #',fn))
@@ -908,6 +1155,9 @@ details.
 :PROPERTIES:
 :CUSTOM_ID: h:CDB8D834-C18F-4B3E-BAE8-98BBDFE5095B
 :END:
+
+The modal editing system in *grandview* is powered by =meow= (thanks to
+*@DogLooksGood*!).
 
 Unlike =evil-mode=, which tries to create a whole vim emulation in emacs, =meow=
 only focus on bringing the goodness of modal editing to vanilla emacs.
@@ -1595,7 +1845,7 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
   (define-key transient-sticky-map (kbd "ESC") 'transient-quit-all))
 #+end_src
 
-** Get help in emacs
+** Get help in Emacs
 :PROPERTIES:
 :CUSTOM_ID: h:B5C5A759-2EF0-4B56-8E18-B1AD5E3D3D96
 :END:
@@ -3080,7 +3330,7 @@ A few commands for quick file access.
 (defun +files-open-grandview-config ()
   "Edit grandview's org file."
   (interactive)
-  (find-file grandview--dot-org))
+  (find-file (grandview--path 'g)))
 
 ;;;###autoload
 (defun +files-find-dotfiles ()
@@ -3259,6 +3509,20 @@ startup.
 :PROPERTIES:
 :CUSTOM_ID: h:5E45BE4B-5234-4A29-93F7-6D7BCF1F13DA
 :END:
+*** Display line nubmers
+:PROPERTIES:
+:CUSTOM_ID: h:E9F856B8-86A8-45E2-8E80-7C8B45B0C7C2
+:END:
+
+I don't rely on line numbers that much, so I usually enable them manually via
+=M-x display-line-numbers-mode=.
+
+#+begin_src emacs-lisp
+(use-package display-line-numbers-mode :ensure nil)
+
+;; (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+#+end_src
+
 *** Show parentheses (paren.el)
 :PROPERTIES:
 :CUSTOM_ID: h:6443408B-A49C-4D29-B14F-998CDB289F76
@@ -3708,20 +3972,14 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 :END:
 
 =org-modern= adds some styling to your Org buffer, which gives it a modern look.
-I disabled its table unit prettifier and use =valign= instead.
 
 #+begin_src emacs-lisp
 (use-package org-modern :ensure t)
-(use-package valign :ensure t)
 
 (setq org-modern-star 'replace)
-(setq org-modern-table nil)
 
 (add-hook 'org-mode-hook 'org-modern-mode)
 (add-hook 'org-agenda-finalize-hook 'org-modern-agenda)
-
-(setq valign-fancy-bar t)
-(add-hook 'org-mode-hook 'valign-mode)
 #+end_src
 
 *** Habit (org-habit.el)
@@ -3818,13 +4076,11 @@ Some number of BLANK-LINES will be shown below the header."
          (text-scale-set +org-tree-slide-text-scale)
          (+frame-cursor-dim-mode +1)
          (+window-monocle-mode +1)
-         (when (fboundp 'writeroom-mode) (writeroom-mode +1))
          (ignore-errors (org-latex-preview '(4))))
         (t
          (text-scale-set 0)
          (+window-monocle-mode -1)
          (+frame-cursor-dim-mode -1)
-         (when (fboundp 'writeroom-mode) (writeroom-mode -1))
          (org-clear-latex-preview)
          (org-mode))))
 #+end_src
@@ -3903,29 +4159,12 @@ Huge thanks to @blahgeek and @jdtsmith!
 #+begin_src emacs-lisp
 (use-package flymake :ensure nil)
 
-(add-hook 'prog-mode-hook '+flymake-enable)
-(add-hook 'text-mode-hook 'flymake-mode)
+(add-hook 'prog-mode-hook 'flymake-mode)
+
 (bind! grandview-prog-map
   "e" 'flymake-goto-next-error
   "E" 'flymake-goto-prev-error
   "S" 'flymake-start)
-#+end_src
-
-**** Extras
-:PROPERTIES:
-:CUSTOM_ID: h:AE26DC0C-1792-4840-A2B4-DFDC227BA78C
-:header-args:emacs-lisp: :tangle (expand-file-name "+flymake.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
-(defun +flymake-enable ()
-  "Inhibit `flymake-mode' under certain circumstances."
-  (unless (or (equal default-directory
-                     (or (file-name-directory grandview--dot-org)
-                         user-emacs-directory))
-              (eq (current-buffer) (get-buffer "*scratch*")))
-    (flymake-mode +1)))
 #+end_src
 
 *** Compiler (compile.el)
@@ -5131,43 +5370,43 @@ the following scenario:
                   'meow-save 'meow-replace)))
 #+end_src
 
-*** Distraction-free writing (writeroom-mode.el)
+*** Visual line wrap (visual-fill-column.el)
 :PROPERTIES:
-:CUSTOM_ID: h:30BCB780-6A36-45D4-8A5F-DC207C8587BB
+:CUSTOM_ID: h:2C9638FC-CCDD-436D-9401-2C9142785F33
 :END:
 
+=visual-fill-column-mode= is a small Emacs minor mode that mimics the effect of
+=fill-column= in =visual-line-mode=.  Instead of wrapping lines at the window edge,
+which is the standard behaviour of =visual-line-mode=, it wraps lines at
+=fill-column= (or =visual-fill-column-width=, if set).  This is accomplished by
+widening the margins, which narrows the text area.  When the window size
+changes, the margins are adjusted automatically.
+
+When =visual-fill-column-center-text= is set, the text is centered in the window.
+This can also be used in combination with =auto-fill-mode= instead of
+=visual-line-mode=, or in programming modes.
+
 #+begin_src emacs-lisp
-(use-package writeroom-mode :ensure t :after-call org-mode-hook markdown-mode-hook)
+(use-package visual-fill-column :ensure t)
 
-(add-hook 'org-mode-hook #'+visual-fill-center-text)
-
-(with-eval-after-load 'writeroom-mode
-  (setq writeroom-width 128
-        writeroom-bottom-divider-width 0
-        writeroom-fringes-outside-margins t
-        writeroom-fullscreen-effect 'fullboth
-        writeroom-major-modes '(text-mode prog-mode conf-mode special-mode Info-mode)
-        writeroom-major-modes-exceptions '(process-menu-mode proced-mode)
-        writeroom-maximize-window nil
-        writeroom-mode-line t))
+(add-hook 'org-mode-hook #'+visual-fill-column-center-text)
 #+end_src
 
 **** Extras
 :PROPERTIES:
 :CUSTOM_ID: h:FC7300FE-855C-4AC5-9272-689829C7D4D7
-:header-args:emacs-lisp: :tangle (expand-file-name "+writeroom-mode.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+visual-fill-column.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +visual-fill-center-text ()
+(defun +visual-fill-column-center-text ()
   "Centering text."
   (interactive)
   (setq-local visual-fill-column-width 120)
   (setq-local visual-fill-column-center-text t)
   (visual-fill-column-mode 1))
 #+end_src
-
 ** Knowledge management
 :PROPERTIES:
 :CUSTOM_ID: h:0C192736-DDAD-4638-8611-AB8A58B3BA3B
@@ -5232,7 +5471,8 @@ Here are the local variables in this file.
   "Setup for `grandview-org-file'."
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
-  (setq-local org-edit-src-content-indentation 0))
+  (setq-local org-edit-src-content-indentation 0)
+  (auto-fill-mode))
 
 (provide 'grandview)
 ;;; grandview.el ends here
