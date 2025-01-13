@@ -1675,7 +1675,7 @@ Setup fonts.
               (lambda () (unless (frame-focus-state)
                            (garbage-collect))))
 
-(bind! grandview-app-map "t" #'toggle-frame-maximized)
+(bind! grandview-app-map "f" #'toggle-frame-maximized)
 #+end_src
 
 **** Frame margin (fringe.el)
@@ -2787,7 +2787,6 @@ org-mode
 :PROPERTIES:
 :CUSTOM_ID: h:2F4217E3-BF28-4F5D-B8F6-389562DF634A
 :END:
-
 ** Working with directories
 :PROPERTIES:
 :CUSTOM_ID: h:92C67806-B5D1-47BB-87D9-3E62A5D6615B
@@ -3362,7 +3361,6 @@ A few commands for quick file access.
 :PROPERTIES:
 :CUSTOM_ID: h:401D8E76-D334-4E49-A670-8F04B6EA5B27
 :END:
-
 ** Search | Query
 :PROPERTIES:
 :CUSTOM_ID: h:29B6B90B-9E1A-481E-A987-FEBF09AAFBBC
@@ -4089,10 +4087,6 @@ Some number of BLANK-LINES will be shown below the header."
 :PROPERTIES:
 :CUSTOM_ID: h:2E097771-0569-462C-AB7A-4FA52F97E771
 :END:
-
-After proper configuration, Emacs can become a powerful and modern developing
-environment.
-
 ** Services
 :PROPERTIES:
 :CUSTOM_ID: h:CAED6558-08CD-4081-B9A9-9159B780C69F
@@ -4610,7 +4604,6 @@ better option."
 :PROPERTIES:
 :CUSTOM_ID: h:6019F888-2F43-40CD-89C6-03D542D48FA4
 :END:
-
 ** Integration
 :PROPERTIES:
 :CUSTOM_ID: h:E558471C-2534-4ABA-B898-905EB09F779F
@@ -4630,6 +4623,10 @@ external library (libvterm) loaded as a dynamic module.  Using compiled code
 instead of Emacs Lisp, allows vterm to be fast, fully capable, and seamlessly
 handle large outputs.
 
+#+begin_src emacs-lisp
+(use-package vterm :ensure t)
+#+end_src
+
 **** Poorman's terminal multiplexer
 :PROPERTIES:
 :CUSTOM_ID: h:B68077F6-09F1-4D8D-B5EE-7B1DCB0F44CD
@@ -4648,9 +4645,8 @@ For more details, see my [[https://github.com/alexluigit/zenish][zsh profile]], 
 integrating vterm with zsh.
 
 #+begin_src emacs-lisp
-(use-package vterm :ensure t)
-
 (define-key global-map (kbd "s-`") '+vterm-toggle)
+(define-key grandview-app-map (kbd "t") '+vterm-toggle)
 
 (with-eval-after-load 'vterm
   (+vterm-mux-mode)
@@ -4726,10 +4722,11 @@ Used as a hook function added to `kill-buffer-hook'."
       (delq! buf +vterm-buffers))))
 
 ;;;###autoload
-(defun +vterm-toggle (&optional project-root)
+(defun +vterm-toggle (&optional in-place)
   "Toggle vterm.
 If called with prefix argument, create a new vterm buffer with
-project root directory as `default-directory'."
+`default-directory', otherwise create a new vterm buffer with project
+root directory as `default-directory'."
   (interactive "P")
   (if (eq major-mode 'vterm-mode)
       (delete-window)
@@ -4738,7 +4735,7 @@ project root directory as `default-directory'."
            (pr-root (or (ignore-errors
                           (project-root (project-current)))
                         default-directory))
-           (default-directory (if project-root pr-root default-directory))
+           (default-directory (if in-place default-directory pr-root))
            (index (if buf (+vterm--get-index buf) 0)))
       (add-to-list '+vterm-buffers (vterm index))
       (meow-insert))))
@@ -5424,7 +5421,6 @@ This can also be used in combination with =auto-fill-mode= instead of
 :PROPERTIES:
 :CUSTOM_ID: h:76956BDC-B5A6-49E9-BCE1-0242B5EB647D
 :END:
-
 ** COPYING
 :PROPERTIES:
 :CUSTOM_ID: h:3CC0C8EB-75AE-4CDE-803B-A904AD026E65
