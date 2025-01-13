@@ -1,13 +1,15 @@
 ;;; early-init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
 
 ;;; Commentary:
-;; Auto generated file, do not edit.
+;; This file is auto-generated.
+;; Do *NOT* edit this file directly.  Edit relevant sections in `grandview.org' instead.
+;; Do not delete this file, otherwise you'll have to retangle it manually.
 
 ;;; Code:
 
 (setq
- native-comp-async-report-warnings-errors 'silent
  gc-cons-threshold most-positive-fixnum ; Inhibit garbage collection during startup
+ native-comp-async-report-warnings-errors 'silent ; Do not report native-comp warnings
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
  package-user-dir (locate-user-emacs-file "elpa") ; Use `user-emacs-directory' we set above
@@ -23,6 +25,7 @@
  fast-but-imprecise-scrolling t ; More performant rapid scrolling over unfontified regions
  ffap-machine-p-known 'reject ; Don't ping things that look like domain names
  frame-inhibit-implied-resize t ; Inhibit frame resizing for performance
+ frame-resize-pixelwise t ; Allow resizing frame pixelwise
  idle-update-delay 1.0  ; slow down UI updates down
  read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
  process-adaptive-read-buffering nil
@@ -36,13 +39,11 @@
  use-short-answers t ; y/n for yes/no
  ring-bell-function #'ignore ; Do NOT ring the bell
  ad-redefinition-action 'accept ; Disable warnings from legacy advice system
- inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
+ inhibit-compacting-font-caches t ; Don't compact font caches during gc
  inhibit-startup-message t ; Reduce noise at startup
  inhibit-startup-echo-area-message user-login-name
  inhibit-default-init t
  initial-scratch-message nil)
-
-(push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
 
 (load custom-file 'noerror 'silent)   ; Load user's customization
 (tool-bar-mode -1)                    ; Disable toolbar

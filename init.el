@@ -1,7 +1,9 @@
 ;;; init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
 
 ;;; Commentary:
-;; Auto generated file, do not edit.
+;; This file is auto-generated.
+;; Do *NOT* edit this file directly.  Edit relevant sections in `grandview.org' instead.
+;; Do not delete this file, otherwise you'll have to retangle it manually.
 
 ;;; Code:
 
@@ -14,14 +16,17 @@
 (defun grandview--path (type)
   "Get grandview's init path according to TYPE."
   (pcase type
-    ('g (expand-file-name "grandview.org" (file-name-directory user-init-file)))
+    ('g (expand-file-name "grandview.org"
+                          (file-name-directory user-init-file)))
+    ('private (expand-file-name "grandview.private.el"
+                                (file-name-directory user-init-file)))
     ('main (expand-file-name "grandview.el" grandview--cache))
     ('main-md5 (expand-file-name "grandview.el.md5" grandview--cache))
     ('def-el (expand-file-name "grandview-loaddefs.el" grandview--cache))
     ('def-md5 (expand-file-name "grandview-loaddefs.md5" grandview--cache))))
 
 (defun grandview--readfile (path)
-  "Return the decoded text in PATH as multibyte string."
+  "Return the decoded text in PATH as single-byte string."
   (with-temp-buffer
     (set-buffer-multibyte nil)
     (setq buffer-file-coding-system 'binary)
@@ -64,7 +69,7 @@
                     (or memo (replace-regexp-in-string
                               (regexp-quote " ") "_" title t t))))))))))))
     (save-buffer)
-    (kill-this-buffer)))
+    (kill-current-buffer)))
 
 (defun grandview--loaddefs-gen (&optional force)
   "Generate autoload files for Grandview.
@@ -95,7 +100,8 @@ last change or FORCE is non nil."
          (md5-file (grandview--path 'main-md5))
          (old-md5 (grandview--readfile md5-file))
          (new-md5 (secure-hash 'md5 (grandview--readfile g-org)))
-         find-file-hook kill-buffer-hook write-file-functions)
+         find-file-hook kill-buffer-hook write-file-functions
+         enable-local-variables)
     (when (or force (not (string= old-md5 new-md5)))
       (require 'org)
       (grandview--put-tangle-path g-org)
@@ -120,7 +126,7 @@ last change or FORCE is non nil."
                     (write-region nil nil lib)))
       (grandview--loaddefs-gen force))))
 
-(let ((debug (or (getenv-internal "DEBUG") init-file-debug))
+(let ((raise-err-when-debug-init (not (getenv-internal "DEBUG")))
       file-name-handler-alist)
   (unless (file-exists-p grandview--cache)
     (make-directory grandview--def-dir t)
@@ -128,8 +134,12 @@ last change or FORCE is non nil."
   (add-to-list 'load-path grandview--cache)
   (add-to-list 'load-path grandview--def-dir)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (require 'grandview-macros nil (not debug))
-  (require 'grandview-custom nil (not debug))
-  (require 'grandview-loaddefs nil (not debug))
-  (require 'grandview nil (not debug))
+  (require 'grandview-macros nil raise-err-when-debug-init)
+  (require 'grandview-custom nil raise-err-when-debug-init)
+  (when-let* ((private-conf (grandview--path 'private))
+              ((file-exists-p private-conf)))
+    (load private-conf raise-err-when-debug-init 'silent))
+  (require 'grandview-loaddefs nil raise-err-when-debug-init)
+  (push '(grandview-org-local-setup) safe-local-eval-forms)
+  (require 'grandview nil raise-err-when-debug-init)
   (setq gc-cons-threshold 134217728))

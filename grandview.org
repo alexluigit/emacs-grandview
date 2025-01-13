@@ -9,18 +9,16 @@
 :CUSTOM_ID: h:1AECDD3A-9714-41E1-BA21-8BCAFED96CD3
 :END:
 
-*Emacs grandview* is my GNU Emacs configuration.
-
-While you are welcome to use this repository as your own configuration, it's
-primarily intended to share my working setup for others to experiment with and
-learn from.  Detailed guides are provided in the sections below. Consequently,
-I'm unlikely to merge pull requests, except for documentation improvements or
-exceptionally innovative ideas.  Please feel free to ask any questions you may
-have.
+This repository, *emacs-grandview*, showcases my personal Emacs configuration for
+educational purposes and experimentation.  While you're welcome to use it as a
+basis for your own setup, I'm not maintaining it as a Emacs distribution.
+Therefore, I'm unlikely to merge pull requests except for documentation
+improvements or changes I find beneficial.  Feel free to ask any questions you
+may have.
 
 If you're viewing this document on GitHub, the "table of contents" button in the
 upper-right corner of the README container box can help you navigate its
-sections.
+sections.  Welcome to my kitchen sink.
 
 ** Features
 :PROPERTIES:
@@ -41,7 +39,7 @@ sections.
 This section details the loading procedure for *grandview* and provides
 instructions for using this configuration.
 
-*** This file (=grandview.org=)
+*** This file (*grandview.org*)
 :PROPERTIES:
 :CUSTOM_ID: h:95B6B174-9877-4DCB-B298-86B3B889A11F
 :END:
@@ -119,16 +117,16 @@ tree ~/.cache/emacs/grandview
 
 More details are in the [[#h:4E1A86EF-3A26-4308-A263-1447D5D3987E][Load tangled elisp file]] section.
 
-*** Private config | grandview options (=init.grandview.el=)
+*** Private config | grandview options (*grandview.private.el*)
 :PROPERTIES:
 :CUSTOM_ID: h:9102F88E-A57C-48D2-A606-FF01002E4D98
 :END:
 
-=init.grandview.el= is the place to put your *grandview* specific configuration or
-other arbitrary settings to load before loading =grandview.el=.  See [[#h:0EBF6C16-D48B-4BE3-85B6-39FC96982410][Customization
+=grandview.private.el= is the place to put your *grandview* specific configuration or
+other private settings to load before loading =grandview.el=.  See [[#h:0EBF6C16-D48B-4BE3-85B6-39FC96982410][Customization
 options]].
 
-Here is an example of =init.grandview.el=:
+Here is an example of =grandview.private.el=:
 
 #+begin_src emacs-lisp :tangle no
 ;; adjust font size
@@ -141,9 +139,10 @@ Here is an example of =init.grandview.el=:
 (setq grandview-custom-theme 'modus-operandi)
 
 ;; use http proxy
-(pushnew! grandview-custom-env-alist
-          '("HTTP_PROXY" . "http://localhost:1080")
-          '("HTTPS_PROXY" . "http://localhost:1080"))
+(setopt grandview-custom-env-alist
+        (pushnew! grandview-custom-env-alist
+                  '("HTTP_PROXY" . "http://127.0.0.1:1080")
+                  '("HTTPS_PROXY" . "http://127.0.0.1:1080")))
 
 ;; set initial frame opacity
 (setq +frame-opacity 80)
@@ -221,14 +220,12 @@ These flags are supported by this script:
 #+name: grandview-cache
 #+begin_src emacs-lisp :var type="main" :tangle no
 (pcase type
-  ("home" (file-name-directory user-init-file))
   ("main" (format "%s" grandview--cache))
   ("pkg-repos" (format "%s" package-user-dir)))
 #+end_src
 
 #+begin_src bash :tangle "~/.local/bin/rem" :shebang "#!/usr/bin/env bash" :noweb yes
 PKG="" REPOs=false RESET=false DEBUG="" BIN="emacs"
-INIT_DIR="--init-directory <<grandview-cache(type="home")>>"
 [[ $(uname) == "Darwin" ]] && BIN="/Applications/Emacs.app/Contents/MacOS/Emacs"
 
 while getopts "p:Prd" opt; do
@@ -241,7 +238,7 @@ while getopts "p:Prd" opt; do
 done
 shift $((OPTIND -1))
 
-emacs_cmd="$BIN $DEBUG $INIT_DIR >/dev/null 2>&1 & disown"
+emacs_cmd="$BIN $DEBUG >/dev/null 2>&1 & disown"
 kill -9 $(pgrep -x '[Ee]macs') 2>/dev/null
 [[ -n $PKG ]]  && rm -rf <<grandview-cache(type="pkg-repos")>>/$PKG 2>/dev/null
 $RESET && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
@@ -254,12 +251,11 @@ eval $emacs_cmd
 :CUSTOM_ID: h:FB2572C2-4DDC-44A2-92C0-D8754305B2A7
 :END:
 
-This section contains the core initialization files and modules for grandview.
+This section contains the initialization files and core modules for *grandview*.
 Here, you'll find configurations for the modal editing, user interface,
-including themes and fonts.  **Do not comment out this entire section without a
-thorough understanding of its function.**
+including themes and fonts.
 
-** The early-init file (early-init.el)
+** The early-init file (*early-init.el*)
 :PROPERTIES:
 :CUSTOM_ID: h:610D1070-5D79-466F-A5A5-7068396F2D41
 :END:
@@ -278,17 +274,27 @@ subsequently loaded packages store their cache within =~/.cache/emacs=.
 These are some general setups for frames initialization and the basics of the
 toolkit.  In short, I disabled most of UI elements to keep things minimal.
 
+Be cautious when experimenting with *grandview*'s initialization files,
+specifically *early-init.el* and *init.el*.  These two files, along with other
+output files, are automatically generated and updated each time Emacs restarts.
+If you manually delete *init.el* or *early-init.el*, or improperly edit their
+corresponding code blocks, Emacs will lose track of *grandview.org* and start with
+an empty profile.  In such cases, you will need to manually create and edit these
+two files.
+
 #+begin_src emacs-lisp :tangle (expand-file-name "early-init.el" (file-name-directory user-init-file))
 ;;; early-init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
 
 ;;; Commentary:
-;; Auto generated file, do not edit.
+;; This file is auto-generated.
+;; Do *NOT* edit this file directly.  Edit relevant sections in `grandview.org' instead.
+;; Do not delete this file, otherwise you'll have to retangle it manually.
 
 ;;; Code:
 
 (setq
- native-comp-async-report-warnings-errors 'silent
  gc-cons-threshold most-positive-fixnum ; Inhibit garbage collection during startup
+ native-comp-async-report-warnings-errors 'silent ; Do not report native-comp warnings
  user-emacs-directory (expand-file-name "~/.cache/emacs/") ; No littering
  custom-file (concat user-emacs-directory "custom.el") ; Place all "custom" code in a temporary file
  package-user-dir (locate-user-emacs-file "elpa") ; Use `user-emacs-directory' we set above
@@ -304,6 +310,7 @@ toolkit.  In short, I disabled most of UI elements to keep things minimal.
  fast-but-imprecise-scrolling t ; More performant rapid scrolling over unfontified regions
  ffap-machine-p-known 'reject ; Don't ping things that look like domain names
  frame-inhibit-implied-resize t ; Inhibit frame resizing for performance
+ frame-resize-pixelwise t ; Allow resizing frame pixelwise
  idle-update-delay 1.0  ; slow down UI updates down
  read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
  process-adaptive-read-buffering nil
@@ -317,13 +324,11 @@ toolkit.  In short, I disabled most of UI elements to keep things minimal.
  use-short-answers t ; y/n for yes/no
  ring-bell-function #'ignore ; Do NOT ring the bell
  ad-redefinition-action 'accept ; Disable warnings from legacy advice system
- inhibit-compacting-font-caches t ; Inhibit frame resizing for performance
+ inhibit-compacting-font-caches t ; Don't compact font caches during gc
  inhibit-startup-message t ; Reduce noise at startup
  inhibit-startup-echo-area-message user-login-name
  inhibit-default-init t
  initial-scratch-message nil)
-
-(push '(ignore-errors (grandview-setup-literate-file)) safe-local-eval-forms)
 
 (load custom-file 'noerror 'silent)   ; Load user's customization
 (tool-bar-mode -1)                    ; Disable toolbar
@@ -332,7 +337,7 @@ toolkit.  In short, I disabled most of UI elements to keep things minimal.
 (scroll-bar-mode -1)                  ; Disable scroll bar
 #+end_src
 
-** The initialization file (init.el)
+** The initialization file (*init.el*)
 :PROPERTIES:
 :CUSTOM_ID: h:DF24DB4D-F3B6-47B2-AE76-F5728FF1CFB4
 :END:
@@ -347,13 +352,15 @@ The =init.el= file is responsible for:
 :CUSTOM_ID: h:8236B22C-818F-48D5-A1E6-2D4579863C2F
 :END:
 
-You can find all the paths used by *grandview* here.
+You can find all the paths managed by *grandview* here.
 
 #+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
 ;;; init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
 
 ;;; Commentary:
-;; Auto generated file, do not edit.
+;; This file is auto-generated.
+;; Do *NOT* edit this file directly.  Edit relevant sections in `grandview.org' instead.
+;; Do not delete this file, otherwise you'll have to retangle it manually.
 
 ;;; Code:
 
@@ -366,14 +373,25 @@ You can find all the paths used by *grandview* here.
 (defun grandview--path (type)
   "Get grandview's init path according to TYPE."
   (pcase type
-    ('g (expand-file-name "grandview.org" (file-name-directory user-init-file)))
+    ('g (expand-file-name "grandview.org"
+                          (file-name-directory user-init-file)))
+    ('private (expand-file-name "grandview.private.el"
+                                (file-name-directory user-init-file)))
     ('main (expand-file-name "grandview.el" grandview--cache))
     ('main-md5 (expand-file-name "grandview.el.md5" grandview--cache))
     ('def-el (expand-file-name "grandview-loaddefs.el" grandview--cache))
     ('def-md5 (expand-file-name "grandview-loaddefs.md5" grandview--cache))))
+
+(defun grandview--readfile (path)
+  "Return the decoded text in PATH as single-byte string."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (setq buffer-file-coding-system 'binary)
+    (when (file-exists-p path) (insert-file-contents-literally path))
+    (buffer-substring-no-properties (point-min) (point-max))))
 #+end_src
 
-*** The =grandview-tangle= function
+*** The *grandview-tangle* function
 :PROPERTIES:
 :CUSTOM_ID: h:9A75C0EA-7484-4B28-894C-B9A5415F5294
 :END:
@@ -394,14 +412,6 @@ These are 2 helper functions for =grandview-tangle=.
   put correctly.
 
 #+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
-(defun grandview--readfile (path)
-  "Return the decoded text in PATH as multibyte string."
-  (with-temp-buffer
-    (set-buffer-multibyte nil)
-    (setq buffer-file-coding-system 'binary)
-    (when (file-exists-p path) (insert-file-contents-literally path))
-    (buffer-substring-no-properties (point-min) (point-max))))
-
 (defun grandview--put-tangle-path (file-name)
   "Prepare metadata for `grandview-tangle' in FILE-NAME."
   (with-current-buffer (find-file-noselect file-name)
@@ -438,7 +448,7 @@ These are 2 helper functions for =grandview-tangle=.
                     (or memo (replace-regexp-in-string
                               (regexp-quote " ") "_" title t t))))))))))))
     (save-buffer)
-    (kill-this-buffer)))
+    (kill-current-buffer)))
 
 (defun grandview--loaddefs-gen (&optional force)
   "Generate autoload files for Grandview.
@@ -478,7 +488,8 @@ last change or FORCE is non nil."
          (md5-file (grandview--path 'main-md5))
          (old-md5 (grandview--readfile md5-file))
          (new-md5 (secure-hash 'md5 (grandview--readfile g-org)))
-         find-file-hook kill-buffer-hook write-file-functions)
+         find-file-hook kill-buffer-hook write-file-functions
+         enable-local-variables)
     (when (or force (not (string= old-md5 new-md5)))
       (require 'org)
       (grandview--put-tangle-path g-org)
@@ -504,7 +515,7 @@ last change or FORCE is non nil."
       (grandview--loaddefs-gen force))))
 #+end_src
 
-*** Load tangled elisp file
+*** Load tangled .el files
 :PROPERTIES:
 :CUSTOM_ID: h:4E1A86EF-3A26-4308-A263-1447D5D3987E
 :END:
@@ -520,7 +531,7 @@ design avoids tangling =grandview.org= every time Emacs launches, which can be
 slow due to the heaviness of =org.el=.
 
 #+begin_src emacs-lisp :tangle (expand-file-name "init.el" (file-name-directory user-init-file))
-(let ((debug (or (getenv-internal "DEBUG") init-file-debug))
+(let ((raise-err-when-debug-init (not (getenv-internal "DEBUG")))
       file-name-handler-alist)
   (unless (file-exists-p grandview--cache)
     (make-directory grandview--def-dir t)
@@ -528,10 +539,14 @@ slow due to the heaviness of =org.el=.
   (add-to-list 'load-path grandview--cache)
   (add-to-list 'load-path grandview--def-dir)
   (add-hook 'kill-emacs-hook #'grandview-tangle -90)
-  (require 'grandview-macros nil (not debug))
-  (require 'grandview-custom nil (not debug))
-  (require 'grandview-loaddefs nil (not debug))
-  (require 'grandview nil (not debug))
+  (require 'grandview-macros nil raise-err-when-debug-init)
+  (require 'grandview-custom nil raise-err-when-debug-init)
+  (when-let* ((private-conf (grandview--path 'private))
+              ((file-exists-p private-conf)))
+    (load private-conf raise-err-when-debug-init 'silent))
+  (require 'grandview-loaddefs nil raise-err-when-debug-init)
+  (push '(grandview-org-local-setup) safe-local-eval-forms)
+  (require 'grandview nil raise-err-when-debug-init)
   (setq gc-cons-threshold 134217728))
 #+end_src
 
@@ -570,11 +585,11 @@ In addition, several custom options were introduced in this file:
 + ~grandview-custom-cjk-font~: Font for Chinese / Japanese / Korean characters.
 + ~grandview-custom-env-alist~: Use these environment variables in GUI emacs.
 
-Despite we can set environment variables using =setenv= function and it works fine
-in most of the scenarios, it is more reliable to set them before loading any
-packages.  Some people prefer using the package ~exec-path-from-shell~ to load
-environment variables from SHELL, but calling external process is quite slow, so
-I'm better off do it the regular way.
+Despite we can set environment variables on the fly using =setenv= function and it
+works fine in most of the scenarios, it is more reliable to set them before
+loading any packages.  Some people prefer using the package ~exec-path-from-shell~
+to load environment variables from SHELL, but calling external process is quite
+slow, so I'm better off do it the regular way.
 
 #+begin_src emacs-lisp :tangle (expand-file-name "grandview-custom.el" grandview--cache)
 ;;; grandview-custom.el --- environment variables in emacs -*- lexical-binding: t -*-
@@ -623,20 +638,15 @@ I'm better off do it the regular way.
                         "/usr/local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin"
                         (expand-file-name "~/.local/bin")) ":"))))
   "Use these environment variables in GUI emacs."
-  :group 'grandview :type 'alist)
-
-(when-let* ((user-cfg
-             (expand-file-name
-              "init.grandview.el" (file-name-directory user-init-file)))
-            ((file-exists-p user-cfg)))
-  (load user-cfg 'noerror 'silent))
-
-(pcase-dolist (`(,name . ,value) grandview-custom-env-alist)
-  (setenv name value)
-  (when (string-equal "PATH" name)
-    (setq exec-path (append (parse-colon-path value)
-                            (list exec-directory)))
-    (setq-default eshell-path-env value)))
+  :group 'grandview :type 'alist
+  :set (lambda (sym env-alist)
+         (set-default sym env-alist)
+         (pcase-dolist (`(,name . ,value) env-alist)
+           (setenv name value)
+           (when (string-equal "PATH" name)
+             (setq exec-path (append (parse-colon-path value)
+                                     (list exec-directory)))
+             (setq-default eshell-path-env value)))))
 
 (provide 'grandview-custom)
 ;;; grandview-custom.el ends here
@@ -647,48 +657,72 @@ I'm better off do it the regular way.
 :CUSTOM_ID: h:E5232E0D-670F-487F-BA8C-50396998807A
 :END:
 
-We defined a few keymaps for you to use in the following configurations.  When
-used with =meow=, they are bind as different prefixes under leader key (=SPC=).  See
-[[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Meow > Keybindings > Leader]]
+Here I defined a few top-level keymaps for you to use in the following
+configurations.  When used with =meow=, they are bind as different prefixes under
+leader key (=SPC=).  See [[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Meow > Keybindings > Leader]]
 
-+ =grandview-file-map=:       File manipulations, dired, etc.
-+ =grandview-search-map=:     Commands relate to search.
-+ =grandview-prog-map=:       Commands relate to programming.
-+ =grandview-window-map=:     Commands relate to window management.
-+ =grandview-tab-map=:        Commands relate to tab / workspaces.
-+ =grandview-app-map=:        Useful application / utils such as set frame opacity, etc.
-+ =grandview-reg-map=:        Commands for various registers.
-+ =grandview-project-map=:    Project commands.
++ =grandview-file-map=: File manipulations, dired, etc.
++ =grandview-mct-map=: [M]inibuffer and [C]ompletion in [T]andem.
++ =grandview-lang-map=: Commands relate to programming languages.
++ =grandview-app-map=: Useful application / utils such as set frame opacity, etc.
+
+And a few child keymaps.
+
++ =+config-prefix-map=: Commands for managing Emacs config, under =grandview-app-map=
++ =+find-file-prefix-map=: Locate files in specified places, under =grandview-file-map=
+
+Initially, the =+config-prefix-map= includes several commands:
+
++ =grandview-org= and =grandview-private-el= ::
+  allow you to quickly locate =grandview.org= and =grandview.private.el=, respectively.
+
++ =emacs-init-time= ::
+  show the time takes for Emacs to finish initialization
+
++ =restart-emacs= ::
+  built-in command to restart Emacs
 
 #+begin_src emacs-lisp
 (defvar-keymap grandview-file-map
   :doc "File and directory manipulations.")
 
-(defvar-keymap grandview-search-map
+(defvar-keymap grandview-mct-map
   :doc "Search everything using minibuffer.")
 
-(defvar-keymap grandview-prog-map
-  :doc "Programming related commands.")
-
-(defvar-keymap grandview-project-map
-  :doc "Project commands."
-  :parent project-prefix-map)
-
-(defvar-keymap grandview-window-map
-  :doc "Window management commands.")
-
-(defvar-keymap grandview-tab-map
-  :doc "Tab|Workspace commands."
-  :parent tab-prefix-map)
+(defvar-keymap grandview-lang-map
+  :doc "Keymap for programming languages.")
 
 (defvar-keymap grandview-app-map
   :doc "Useful applications and utilities."
   "d" #'toggle-debug-on-error
   "=" #'count-words)
 
-(defvar-keymap grandview-reg-map
-  :doc "Commands for various registers."
-  :parent ctl-x-r-map)
+(defvar-keymap +config-prefix-map
+  :doc "Handy commands for configuring `emacs-grandview'."
+  :parent grandview-app-map
+  "g" #'grandview-org
+  "p" #'grandview-private-el
+  "i" #'emacs-init-time
+  "r" #'restart-emacs)
+
+(defvar-keymap +find-file-prefix-map
+  :doc "Keymap for locating files"
+  :parent grandview-file-map)
+
+(defun grandview-org ()
+  "Edit grandview's org document."
+  (interactive)
+  (find-file (grandview--path 'g)))
+
+(defun grandview-private-el ()
+  "Edit grandview's private config."
+  (interactive)
+  (find-file
+   (expand-file-name
+    "grandview.private.el" (file-name-directory user-init-file))))
+
+(define-key grandview-file-map (kbd "f") +find-file-prefix-map)
+(define-key grandview-app-map (kbd "g") +config-prefix-map)
 #+end_src
 
 *** Macros for configuring packages
@@ -698,7 +732,7 @@ used with =meow=, they are bind as different prefixes under leader key (=SPC=). 
 
 A few handy macros were defined to be used in elisp code blocks of this =.org=
 file, you'll see them appear in this file a couple of times.  These macros are
-also accessible in =init.grandview.el=.
+also accessible in =grandview.private.el=.
 
 + =appendq!=: append lists to a symbol.
 + =delq!=: delete an element from a list.
@@ -786,21 +820,21 @@ DEFINITIONS is a sequence of string and command pairs."
 :CUSTOM_ID: h:F8A8595A-6466-49D8-902B-3CA74C9B0657
 :END:
 
-As the author of =use-package= stated, '=use-package= is *not* a package manager'.
-Instead, it's purpose is to allow you to isolate package configuration in your
-.emacs file in a way that is both performance-oriented and, well, tidy.
+As the author of =use-package= stated, it is *not* a package manager.  Instead,
+it's designed to isolate package configurations within your Emacs init file,
+promoting both performance and organization.
 
-Nonetheless, we still use it together with =package.el= to act as our package
-manager, there are several reasons for that:
+Despite this, we stick to use it in conjunction with =package.el= as our package
+management solution for several reasons:
 
-+ Both of them are built-in to Emacs (we use emacs30).
-+ =use-package= is able to adjust the package loading order using ~:after~ keyword.
-+ =use-package= now support the ~:vc~ keyword to install package from source.
-+ For our use cases, the package configs are maintained out side of =use-package=
-  anyway, so I guess it's fine to use them the "wrong" way.
++ Both are built into Emacs (we are using emacs30).
++ =use-package= can control package loading order with the ~:after~ keyword.
++ =use-package= now supports installing packages from source using the ~:vc~ keyword.
++ Our package configurations are maintained separately from =use-package=
+  declarations, so using them in this way is acceptable for our needs.
 
-In order to expand its lazy-loading capabilities, here I bring in the
-=:after-call= keyword definition from *doom-emacs*.
+To further enhance its lazy-loading capabilities, we're incorporating the
+~:after-call~ keyword definition from Doom Emacs.
 
 #+begin_src elisp :tangle no
 ;; The keyword should be used like this:
@@ -887,21 +921,21 @@ fundamental text editing commands and features.
 :CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
 :END:
 
-For historical reason, utilities lives in terminal (such as bash, vim, etc.) can
-not tell the difference between some key storkes. For example, =C-i= and =tab=, =C-m=
-and =Return=.  By default, emacs follow this convention, but it doesn't mean it is
-not able to tell the difference.  In a GUI environment, I remapped the =[?\C-i]=
-key sequence so that emacs is able to see =Tab= and =C-i= as different keycodes.  In
-terms of terminal emulator (alacritty in my case), I instruct it to translate
-=C-i= to =<f7>=, after that various commands from different terminal applications
-(such as shell, vim) can then wired to =C-i= through the =<f7>= outlet.
+Historically, terminal utilities like *bash* and *vim* cannot distinguish between
+certain keystrokes.  For instance, they treat =C-i= and =Tab= as the same, as well
+as =C-m= and =Return=.  By default, Emacs follows this convention.  However, Emacs
+is capable of differentiating these keystrokes.  In a GUI environment, I've
+remapped the =?C-i= key sequence, allowing Emacs to recognize =Tab= and =C-i= as
+distinct keycodes.  My terminal emulator, Alacritty, is configured to translate
+=C-i= to =<f7>=.  This enables various commands from different terminal applications
+(like shell and vim) to be bound to =C-i= through the =<f7>= intermediary.
 
-To understand what happens under the hook, you may want to checkout the
-~input-decode-map~ and [[https://en.wikipedia.org/wiki/Escape_sequence][escape sequences]].
+To understand the underlying mechanisms, you may want to explore
+=input-decode-map= and [[https://en.wikipedia.org/wiki/Escape_sequence][escape sequences]].
+
 
 #+begin_src emacs-lisp
-(when (display-graphic-p)
-  (define-key input-decode-map [?\C-i] [C-i]))
+(when (display-graphic-p) (define-key input-decode-map [?\C-i] [C-i]))
 #+end_src
 
 Here is how I do with my alacritty configuration:
@@ -1015,11 +1049,6 @@ related to some major mode or to file-handling.
 :END:
 
 #+begin_src emacs-lisp
-(defadvice! delete-backward-char-ad (fn &rest args)
-  "Do not try to delete char when the last char is read-only."
-  :around #'delete-backward-char
-  (unless (get-text-property (1- (point)) 'read-only) (apply fn args)))
-
 (defadvice! next-error-no-select-ad (fn &rest args)
   "Do not open new window when calling `next-error-no-select'."
   :around #'next-error-no-select
@@ -1038,13 +1067,11 @@ related to some major mode or to file-handling.
     (when (string-suffix-p "\n" clip)
       (goto-char (line-beginning-position)))))
 
-;;;###autoload
 (defun +simple-join-line ()
   "Join the current line with the line beneath it."
   (interactive)
   (delete-indentation 1))
 
-;;;###autoload
 (defun +simple-mark-inner-line ()
   "Mark inner line and move cursor to bol."
   (interactive)
@@ -1054,7 +1081,6 @@ related to some major mode or to file-handling.
     (back-to-indentation)))
 
 ;; Copied from `xah-fly-keys'
-;;;###autoload
 (defun +simple-toggle-letter-case ()
   "Toggle the letter case of current word or selection.
 Always cycle in this order: Init Caps, ALL CAPS, all lower."
@@ -1151,7 +1177,7 @@ details.
 ;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
 #+end_src
 
-** Modal Editing On Wish (meow.el)
+** Modal Editing On Wish
 :PROPERTIES:
 :CUSTOM_ID: h:CDB8D834-C18F-4B3E-BAE8-98BBDFE5095B
 :END:
@@ -1234,27 +1260,36 @@ this section as it contains essential keybindings.
 :CUSTOM_ID: h:B82246F0-CABC-48E4-AE8F-FDAAD6CFDC4F
 :END:
 
-One of the big differences between *emacs* and *vim* is their keybinding style.  I'm
-not talking about the modal editing part but the style of how they assign
-certain key to its corresponding command.  For example, in *vim* / *evil-mode*, =j= is
-the key to move to next line, the rational for that is the command 'move to next
-line' is so frequently used and we should assign a home row key to it.  For a
-very long period of time I had never doubted that since vim is so widely
-accepted, until I became a colemak user.  At the moment I switched to colemak, I
-realized that the =hjkl= paradigm in *vim* / *evil-mode* has 2 flaws:
+A key difference between *Emacs* and *Vim* lies in their keybinding styles, beyond
+modal editing. *Vim*, including *evil-mode*, often assigns frequently used commands
+to home row keys (e.g., =j= for "move to next line").  This approach, while widely
+accepted, clashes with Emacs, especially for users of non-standard keyboard
+layouts like Dvorak.  *Vim's* keybindings are fundamentally incompatible with
+Emacs for these reasons:
 
-1. It is *not* keyboard-layout agnostic.
-2. The key letters such as =j= / =k= tell us nothing about the relationship between
-   the keycode and the command it calls.
++ *Vim's* philosophy contradicts Emacs's established keybinding conventions :::
 
-While their counterpart, the emacs keybinding naming convention, has a rather
-reasonable linkage between the key itself and its corresponding command.  =C-n=
-calls command =next-line=, the letter =n= in the =C-n= is meaningful thus making it
-easier for people to understand and memorize.
+   While =k= for "previous line" might seem logical in isolation, in Emacs, "k"
+   often signifies "kill," as in =C-k= for =kill-line= or =C-c k= for
+   =kill-current-buffer=.  This consistent concept, developed over Emacs's
+   history, explains why =org-kill-note-or-show-branches= and
+   =org-next-visible-heading= are bound to =C-c C-k= and =C-c C-n=, not the reverse.
+   Adapting *Vim* to *Emacs* requires endless keybinding translations across
+   packages.
 
-The following =meow-normal-state-keymap= is arranged in a way that conforms the
-principle mentioned above, e.g. =n/p= for command =meow-next/prev=.  Also, I
-introduced key pair =i/o= for moving cursor forward/backward with one character
++ The *hjkl* paradigm is keyboard-layout dependent and a flawed starting point :::
+
+   Even with a standard QWERTY layout, the natural hand position places the
+   fingers on *jkl;* rather than *hjkl*.  This creates a dilemma: either maintain
+   the standard hand position and awkwardly stretch the index finger to reach
+   "h," or adjust the hand position to match *hjkl*.  Neither option is ideal.
+
+Emacs's keybinding style, conversely, emphasizes a clear relationship between
+the key and the command.  For example, =C-n= for =next-line= uses =n= in a mnemonic
+way that aids understanding and recall.
+
+The following =meow-normal-state-keymap= aligns with this principle, using =n/p= for
+=meow-next/prev= and =i/o= for moving the cursor forward/backward one character
 (mnemonic: move [i]n and [o]ut).
 
 #+begin_src emacs-lisp
@@ -1269,7 +1304,7 @@ introduced key pair =i/o= for moving cursor forward/backward with one character
   '("7" . meow-digit-argument)
   '("8" . meow-digit-argument)
   '("9" . meow-digit-argument)
-  '("<escape>" . meow-escape-or-normal-modal)
+  '("<escape>" . ignore)
   '("<backspace>" . meow-cancel-selection)
   '(";" . meow-pop-selection)
   '("," . meow-inner-of-thing)
@@ -1335,6 +1370,11 @@ introduced key pair =i/o= for moving cursor forward/backward with one character
   '("Y" . meow-yank-pop)
   '("z" . meow-pop-to-mark)
   '("Z" . meow-unpop-to-mark))
+
+(with-eval-after-load 'consult
+  (meow-define-keys 'normal
+    '("/" . consult-line)
+    '("V" . consult-global-mark)))
 #+end_src
 
 **** INSERT
@@ -1358,13 +1398,13 @@ To make it consistent, we bind =C-i= and =C-o= in insert mode to do the same job
 :CUSTOM_ID: h:5D69FCEA-9C0B-4EB9-8C03-E0AF1A4EB46C
 :END:
 
-Being able to use =SPC= as the *leader* key is one of the killing features of modal
-editing.  Prees =SPC x f= in sequence takes 3 keystroke indeed, which looks longer
-than =C-x C-f=, but it is objectively easier than holding the control key while
-press another letter key.  Using modifiers (ctrl/shift/alt etc.)  in your
-shortcuts too much usually intensify the risk of getting repetitive strain
-injury (RSI).  Maximize the usage of leader key will help to reduce RSI for
-those who use the keyboard for long periods of time.
+The ability to use =SPC= as a *leader* key is a key advantage of modal editing.
+While a sequence like =SPC x f= requires three keystrokes, which may seem longer
+than =C-x C-f=, it's objectively easier than holding the control key while
+pressing another letter.  Overusing modifier keys (Ctrl, Shift, Alt, etc.) in
+shortcuts increases the risk of repetitive strain injury (RSI).  Maximizing the
+use of a leader key can help reduce RSI, especially for those who spend long
+hours at the keyboard.
 
 #+begin_src emacs-lisp
 (meow-define-keys 'leader
@@ -1372,29 +1412,32 @@ those who use the keyboard for long periods of time.
   '("1" . delete-other-windows)
   '("2" . split-window-below)
   '("3" . split-window-right)
-  '("4" . ctl-x-4-prefix)
-  '("5" . ctl-x-5-prefix)
-  '("8" . insert-char)
-  '("/" . xref-find-references)
   '(";" . comment-line)
   '("," . xref-go-back)
   '("." . xref-find-definitions)
+  '("/" . xref-find-references)
   '("<" . beginning-of-buffer)
   '(">" . end-of-buffer)
-  (cons "a" grandview-app-map)
   '("e" . dired-jump)
-  '("E" . eval-expression)
-  (cons "f" grandview-file-map)
+  '("r" . eval-expression) ; [r]un something
   '("i" . ibuffer)
   '("k" . kill-current-buffer)
   '("n" . project-find-file)
-  (cons "o" grandview-prog-map)
-  (cons "p" grandview-project-map)
-  (cons "r" grandview-reg-map)
-  (cons "s" grandview-search-map)
-  (cons "t" grandview-tab-map)
-  (cons "w" grandview-window-map)
-  '("z" . window-toggle-side-windows))
+  '("q" . tab-close)
+  (cons "TAB" tab-prefix-map)
+  (cons "4" ctl-x-4-map)
+  (cons "5" ctl-x-5-map)
+  (cons "7" ctl-x-r-map)
+  (cons "8" ctl-x-x-map)
+  (cons "a" grandview-app-map)
+  (cons "f" grandview-file-map)
+  (cons "l" grandview-lang-map)
+  (cons "p" project-prefix-map)
+  (cons "t" grandview-mct-map)
+  (cons "w" window-prefix-map))
+
+(with-eval-after-load 'consult
+  (meow-define-keys 'leader '("SPC" . consult-buffer)))
 #+end_src
 
 **** MOTION
@@ -1402,10 +1445,14 @@ those who use the keyboard for long periods of time.
 :CUSTOM_ID: h:8F6D148E-53F1-4FA2-A362-7607F82AA103
 :END:
 
-Do not use =ESC= key as a prefix.
++ Do not use =ESC= key as a prefix.
++ When *consult* is available, bind =/= as =consult-line= globally.
 
 #+begin_src emacs-lisp
 (meow-define-keys 'motion '("<escape>" . ignore))
+
+(with-eval-after-load 'consult
+  (meow-define-keys 'motion '("/" . consult-line)))
 #+end_src
 
 *** Configuration
@@ -1445,30 +1492,29 @@ Here I'm adjusting some meow's behavior that I'm not quite used to:
       '((?r . round) (?b . square) (?c . curly) (?s . string) (?e . symbol) (?w . window)
         (?B . buffer) (?p . paragraph) (?d . defun) (?i . indent) (?. . sentence) (?l . line)))
 
+(with-eval-after-load 'meow (require '+meow))
+
 ;; Finally, enable meow globally.
 (meow-global-mode)
 #+end_src
 
-*** Extras
+*** Extras ::: +meow.el
 :PROPERTIES:
 :CUSTOM_ID: h:3050E51B-BD81-4574-B257-232C450D998B
 :header-args:emacs-lisp: :tangle (expand-file-name "+meow.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
-;;;###autoload
 (defadvice! meow-yank-ad (fn &rest _)
   "When region is active, do `meow-replace', otherwise just `meow-yank'."
   :around #'meow-yank
   (if (region-active-p) (meow-replace) (funcall fn)))
 
-;;;###autoload
 (defadvice! meow-search-ad (&rest _)
   "Center point after search."
   :after #'meow-search
   (recenter))
 
-;;;###autoload
 (defadvice! meow-query-replace-ad (&rest _)
   "Call `meow-query-replace' and auto fill prompt with region text."
   :before #'meow-query-replace
@@ -1478,20 +1524,17 @@ Here I'm adjusting some meow's behavior that I'm not quite used to:
     (deactivate-mark t)
     (run-with-timer 0.05 nil 'insert text)))
 
-;;;###autoload
 (defadvice! meow-inhibit-highlight-num-positions-ad (&rest _)
   "Do not show cursor movement indices."
   :override #'meow--maybe-highlight-num-positions
   (ignore))
 
-;;;###autoload
 (defun +meow-insert-at-indentation ()
   "Insert at first non-whitespace point at current line."
   (interactive)
   (back-to-indentation)
   (meow-insert))
 
-;;;###autoload
 (defun +meow-save-line ()
   "Fallback command for `meow-save'."
   (interactive)
@@ -1928,10 +1971,7 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 #+begin_src emacs-lisp
 (use-package find-func :ensure nil :after-call minibuffer-setup-hook)
 
-(define-key grandview-file-map (kbd "l") 'find-library)
-
-(when (eq system-type 'gnu/linux)
-  (setq find-function-C-source-directory "~/Code/emacs/src"))
+(define-key +find-file-prefix-map (kbd "l") 'find-library)
 #+end_src
 
 ** Use Emacs like a Desktop Environment
@@ -2063,9 +2103,14 @@ reduces rendering/line scan work for Emacs in non-focused windows.
   (setq switch-to-buffer-in-dedicated-window 'pop)
   (setq split-height-threshold nil)
   (setq split-width-threshold 120))
-(define-key grandview-window-map (kbd "o") 'other-window)
 ;; there are situations when we want to switch windows while typing
 (define-key global-map (kbd "s-o") 'other-window)
+
+(bind! window-prefix-map
+  "k" #'delete-window
+  "1" #'delete-other-windows
+  "f" #'fit-window-to-buffer
+  "o" #'other-window)
 #+end_src
 
 **** Adjust window size
@@ -2079,7 +2124,7 @@ normal mode can =repeat= the last command, which may save a lot of key strokes f
 you.
 
 #+begin_src emacs-lisp
-(bind! grandview-window-map
+(bind! window-prefix-map
   "-" #'shrink-window
   "=" #'enlarge-window
   "," #'shrink-window-horizontally
@@ -2089,7 +2134,7 @@ you.
 =SPC w c= to recenter current line.
 
 #+begin_src emacs-lisp
-(define-key grandview-window-map (kbd "c") 'recenter)
+(define-key window-prefix-map (kbd "c") 'recenter)
 #+end_src
 
 **** Window reorder (windmove.el)
@@ -2104,7 +2149,8 @@ section in =meow-tutor=).
 #+begin_src emacs-lisp
 (use-package windmove :ensure nil :after-call split-window)
 
-(bind! grandview-window-map
+(bind! window-prefix-map
+  "t" #'toggle-window-dedicated ; restore this command
   "d" #'windmove-swap-states-down
   "u" #'windmove-swap-states-up
   "r" #'windmove-swap-states-right
@@ -2122,7 +2168,7 @@ frame (=C-x 5 2=) directly.  A good example would be showing the **Messages** bu
 in other frame when debugging emacs packages.
 
 #+begin_src emacs-lisp
-(bind! grandview-window-map "m" #'+window-show-messages-other-frame)
+(bind! window-prefix-map "m" #'+window-show-messages-other-frame)
 #+end_src
 
 ***** Extras
@@ -2157,7 +2203,7 @@ If ERASE is non-nil, erase the buffer before switching to it."
 A command to maximize / restore a window.
 
 #+begin_src emacs-lisp
-(define-key grandview-window-map (kbd "w") #'+window-monocle-mode)
+(define-key window-prefix-map (kbd "w") #'+window-monocle-mode)
 #+end_src
 
 ***** Extras
@@ -2234,11 +2280,12 @@ more on how fast you can bring them into focus.  This is, of course, a matter of
 realigning priorities, as we still wish to control every aspect of the
 interface.
 
-Auto-completion, particularly in the minibuffer, is a core feature of this
-setup.  Unless you experience package configuration problems in this section,
-avoid commenting it out entirely. Debugging Emacs frequently requires manual
-command entry in the minibuffer, making this functionality essential.  However,
-feel free to adjust the configurations within this section as needed.
+Auto-completion, especially in the minibuffer, is essential for this setup.
+While not a core component of *grandview* — other completion UIs like Ivy can be
+substituted without breaking the setup — this section should generally not be
+disabled.  Debugging Emacs often involves manually entering commands in the
+minibuffer, making this functionality crucial.  Feel free to adjust the
+configurations within this section as needed.
 
 ** Setup minibuffer
 :PROPERTIES:
@@ -2446,10 +2493,14 @@ Selectrum, Vertico and Embark.
 The purpose for setting =consult-async-min-input= to 2 is to adapt for Chinese
 word, which usually consists of only 2 characters.
 
-#+begin_src emacs-lisp
-(use-package consult :ensure t)
+As of keybindings, I bind some frequently used consult commands onto the
+=grandview-mct-map= directly for quick access, while making sure the others are
+accessiable under its child keymap =+consult-prefix-=map=.
 
-(with-eval-after-load 'vertico
+#+begin_src emacs-lisp
+(use-package consult :ensure t :after-call vertico-mode)
+
+(with-eval-after-load 'consult
   (setq completion-in-region-function #'consult-completion-in-region)
   (advice-add #'register-preview :override #'consult-register-window)
   (setq register-preview-delay 0.2)
@@ -2461,29 +2512,38 @@ word, which usually consists of only 2 characters.
   (setq consult-async-input-debounce 0.5)
   (setq consult-async-input-throttle 0.8)
   (setq consult-narrow-key ">")
-  (bind! grandview-search-map
-    "l" 'consult-line
-    "/" 'consult-line-multi
-    "t" 'consult-mark
-    "T" 'consult-global-mark
-    "a" 'consult-apropos
+
+  (bind! grandview-mct-map
     "e" 'consult-compile-error
     "f" 'consult-flymake
     "r" 'consult-ripgrep
+    "k" 'consult-kmacro
+    "o" 'consult-outline
+    "y" 'consult-yank-from-kill-ring
+    "m" 'consult-bookmark)
+
+  (defvar-keymap +consult-prefix-map
+    :doc "Keymap for `consult' commands."
+    "a" 'consult-org-agenda
+    "h" 'consult-org-heading
+    "l" 'consult-line
+    "L" 'consult-line-multi
+    "m" 'consult-mark
+    "v" 'consult-global-mark ; [v]isited
+    "e" 'consult-compile-error
+    "f" 'consult-flymake
     "k" 'consult-kmacro
     "K" 'consult-keep-lines
     "i" 'consult-imenu-multi
     "n" 'consult-focus-lines ; narrow
     "o" 'consult-outline
-    "R" 'consult-register
+    "r" 'consult-register
     "y" 'consult-yank-from-kill-ring
-    "m" 'consult-bookmark
     "c" 'consult-complex-command
     "C" 'consult-mode-command
     "M" 'consult-minor-mode-menu)
-  (meow-define-keys 'normal '("/" . consult-line) '("V" . consult-global-mark))
-  (meow-define-keys 'motion '("/" . consult-line))
-  (meow-define-keys 'leader '("SPC" . consult-buffer)))
+
+  (define-key grandview-mct-map (kbd "t") +consult-prefix-map))
 #+end_src
 
 *** Candidate annotation (marginalia.el)
@@ -2545,31 +2605,16 @@ in the form of Capfs (~completion-at-point-functions~).
 
 (with-eval-after-load 'cape
   (setq cape-dict-file "/usr/share/dict/words")
+
   (when (>= emacs-major-version 30)
     (setopt text-mode-ispell-word-completion nil))
+
   (add-hook 'completion-at-point-functions #'cape-file)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
   (add-hook 'completion-at-point-functions #'cape-keyword)
   (add-hook 'completion-at-point-functions #'cape-dict)
 
-  (defvar-keymap grandview-cape-map
-    :parent grandview-search-map
-    "c" #'completion-at-point ; capf
-    "t" #'complete-tag        ; etags
-    "d" #'cape-dabbrev        ; or dabbrev-completion
-    "f" #'cape-file
-    "k" #'cape-keyword
-    "s" #'cape-symbol
-    "a" #'cape-abbrev
-    "i" #'cape-ispell
-    "l" #'cape-line
-    "w" #'cape-dict
-    "\\" #'cape-tex
-    "_" #'cape-tex
-    "^" #'cape-tex
-    "&" #'cape-sgml
-    "r" #'cape-rfc1345)
-  (define-key grandview-search-map (kbd "s") grandview-cape-map))
+  (define-key grandview-mct-map (kbd "c") cape-prefix-map))
 #+end_src
 
 *** Snippet (tempel.el)
@@ -2590,6 +2635,15 @@ completion."
 
 #+begin_src emacs-lisp
 (use-package tempel :ensure t :after-call self-insert-command)
+
+(defvar-keymap +tempel-prefix-map
+  :doc "Kepmap for tempel commands."
+  :parent grandview-lang-map
+  "t" #'tempel-insert
+  "<backspace>" #'tempel-kill
+  "a" #'tempel-abort)
+
+(define-key grandview-mct-map (kbd "s") +tempel-prefix-map)
 
 (add-hook 'prog-mode-hook '+tempel-setup-capf)
 (add-hook 'text-mode-hook '+tempel-setup-capf)
@@ -2675,11 +2729,11 @@ lisp-mode emacs-lisp-mode ;; Specify multiple modes
 
 emacs-lisp-mode
 
-(use "(use-package " p ")")
+(use- "(use-package " p ")")
 (lambda "(lambda (" p ")" n> r> ")")
 (autoload ";;;###autoload")
-(pt "(point)")
-(var "(defvar " p "\n  \"" p "\")")
+(point "(point)")
+(defv "(defvar " p "\n  \"" p "\")")
 (local "(defvar-local " p "\n  \"" p "\")")
 (const "(defconst " p "\n  \"" p "\")")
 (custom "(defcustom " p "\n  \"" p "\"" n> ":type '" p ")")
@@ -2687,18 +2741,18 @@ emacs-lisp-mode
 (group "(defgroup " p " nil\n  \"" p "\"" n> ":group '" p n> ":prefix \"" p "-\")")
 (macro "(defmacro " p " (" p ")\n  \"" p "\"" n> r> ")")
 (alias "(defalias '" p " '" p ")")
-(fun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
+(defun "(defun " p " (" p ")\n  \"" p "\"" n> r> ")")
 (iflet "(if-let* (" p ")" n> r> ")")
 (whenlet "(when-let* (" p ")" n> r> ")")
 (whilelet "(while-let (" p ")" n> r> ")")
 (andlet "(and-let* (" p ")" n> r> ")")
 (cond "(cond (" p ")" n> "()" n> "()" ")")
 (pcase "(pcase " (p "scrutinee") n "(" q "))" >)
-(let "(let (" p ")" n> r> ")")
-(lett "(let* (" p ")" n> r> ")")
+(lett "(let (" p ")" n> r> ")")
+(lettt "(let* (" p ")" n> r> ")")
 (pcaselet "(pcase-let (" p ")" n> r> ")")
 (pcaselett "(pcase-let* (" p ")" n> r> ")")
-(rec "(letrec (" p ")" n> r> ")")
+(letrec "(letrec (" p ")" n> r> ")")
 (dotimes "(dotimes (" p ")" n> r> ")")
 (dolist "(dolist (" p ")" n> r> ")")
 (loop "(cl-loop for " p " in " p " do" n> r> ")")
@@ -2946,7 +3000,6 @@ that if you install it from Melpa.
     "<mouse-2>" 'dired-mouse-find-file-other-window ; middle click for opening file / entering dir in other window
     "<mouse-3>" 'dired-mouse-find-file              ; right click for opening file / entering dir
     "<mouse-8>" 'dired-do-shell-command             ; side button for shell command execution
-    "SPC" 'consult-buffer
     "s-n" 'dirvish-history-go-forward
     "s-p" 'dirvish-history-go-backward
     "h" 'dirvish-history-jump
@@ -2964,12 +3017,14 @@ that if you install it from Melpa.
     "s" 'dirvish-quicksort
     "l" 'dirvish-ls-switches-menu
     "y" 'dirvish-yank-menu)
-  (bind! grandview-file-map
-    "e" 'dirvish
+  (defvar-keymap +dirvish-prefix-map
+    :doc "Keymap for `dirvish' commands."
+    "d" 'dirvish
     "f" 'dirvish-fd
     "n" 'dirvish-side
-    "o" 'dirvish-quick-access
-    "b" 'dirvish-fd-jump)
+    "a" 'dirvish-quick-access
+    "j" 'dirvish-fd-jump)
+  (define-key grandview-file-map (kbd "e") +dirvish-prefix-map)
   (bind! mode-specific-map "e" 'dirvish-dwim))
 #+end_src
 
@@ -2988,7 +3043,7 @@ directory with a recognizable root is selected, it's added to the project
 list. After selecting a project, a list of common actions appears; these are
 defined by the =project-switch-commands= user option and accessed through =SPC p=
 followed by a final key (e.g., =SPC p /= for =project-dired=, as configured in the
-=grandview-project-map=).
+=project-prefix-map=).
 
 If any =project.el= command is invoked outside a project, it will first prompt for
 a project before executing its action. For example, =project-find-file= will
@@ -2998,7 +3053,7 @@ project.
 When inside a project, project-level commands become available. For instance,
 =SPC p f= (=project-find-file=) searches for a file inside the current project, and
 =SPC p b= (=project-switch-to-buffer=) switches to a buffer belonging to that
-project.  Refer to the =grandview-project-map= for a complete list of available
+project.  Refer to the =project-prefix-map= for a complete list of available
 commands.
 
 #+begin_src emacs-lisp
@@ -3012,7 +3067,7 @@ commands.
             (project-dired "Dired at root")
             (project-vc-dir "VC-project"))))
 
-(bind! grandview-project-map
+(bind! project-prefix-map
   "/" '+project-dired
   "p" '+project-switch)
 #+end_src
@@ -3211,10 +3266,9 @@ every 5 minutes.
 #+begin_src emacs-lisp
 (use-package files :ensure nil)
 
-(with-eval-after-load 'meow ;; files usually edited in `meow-insert-mode'
-  (setq auto-save-default nil)
-  (auto-save-visited-mode)
-  (setopt auto-save-visited-interval 300))
+(setq auto-save-default nil)
+(auto-save-visited-mode)
+(setopt auto-save-visited-interval 300)
 #+end_src
 
 ** Utilities
@@ -3289,8 +3343,7 @@ A few commands for quick file access.
 (setq permanently-enabled-local-variables '(lexical-binding encoding))
 (setq confirm-kill-processes nil)
 
-(bind! grandview-file-map
-  "g" '+files-open-grandview-config
+(bind! +find-file-prefix-map
   "." '+files-find-dotfiles
   "u" '+files-find-user-files)
 #+end_src
@@ -3324,12 +3377,6 @@ A few commands for quick file access.
          (files (+minibuffer-append-metadata 'file files-raw))
          (file (completing-read (or prompt "Open file: ") files)))
     (find-file (concat dir "/" file))))
-
-;;;###autoload
-(defun +files-open-grandview-config ()
-  "Edit grandview's org file."
-  (interactive)
-  (find-file (grandview--path 'g)))
 
 ;;;###autoload
 (defun +files-find-dotfiles ()
@@ -3434,6 +3481,7 @@ most frequently used are:
 #+begin_src emacs-lisp
 (use-package xref :ensure nil)
 
+(setq xref-prompt-for-identifier nil)
 (setq xref-file-name-display 'project-relative)
 (setq xref-search-program 'ripgrep)
 #+end_src
@@ -3461,7 +3509,7 @@ Some additions I've added to rg transient:
 
 (with-eval-after-load 'rg
   (+rg-setup)
-  (define-key grandview-prog-map (kbd "s") 'rg-project-all-files-no-ask))
+  (define-key grandview-lang-map (kbd "s") 'rg-project-all-files-no-ask))
 #+end_src
 
 **** Writable grep (wgrep.el)
@@ -3507,7 +3555,7 @@ startup.
 :PROPERTIES:
 :CUSTOM_ID: h:5E45BE4B-5234-4A29-93F7-6D7BCF1F13DA
 :END:
-*** Display line nubmers
+*** COMMENT Display line nubmers
 :PROPERTIES:
 :CUSTOM_ID: h:E9F856B8-86A8-45E2-8E80-7C8B45B0C7C2
 :END:
@@ -3518,7 +3566,7 @@ I don't rely on line numbers that much, so I usually enable them manually via
 #+begin_src emacs-lisp
 (use-package display-line-numbers-mode :ensure nil)
 
-;; (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
 #+end_src
 
 *** Show parentheses (paren.el)
@@ -3577,7 +3625,7 @@ Summary of what these do:
 (setq prettify-symbols-unprettify-at-point 'right-edge)
 #+end_src
 
-** Input composer
+** Automation
 :PROPERTIES:
 :CUSTOM_ID: h:F7A967C9-D685-4B40-9EDB-FF2C334546D7
 :END:
@@ -3730,6 +3778,31 @@ of characters.
     (format "%d. " num)))
 #+end_src
 
+*** Remove whitespaces on saving (whitespace.el)
+
+This built-in package handles blanks (TAB, (HARD) SPACE and NEWLINE).
+
+#+begin_src emacs-lisp
+(use-package whitespace :ensure nil :after-call basic-save-buffer)
+
+(add-hook 'before-save-hook #'+whitespace-cleanup-before-saving)
+#+end_src
+
+**** Extras
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "+whitespace.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +whitespace-cleanup-before-saving ()
+  "Cleanup whitespaces for local actual files."
+  (when-let* ((file buffer-file-name)
+              ((not (file-remote-p file)))
+              ((file-exists-p file)))
+    (whitespace-cleanup)))
+#+end_src
+
 ** Using org-mode
 :PROPERTIES:
 :CUSTOM_ID: h:D30BE4AD-1214-42E5-8634-A76D5CF5F9E7
@@ -3765,6 +3838,7 @@ look like which can be described briefly as follows:
 (use-package org :ensure nil)
 
 (with-eval-after-load 'org
+  (require '+org)
   (+org-font-setup)
   (add-hook 'org-mode-hook 'variable-pitch-mode)
   (add-hook 'org-mode-hook 'org-indent-mode)
@@ -3779,11 +3853,10 @@ look like which can be described briefly as follows:
   (setq org-log-into-drawer t)
   (setq org-image-actual-width nil)
   (setq org-display-remote-inline-images 'download)
-  (define-key org-mode-map (kbd "C-c C-h") 'consult-org-heading)
   (define-key org-mode-map (kbd "C-c l") 'org-insert-last-stored-link))
 #+end_src
 
-**** Extras
+**** Extras ::: +org.el
 :PROPERTIES:
 :CUSTOM_ID: h:D1E76232-405A-40C8-87B1-B553DBB57F43
 :header-args:emacs-lisp: :tangle (expand-file-name "+org.el" grandview--def-dir)
@@ -3796,7 +3869,6 @@ look like which can be described briefly as follows:
   "Heights of level1-4 org headings."
   :group 'org :type 'list)
 
-;;;###autoload
 (defadvice! org-toggle-comment-ad (fn &rest args)
   "Drop-in replacement for `org-toggle-comment'.
 This allows `org-toggle-comment' to toggle comment for all the
@@ -3816,7 +3888,6 @@ debugging code blocks in a org config file."
               (org-forward-element)))))
     (apply fn args)))
 
-;;;###autoload
 (defadvice! org-fill-paragraph-ad (&rest _)
   "Let `org-fill-paragraph' works inside of src block in Org-mode."
   :before-while #'org-fill-paragraph
@@ -3832,7 +3903,6 @@ debugging code blocks in a org config file."
         (progn (org-babel-do-in-edit-buffer (fill-paragraph)) nil)
       t)))
 
-;;;###autoload
 (defun +org-font-setup ()
   "Setup variable-pitch fonts for org-mode."
   (let* ((families (font-family-list))
@@ -3947,6 +4017,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (use-package org-src :ensure nil)
 
 (with-eval-after-load 'org-src
+  (setq org-edit-src-content-indentation 0)
   (setq org-src-window-setup 'split-window-right)
   (push '("conf-unix" . conf-unix) org-src-lang-modes))
 #+end_src
@@ -4121,12 +4192,16 @@ Huge thanks to @blahgeek and @jdtsmith!
   (setq eglot-booster-io-only t)
   (add-hook 'eglot-mode-hook 'eglot-booster-mode))
 
-(bind! grandview-prog-map
+(defvar-keymap +eglot-prefix-map
+  :doc "Keymap for `eglot' commands."
+  :parent grandview-lang-map
   "a" 'eglot-code-actions
   "t" 'eglot-find-typeDefinition
   "d" 'eglot-find-declaration
   "i" 'eglot-find-implementation
   "r" 'eglot-rename)
+
+(define-key grandview-lang-map (kbd "e") +eglot-prefix-map)
 #+end_src
 
 **** Extras
@@ -4155,10 +4230,14 @@ Huge thanks to @blahgeek and @jdtsmith!
 
 (add-hook 'prog-mode-hook 'flymake-mode)
 
-(bind! grandview-prog-map
-  "e" 'flymake-goto-next-error
-  "E" 'flymake-goto-prev-error
-  "S" 'flymake-start)
+(defvar-keymap +flymake-prefix-map
+  :doc "Keymap for `flymake' commands."
+  :parent grandview-lang-map
+  "n" 'flymake-goto-next-error
+  "p" 'flymake-goto-prev-error
+  "s" 'flymake-start)
+
+(define-key grandview-lang-map (kbd "f") +flymake-prefix-map)
 #+end_src
 
 *** Compiler (compile.el)
@@ -4170,8 +4249,8 @@ Run compiler as inferior of Emacs, parse error messages.
 
 #+begin_src emacs-lisp
 (bind! grandview-file-map
-  "p" 'compile
-  "P" 'recompile)
+  "c" 'compile
+  "C" 'recompile)
 #+end_src
 
 *** Formatter (reformatter.el)
@@ -4186,7 +4265,7 @@ optional minor mode which can apply this command automatically on save.
 #+begin_src emacs-lisp
 (use-package reformatter :ensure t)
 
-(define-key grandview-prog-map (kbd "f") '+format-buffer)
+(define-key grandview-lang-map (kbd "r") '+reformatter-format-buffer)
 
 (with-eval-after-load 'reformatter
   (reformatter-define lua-format
@@ -4228,7 +4307,7 @@ optional minor mode which can apply this command automatically on save.
       '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs" "package.json")))))
 
 ;;;###autoload
-(defun +format-buffer ()
+(defun +reformatter-format-buffer ()
   (interactive)
   (let* ((mode-name
           (string-remove-suffix
@@ -4886,17 +4965,14 @@ accessiable by the =pass= command.
    `(display-buffer-in-direction
      (body-function . ,#'select-window) (direction . rightmost))
    gptel-default-mode 'org-mode
-   gptel-model 'google/gemini-2.0-flash-exp:free
+   gptel-model 'gemini-2.0-flash-exp
    gptel-backend
-   (gptel-make-openai "OpenRouter"
-     :host "openrouter.ai"
-     :endpoint "/api/v1/chat/completions"
-     :key (lambda () (require 'password-store) (password-store-get "openrouter_apikey"))
-     :stream t
-     :models '(google/gemini-2.0-flash-exp:free)))
+   (gptel-make-gemini "Gemini"
+     :key (lambda () (require 'password-store) (password-store-get "gemini_apikey"))
+     :stream t))
   (add-hook 'gptel-mode-hook #'visual-line-mode))
 
-(defvar-keymap grandview-gptel-map
+(defvar-keymap +gptel-prefix-map
   :doc "Summon gpt models."
   :parent grandview-app-map
   "n" #'gptel ; start [n]ew dialog
@@ -4910,7 +4986,7 @@ accessiable by the =pass= command.
   "m" #'gptel-mode)
 
 ;; a key for AI
-(bind! grandview-app-map "a" grandview-gptel-map)
+(bind! grandview-app-map "a" +gptel-prefix-map)
 #+end_src
 
 ** Version Control
@@ -4958,12 +5034,18 @@ Extras:
 :CUSTOM_ID: h:2F3C245E-4DE8-46F4-9168-0B45BED441E1
 :END:
 
+Magit is a text-based Git user interface that puts an unmatched focus on
+streamlining workflows.  Commands are invoked using short mnemonic key sequences
+that take the cursor's position in the highly actionable interface into account
+to provide context-sensitive behavior.
+
 #+begin_src emacs-lisp
 (use-package magit :ensure t)
 
 (define-key grandview-app-map (kbd "m") 'magit-status-here)
 (with-eval-after-load 'magit
-  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  (setq magit-display-buffer-function
+        'magit-display-buffer-same-window-except-diff-v1)
   (setq magit-define-global-key-bindings nil)
   (setq git-commit-summary-max-length 68)
   (setq git-commit-known-pseudo-headers
@@ -4973,7 +5055,8 @@ Extras:
         '(non-empty-second-line overlong-summary-line))
   (setq magit-diff-refine-hunk t)
   (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
-  (define-key magit-diff-section-base-map (kbd "<C-return>") 'magit-diff-visit-file-other-window))
+  (define-key magit-diff-section-base-map
+              (kbd "<C-return>") 'magit-diff-visit-file-other-window))
 #+end_src
 
 *** Interactive diff, patch, or merge conflict (ediff.el)
@@ -5248,27 +5331,13 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
       tabspaces-include-buffers '("*scratch*" "*Messages*")
       tabspaces-remove-to-default t)
 
-(bind! grandview-tab-map
+(bind! tab-prefix-map
   "C" 'tabspaces-clear-buffers
   "R" 'tabspaces-remove-selected-buffer
   "k" 'tabspaces-kill-buffers-close-workspace
   "s" 'tabspaces-switch-or-create-workspace)
 
-(with-eval-after-load 'consult
-  (consult-customize consult--source-buffer :hidden t :default nil)
-  (defvar consult--source-workspace
-    (list :name "Workspace Buffers"
-          :narrow ?w
-          :history 'buffer-name-history
-          :category 'buffer
-          :state #'consult--buffer-state
-          :default t
-          :items (lambda () (consult--buffer-query
-                             :predicate #'tabspaces--local-buffer-p
-                             :sort 'visibility
-                             :as #'buffer-name)))
-    "Set Workspace buffer list for consult buffer.")
-  (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+(with-eval-after-load 'consult (+tabspaces-integrate-consult))
 #+end_src
 
 **** Extras
@@ -5303,6 +5372,23 @@ Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces
     (when path (dirvish path))))
 
 ;;;###autoload
+(defun +tabspaces-integrate-consult ()
+  "Integrate `tabspaces' with `consult'."
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (defvar consult--source-workspace
+    (list :name "Workspace Buffers"
+          :narrow ?w
+          :history 'buffer-name-history
+          :category 'buffer
+          :state #'consult--buffer-state
+          :default t
+          :items (lambda () (consult--buffer-query
+                             :predicate #'tabspaces--local-buffer-p
+                             :sort 'visibility
+                             :as #'buffer-name)))
+    "Set Workspace buffer list for consult buffer."))
+
+;;;###autoload
 (defun +tabspaces-setup ()
   "Setup tabspaces when a frame is created as well."
   (cl-loop for (name . path) in +tabspaces-startup-workspaces
@@ -5323,7 +5409,7 @@ selectable and scrollable with mouse, even though the cursor is hidden.
 (use-package eldoc-box :ensure t :after-call flymake-mode)
 
 (with-eval-after-load 'eldoc-box
-  (define-key grandview-prog-map (kbd "p") 'eldoc-box-help-at-point))
+  (define-key grandview-lang-map (kbd "d") 'eldoc-box-help-at-point)) ; [d]oc
 #+end_src
 
 *** Pixel scrolling (pixel-scroll.el)
@@ -5359,11 +5445,7 @@ the following scenario:
 (pulsar-global-mode)
 (with-eval-after-load 'pulsar
   (appendq! pulsar-pulse-functions
-            (list 'windmove-left 'windmove-right
-                  'windmove-up 'windmove-down
-                  'previous-window-any-frame
-                  'next-window-any-frame
-                  'next-error
+            (list 'flymake-goto-next-error 'flymake-goto-prev-error
                   'meow-save 'meow-replace)))
 #+end_src
 
@@ -5447,14 +5529,15 @@ this file.  If not, see <http://www.gnu.org/licenses/>.
 :CUSTOM_ID: h:70CB6487-B425-4BE3-8E1B-1FE655056EFC
 :END:
 
-Here are the local variables in this file.
+Here are the local setups for this file (*grandview.org*).
 
 + ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
 + ~org-edit-src-content-indentation~: do not add spaces at line beginning in src blocks
++ Enable ~auto-fill-mode~.
 
 #+begin_src emacs-lisp
 (defun grandview--org-eldoc-funcall (_callback &rest _ignored)
-  "Fix `elisp-eldoc-funcall' in `org-mode'."
+  "Adapt `elisp-eldoc-funcall' in `grandviwe.org'."
   (when (eq (org-element-type (org-element-at-point)) 'src-block)
     (let* ((sym-info (elisp--fnsym-in-current-sexp))
            (fn-sym (car sym-info)))
@@ -5463,10 +5546,11 @@ Here are the local variables in this file.
                  (propertize (format "%s" fn-sym) 'face 'font-lock-function-name-face)
                  (apply #'elisp-get-fnsym-args-string sym-info))))))
 
-(defun grandview-setup-literate-file ()
-  "Setup for `grandview-org-file'."
+(defun grandview-org-local-setup ()
+  "Adaptive setups for `grandview.org'."
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
+  ;; keep this line as errors may occur before the `org-src' config block
   (setq-local org-edit-src-content-indentation 0)
   (auto-fill-mode))
 
@@ -5475,5 +5559,5 @@ Here are the local variables in this file.
 #+end_src
 
 # Local Variables:
-# eval: (ignore-errors (grandview-setup-literate-file)))
+# eval: (grandview-org-local-setup)
 # End:
