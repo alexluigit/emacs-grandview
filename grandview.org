@@ -189,9 +189,13 @@ git clone https://www.github.com/alexluigit/emacs-grandview /path/to/dotfiles
 ln -sf /path/to/dotfiles/grandview ~/.config/emacs
 #+end_src
 
-Emacs may take some time to install and compile packages on its first launch.
-Please be patient.  After the initial setup, you can restart Emacs using the *rem*
-shell command, which is explained in the following section.
+Emacs may take some time to install packages on its first launch.
+
+During the native compile stage, which can take several minutes, the UI may
+become unresponsive and choppy.  Please be patient and do not worry.
+
+After the initial setup, you can restart Emacs using the *rem* shell command,
+which is explained in the following section.
 
 #+begin_src shell :tangle no
 # on macOS
@@ -201,7 +205,7 @@ open -a Emacs.app
 emacs
 #+end_src
 
-*** Restart script
+** Restart script
 :PROPERTIES:
 :CUSTOM_ID: h:2DCD6D3B-6759-4E78-AF50-5B23FA77C603
 :END:
@@ -210,10 +214,10 @@ Emacs offers =unload-feature= and =remove-hook= to mitigate the side effects of
 packages or user configurations.  However, a full Emacs restart, often achieved
 through the =restart-emacs= command, remains the simpler solution.  When Emacs
 freezes, preventing access to keybindings, a shell script to restart Emacs from
-the terminal becomes invaluable.  Consequently, I created the following shell
-script, named =rem= (for "restart-emacs"). If you've followed the previous
-instructions, this script is already installed.  It will be located at
-*~/.local/bin/rem*, so ensure *~/.local/bin* is included in your *PATH*.
+the terminal becomes invaluable.  Consequently, I created the following CLI
+named =rem= (for "restart-emacs").  If you've followed the previous instructions,
+this script is already installed.  It will be located at *~/.local/bin/rem*, so
+ensure *~/.local/bin* is included in your *PATH*.
 
 These flags are supported by this script:
 
@@ -305,8 +309,8 @@ specifically *early-init.el* and *init.el*.  These two files, along with other
 output files, are automatically generated and updated each time Emacs restarts.
 If you manually delete *init.el* or *early-init.el*, or improperly edit their
 corresponding code blocks, Emacs will lose track of *grandview.org* and start with
-an empty profile.  In such cases, you will need to manually create and edit these
-two files.
+an empty profile.  In such cases, you will need to manually create and edit
+these two files.
 
 #+begin_src emacs-lisp :tangle (expand-file-name "early-init.el" (file-name-directory user-init-file))
 ;;; early-init.el --- tangled from grandview.org  -*- lexical-binding: t -*-
@@ -639,7 +643,7 @@ variables or eval forms to *grandview.org*. This is the recommended method.
   (setq-local eldoc-documentation-functions
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
   (when (fboundp '+org-id-headlines)
-    (add-hook 'before-save-hook #'+org-id-headlines))
+    (add-hook 'before-save-hook #'+org-id-headlines nil t))
   ;; keep this line as errors may occur before the `org-src' config block
   (setq-local org-edit-src-content-indentation 0)
   (auto-fill-mode))
@@ -1066,20 +1070,20 @@ Emacs for these reasons:
 
 + *Vim's* philosophy contradicts Emacs's established keybinding conventions :::
 
-   While =k= for "previous line" might seem logical in isolation, in Emacs, "k"
-   often signifies "kill," as in =C-k= for =kill-line= or =C-c k= for
-   =kill-current-buffer=.  This consistent concept, developed over Emacs's
-   history, explains why =org-kill-note-or-show-branches= and
-   =org-next-visible-heading= are bound to =C-c C-k= and =C-c C-n=, not the reverse.
-   Adapting *Vim* to *Emacs* requires endless keybinding translations across
-   packages.
+  While =k= for "previous line" might seem logical in isolation, in Emacs, "k"
+  often signifies "kill," as in =C-k= for =kill-line= or =C-c k= for
+  =kill-current-buffer=.  This consistent concept, developed over Emacs's
+  history, explains why =org-kill-note-or-show-branches= and
+  =org-next-visible-heading= are bound to =C-c C-k= and =C-c C-n=, not the reverse.
+  Adapting *Vim* to *Emacs* requires endless keybinding translations across
+  packages.
 
 + The *hjkl* paradigm is keyboard-layout dependent and a flawed starting point :::
 
-   Even with a standard QWERTY layout, the natural hand position places the
-   fingers on *jkl;* rather than *hjkl*.  This creates a dilemma: either maintain
-   the standard hand position and awkwardly stretch the index finger to reach
-   "h," or adjust the hand position to match *hjkl*.  Neither option is ideal.
+  Even with a standard QWERTY layout, the natural hand position places the
+  fingers on *jkl;* rather than *hjkl*.  This creates a dilemma: either maintain
+  the standard hand position and awkwardly stretch the index finger to reach
+  "h," or adjust the hand position to match *hjkl*.  Neither option is ideal.
 
 Emacs's keybinding style, conversely, emphasizes a clear relationship between
 the key and the command.  For example, =C-n= for =next-line= uses =n= in a mnemonic
@@ -2325,8 +2329,8 @@ completion."
 (defvar-keymap +tempel-prefix-map
   :doc "Kepmap for tempel commands."
   :parent grandview-lang-map
-  "t" #'tempel-insert
-  "<backspace>" #'tempel-kill
+  "i" #'tempel-insert
+  "k" #'tempel-kill
   "a" #'tempel-abort)
 
 (define-key grandview-mct-map (kbd "s") +tempel-prefix-map)
@@ -2492,7 +2496,7 @@ org-mode :when (and (org-in-src-block-p)
                     (string= (org-element-property :language (org-element-context))
                              "emacs-lisp"))
 
-(use "(use-package " p ")")
+(use- "(use-package " p ")")
 (lambda "(lambda (" p ")" n> r> ")")
 (autoload ";;;###autoload")
 
@@ -2678,7 +2682,7 @@ that if you install it from Melpa.
             ("w" "~/Pictures/wallpaper/"       "Wallpaper")
             ("m" "/mnt/"                       "Mounted Drives")
             ("s" "/mnt/HDD/Share/"             "Shared files")
-            ("a" "🔍\\\.org$📁~/Documents/📁" "AllNotes")
+            ("a" "🔍\\\.org$📁~/Documents/📁" "All Notes") ; this requires `dirvish-fd'
             ("t" "~/.local/share/Trash/files/" "Trash")
             ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/")))
   (bind! dirvish-mode-map
@@ -4966,6 +4970,8 @@ testing my =dirvish-icons= library.
 (use-package copilot
   :vc (:url "https://github.com/copilot-emacs/copilot.el"))
 
+(define-key grandview-lang-map (kbd "c") 'copilot-mode)
+
 (with-eval-after-load 'copilot
   (bind! copilot-completion-map
     "<tab>" 'copilot-accept-completion
@@ -5139,6 +5145,142 @@ you change your mind).
 :PROPERTIES:
 :CUSTOM_ID: h:6762E5C6-D007-452E-8328-47EF50515A8B
 :END:
+*** Workspaces
+:PROPERTIES:
+:CUSTOM_ID: h:AF5996B4-03F2-439A-8EA9-4087A2C152C9
+:END:
+**** Frame-local tabs (tab-bar.el)
+:PROPERTIES:
+:CUSTOM_ID: h:772C6B34-A85D-4F75-A9DE-A38B5B4DFB75
+:END:
+
+=tab-bar-mode= allows you to create multiple tabs within each Emacs frame, similar
+to the tabbed interface found in standard text editors and browsers.  However,
+Emacs tabs are more powerful: each one saves a complete window configuration,
+not just a single buffer.  This means you can arrange your window into multiple
+buffers, save that layout as a tab with a name, and then switch to a different
+tab with a completely different arrangement of buffers.
+
+The customizations I made here are just for visual appeal.
+
+#+begin_src emacs-lisp
+(use-package tab-bar :ensure nil)
+
+(setq tab-bar-separator " "
+      tab-bar-close-button-show nil
+      tab-bar-close-last-tab-choice 'tab-bar-mode-disable
+      tab-bar-tab-name-format-function #'+tab-bar-tab-name-format
+      tab-bar-format '(+tab-bar-format-menu-bar
+                       tab-bar-format-tabs
+                       tab-bar-separator
+                       tab-bar-format-align-right
+                       tab-bar-format-global))
+#+end_src
+
+***** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
+:header-args:emacs-lisp: :tangle (expand-file-name "+tab-bar.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +tab-bar-format-menu-bar ()
+  "Produce the Menu button for the tab bar that shows the menu bar."
+  `((menu-bar menu-item (propertize " 𝝺 " 'face 'tab-bar)
+              tab-bar-menu-bar :help "Menu Bar")))
+
+;;;###autoload
+(defun +tab-bar-tab-name-format (tab index)
+  "Format name of TAB with INDEX."
+  (propertize (concat " " (tab-bar-tab-name-format-default tab index) " ")
+              'face (funcall tab-bar-tab-face-function tab)))
+#+end_src
+
+**** Buffer-isolated workspaces (tabspaces.el)
+:PROPERTIES:
+:CUSTOM_ID: h:8853080E-7EA8-4666-A69C-7E9684F097C1
+:END:
+
+*Tabspaces* leverages *tab-bar.el* and *project.el* (both built into emacs 27+) to
+create buffer-isolated workspaces (or "tabspaces") that also integrate with your
+version-controlled projects.
+
+Because *tabspaces* is built upon *tab-bar*, it's logical to bind its commands to
+the =tab-prefix-map= (~SPC TAB~).  ~SPC TAB TAB~ provides access to them.
+
+The =+tabspaces-integrate-consult= function would seamlessly integrate workspace
+buffers into =consult-buffer=, displaying workspace buffers by default and all
+buffers when narrowing using =b=. Note that you can also see all project related
+buffers and files just by narrowing with =p= in a default consult setup.
+
+The =+tabspaces-startup-workspaces= variable lets you define one or more
+workspaces that will be created when Emacs starts.
+
+#+begin_src emacs-lisp
+(use-package tabspaces :ensure t :after-call tab-bar-mode-hook)
+
+(when +tabspaces-startup-workspaces
+  (add-hook 'server-after-make-frame-hook #'+tabspaces-init-frame))
+
+(with-eval-after-load 'tabspaces
+  (require '+tabspaces)
+  (tabspaces-mode 1)
+
+  (setq tabspaces-keymap-prefix nil
+        tabspaces-default-tab "Default"
+        tabspaces-include-buffers '("*scratch*" "*Messages*")
+        tabspaces-remove-to-default t)
+
+  (define-key tab-prefix-map (kbd "TAB") tabspaces-command-map)
+
+  (with-eval-after-load 'consult (+tabspaces-integrate-consult)))
+#+end_src
+
+***** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
+:header-args:emacs-lisp: :tangle (expand-file-name "+tabspaces.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defcustom +tabspaces-startup-workspaces nil
+  "Workspaces being created at startup."
+  :group 'grandview :type 'alist)
+
+(defun +tabspaces-init-frame ()
+  "Setup tabspaces when a frame is created as well."
+  (cl-loop
+   with dir-fn = (if (fboundp 'dirvish) #'dirvish #'dired)
+   for (name . path) in +tabspaces-startup-workspaces
+   do (if (member name (tabspaces--list-tabspaces))
+          (progn (tab-bar-switch-to-tab name)
+                 (when (and (not (get-buffer name)) path)
+                   (apply dir-fn path)))
+        (tab-bar-new-tab)
+        (tab-bar-rename-tab name)
+        (when path (apply dir-fn path)))
+   finally do (tab-bar-select-tab 1)))
+
+(defun +tabspaces-integrate-consult ()
+  "Integrate `tabspaces' with `consult'."
+  (consult-customize consult--source-buffer :hidden t :default nil)
+  (defvar consult--source-workspace
+    (list :name "Workspace Buffers"
+          :narrow ?w
+          :history 'buffer-name-history
+          :category 'buffer
+          :state #'consult--buffer-state
+          :default t
+          :items (lambda () (consult--buffer-query
+                             :predicate #'tabspaces--local-buffer-p
+                             :sort 'visibility
+                             :as #'buffer-name)))
+    "Set Workspace buffer list for consult buffer.")
+  (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+#+end_src
+
 *** Composable mode line
 :PROPERTIES:
 :CUSTOM_ID: h:9C974B19-F47B-4758-87BD-A889965D7239
@@ -5328,106 +5470,6 @@ one.  We only load this package after we have more than 1 windows.
 
 (with-eval-after-load 'auto-dim-other-buffers
   (auto-dim-other-buffers-mode))
-#+end_src
-
-*** Workspaces (tabspaces.el)
-:PROPERTIES:
-:CUSTOM_ID: h:AF5996B4-03F2-439A-8EA9-4087A2C152C9
-:END:
-
-Use the inbuilt =tab-bar.el= and the package =tabspaces.el= to create workspaces.
-
-- General tab bar customization
-- Enable ~tabspaces-mode~
-- Create some default workspaces
-- Filter buffers for consult tabspaces
-- Rename the first tab (generated by tab-bar itself) to =Default=
-
-#+begin_src emacs-lisp
-(use-package tabspaces :ensure t)
-
-(require 'tabspaces)
-(tabspaces-mode 1)
-(add-hook 'server-after-make-frame-hook #'+tabspaces-setup)
-
-(setq tab-bar-separator " "
-      tab-bar-close-button-show nil
-      tab-bar-close-last-tab-choice 'tab-bar-mode-disable
-      tab-bar-tab-name-format-function #'+tabspaces-tab-name-format-comfortable
-      tab-bar-format '(+tabspaces-format-menu-bar
-                       tab-bar-format-tabs
-                       tab-bar-separator
-                       tab-bar-format-align-right
-                       tab-bar-format-global)
-      tabspaces-keymap-prefix nil
-      tabspaces-default-tab "Default"
-      tabspaces-include-buffers '("*scratch*" "*Messages*")
-      tabspaces-remove-to-default t)
-
-(bind! tab-prefix-map
-  "C" 'tabspaces-clear-buffers
-  "R" 'tabspaces-remove-selected-buffer
-  "k" 'tabspaces-kill-buffers-close-workspace
-  "s" 'tabspaces-switch-or-create-workspace)
-
-(with-eval-after-load 'consult (+tabspaces-integrate-consult))
-#+end_src
-
-**** Extras
-:PROPERTIES:
-:CUSTOM_ID: h:FF6995C8-B5C2-4B1A-A1D6-1E1780E1F582
-:header-args:emacs-lisp: :tangle (expand-file-name "+tabspaces.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-(defcustom +tabspaces-startup-workspaces nil
-  "Workspaces being created at startup."
-  :group 'grandview :type 'alist)
-
-;;;###autoload
-(defun +tabspaces-format-menu-bar ()
-  "Produce the Menu button for the tab bar that shows the menu bar."
-  `((menu-bar menu-item (propertize " 𝝺" 'face 'tab-bar)
-              tab-bar-menu-bar :help "Menu Bar")))
-
-;;;###autoload
-(defun +tabspaces-tab-name-format-comfortable (tab i)
-  (propertize (concat " " (tab-bar-tab-name-format-default tab i) " ")
-              'face (funcall tab-bar-tab-face-function tab)))
-
-(defun +tabspaces-create-workspace (name &optional path)
-  "Setup the workspace with name NAME and startup path PATH."
-  (if (member name (tabspaces--list-tabspaces))
-      (progn (tab-bar-switch-to-tab name)
-             (when (and (not (get-buffer name)) path) (dirvish path)))
-    (tab-bar-new-tab)
-    (tab-bar-rename-tab name)
-    (when path (dirvish path))))
-
-;;;###autoload
-(defun +tabspaces-integrate-consult ()
-  "Integrate `tabspaces' with `consult'."
-  (consult-customize consult--source-buffer :hidden t :default nil)
-  (defvar consult--source-workspace
-    (list :name "Workspace Buffers"
-          :narrow ?w
-          :history 'buffer-name-history
-          :category 'buffer
-          :state #'consult--buffer-state
-          :default t
-          :items (lambda () (consult--buffer-query
-                             :predicate #'tabspaces--local-buffer-p
-                             :sort 'visibility
-                             :as #'buffer-name)))
-    "Set Workspace buffer list for consult buffer."))
-
-;;;###autoload
-(defun +tabspaces-setup ()
-  "Setup tabspaces when a frame is created as well."
-  (cl-loop for (name . path) in +tabspaces-startup-workspaces
-           do (+tabspaces-create-workspace name path))
-  (tab-bar-select-tab 1)
-  (tab-bar-rename-tab "Default"))
 #+end_src
 
 *** Eldoc in childframe (eldoc-box.el)
