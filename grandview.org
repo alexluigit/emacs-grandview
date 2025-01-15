@@ -106,8 +106,7 @@ tree ~/.cache/emacs/grandview
 │   ├── +visual-fill-column.el
 │   ├── +vterm.el
 │   ├── +vue.el
-│   ├── +window-in-other-frames.el
-│   └── +window-monocle-mode.el
+│   └── +window-monocle.el
 ├── grandview-custom.el
 ├── grandview-loaddefs.el
 ├── grandview-loaddefs.md5
@@ -177,24 +176,29 @@ Make sure to backup your old emacs config before installation.
 cp -r ~/.emacs.d ~/.emacs.d.bak
 #+end_src
 
-Then clone the repo and start using it, enjoy!
+Clone the repo to *~/.config* directly
 
 #+begin_src shell :tangle no
-git clone https://www.github.com/alexluigit/emacs-grandview
-## move the repo to ~/.config/emacs, which conforms to the XDG spec
-mv ~/emacs-grandview ~/.config/emacs/
-## or use symlink
-# ln -sf ~/Code/emacs-grandview ~/.config/emacs
-## or you can put it to ~/.emacs.d, it's an old convention
-# mv ~/emacs-grandview ~/.emacs.d
+git clone https://www.github.com/alexluigit/emacs-grandview ~/.config/emacs
+#+end_src
 
+Alternatively, create a symlink
+
+#+begin_src shell :tangle no
+git clone https://www.github.com/alexluigit/emacs-grandview /path/to/dotfiles
+ln -sf /path/to/dotfiles/grandview ~/.config/emacs
+#+end_src
+
+Emacs may take some time to install and compile packages on its first launch.
+Please be patient.  After the initial setup, you can restart Emacs using the *rem*
+shell command, which is explained in the following section.
+
+#+begin_src shell :tangle no
 # on macOS
-# /Applications/Emacs.app/Contents/MacOS/Emacs
+open -a Emacs.app
 
+# on Linux
 emacs
-
-## NOTE: After the first initialization you should be able to start/restart
-## Emacs by 'rem' bash command, see the "** Restart Emacs" section below.
 #+end_src
 
 *** Restart script
@@ -978,330 +982,52 @@ Optional LABEL can be a symbol or string, use GRANDVIEW by default."
          (use-package-process-keywords name rest state))))))
 #+end_src
 
-** Editing basics
-:PROPERTIES:
-:CUSTOM_ID: h:0EFB6EF1-C52F-4EC8-8257-F3C21300AC0A
-:END:
-
-GNU Emacs is an extensible, customizable, free/libre text editor (and
-more).  This section introduces several built-in packages that provide
-fundamental text editing commands and features.
-
-*** Keyboard orientation (keyboard.c)
-:PROPERTIES:
-:CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
-:END:
-
-Historically, terminal utilities like *bash* and *vim* cannot distinguish between
-certain keystrokes.  For instance, they treat =C-i= and =Tab= as the same, as well
-as =C-m= and =Return=.  By default, Emacs follows this convention.  However, Emacs
-is capable of differentiating these keystrokes.  In a GUI environment, I've
-remapped the =?C-i= key sequence, allowing Emacs to recognize =Tab= and =C-i= as
-distinct keycodes.  My terminal emulator, Alacritty, is configured to translate
-=C-i= to =<f7>=.  This enables various commands from different terminal applications
-(like shell and vim) to be bound to =C-i= through the =<f7>= intermediary.
-
-To understand the underlying mechanisms, you may want to explore
-=input-decode-map= and [[https://en.wikipedia.org/wiki/Escape_sequence][escape sequences]].
-
-
-#+begin_src emacs-lisp
-(when (display-graphic-p) (define-key input-decode-map [?\C-i] [C-i]))
-#+end_src
-
-Here is how I do with my alacritty configuration:
-
-#+begin_src toml :tangle no
-[keyboard]
-bindings = [
-# ...
-# Ctrl-i => F7
-{ chars = "\u001B[18~", key = "I", mods = "Control" }
-# ...
-]
-#+end_src
-
-Modifier settings for macOS, we use the default though.
-
-#+begin_src emacs-lisp
-(setq ns-command-modifier 'super)
-(setq ns-alternate-modifier 'meta)
-#+end_src
-
-*** Tab for Indentation (indent.el)
-:PROPERTIES:
-:CUSTOM_ID: h:1EE47211-84CB-4880-8D62-592999C7441D
-:END:
-
-I believe tabs, in the sense of inserting the tab character, are best suited for
-indentation.  While spaces are superior at precisely aligning text.  However, I
-understand that elisp uses its own approach, which I do not want to interfere
-with.  Also, Emacs tends to perform alignments by mixing tabs with spaces, which
-can actually lead to misalignments depending on certain variables such as the
-size of the tab.  As such, I am disabling tabs by default.
-
-If there ever is a need to use different settings in other modes, we can
-customise them via hooks.  This is not an issue I have encountered yet and am
-therefore refraining from solving a problem that does not affect me.
-
-Note that ~tab-always-indent~ will first do indentation and then try to complete
-whatever you have typed in.
-
-#+begin_src emacs-lisp
-(setq-default tab-always-indent t)
-(setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
-(setq-default indent-tabs-mode nil)
-#+end_src
-
-*** Line wrap and sentences (fill.el)
-:PROPERTIES:
-:CUSTOM_ID: h:065A996E-9860-46BE-BC54-B12EC8414752
-:END:
-
-The =fill.el= library is a tiny wrapper around some Emacs settings and modes that
-are scrattered around several files, which control (i) how paragraphs or
-comments in programming modes should be wrapped to a given column count, and
-(ii) what constitutes a sentence. Although ~fill-column~ variable is not defined
-in =fill.el=, I believe put them all together here make things easier to track.
-
-With regard to paragraphs, I find that a double space is the best way to delimit
-sentences in source form, where a monospaced typeface is customary. There is no
-worry that this will be shown on a website or rendered version of a document,
-because processors know how to handle spacing. We do this to make phrases easier
-to tell apart, but also to render unambiguous commands like forward-sentence.
-
-#+begin_src emacs-lisp
-(use-package fill :ensure nil)
-
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
-
-(setq-default fill-column 80)
-(setq colon-double-space nil)
-(setq adaptive-fill-mode t)
-(setq sentence-end-double-space t)
-(setq sentence-end-without-period nil)
-#+end_src
-
-*** Built-in editing utilities (simple.el)
-:PROPERTIES:
-:CUSTOM_ID: h:FB996162-B528-4AD8-A114-660D515D6F23
-:END:
-
-=simple.el= consists of a grab-bag of basic Emacs commands not specifically
-related to some major mode or to file-handling.
-
-+ Unbind =SPC= in /*messages*/ buffer since we use it as the leader key
-+ Add a command to toggle the letter case of the word under cursor
-+ Add a command to mark the inner line
-+ Bind =M-n/p= | =s-n/p= globally for page scrolling | paragraph navigation.
-
-#+begin_src emacs-lisp
-(use-package simple :ensure nil :after meow)
-
-;; these bindings work globally.
-(bind! global-map
-  "S-SPC" #'toggle-input-method
-  "s-u" #'+simple-toggle-letter-case
-  "M-n" #'scroll-up-command
-  "M-p" #'scroll-down-command
-  "s-n" #'forward-paragraph
-  "s-p" #'backward-paragraph)
-
-(with-eval-after-load 'simple
-  (require '+simple)
-  (define-key messages-buffer-mode-map (kbd "SPC") nil)
-  (setq next-error-message-highlight t)) ; added in Emacs 28.1
-#+end_src
-
-**** Extras ::: +simple.el
-:PROPERTIES:
-:CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
-:header-args:emacs-lisp: :tangle (expand-file-name "+simple.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-(defadvice! next-error-no-select-ad (fn &rest args)
-  "Do not open new window when calling `next-error-no-select'."
-  :around #'next-error-no-select
-  (let ((split-width-threshold nil)) (apply fn args)))
-
-(defadvice! previous-error-no-select-ad (fn &rest args)
-  "Do not open new window when calling `previous-error-no-select'."
-  :around #'previous-error-no-select
-  (let ((split-width-threshold nil)) (apply fn args)))
-
-(defadvice! yank-ad (&rest _)
-  "Make `yank' behave like paste (p) command in vim."
-  :before #'yank
-  (when-let* ((clip (condition-case nil (current-kill 0 t) (error ""))))
-    (set-text-properties 0 (length clip) nil clip)
-    (when (string-suffix-p "\n" clip)
-      (goto-char (line-beginning-position)))))
-
-(defun +simple-join-line ()
-  "Join the current line with the line beneath it."
-  (interactive)
-  (delete-indentation 1))
-
-(defun +simple-mark-inner-line ()
-  "Mark inner line and move cursor to bol."
-  (interactive)
-  (save-window-excursion
-    (move-end-of-line 1)
-    (set-mark-command nil)
-    (back-to-indentation)))
-
-;; Copied from `xah-fly-keys'
-(defun +simple-toggle-letter-case ()
-  "Toggle the letter case of current word or selection.
-Always cycle in this order: Init Caps, ALL CAPS, all lower."
-  (interactive)
-  (let ((deactivate-mark nil) xbeg xend)
-    (if (region-active-p)
-        (setq xbeg (region-beginning) xend (region-end))
-      (save-excursion
-        (skip-chars-backward "[:alnum:]")
-        (setq xbeg (point))
-        (skip-chars-forward "[:alnum:]")
-        (setq xend (point))))
-    (when (not (eq last-command this-command))
-      (put this-command 'state 0))
-    (cond
-     ((equal 0 (get this-command 'state))
-      (upcase-initials-region xbeg xend)
-      (put this-command 'state 1))
-     ((equal 1 (get this-command 'state))
-      (upcase-region xbeg xend)
-      (put this-command 'state 2))
-     ((equal 2 (get this-command 'state))
-      (downcase-region xbeg xend)
-      (put this-command 'state 0)))))
-#+end_src
-
-*** Long line text (so-long.el)
-:PROPERTIES:
-:CUSTOM_ID: h:F19F714D-1B7B-47A1-AE22-5DF737822996
-:END:
-
-Consistent performance is the reason to enable =global-so-long-mode=, built into
-Emacs versions >= 27, which allows the active major mode to gracefully adapt to
-buffers with very long lines. What “very long” means is, of course,
-configurable: M-x find-library so-long covers several customisation options,
-though I find that the defaults require no further intervention from my part.
-
-=so-long-mode= Files with long lines have huge performance impact for file preview
-(in our case =dirvish.el=), so we ensure the =global-so-long-mode= is enabled before
-=dirvish= is loaded.
-
-#+begin_src emacs-lisp
-(use-package so-long :ensure nil :after-call dired-mode-hook)
-
-(with-eval-after-load 'so-long (global-so-long-mode))
-#+end_src
-
-*** Syntax highlighting powered by tree-sitter (treesit.el)
-:PROPERTIES:
-:CUSTOM_ID: h:9A2141F6-3085-4E4D-958C-466E4A16D9BE
-:END:
-
-=treesit.el= (built-in with Emacs29+) is an Emacs binding for Tree-sitter, an
-incremental parsing system.
-
-It aims to be the foundation for a new breed of Emacs packages that understand
-code structurally. For example:
-
-- Faster, fine-grained code highlighting.
-- More flexible code folding.
-- Structural editing (like Paredit, or even better) for non-Lisp code.
-- More informative indexing for imenu.
-
-After setting the ~treesit-language-source-alist~, try =M-x
-treesit-install-language-grammar=.
-
-See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for
-details.
-
-#+begin_src emacs-lisp
-(setq treesit-language-source-alist
-      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-        (cmake "https://github.com/uyha/tree-sitter-cmake")
-        (c-sharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
-        (css "https://github.com/tree-sitter/tree-sitter-css")
-        (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-        (go "https://github.com/tree-sitter/tree-sitter-go")
-        (html "https://github.com/tree-sitter/tree-sitter-html")
-        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-        (json "https://github.com/tree-sitter/tree-sitter-json")
-        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
-        (make "https://github.com/alemuller/tree-sitter-make")
-        (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-        (python "https://github.com/tree-sitter/tree-sitter-python")
-        (toml "https://github.com/tree-sitter/tree-sitter-toml")
-        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-        (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-        (clojure "https://github.com/sogaiu/tree-sitter-clojure")
-        (rust "https://github.com/tree-sitter/tree-sitter-rust")
-        (vue "https://github.com/ikatyang/tree-sitter-vue")))
-
-(setq treesit-font-lock-level 2)
-;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
-#+end_src
-
 ** Modal Editing On Wish
 :PROPERTIES:
 :CUSTOM_ID: h:CDB8D834-C18F-4B3E-BAE8-98BBDFE5095B
 :END:
 
-The modal editing system in *grandview* is powered by =meow= (thanks to
-*@DogLooksGood*!).
+*grandview*'s modal editing is powered by *meow.el* (Modal Editing On Wish), a
+contribution by *@DogLooksGood*!  Meow includes a built-in tutorial, accessible
+via =M-x meow-tutor=.  For more information about meow or modal editing in
+general, visit [[https://www.github.com/DoglooksGood/meow][meow]].
 
-Unlike =evil-mode=, which tries to create a whole vim emulation in emacs, =meow=
-only focus on bringing the goodness of modal editing to vanilla emacs.
+Unlike *evil-mode*, which emulates the entirety of Vim within Emacs, meow focuses
+on bringing modal editing to vanilla Emacs.  Compared to *Vim* or *evil-mode*,
+meow is minimalist, lightweight, and powerful.  However, I missed some utilities
+from my Vim days, so I use two additional packages in tandem with meow.  So far,
+they work together flawlessly.
 
-You may noticed that I didn't include any keybindings of meow here, that's
-because it can be very lengthy and should be configured separately, see
-[[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Keybindings]] for details.  A very good meow tutorial is built-in with meow, just
-type =M-x meow-tutor= and enjoy your learning trip!
++ *avy.el* ::
 
-Check out [[https://www.github.com/DoglooksGood/meow][meow]] for more about meow or modal editing in general.
+  With *Avy*, you can move point to any position in Emacs – even in a different
+  window – using very few keystrokes.  For this, you look at the position where
+  you want point to be, invoke Avy, and then enter the sequence of characters
+  displayed at that position.  This package is similar to *easymotion.vim* in Vim.
+
++ *embrace.el* ::
+
+  This package provides symbol pair insertion, modification, and deletion,
+  similar to *surround.vim* in Vim. I've forked it to make it more customizable,
+  allowing you to use keystrokes like ~er~ to add a pair of parentheses around the
+  selected region (assuming your ~e~ key is bound to =embrace-add=).
+
+Keybindings are not included here due to their length and should be configured
+separately; see [[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Keybindings]] for details.
 
 #+begin_src emacs-lisp
 (use-package meow
   :ensure t
   :after-call pre-command-hook
   :autoload meow-define-keys)
-#+end_src
-
-*** Quick goto char (avy.el)
-:PROPERTIES:
-:CUSTOM_ID: h:6456CB8B-6280-41C6-8BAC-CB11A7BD9E20
-:END:
-
-Jump to any visible text with a few strokes.
-
-#+begin_src emacs-lisp
-(use-package avy :ensure t)
+(use-package avy :ensure t :after meow)
+(use-package embrace
+  :vc (:url "https://github.com/alexluigit/embrace.el")
+  :after meow)
 
 (setq avy-timeout-seconds 0.4)
 (setq avy-all-windows nil)
 (setq avy-keys '(?a ?r ?s ?t ?n ?e ?i ?o))
-#+end_src
-
-*** Symbol pairs (embrace.el)
-:PROPERTIES:
-:CUSTOM_ID: h:250F31DC-B2AB-47A5-A0A9-25C76E962E7E
-:END:
-
-=embrace.el= is a package for symbol pairs insert/change/delete which resembles to
-=surround.vim= in vim.
-
-I've forked this package to extract =embrace-default-pairs= out, so we can use
-keys like ~,r~ to select an inner parenthesis block (this assumes your comma key
-has been bound to =meow-inner-of-thing=.)
-
-#+begin_src emacs-lisp
-(use-package embrace :vc (:url "https://github.com/alexluigit/embrace.el"))
 
 (setq embrace-default-pairs
       '((?r . ("(" . ")"))
@@ -1408,12 +1134,12 @@ The following =meow-normal-state-keymap= aligns with this principle, using =n/p=
   '("h" . mark-paragraph)
   '("i" . meow-right)
   '("I" . meow-right-expand)
-  '("j" . +simple-join-line)
+  '("j" . +meow-join-line)
   '("J" . meow-join)
   '("k" . meow-kill)
   '("K" . meow-C-k)
   '("l" . meow-line)
-  '("L" . +simple-mark-inner-line)
+  '("L" . +meow-mark-inner-line)
   '("m" . meow-mark-word)
   '("M" . meow-mark-symbol)
   '("n" . meow-next)
@@ -1599,6 +1325,19 @@ Here I'm adjusting some meow's behavior that I'm not quite used to:
   "Do not show cursor movement indices."
   :override #'meow--maybe-highlight-num-positions
   (ignore))
+
+(defun +meow-join-line ()
+  "Join the current line with the line beneath it."
+  (interactive)
+  (delete-indentation 1))
+
+(defun +meow-mark-inner-line ()
+  "Mark inner line and move cursor to bol."
+  (interactive)
+  (save-window-excursion
+    (move-end-of-line 1)
+    (set-mark-command nil)
+    (back-to-indentation)))
 
 (defun +meow-insert-at-indentation ()
   "Insert at first non-whitespace point at current line."
@@ -2128,7 +1867,7 @@ you.
 :END:
 
 Directional window-selection routines.  Thanks to =meow-keypad-mode=, the actual
-keystroke for this binding is =SPC w d/u/r/l= (check out =KEYPAD AND MOTION MODE=
+keystroke for this binding is =SPC w d/u/r/l= (check out *KEYPAD AND MOTION MODE*
 section in =meow-tutor=).
 
 #+begin_src emacs-lisp
@@ -2142,45 +1881,7 @@ section in =meow-tutor=).
   "l" #'windmove-swap-states-left)
 #+end_src
 
-**** Place window in other frames (window-in-other-frames)
-:PROPERTIES:
-:CUSTOM_ID: h:C2DBDFAB-F845-402A-9380-DC7C4BC74E8A
-:END:
-
-To prevent certain windows corrupting our delicately crafted frame layout, we
-can instuct them to open in other frames, when the task is done, close that
-frame (=C-x 5 2=) directly.  A good example would be showing the **Messages** buffer
-in other frame when debugging emacs packages.
-
-#+begin_src emacs-lisp
-(bind! window-prefix-map "m" #'+window-show-messages-other-frame)
-#+end_src
-
-***** Extras
-:PROPERTIES:
-:CUSTOM_ID: h:5FD0BB42-46A7-4814-8F35-A7FF80DAFBB3
-:header-args:emacs-lisp: :tangle (expand-file-name "+window-in-other-frames.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
-(defun +window-show-messages-other-frame (&optional erase)
-  "Show *Messages* buffer in other frame.
-If ERASE is non-nil, erase the buffer before switching to it."
-  (interactive "P")
-  (when erase
-    (let ((inhibit-read-only t))
-      (with-current-buffer "*Messages*" (erase-buffer))))
-  (let ((win (get-buffer-window "*Messages*" t))
-        (after-make-frame-functions nil))
-    (if (window-live-p win)
-        (delete-frame (window-frame win))
-      (with-selected-frame (make-frame)
-        (set-window-parameter (selected-window) 'no-other-window t)
-        (switch-to-buffer "*Messages*")))))
-#+end_src
-
-**** Maximize | restore window size (window-monocle-mode)
+**** Maximize | restore window size
 :PROPERTIES:
 :CUSTOM_ID: h:5BE7214A-B950-4F9B-951E-C45882829C0F
 :END:
@@ -2191,10 +1892,10 @@ A command to maximize / restore a window.
 (define-key window-prefix-map (kbd "w") #'+window-monocle-mode)
 #+end_src
 
-***** Extras
+***** Extras ::: +window-monocle.el
 :PROPERTIES:
 :CUSTOM_ID: h:7BAA0631-CBD3-4BED-BB6B-D6BE35BDBA73
-:header-args:emacs-lisp: :tangle (expand-file-name "+window-monocle-mode.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+window-monocle.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
@@ -3393,6 +3094,214 @@ A few commands for quick file access.
 :PROPERTIES:
 :CUSTOM_ID: h:401D8E76-D334-4E49-A670-8F04B6EA5B27
 :END:
+
+GNU Emacs is an extensible, customizable, free/libre text editor (and more).
+This section introduces several built-in packages that provide fundamental text
+editing commands and features.
+
+** Editor basics
+:PROPERTIES:
+:CUSTOM_ID: h:0EFB6EF1-C52F-4EC8-8257-F3C21300AC0A
+:END:
+*** Keyboard orientation (keyboard.c)
+:PROPERTIES:
+:CUSTOM_ID: h:46996B4B-A490-4981-B583-51ED036305CD
+:END:
+
+Historically, terminal utilities like *bash* and *vim* cannot distinguish between
+certain keystrokes.  For instance, they treat =C-i= and =Tab= as the same, as well
+as =C-m= and =Return=.  By default, Emacs follows this convention.  However, Emacs
+is capable of differentiating these keystrokes.  In a GUI environment, I've
+remapped the =?C-i= key sequence, allowing Emacs to recognize =Tab= and =C-i= as
+distinct keycodes.  My terminal emulator, Alacritty, is configured to translate
+=C-i= to =<f7>=.  This enables various commands from different terminal applications
+(like shell and vim) to be bound to =C-i= through the =<f7>= intermediary.
+
+To understand the underlying mechanisms, you may want to explore
+=input-decode-map= and [[https://en.wikipedia.org/wiki/Escape_sequence][escape sequences]].
+
+
+#+begin_src emacs-lisp
+(when (display-graphic-p) (define-key input-decode-map [?\C-i] [C-i]))
+#+end_src
+
+Here is how I do with my alacritty configuration:
+
+#+begin_src toml :tangle no
+[keyboard]
+bindings = [
+# ...
+# Ctrl-i => F7
+{ chars = "\u001B[18~", key = "I", mods = "Control" }
+# ...
+]
+#+end_src
+
+Modifier settings for macOS, we use the default though.
+
+#+begin_src emacs-lisp
+(setq ns-command-modifier 'super)
+(setq ns-alternate-modifier 'meta)
+#+end_src
+
+*** Tab for Indentation (indent.el)
+:PROPERTIES:
+:CUSTOM_ID: h:1EE47211-84CB-4880-8D62-592999C7441D
+:END:
+
+I believe tabs, in the sense of inserting the tab character, are best suited for
+indentation.  While spaces are superior at precisely aligning text.  However, I
+understand that elisp uses its own approach, which I do not want to interfere
+with.  Also, Emacs tends to perform alignments by mixing tabs with spaces, which
+can actually lead to misalignments depending on certain variables such as the
+size of the tab.  As such, I am disabling tabs by default.
+
+If there ever is a need to use different settings in other modes, we can
+customise them via hooks.  This is not an issue I have encountered yet and am
+therefore refraining from solving a problem that does not affect me.
+
+Note that ~tab-always-indent~ will first do indentation and then try to complete
+whatever you have typed in.
+
+#+begin_src emacs-lisp
+(setq-default tab-always-indent t)
+(setq-default tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
+(setq-default indent-tabs-mode nil)
+#+end_src
+
+*** Line wrap and sentences (fill.el)
+:PROPERTIES:
+:CUSTOM_ID: h:065A996E-9860-46BE-BC54-B12EC8414752
+:END:
+
+The =fill.el= library is a tiny wrapper around some Emacs settings and modes that
+are scrattered around several files, which control (i) how paragraphs or
+comments in programming modes should be wrapped to a given column count, and
+(ii) what constitutes a sentence. Although ~fill-column~ variable is not defined
+in =fill.el=, I believe put them all together here make things easier to track.
+
+With regard to paragraphs, I find that a double space is the best way to delimit
+sentences in source form, where a monospaced typeface is customary. There is no
+worry that this will be shown on a website or rendered version of a document,
+because processors know how to handle spacing. We do this to make phrases easier
+to tell apart, but also to render unambiguous commands like forward-sentence.
+
+#+begin_src emacs-lisp
+(use-package fill :ensure nil)
+
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+(setq-default fill-column 80)
+(setq colon-double-space nil)
+(setq adaptive-fill-mode t)
+(setq sentence-end-double-space t)
+(setq sentence-end-without-period nil)
+#+end_src
+
+*** Built-in editing utilities (simple.el)
+:PROPERTIES:
+:CUSTOM_ID: h:FB996162-B528-4AD8-A114-660D515D6F23
+:END:
+
+=simple.el= consists of a grab-bag of basic Emacs commands not specifically
+related to some major mode or to file-handling.
+
++ Unbind =SPC= in /*messages*/ buffer since we use it as the leader key
++ Add a command to toggle the letter case of the word under cursor
++ Add a command to mark the inner line
++ Bind =M-n/p= | =s-n/p= globally for page scrolling | paragraph navigation.
+
+#+begin_src emacs-lisp
+(use-package simple :ensure nil :after meow)
+
+;; these bindings work globally.
+(bind! global-map
+  "S-SPC" #'toggle-input-method
+  "s-u" #'+simple-toggle-letter-case
+  "M-n" #'scroll-up-command
+  "M-p" #'scroll-down-command
+  "s-n" #'forward-paragraph
+  "s-p" #'backward-paragraph)
+
+(with-eval-after-load 'simple
+  (require '+simple)
+  (define-key messages-buffer-mode-map (kbd "SPC") nil)
+  (setq next-error-message-highlight t)) ; added in Emacs 28.1
+#+end_src
+
+**** Extras ::: +simple.el
+:PROPERTIES:
+:CUSTOM_ID: h:C1A34439-1A4C-4A32-9FEE-2A22CF785336
+:header-args:emacs-lisp: :tangle (expand-file-name "+simple.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+(defadvice! next-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `next-error-no-select'."
+  :around #'next-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+(defadvice! previous-error-no-select-ad (fn &rest args)
+  "Do not open new window when calling `previous-error-no-select'."
+  :around #'previous-error-no-select
+  (let ((split-width-threshold nil)) (apply fn args)))
+
+(defadvice! yank-ad (&rest _)
+  "Make `yank' behave like paste (p) command in vim."
+  :before #'yank
+  (when-let* ((clip (condition-case nil (current-kill 0 t) (error ""))))
+    (set-text-properties 0 (length clip) nil clip)
+    (when (string-suffix-p "\n" clip)
+      (goto-char (line-beginning-position)))))
+
+;; Copied from `xah-fly-keys'
+(defun +simple-toggle-letter-case ()
+  "Toggle the letter case of current word or selection.
+Always cycle in this order: Init Caps, ALL CAPS, all lower."
+  (interactive)
+  (let ((deactivate-mark nil) xbeg xend)
+    (if (region-active-p)
+        (setq xbeg (region-beginning) xend (region-end))
+      (save-excursion
+        (skip-chars-backward "[:alnum:]")
+        (setq xbeg (point))
+        (skip-chars-forward "[:alnum:]")
+        (setq xend (point))))
+    (when (not (eq last-command this-command))
+      (put this-command 'state 0))
+    (cond
+     ((equal 0 (get this-command 'state))
+      (upcase-initials-region xbeg xend)
+      (put this-command 'state 1))
+     ((equal 1 (get this-command 'state))
+      (upcase-region xbeg xend)
+      (put this-command 'state 2))
+     ((equal 2 (get this-command 'state))
+      (downcase-region xbeg xend)
+      (put this-command 'state 0)))))
+#+end_src
+
+*** Long line text (so-long.el)
+:PROPERTIES:
+:CUSTOM_ID: h:F19F714D-1B7B-47A1-AE22-5DF737822996
+:END:
+
+Emacs versions 27 and later include =global-so-long-mode=, which brings consistent
+performance when working with buffers containing very long lines. This mode
+allows the active major mode to adapt gracefully.  While the definition of "very
+long" is configurable via =M-x find-library so-long=, the default settings work
+well for most users and require no additional customization.
+
+=so-long-mode= Files with long lines have huge performance impact for file preview
+(in our case =dirvish.el=), so we ensure the =global-so-long-mode= is enabled before
+=dired= is loaded.
+
+#+begin_src emacs-lisp
+(use-package so-long :ensure nil :after-call dired-mode-hook)
+
+(with-eval-after-load 'so-long (global-so-long-mode))
+#+end_src
+
 ** Search | Query
 :PROPERTIES:
 :CUSTOM_ID: h:29B6B90B-9E1A-481E-A987-FEBF09AAFBBC
@@ -4151,6 +4060,55 @@ Some number of BLANK-LINES will be shown below the header."
 :PROPERTIES:
 :CUSTOM_ID: h:CAED6558-08CD-4081-B9A9-9159B780C69F
 :END:
+*** Tree sitter integration (treesit.el)
+:PROPERTIES:
+:CUSTOM_ID: h:9A2141F6-3085-4E4D-958C-466E4A16D9BE
+:END:
+
+=treesit= (built-in with Emacs29+) is an Emacs binding for Tree-sitter, an
+incremental parsing system.
+
+It aims to be the foundation for a new breed of Emacs packages that understand
+code structurally. For example:
+
+- Faster, fine-grained code highlighting.
+- More flexible code folding.
+- Structural editing (like Paredit, or even better) for non-Lisp code.
+- More informative indexing for imenu.
+
+After setting the ~treesit-language-source-alist~, try =M-x
+treesit-install-language-grammar=.
+
+See: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter for
+details.
+
+#+begin_src emacs-lisp
+(setq treesit-language-source-alist
+      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (cmake "https://github.com/uyha/tree-sitter-cmake")
+        (c-sharp "https://github.com/tree-sitter/tree-sitter-c-sharp")
+        (css "https://github.com/tree-sitter/tree-sitter-css")
+        (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+        (go "https://github.com/tree-sitter/tree-sitter-go")
+        (html "https://github.com/tree-sitter/tree-sitter-html")
+        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+        (json "https://github.com/tree-sitter/tree-sitter-json")
+        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
+        (make "https://github.com/alemuller/tree-sitter-make")
+        (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+        (python "https://github.com/tree-sitter/tree-sitter-python")
+        (toml "https://github.com/tree-sitter/tree-sitter-toml")
+        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+        (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+        (clojure "https://github.com/sogaiu/tree-sitter-clojure")
+        (rust "https://github.com/tree-sitter/tree-sitter-rust")
+        (vue "https://github.com/ikatyang/tree-sitter-vue")))
+
+(setq treesit-font-lock-level 2)
+;; (mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist))
+#+end_src
+
 *** Client for LSP servers (eglot.el)
 :PROPERTIES:
 :CUSTOM_ID: h:D1EA3177-9AE1-44EE-8C71-E45FE5BF3AB5
