@@ -1,3 +1,4 @@
+# -*- eval: (grandview-org-local-setup); -*-
 #+AUTHOR: Alex Lu
 #+EMAIL: alexluigit@gmail.com
 #+PROPERTY: header-args :mkdirp yes
@@ -246,6 +247,27 @@ $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 eval $emacs_cmd
 #+end_src
 
+** COPYING
+:PROPERTIES:
+:CUSTOM_ID: h:3CC0C8EB-75AE-4CDE-803B-A904AD026E65
+:END:
+
+#+begin_quote
+Copyright (c) 2020-2025 Alex Lu <alexluigit@gmail.com>
+
+This file is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This file is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this file.  If not, see <http://www.gnu.org/licenses/>.
+#+end_quote
+
 * CORE of grandview
 :PROPERTIES:
 :CUSTOM_ID: h:FB2572C2-4DDC-44A2-92C0-D8754305B2A7
@@ -485,27 +507,31 @@ called automatically when needed. You can safely ignore it.
 The tanglement only happens when the hashed md5 string changed after
 last change or FORCE is non nil."
   (let* ((g-org (grandview--path 'g))
+         (main-el (grandview--path 'main))
          (md5-file (grandview--path 'main-md5))
          (old-md5 (grandview--readfile md5-file))
          (new-md5 (secure-hash 'md5 (grandview--readfile g-org)))
          find-file-hook kill-buffer-hook write-file-functions
          enable-local-variables)
     (when (or force (not (string= old-md5 new-md5)))
-      (require 'org)
+      (require 'ob-tangle)
       (grandview--put-tangle-path g-org)
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
         (write-region (point-min) (point-max) md5-file))
       (let (org-confirm-babel-evaluate)
-        (org-babel-tangle-file
-         g-org (grandview--path 'main)))
+        (org-babel-tangle-file g-org main-el)
+        (with-temp-buffer
+          (insert-file-contents main-el)
+          (goto-char (point-max))
+          (insert "\n(provide 'grandview)\n;;; grandview.el ends here")
+          (write-region nil nil main-el)))
       (cl-loop for lib in (directory-files-recursively
                            grandview--def-dir "\\.el$")
-               for f-base = (file-name-base lib)
-               for f-name = (file-name-nondirectory lib)
+               for base = (file-name-base lib)
                for end-s =
-               (format "\n(provide '%s)\n;;; %s ends here" f-base f-name)
+               (format "\n(provide '%s)\n;;; %s.el ends here" base base)
                do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
                     (insert-file-contents lib)
@@ -568,6 +594,51 @@ Setting up the environment variables, package manager, etc.
 
 ;;; Code:
 
+#+end_src
+
+*** Local variables in *grandview.org*
+:PROPERTIES:
+:CUSTOM_ID: h:70CB6487-B425-4BE3-8E1B-1FE655056EFC
+:END:
+
+Here are the local setups for this file (*grandview.org*).
+
++ make *eldoc* works the same way as in a normal elisp file.
+  When making changes to elisp code blocks, it's recommended to use
+  =org-edit-special= (=SPC c '=) to edit the code in a new window with full language
+  support.  However, for small changes where you want symbol documentation in
+  the minibuffer, this "hack" can be useful.
+
++ Do not add spaces at line beginning in src blocks.
+  Basically setting ~org-edit-src-content-indentation~ to 0.
+
++ Enable ~auto-fill-mode~.
++ Ensure the *CUSTOM_ID* attribute is attached to every section when saving.
+
+I used the built-in function =add-file-local-variable-prop-line= to append local
+variables or eval forms to *grandview.org*. This is the recommended method.
+
+#+begin_src emacs-lisp
+(defun grandview--org-eldoc-funcall (_callback &rest _ignored)
+  "Adapt `elisp-eldoc-funcall' in `grandviwe.org'."
+  (when (eq (org-element-type (org-element-at-point)) 'src-block)
+    (let* ((sym-info (elisp--fnsym-in-current-sexp))
+           (fn-sym (car sym-info)))
+      (when (fboundp fn-sym)
+        (message "%s: %s"
+                 (propertize (format "%s" fn-sym)
+                             'face 'font-lock-function-name-face)
+                 (apply #'elisp-get-fnsym-args-string sym-info))))))
+
+(defun grandview-org-local-setup ()
+  "Adaptive setups for `grandview.org'."
+  (setq-local eldoc-documentation-functions
+              '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
+  (when (fboundp '+org-id-headlines)
+    (add-hook 'before-save-hook #'+org-id-headlines))
+  ;; keep this line as errors may occur before the `org-src' config block
+  (setq-local org-edit-src-content-indentation 0)
+  (auto-fill-mode))
 #+end_src
 
 *** Customization options
@@ -1886,92 +1957,6 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
   (setq transient-display-buffer-action '(display-buffer-below-selected))
   (define-key transient-map (kbd "<escape>") 'transient-quit-all)
   (define-key transient-sticky-map (kbd "ESC") 'transient-quit-all))
-#+end_src
-
-** Get help in Emacs
-:PROPERTIES:
-:CUSTOM_ID: h:B5C5A759-2EF0-4B56-8E18-B1AD5E3D3D96
-:END:
-
-This section details how to access help information within Emacs, including
-relevant configurations and guides.
-
-*** Emacs Manual (info.el)
-:PROPERTIES:
-:CUSTOM_ID: h:59DC4309-57FF-4762-8ECC-96826FC36D96
-:END:
-
-The keybinding =SPC h i= (or =C-h i= if meow-keypad-mode is not enabled) opens the
-Info documentation tree, which covers almost all topics about Emacs itself and
-installed packages (provided corresponding .info documents are available). I've
-added some keybindings to simplify navigation within this tree.
-
-#+begin_src emacs-lisp
-(use-package info :ensure nil)
-
-(with-eval-after-load 'info
-  (bind! Info-mode-map
-    "n" 'next-line
-    "p" 'previous-line
-    "C-n" 'Info-next
-    "C-p" 'Info-prev
-    "s-n" 'forward-paragraph
-    "s-p" 'backward-paragraph))
-#+end_src
-
-*** Man page (man.el)
-:PROPERTIES:
-:CUSTOM_ID: h:E15D7EFF-09E4-481B-8B4C-8AE08F46A65E
-:END:
-
-=man.el= lets you view command man pages directly within Emacs, instead of using
-the command-line tool. The powerful document navigation and text manipulation
-tools we've already set up make reading manuals much easier.
-
-#+begin_src emacs-lisp
-(use-package man :ensure nil)
-
-(setq Man-notify-method 'newframe)
-(with-eval-after-load 'man
-  (define-key Man-mode-map (kbd "q") 'kill-this-buffer))
-#+end_src
-
-*** Helpful (helpful.el)
-:PROPERTIES:
-:CUSTOM_ID: h:9B7AA6E6-C7BE-41CD-B523-CB34BB185E0A
-:END:
-
-=helpful.el= provides a better help buffer.  It's always a good thing for us to be
-able to read the source code of the symbol we are looking at since it tells more
-information than its docstring.  Again, because we use =meow=, the actual prefix
-to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
-=helpful-symbol=.
-
-#+begin_src emacs-lisp
-(use-package helpful :ensure t :after-call meow-keypad-mode-hook)
-
-(bind! global-map
-  "C-h C-s" 'helpful-symbol
-  "C-h K" 'describe-keymap
-  "C-h C-f" 'helpful-callable
-  "C-h C-v" 'helpful-variable
-  "C-h k" 'helpful-key)
-#+end_src
-
-*** Find libraries (find-func.el)
-:PROPERTIES:
-:CUSTOM_ID: h:386D803D-CA14-4ACE-A7A6-F5B137E7C353
-:END:
-
-This packages provides the ~find-library~ command which allows us browsing the
-source code of Emacs efficiently, want to have to look on =dired.el=? Just ~M-x
-find-library RET dired~. Even better, we can introspect the C code of Emacs
-itself as long as the ~find-function-C-source-directory~ is set properly.
-
-#+begin_src emacs-lisp
-(use-package find-func :ensure nil :after-call minibuffer-setup-hook)
-
-(define-key +find-file-prefix-map (kbd "l") 'find-library)
 #+end_src
 
 ** Use Emacs like a Desktop Environment
@@ -3779,6 +3764,9 @@ of characters.
 #+end_src
 
 *** Remove whitespaces on saving (whitespace.el)
+:PROPERTIES:
+:CUSTOM_ID: h:CBCE7DD3-399D-4B34-B1D7-97F4FD0BE1F2
+:END:
 
 This built-in package handles blanks (TAB, (HARD) SPACE and NEWLINE).
 
@@ -3791,6 +3779,7 @@ This built-in package handles blanks (TAB, (HARD) SPACE and NEWLINE).
 **** Extras
 :PROPERTIES:
 :header-args:emacs-lisp: :tangle (expand-file-name "+whitespace.el" grandview--def-dir)
+:CUSTOM_ID: h:5D70CEE9-84B3-4374-9398-75D3518CA876
 :END:
 
 #+begin_src emacs-lisp
@@ -4683,6 +4672,92 @@ better option."
 :PROPERTIES:
 :CUSTOM_ID: h:6019F888-2F43-40CD-89C6-03D542D48FA4
 :END:
+** Get help in Emacs
+:PROPERTIES:
+:CUSTOM_ID: h:B5C5A759-2EF0-4B56-8E18-B1AD5E3D3D96
+:END:
+
+This section details how to access help information within Emacs, including
+relevant configurations and guides.
+
+*** Emacs Manual (info.el)
+:PROPERTIES:
+:CUSTOM_ID: h:59DC4309-57FF-4762-8ECC-96826FC36D96
+:END:
+
+The keybinding =SPC h i= (or =C-h i= if meow-keypad-mode is not enabled) opens the
+Info documentation tree, which covers almost all topics about Emacs itself and
+installed packages (provided corresponding .info documents are available). I've
+added some keybindings to simplify navigation within this tree.
+
+#+begin_src emacs-lisp
+(use-package info :ensure nil)
+
+(with-eval-after-load 'info
+  (bind! Info-mode-map
+    "n" 'next-line
+    "p" 'previous-line
+    "C-n" 'Info-next
+    "C-p" 'Info-prev
+    "s-n" 'forward-paragraph
+    "s-p" 'backward-paragraph))
+#+end_src
+
+*** Man page (man.el)
+:PROPERTIES:
+:CUSTOM_ID: h:E15D7EFF-09E4-481B-8B4C-8AE08F46A65E
+:END:
+
+=man.el= lets you view command man pages directly within Emacs, instead of using
+the command-line tool. The powerful document navigation and text manipulation
+tools we've already set up make reading manuals much easier.
+
+#+begin_src emacs-lisp
+(use-package man :ensure nil)
+
+(setq Man-notify-method 'newframe)
+(with-eval-after-load 'man
+  (define-key Man-mode-map (kbd "q") 'kill-this-buffer))
+#+end_src
+
+*** Helpful (helpful.el)
+:PROPERTIES:
+:CUSTOM_ID: h:9B7AA6E6-C7BE-41CD-B523-CB34BB185E0A
+:END:
+
+=helpful.el= provides a better help buffer.  It's always a good thing for us to be
+able to read the source code of the symbol we are looking at since it tells more
+information than its docstring.  Again, because we use =meow=, the actual prefix
+to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
+=helpful-symbol=.
+
+#+begin_src emacs-lisp
+(use-package helpful :ensure t :after-call meow-keypad-mode-hook)
+
+(bind! global-map
+  "C-h C-s" 'helpful-symbol
+  "C-h K" 'describe-keymap
+  "C-h C-f" 'helpful-callable
+  "C-h C-v" 'helpful-variable
+  "C-h k" 'helpful-key)
+#+end_src
+
+*** Find libraries (find-func.el)
+:PROPERTIES:
+:CUSTOM_ID: h:386D803D-CA14-4ACE-A7A6-F5B137E7C353
+:END:
+
+This packages provides the ~find-library~ command which allows us browsing the
+source code of Emacs efficiently, want to have to look on =dired.el=? Just ~M-x
+find-library RET dired~. Even better, we can introspect the C code of Emacs
+itself as long as the ~find-function-C-source-directory~ is set properly.
+
+#+begin_src emacs-lisp
+(use-package find-func :ensure nil :after-call minibuffer-setup-hook)
+
+(define-key +find-file-prefix-map (kbd "l") 'find-library)
+#+end_src
+
 ** Integration
 :PROPERTIES:
 :CUSTOM_ID: h:E558471C-2534-4ABA-B898-905EB09F779F
@@ -5486,6 +5561,7 @@ This can also be used in combination with =auto-fill-mode= instead of
   (setq-local visual-fill-column-center-text t)
   (visual-fill-column-mode 1))
 #+end_src
+
 ** Knowledge management
 :PROPERTIES:
 :CUSTOM_ID: h:0C192736-DDAD-4638-8611-AB8A58B3BA3B
@@ -5498,66 +5574,3 @@ This can also be used in combination with =auto-fill-mode= instead of
 #+begin_src emacs-lisp
 (use-package denote :ensure t)
 #+end_src
-
-* About
-:PROPERTIES:
-:CUSTOM_ID: h:76956BDC-B5A6-49E9-BCE1-0242B5EB647D
-:END:
-** COPYING
-:PROPERTIES:
-:CUSTOM_ID: h:3CC0C8EB-75AE-4CDE-803B-A904AD026E65
-:END:
-
-#+begin_quote
-Copyright (c) 2020-2025 Alex Lu <alexluigit@gmail.com>
-
-This file is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-This file is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-this file.  If not, see <http://www.gnu.org/licenses/>.
-#+end_quote
-
-** File local variables
-:PROPERTIES:
-:CUSTOM_ID: h:70CB6487-B425-4BE3-8E1B-1FE655056EFC
-:END:
-
-Here are the local setups for this file (*grandview.org*).
-
-+ ~eldoc-documentation-functions~: make eldoc works the same way as in a normal elisp file
-+ ~org-edit-src-content-indentation~: do not add spaces at line beginning in src blocks
-+ Enable ~auto-fill-mode~.
-
-#+begin_src emacs-lisp
-(defun grandview--org-eldoc-funcall (_callback &rest _ignored)
-  "Adapt `elisp-eldoc-funcall' in `grandviwe.org'."
-  (when (eq (org-element-type (org-element-at-point)) 'src-block)
-    (let* ((sym-info (elisp--fnsym-in-current-sexp))
-           (fn-sym (car sym-info)))
-      (when (fboundp fn-sym)
-        (message "%s: %s"
-                 (propertize (format "%s" fn-sym) 'face 'font-lock-function-name-face)
-                 (apply #'elisp-get-fnsym-args-string sym-info))))))
-
-(defun grandview-org-local-setup ()
-  "Adaptive setups for `grandview.org'."
-  (setq-local eldoc-documentation-functions
-              '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
-  ;; keep this line as errors may occur before the `org-src' config block
-  (setq-local org-edit-src-content-indentation 0)
-  (auto-fill-mode))
-
-(provide 'grandview)
-;;; grandview.el ends here
-#+end_src
-
-# Local Variables:
-# eval: (grandview-org-local-setup)
-# End:

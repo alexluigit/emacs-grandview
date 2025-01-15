@@ -97,27 +97,31 @@ Only do it when FORCE or contents in autoload directory changed."
 The tanglement only happens when the hashed md5 string changed after
 last change or FORCE is non nil."
   (let* ((g-org (grandview--path 'g))
+         (main-el (grandview--path 'main))
          (md5-file (grandview--path 'main-md5))
          (old-md5 (grandview--readfile md5-file))
          (new-md5 (secure-hash 'md5 (grandview--readfile g-org)))
          find-file-hook kill-buffer-hook write-file-functions
          enable-local-variables)
     (when (or force (not (string= old-md5 new-md5)))
-      (require 'org)
+      (require 'ob-tangle)
       (grandview--put-tangle-path g-org)
       (with-temp-buffer
         (erase-buffer)
         (insert new-md5)
         (write-region (point-min) (point-max) md5-file))
       (let (org-confirm-babel-evaluate)
-        (org-babel-tangle-file
-         g-org (grandview--path 'main)))
+        (org-babel-tangle-file g-org main-el)
+        (with-temp-buffer
+          (insert-file-contents main-el)
+          (goto-char (point-max))
+          (insert "\n(provide 'grandview)\n;;; grandview.el ends here")
+          (write-region nil nil main-el)))
       (cl-loop for lib in (directory-files-recursively
                            grandview--def-dir "\\.el$")
-               for f-base = (file-name-base lib)
-               for f-name = (file-name-nondirectory lib)
+               for base = (file-name-base lib)
                for end-s =
-               (format "\n(provide '%s)\n;;; %s ends here" f-base f-name)
+               (format "\n(provide '%s)\n;;; %s.el ends here" base base)
                do (with-temp-buffer
                     (insert ";;; -*- lexical-binding: t -*-\n\n")
                     (insert-file-contents lib)
