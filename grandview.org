@@ -101,7 +101,6 @@ tree ~/.cache/emacs/grandview
 │   ├── +scratch.el
 │   ├── +simple.el
 │   ├── +tabspaces.el
-│   ├── +tempel.el
 │   ├── +vc.el
 │   ├── +visual-fill-column.el
 │   ├── +vterm.el
@@ -170,32 +169,26 @@ You might need these commands when using =emacs-grandview=.
 | pass        | Simple password store       |
 |-------------+-----------------------------|
 
-Make sure to backup your old emacs config before installation.
+Back up your existing Emacs configuration, if any:
 
 #+begin_src shell :tangle no
 cp -r ~/.emacs.d ~/.emacs.d.bak
 #+end_src
 
-Clone the repo to *~/.config* directly
+Clone the repo to *~/.config* directly:
 
 #+begin_src shell :tangle no
 git clone https://www.github.com/alexluigit/emacs-grandview ~/.config/emacs
 #+end_src
 
-Alternatively, create a symlink
+Alternatively, create a symlink:
 
 #+begin_src shell :tangle no
 git clone https://www.github.com/alexluigit/emacs-grandview /path/to/dotfiles
 ln -sf /path/to/dotfiles/grandview ~/.config/emacs
 #+end_src
 
-Emacs may take some time to install packages on its first launch.
-
-During the native compile stage, which can take several minutes, the UI may
-become unresponsive and choppy.  Please be patient and do not worry.
-
-After the initial setup, you can restart Emacs using the *rem* shell command,
-which is explained in the following section.
+Now you can launch it:
 
 #+begin_src shell :tangle no
 # on macOS
@@ -204,6 +197,14 @@ open -a Emacs.app
 # on Linux
 emacs
 #+end_src
+
+Emacs may take some time to install packages on its first launch.
+
+During the native compile stage, which can take several minutes, the UI may
+become unresponsive and choppy.  Please be patient and do not worry.
+
+After the initial setup, you can restart Emacs using the *rem* shell command,
+which is explained below.
 
 ** Restart script
 :PROPERTIES:
@@ -621,6 +622,7 @@ Here are the local setups for this file (*grandview.org*).
   Basically setting ~org-edit-src-content-indentation~ to 0.
 
 + Enable ~auto-fill-mode~.
++ Center the text via ~+visual-fill-column-center-text~.
 + Ensure the *CUSTOM_ID* attribute is attached to every section when saving.
 
 I used the built-in function =add-file-local-variable-prop-line= to append local
@@ -644,6 +646,8 @@ variables or eval forms to *grandview.org*. This is the recommended method.
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
   (when (fboundp '+org-id-headlines)
     (add-hook 'before-save-hook #'+org-id-headlines nil t))
+  (when (fboundp '+visual-fill-column-center-text)
+    (+visual-fill-column-center-text))
   ;; keep this line as errors may occur before the `org-src' config block
   (setq-local org-edit-src-content-indentation 0)
   (auto-fill-mode))
@@ -742,13 +746,14 @@ leader key (=SPC=).  See [[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Meow > Keybi
 
 + =grandview-file-map=: File manipulations, dired, etc.
 + =grandview-mct-map=: [M]inibuffer and [C]ompletion in [T]andem.
-+ =grandview-lang-map=: Commands relate to programming languages.
++ =grandview-prog-map=: Commands relate to programming.
 + =grandview-app-map=: Useful application / utils such as set frame opacity, etc.
 
 And a few child keymaps.
 
 + =+config-prefix-map=: Commands for managing Emacs config, under =grandview-app-map=
 + =+find-file-prefix-map=: Locate files in specified places, under =grandview-file-map=
++ =+buffer-prefix-map=: Commands for buffers, under =grandview-file-map=
 
 Initially, the =+config-prefix-map= includes several commands:
 
@@ -768,8 +773,8 @@ Initially, the =+config-prefix-map= includes several commands:
 (defvar-keymap grandview-mct-map
   :doc "Search everything using minibuffer.")
 
-(defvar-keymap grandview-lang-map
-  :doc "Keymap for programming languages.")
+(defvar-keymap grandview-prog-map
+  :doc "Keymap for programming.")
 
 (defvar-keymap grandview-app-map
   :doc "Useful applications and utilities."
@@ -788,6 +793,10 @@ Initially, the =+config-prefix-map= includes several commands:
   :doc "Keymap for locating files"
   :parent grandview-file-map)
 
+(defvar-keymap +buffer-prefix-map
+  :doc "Keymap for buffers."
+  :parent grandview-file-map)
+
 (defun grandview-org ()
   "Edit grandview's org document."
   (interactive)
@@ -796,11 +805,10 @@ Initially, the =+config-prefix-map= includes several commands:
 (defun grandview-private-el ()
   "Edit grandview's private config."
   (interactive)
-  (find-file
-   (expand-file-name
-    "grandview.private.el" (file-name-directory user-init-file))))
+  (find-file (grandview--path 'private)))
 
 (define-key grandview-file-map (kbd "f") +find-file-prefix-map)
+(define-key grandview-file-map (kbd "b") +buffer-prefix-map)
 (define-key grandview-app-map (kbd "g") +config-prefix-map)
 #+end_src
 
@@ -997,10 +1005,10 @@ via =M-x meow-tutor=.  For more information about meow or modal editing in
 general, visit [[https://www.github.com/DoglooksGood/meow][meow]].
 
 Unlike *evil-mode*, which emulates the entirety of Vim within Emacs, meow focuses
-on bringing modal editing to vanilla Emacs.  Compared to *Vim* or *evil-mode*,
-meow is minimalist, lightweight, and powerful.  However, I missed some utilities
-from my Vim days, so I use two additional packages in tandem with meow.  So far,
-they work together flawlessly.
+on bringing modal editing to vanilla Emacs.  Compared to *Vim* or *evil-mode*, meow
+is minimalist, lightweight, and powerful.  However, I missed some utilities from
+my Vim days, so I use two additional packages in tandem with meow.  So far, they
+work together flawlessly.
 
 + *avy.el* ::
 
@@ -1017,7 +1025,7 @@ they work together flawlessly.
   selected region (assuming your ~e~ key is bound to =embrace-add=).
 
 Keybindings are not included here due to their length and should be configured
-separately; see [[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Keybindings]] for details.
+separately; see [[#h:95E86308-81E7-4A9F-B457-1EE8F8F80896][Keybindings]].
 
 #+begin_src emacs-lisp
 (use-package meow
@@ -1214,28 +1222,23 @@ hours at the keyboard.
   '("2" . split-window-below)
   '("3" . split-window-right)
   '(";" . comment-line)
-  '("," . xref-go-back)
-  '("." . xref-find-definitions)
-  '("/" . xref-find-references)
-  '("<" . beginning-of-buffer)
-  '(">" . end-of-buffer)
-  '("e" . dired-jump)
+  '("," . beginning-of-buffer)
+  '("." . end-of-buffer)
   '("r" . eval-expression) ; [r]un something
   '("i" . ibuffer)
-  '("k" . kill-current-buffer)
-  '("n" . project-find-file)
   '("q" . tab-close)
-  (cons "TAB" tab-prefix-map)
   (cons "4" ctl-x-4-map)
   (cons "5" ctl-x-5-map)
   (cons "7" ctl-x-r-map)
   (cons "8" ctl-x-x-map)
+  (cons "TAB" tab-prefix-map)
   (cons "a" grandview-app-map)
   (cons "f" grandview-file-map)
-  (cons "l" grandview-lang-map)
-  (cons "p" project-prefix-map)
-  (cons "t" grandview-mct-map)
+  (cons "p" grandview-prog-map)
+  (cons "t" grandview-mct-map) ; complete [t]ext
   (cons "w" window-prefix-map))
+
+(define-key grandview-file-map (kbd "p") project-prefix-map)
 
 (with-eval-after-load 'consult
   (meow-define-keys 'leader '("SPC" . consult-buffer)))
@@ -2307,10 +2310,13 @@ in the form of Capfs (~completion-at-point-functions~).
   (define-key grandview-mct-map (kbd "c") cape-prefix-map))
 #+end_src
 
-*** Snippet (tempel.el)
+*** Snippet system (tempel.el)
 :PROPERTIES:
 :CUSTOM_ID: h:B5025BD7-D74F-4DCF-BA55-1B1E8BD42106
 :END:
+
+*Tempel* provides a basic template/snippet system, using a format compatible with
+Emacs' *Tempo* library.
 
 "Tempel is a tiny template package for Emacs, which uses the syntax of the Emacs
 Tempo library. Tempo is an ancient temple of the church of Emacs. It is 30 years
@@ -2325,28 +2331,19 @@ completion."
 
 #+begin_src emacs-lisp
 (use-package tempel :ensure t :after-call self-insert-command)
+(use-package eglot-tempel
+  :vc (:url "https://github.com/fejfighter/eglot-tempel"))
 
 (defvar-keymap +tempel-prefix-map
   :doc "Kepmap for tempel commands."
-  :parent grandview-lang-map
+  :parent grandview-prog-map
   "i" #'tempel-insert
   "k" #'tempel-kill
   "a" #'tempel-abort)
 
+;; [s]nippet
 (define-key grandview-mct-map (kbd "s") +tempel-prefix-map)
 
-(add-hook 'prog-mode-hook '+tempel-setup-capf)
-(add-hook 'text-mode-hook '+tempel-setup-capf)
-#+end_src
-
-**** Extras
-:PROPERTIES:
-:CUSTOM_ID: h:BD8323BA-61B7-4216-8A63-B907DA7288C7
-:header-args:emacs-lisp: :tangle (expand-file-name "+tempel.el" grandview--def-dir)
-:END:
-
-#+begin_src emacs-lisp
-;;;###autoload
 (defun +tempel-setup-capf ()
   ;; Add the Tempel Capf to `completion-at-point-functions'.
   ;; `tempel-expand' only triggers on exact matches. Alternatively use
@@ -2357,16 +2354,37 @@ completion."
   ;; that it will be tried first.
   (setq-local completion-at-point-functions
               (cons #'tempel-complete completion-at-point-functions)))
+
+(add-hook 'prog-mode-hook '+tempel-setup-capf)
+(add-hook 'text-mode-hook '+tempel-setup-capf)
+
+(with-eval-after-load 'eglot (eglot-tempel-mode))
 #+end_src
 
-**** Templates
+**** Integrate with eglot (eglot-tempel)
+:PROPERTIES:
+:CUSTOM_ID: h:67E4ADAF-79BB-444B-B187-8C0B22D64ED4
+:END:
+
+*Eglot-tempel* is introduced to translate snippets from other systems into the
+*Tempel* format, enabling seamless integration with eglot's autocompletion.
+
+#+begin_src emacs-lisp
+(use-package eglot-tempel
+  :vc (:url "https://github.com/fejfighter/eglot-tempel"))
+
+(with-eval-after-load 'eglot (eglot-tempel-mode))
+#+end_src
+
+*** Templates
 :PROPERTIES:
 :CUSTOM_ID: h:160AE5D1-274F-432D-B5BF-DA1DE00A889F
 :END:
 
-All the Tempo syntax elements are fully supported. The syntax elements are
-described in detail in the docstring of ~tempo-define-template~ in tempo.el. We
-document the important ones here:
+This section defines snippet templates for different file types with optional
+conditions.  All the Tempo syntax elements are fully supported. The syntax
+elements are described in detail in the docstring of ~tempo-define-template~ in
+=tempo.el=.  We document the important ones here:
 
 - "string" Inserts a string literal.
 - ~p~ Inserts an unnamed placeholder field.
@@ -2386,13 +2404,15 @@ document the important ones here:
 - ~(r PROMPT <NAME> <NOINSERT>)~ Insert region or act like ~(p ...)~.
 - ~(r> PROMPT <NAME> <NOINSERT>)~ Act like ~(r ...)~, but indent region.
 
-Furthermore Tempel supports syntax extensions:
+Furthermore *Tempel* supports syntax extensions:
 
 - ~(p FORM <NAME> <NONINS>)~ Like ~p~ described above, but ~FORM~ is evaluated.
 - ~(FORM ...)~ Other Lisp forms are evaluated. Named fields are lexically bound.
 - ~q~ Quits the containing template when jumped to.
 
 Use caution with templates which execute arbitrary code!
+
+Let's start with the universal ones:
 
 #+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
 fundamental-mode ;; Available everywhere
@@ -2405,14 +2425,17 @@ prog-mode
 (todo (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "TODO ")
 (bug (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "BUG ")
 (hack (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "HACK ")
+#+end_src
 
-latex-mode
+We use separate code blocks for templates of different programming languages and
+text formats to make them easier to locate within the document.
 
-(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}")
-(frac "\\frac{" p "}{" p "}")
-(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
-(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
+**** [E]lisp
+:PROPERTIES:
+:CUSTOM_ID: h:8E3BDD9B-929E-4210-AE34-15803E5E95EB
+:END:
 
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
 lisp-mode emacs-lisp-mode ;; Specify multiple modes
 
 (lambda "(lambda (" p ")" n> r> ")")
@@ -2464,7 +2487,14 @@ eshell-mode
 (ife "if { " p " } { " p " } { " q " }")
 (unl "unless { " p " } { " q " }")
 (unle "unless { " p " } { " p " } { " q " }")
+#+end_src
 
+**** Text
+:PROPERTIES:
+:CUSTOM_ID: h:76034888-E06F-469B-AFE1-F803830381C6
+:END:
+
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
 text-mode
 
 (box "┌─" (make-string (length str) ?─) "─┐" n
@@ -2487,16 +2517,26 @@ rst-mode
 
 (title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
 
-c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
+latex-mode
 
-(inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
-(incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
+(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}")
+(frac "\\frac{" p "}{" p "}")
+(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
+(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
+#+end_src
 
+**** Org mode
+:PROPERTIES:
+:CUSTOM_ID: h:CB189D93-B839-4E32-AFF2-7AED445FD52D
+:END:
+
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
 org-mode :when (and (org-in-src-block-p)
                     (string= (org-element-property :language (org-element-context))
                              "emacs-lisp"))
 
-(use- "(use-package " p ")")
+(defk "(define-key " p " (kbd \"" p "\") " p ")")
+(use- "(use-package " p " ensure: " p ")")
 (lambda "(lambda (" p ")" n> r> ")")
 (autoload ";;;###autoload")
 
@@ -2520,6 +2560,18 @@ org-mode
 (elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
 (inlsrc "src_" p "{" q "}")
 (title "#+title: " p n "#+author: Alex Lu" n "#+language: en")
+#+end_src
+
+**** Programming
+:PROPERTIES:
+:CUSTOM_ID: h:9640E798-2D69-47B7-95C4-A0B78A49E934
+:END:
+
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
+c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
+
+(inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
+(incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
 
 ;; Local Variables:
 ;; mode: lisp-data
@@ -2709,7 +2761,7 @@ that if you install it from Melpa.
     "y" 'dirvish-yank-menu)
   (defvar-keymap +dirvish-prefix-map
     :doc "Keymap for `dirvish' commands."
-    "d" 'dirvish
+    "e" 'dirvish ; dir [e]ditor
     "f" 'dirvish-fd
     "n" 'dirvish-side
     "a" 'dirvish-quick-access
@@ -2757,6 +2809,8 @@ commands.
             (project-dired "Dired at root")
             (project-vc-dir "VC-project"))))
 
+(define-key mode-specific-map (kbd "n") '+project-find-or-new-file)
+
 (bind! project-prefix-map
   "/" '+project-dired
   "p" '+project-switch)
@@ -2785,6 +2839,17 @@ With optional COMMAND, run it in DIRECTORY."
           (call-interactively command))
       (with-current-buffer buffer
         (kill-local-variable 'project-current-directory-override)))))
+
+(defun +project-find-or-new-file (&optional arg)
+  "A extended version of `project-find-file' with ARG.
+When called without prefix or with `C-u' - 2, it works the same as
+`project-find-file'; When prefix with `C-u' - 3, call `make-empty-file'."
+  (interactive "P")
+  (let ((prefix-arg (prefix-numeric-value arg)))
+    (cond
+     ((not arg) (project-find-file))
+     ((= prefix-arg 2) (call-interactively 'project-find-file))
+     ((= prefix-arg 3) (call-interactively 'make-empty-file)))))
 
 ;;;###autoload
 (defun +project-switch (directory)
@@ -3376,8 +3441,14 @@ most frequently used are:
 - ~xref-find-references~ (=M-?=)
 - ...etc.
 
+I remapped =M-/= to ~xref-find-references~, which is more accessible than the
+default, so that the three adjacent keybindings =SPC m ,= | =SPC m .= | =SPC m /= all
+relate to the concept of *xref*, making them easier to understand and use.
+
 #+begin_src emacs-lisp
 (use-package xref :ensure nil)
+
+(define-key global-map (kbd "M-/") 'xref-find-references)
 
 (setq xref-prompt-for-identifier nil)
 (setq xref-file-name-display 'project-relative)
@@ -3407,7 +3478,7 @@ Some additions I've added to rg transient:
 
 (with-eval-after-load 'rg
   (+rg-setup)
-  (define-key grandview-lang-map (kbd "s") 'rg-project-all-files-no-ask))
+  (define-key grandview-prog-map (kbd "s") 'rg-project-all-files-no-ask))
 #+end_src
 
 **** Writable grep (wgrep.el)
@@ -4131,28 +4202,25 @@ Huge thanks to @blahgeek and @jdtsmith!
 #+begin_src emacs-lisp
 (use-package eglot :ensure nil)
 (use-package markdown-mode :ensure t)
-(use-package eglot-tempel :vc (:url "https://github.com/fejfighter/eglot-tempel"))
 (use-package eglot-booster :vc (:url "https://github.com/jdtsmith/eglot-booster"))
 
 (with-eval-after-load 'eglot
   (setq eglot-autoshutdown t)
   (setq eglot-send-changes-idle-time 0)
   (add-hook 'eglot-mode-hook '+eglot-setup-eldoc)
-  (require 'eglot-tempel)
-  (eglot-tempel-mode)
   (setq eglot-booster-io-only t)
   (add-hook 'eglot-mode-hook 'eglot-booster-mode))
 
 (defvar-keymap +eglot-prefix-map
   :doc "Keymap for `eglot' commands."
-  :parent grandview-lang-map
+  :parent grandview-prog-map
   "a" 'eglot-code-actions
   "t" 'eglot-find-typeDefinition
   "d" 'eglot-find-declaration
   "i" 'eglot-find-implementation
   "r" 'eglot-rename)
 
-(define-key grandview-lang-map (kbd "e") +eglot-prefix-map)
+(define-key grandview-prog-map (kbd "e") +eglot-prefix-map)
 #+end_src
 
 **** Extras
@@ -4183,12 +4251,12 @@ Huge thanks to @blahgeek and @jdtsmith!
 
 (defvar-keymap +flymake-prefix-map
   :doc "Keymap for `flymake' commands."
-  :parent grandview-lang-map
+  :parent grandview-prog-map
   "n" 'flymake-goto-next-error
   "p" 'flymake-goto-prev-error
   "s" 'flymake-start)
 
-(define-key grandview-lang-map (kbd "f") +flymake-prefix-map)
+(define-key grandview-prog-map (kbd "f") +flymake-prefix-map)
 #+end_src
 
 *** Compiler (compile.el)
@@ -4216,7 +4284,7 @@ optional minor mode which can apply this command automatically on save.
 #+begin_src emacs-lisp
 (use-package reformatter :ensure t)
 
-(define-key grandview-lang-map (kbd "r") '+reformatter-format-buffer)
+(define-key grandview-prog-map (kbd "r") '+reformatter-format-buffer)
 
 (with-eval-after-load 'reformatter
   (reformatter-define lua-format
@@ -4970,7 +5038,7 @@ testing my =dirvish-icons= library.
 (use-package copilot
   :vc (:url "https://github.com/copilot-emacs/copilot.el"))
 
-(define-key grandview-lang-map (kbd "c") 'copilot-mode)
+(define-key grandview-prog-map (kbd "c") 'copilot-mode)
 
 (with-eval-after-load 'copilot
   (bind! copilot-completion-map
@@ -5483,8 +5551,9 @@ selectable and scrollable with mouse, even though the cursor is hidden.
 #+begin_src emacs-lisp
 (use-package eldoc-box :ensure t :after-call flymake-mode)
 
+;; [d]oc
 (with-eval-after-load 'eldoc-box
-  (define-key grandview-lang-map (kbd "d") 'eldoc-box-help-at-point)) ; [d]oc
+  (define-key grandview-prog-map (kbd "d") 'eldoc-box-help-at-point))
 #+end_src
 
 *** Pixel scrolling (pixel-scroll.el)
@@ -5543,7 +5612,8 @@ This can also be used in combination with =auto-fill-mode= instead of
 #+begin_src emacs-lisp
 (use-package visual-fill-column :ensure t)
 
-(add-hook 'org-mode-hook #'+visual-fill-column-center-text)
+(define-key
+ +buffer-prefix-map (kbd "c") '+visual-fill-column-center-text)
 #+end_src
 
 **** Extras
