@@ -74,8 +74,8 @@ one or more sections, simply comment out those sections and restart Emacs. The
 configurations within those sections will be ignored, as they won't be tangled
 during the startup process.
 
-The tangled directory typically looks like this:
-(Do not edit these files by hand since all of them are auto generated)
+Here's an example of a typical tangled directory structure (files in *autoloads*
+directory may vary depending on your configuration):
 
 #+begin_example
 tree ~/.cache/emacs/grandview
@@ -114,7 +114,8 @@ tree ~/.cache/emacs/grandview
 └── grandview.el.md5
 #+end_example
 
-More details are in the [[#h:4E1A86EF-3A26-4308-A263-1447D5D3987E][Load tangled elisp file]] section.
+These files are automatically generated and should not be edited manually.  More
+details are in the [[#h:4E1A86EF-3A26-4308-A263-1447D5D3987E][Load tangled elisp file]] section.
 
 *** Private config | grandview options (*grandview.private.el*)
 :PROPERTIES:
@@ -622,7 +623,7 @@ Here are the local setups for this file (*grandview.org*).
   Basically setting ~org-edit-src-content-indentation~ to 0.
 
 + Enable ~auto-fill-mode~.
-+ Center the text via ~+visual-fill-column-center-text~.
++ Center the text via ~+visual-fill-column-center-mode~.
 + Ensure the *CUSTOM_ID* attribute is attached to every section when saving.
 
 I used the built-in function =add-file-local-variable-prop-line= to append local
@@ -646,8 +647,9 @@ variables or eval forms to *grandview.org*. This is the recommended method.
               '(elisp-eldoc-var-docstring grandview--org-eldoc-funcall))
   (when (fboundp '+org-id-headlines)
     (add-hook 'before-save-hook #'+org-id-headlines nil t))
-  (when (fboundp '+visual-fill-column-center-text)
-    (+visual-fill-column-center-text))
+  (when (fboundp '+visual-fill-column-center-mode)
+    (setq-local visual-fill-column-width 120)
+    (+visual-fill-column-center-mode))
   ;; keep this line as errors may occur before the `org-src' config block
   (setq-local org-edit-src-content-indentation 0)
   (auto-fill-mode))
@@ -2412,7 +2414,13 @@ Furthermore *Tempel* supports syntax extensions:
 
 Use caution with templates which execute arbitrary code!
 
-Let's start with the universal ones:
+We use separate code blocks for templates of different programming languages and
+text formats to make them easier to locate within the document.
+
+**** Universal
+:PROPERTIES:
+:CUSTOM_ID: h:1AAF20BE-D986-45F7-AE1C-E5206FE96D72
+:END:
 
 #+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
 fundamental-mode ;; Available everywhere
@@ -2427,10 +2435,81 @@ prog-mode
 (hack (if (derived-mode-p 'emacs-lisp-mode) ";; " comment-start) "HACK ")
 #+end_src
 
-We use separate code blocks for templates of different programming languages and
-text formats to make them easier to locate within the document.
+**** Text
+:PROPERTIES:
+:CUSTOM_ID: h:76034888-E06F-469B-AFE1-F803830381C6
+:END:
 
-**** [E]lisp
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
+text-mode
+
+(box "┌─" (make-string (length str) ?─) "─┐" n
+     "│ " (s str)                       " │" n
+     "└─" (make-string (length str) ?─) "─┘" n)
+(abox "+-" (make-string (length str) ?-) "-+" n
+      "| " (s str)                       " |" n
+      "+-" (make-string (length str) ?-) "-+" n)
+(cut "--8<---------------cut here---------------start------------->8---" n r n
+     "--8<---------------cut here---------------end--------------->8---" n)
+(rot13 (p "plain text" text) n "----" n (rot13 text))
+(calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
+(table (p (read-number "Rows: ") rows noinsert)
+       (p (read-number "Cols: ") cols noinsert)
+       "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
+       "|" (* cols "----|") n
+       (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
+
+rst-mode
+
+(title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
+
+latex-mode
+
+(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}")
+(frac "\\frac{" p "}{" p "}")
+(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
+(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
+#+end_src
+
+**** Org mode
+:PROPERTIES:
+:CUSTOM_ID: h:CB189D93-B839-4E32-AFF2-7AED445FD52D
+:END:
+
+#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
+org-mode :when (and (org-in-src-block-p)
+                    (string= (org-element-property
+                              :language (org-element-context))
+                             "emacs-lisp"))
+
+(defk "(define-key " p " (kbd \"" p "\") " p ")")
+(use- "(use-package " p " ensure: " p ")")
+(lambda "(lambda (" p ")" n> r> ")")
+(autoload ";;;###autoload")
+
+org-mode
+
+(caption "#+caption: ")
+(drawer ":" p ":" n r ":end:")
+(begin "#+begin_" (s name) n> r> n "#+end_" name)
+(quote "#+begin_quote" n> r> n "#+end_quote")
+(sidenote "#+begin_sidenote" n> r> n "#+end_sidenote")
+(marginnote "#+begin_marginnote" n> r> n "#+end_marginnote")
+(example "#+begin_example" n> r> n "#+end_example")
+(center "#+begin_center" n> r> n "#+end_center")
+(ascii "#+begin_export ascii" n> r> n "#+end_export")
+(html "#+begin_export html" n> r> n "#+end_export")
+(latex "#+begin_export latex" n> r> n "#+end_export")
+(comment "#+begin_comment" n> r> n "#+end_comment")
+(verse "#+begin_verse" n> r> n "#+end_verse")
+(src "#+begin_src " q n r n "#+end_src")
+(gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n r n "#+end_src" :post (org-edit-src-code))
+(elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
+(inlsrc "src_" p "{" q "}")
+(title "#+title: " p n "#+author: Alex Lu" n "#+language: en")
+#+end_src
+
+**** Lisp | Emacs Lisp
 :PROPERTIES:
 :CUSTOM_ID: h:8E3BDD9B-929E-4210-AE34-15803E5E95EB
 :END:
@@ -2489,80 +2568,7 @@ eshell-mode
 (unle "unless { " p " } { " p " } { " q " }")
 #+end_src
 
-**** Text
-:PROPERTIES:
-:CUSTOM_ID: h:76034888-E06F-469B-AFE1-F803830381C6
-:END:
-
-#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
-text-mode
-
-(box "┌─" (make-string (length str) ?─) "─┐" n
-     "│ " (s str)                       " │" n
-     "└─" (make-string (length str) ?─) "─┘" n)
-(abox "+-" (make-string (length str) ?-) "-+" n
-      "| " (s str)                       " |" n
-      "+-" (make-string (length str) ?-) "-+" n)
-(cut "--8<---------------cut here---------------start------------->8---" n r n
-     "--8<---------------cut here---------------end--------------->8---" n)
-(rot13 (p "plain text" text) n "----" n (rot13 text))
-(calc (p "taylor(sin(x),x=0,3)" formula) n "----" n (format "%s" (calc-eval formula)))
-(table (p (read-number "Rows: ") rows noinsert)
-       (p (read-number "Cols: ") cols noinsert)
-       "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n
-       "|" (* cols "----|") n
-       (* rows "| " (p "  ") (* (1- cols) " | " (p "  ")) " |" n))
-
-rst-mode
-
-(title (make-string (length title) ?=) n (p "Title: " title) n (make-string (length title) ?=) n)
-
-latex-mode
-
-(begin "\\begin{" (s env) "}" > n> r> "\\end{" (s env) "}")
-(frac "\\frac{" p "}{" p "}")
-(enumerate "\\begin{enumerate}\n\\item " r> n> "\\end{enumerate}")
-(itemize "\\begin{itemize}\n\\item " r> n> "\\end{itemize}")
-#+end_src
-
-**** Org mode
-:PROPERTIES:
-:CUSTOM_ID: h:CB189D93-B839-4E32-AFF2-7AED445FD52D
-:END:
-
-#+begin_src lisp :tangle (expand-file-name "templates" user-emacs-directory)
-org-mode :when (and (org-in-src-block-p)
-                    (string= (org-element-property :language (org-element-context))
-                             "emacs-lisp"))
-
-(defk "(define-key " p " (kbd \"" p "\") " p ")")
-(use- "(use-package " p " ensure: " p ")")
-(lambda "(lambda (" p ")" n> r> ")")
-(autoload ";;;###autoload")
-
-org-mode
-
-(caption "#+caption: ")
-(drawer ":" p ":" n r ":end:")
-(begin "#+begin_" (s name) n> r> n "#+end_" name)
-(quote "#+begin_quote" n> r> n "#+end_quote")
-(sidenote "#+begin_sidenote" n> r> n "#+end_sidenote")
-(marginnote "#+begin_marginnote" n> r> n "#+end_marginnote")
-(example "#+begin_example" n> r> n "#+end_example")
-(center "#+begin_center" n> r> n "#+end_center")
-(ascii "#+begin_export ascii" n> r> n "#+end_export")
-(html "#+begin_export html" n> r> n "#+end_export")
-(latex "#+begin_export latex" n> r> n "#+end_export")
-(comment "#+begin_comment" n> r> n "#+end_comment")
-(verse "#+begin_verse" n> r> n "#+end_verse")
-(src "#+begin_src " q n r n "#+end_src")
-(gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n r n "#+end_src" :post (org-edit-src-code))
-(elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
-(inlsrc "src_" p "{" q "}")
-(title "#+title: " p n "#+author: Alex Lu" n "#+language: en")
-#+end_src
-
-**** Programming
+**** C
 :PROPERTIES:
 :CUSTOM_ID: h:9640E798-2D69-47B7-95C4-A0B78A49E934
 :END:
@@ -2572,11 +2578,6 @@ c-mode :when (re-search-backward "^\\S-*$" (line-beginning-position) 'noerror)
 
 (inc "#include <" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) ">")
 (incc "#include \"" (p (concat (file-name-base (or (buffer-file-name) (buffer-name))) ".h")) "\"")
-
-;; Local Variables:
-;; mode: lisp-data
-;; outline-regexp: "[a-z]"
-;; End:
 #+end_src
 
 * File management
@@ -2597,22 +2598,12 @@ inside of an Emacs buffer.  It is simply superb!
 
 #+begin_src emacs-lisp
 (use-package dired :ensure nil :after-call pre-command-hook)
-(use-package dired-x :ensure nil)
-(use-package dired-aux :ensure nil)
-(use-package diredfl :ensure t)
-
-(with-eval-after-load 'diredfl
-  (set-face-attribute 'diredfl-dir-name nil :bold t)
-  (add-hook 'enable-theme-functions
-            (lambda (_theme)
-              (set-face-attribute 'diredfl-dir-name nil :bold t))))
 
 (when (eq system-type 'darwin) (setq insert-directory-program "gls"))
 (setq dired-listing-switches
       "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
 
 (with-eval-after-load 'dired
-  (add-hook 'dired-mode-hook 'diredfl-mode)
   (setq mouse-1-click-follows-link nil)
   (setq dired-mouse-drag-files t)                   ; added in Emacs 29
   (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
@@ -2627,6 +2618,8 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-do-revert-buffer t)
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
   (bind! dired-mode-map
+    "<mouse-3>" 'dired-mouse-find-file ; right click for opening file / entering dir
+    "<mouse-8>" 'dired-do-shell-command ; side button for shell command execution
     "/" 'dired-goto-file
     "," 'dired-create-directory
     "." 'dired-create-empty-file
@@ -2640,9 +2633,44 @@ inside of an Emacs buffer.  It is simply superb!
     "x" 'dired-do-delete
     "X" 'dired-do-flagged-delete
     "y" 'dired-do-copy))
+#+end_src
+
+**** Extra Dired functionality
+:PROPERTIES:
+:CUSTOM_ID: h:C992F838-A4BB-4AA5-9331-147D081D8FE5
+:END:
+
+At load time *dired-x.el* will install itself and bind some Dired keys.  Some
+*dired.el* and *dired-aux.el* functions have extra features if *dired-x* is loaded.
+
+#+begin_src emacs-lisp
+(use-package dired-x :ensure nil)
+(use-package dired-aux :ensure nil)
 
 (with-eval-after-load 'dired-x
   (setq dired-omit-files (concat dired-omit-files "\\|^\\..*$")))
+#+end_src
+
+**** Font lock rules for Dired buffers (diredfl.el)
+:PROPERTIES:
+:CUSTOM_ID: h:89FB8551-2C36-42FD-B4DE-CF2EB706D18E
+:END:
+
+*Diredfl* enhances dired with additional font-lock rules for a more colorful
+display.  We've customized the ~diredfl-dir-name~ face to render directory entries
+in bold, distinguishing them from file entries.
+
+#+begin_src emacs-lisp
+(use-package diredfl :ensure t)
+
+(with-eval-after-load 'dired
+  (add-hook 'dired-mode-hook 'diredfl-mode))
+
+(with-eval-after-load 'diredfl
+  (set-face-attribute 'diredfl-dir-name nil :bold t)
+  (add-hook 'enable-theme-functions
+            (lambda (_theme)
+              (set-face-attribute 'diredfl-dir-name nil :bold t))))
 #+end_src
 
 *** Batch rename files made easy (wdired.el)
@@ -2666,13 +2694,11 @@ Bulk renaming files like a breeze.
 :CUSTOM_ID: h:398861A3-9FBA-43EA-A54F-3C06C4902C7D
 :END:
 
-
 =image-dired= allows us to browse and manipulate images using Dired.
 
 + show bigger sized thumbnail image, we are in the 21st century
-+ no not display original image in other window when flag/mark files
-  - it's very slow
-  - if I want to view the bigger image, I use =dirvish= instead
++ do not display original image in other window when flag/mark files
+  It's very slow, for image preview, I use =dirvish= instead.
 + tweak the keybindings to my preferences
 
 #+begin_src emacs-lisp
@@ -2697,22 +2723,28 @@ This package empowers dired by giving it a modern UI in a unintrusive way. Emacs
 users deserve a file manager better than those popular ones on terminal such as
 [[https://github.com/ranger/ranger][ranger]], [[https://github.com/vifm/vifm][vifm]], [[https://github.com/gokcehan/lf][lf]] since Emacs is more than a terminal emulator.
 
-The usage of =:vc= in the =use-package= declaration and the implict =require=
-statement is for the purpose of maintaining this project, you don't have to do
-that if you install it from Melpa.
-
 #+begin_src emacs-lisp
-;; (use-package dirvish :ensure t) ; for normal user, install from Melpa
-(use-package dirvish
-  :load-path "~/.cache/emacs/elpa/dirvish"
-  :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions")
-  :after-call meow-keypad-mode-hook)
+(use-package dirvish :ensure t)
 
 (with-eval-after-load 'dirvish
-  (require 'dirvish-extras)
   (dirvish-override-dired-mode)
-  (dirvish-side-follow-mode) ;; `project-current' is buggy in Emacs 31
-  (dirvish-peek-mode)
+  (dirvish-side-follow-mode)
+  (dirvish-peek-mode))
+#+end_src
+
+**** Look and feel
+:PROPERTIES:
+:CUSTOM_ID: h:D63746B7-A408-41A8-8AA7-9043B27C6CA8
+:END:
+
+Here are some customizations about the appearance of *dirvish*.
+
++ show file attributes on file lines.
++ display necessary information on mode line and header line.
++ other prettifications
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'dirvish
   (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
   (add-hook 'dirvish-directory-view-mode-hook 'diredfl-mode)
   (setq dirvish-attributes
@@ -2723,8 +2755,19 @@ that if you install it from Melpa.
   (setq dirvish-mode-line-height 21)
   (setq dirvish-side-width 38)
   (setq dirvish-header-line-format '(:left (path) :right (free-space)))
-  (setq dirvish-path-separators (list "  " "  " "  "))
-  (appendq! dirvish-preview-disabled-exts '("lockb" "sqlite" "db"))
+  (setq dirvish-path-separators (list "  " "  " "  ")))
+#+end_src
+
+**** Quick access
+:PROPERTIES:
+:CUSTOM_ID: h:579DBE58-EA09-4EF3-9016-75D2E91C366E
+:END:
+
+These are quick access entries for the ~dirvish-quick-access~ command, which can
+be called inside or outside of *Dirvish*.
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'dirvish-quick-access
   (setopt dirvish-quick-access-entries
           '(("o" "~/"                          "Home")
             ("d" "/opt/dotfiles/"              "Dotfiles")
@@ -2736,12 +2779,35 @@ that if you install it from Melpa.
             ("s" "/mnt/HDD/Share/"             "Shared files")
             ("a" "🔍\\\.org$📁~/Documents/📁" "All Notes") ; this requires `dirvish-fd'
             ("t" "~/.local/share/Trash/files/" "Trash")
-            ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/")))
+            ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/"))))
+#+end_src
+
+**** Shortcuts
+:PROPERTIES:
+:CUSTOM_ID: h:88A15EC2-44EA-4201-8017-0219988B8F6F
+:END:
+
+A child keymap, =dirvish-prefix-map=, is created under `grandview-file-map` to
+open *Dirvish* in different forms.
+
+*Dirvish* improves file viewing, navigation, and management by adding features and
+commands. I bind these to =dirvish-mode-map=, which inherits from =dired-mode-map=,
+for convenient access.
+
+#+Begin_src emacs-lisp
+(defvar-keymap +dirvish-prefix-map
+  :doc "Keymap for `dirvish' commands."
+  "e" 'dirvish ; dir [e]ditor
+  "f" 'dirvish-fd
+  "n" 'dirvish-side
+  "a" 'dirvish-quick-access
+  "j" 'dirvish-fd-jump)
+(define-key grandview-file-map (kbd "e") +dirvish-prefix-map)
+(bind! mode-specific-map "e" 'dirvish-dwim)
+
+(with-eval-after-load 'dirvish
   (bind! dirvish-mode-map
-    "<mouse-1>" 'dirvish-subtree-toggle-or-open     ; left click for expand/collapse dir or open file
-    "<mouse-2>" 'dired-mouse-find-file-other-window ; middle click for opening file / entering dir in other window
-    "<mouse-3>" 'dired-mouse-find-file              ; right click for opening file / entering dir
-    "<mouse-8>" 'dired-do-shell-command             ; side button for shell command execution
+    "<mouse-1>" 'dirvish-subtree-toggle-or-open ; left click for expand/collapse dir or open file
     "s-n" 'dirvish-history-go-forward
     "s-p" 'dirvish-history-go-backward
     "h" 'dirvish-history-jump
@@ -2758,16 +2824,7 @@ that if you install it from Melpa.
     "s-j" 'dirvish-fd-jump
     "s" 'dirvish-quicksort
     "l" 'dirvish-ls-switches-menu
-    "y" 'dirvish-yank-menu)
-  (defvar-keymap +dirvish-prefix-map
-    :doc "Keymap for `dirvish' commands."
-    "e" 'dirvish ; dir [e]ditor
-    "f" 'dirvish-fd
-    "n" 'dirvish-side
-    "a" 'dirvish-quick-access
-    "j" 'dirvish-fd-jump)
-  (define-key grandview-file-map (kbd "e") +dirvish-prefix-map)
-  (bind! mode-specific-map "e" 'dirvish-dwim))
+    "y" 'dirvish-yank-menu))
 #+end_src
 
 *** Project management (project.el)
@@ -4762,14 +4819,17 @@ to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
 =helpful-symbol=.
 
 #+begin_src emacs-lisp
-(use-package helpful :ensure t :after-call meow-keypad-mode-hook)
+(use-package helpful :ensure t)
 
-(bind! global-map
-  "C-h C-s" 'helpful-symbol
-  "C-h K" 'describe-keymap
-  "C-h C-f" 'helpful-callable
-  "C-h C-v" 'helpful-variable
-  "C-h k" 'helpful-key)
+;; `helpful-symbol' and `helpful-variable' raise the "lisp nesting
+;; exceed 'max-lisp-eval-depth'" error for keymaps involves
+;; `mode-specfic-map' (leader key), what's going on?
+(bind! help-map
+  "/" 'helpful-symbol
+  "v" 'helpful-variable
+  "K" 'describe-keymap
+  "C-f" 'helpful-callable
+  "k" 'helpful-key)
 #+end_src
 
 *** Find libraries (find-func.el)
@@ -5612,8 +5672,7 @@ This can also be used in combination with =auto-fill-mode= instead of
 #+begin_src emacs-lisp
 (use-package visual-fill-column :ensure t)
 
-(define-key
- +buffer-prefix-map (kbd "c") '+visual-fill-column-center-text)
+(define-key +buffer-prefix-map (kbd "c") '+visual-fill-column-center-mode)
 #+end_src
 
 **** Extras
@@ -5624,12 +5683,17 @@ This can also be used in combination with =auto-fill-mode= instead of
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +visual-fill-column-center-text ()
-  "Centering text."
-  (interactive)
-  (setq-local visual-fill-column-width 120)
-  (setq-local visual-fill-column-center-text t)
-  (visual-fill-column-mode 1))
+(define-minor-mode +visual-fill-column-center-mode
+  "A thin wrapper on `visual-line-fill-column-mode'.
+Use this mode to activate and deactivate `visual-line-mode' and
+`visual-fill-column-mode' and text centering in conjunction."
+  :init-value nil :lighter nil :global nil
+  (if +visual-fill-column-center-mode
+      (progn
+        (setq-local visual-fill-column-center-text t)
+        (visual-line-fill-column-mode 1))
+    (setq-local visual-fill-column-center-text nil)
+    (visual-line-fill-column-mode -1)))
 #+end_src
 
 ** Knowledge management
