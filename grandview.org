@@ -667,6 +667,7 @@ In addition, several custom options were introduced in this file:
 + ~grandview-custom-default-font~: The default font.
 + ~grandview-custom-fixed-font~: The =fixed-pitch= font.
 + ~grandview-custom-variable-font~: The =variable-pitch= font.
++ ~grandview-custom-headline-sizes~: Height scaling of 1-4 level of headlines.
 + ~grandview-custom-cjk-font~: Font for Chinese / Japanese / Korean characters.
 + ~grandview-custom-env-alist~: Use these environment variables in GUI emacs.
 
@@ -685,7 +686,7 @@ slow, so I'm better off do it the regular way.
 
 ;;; Code:
 
-(defcustom grandview-custom-theme 'modus-vivendi
+(defcustom grandview-custom-theme 'doom-one
   "Default theme for grandview."
   :group 'grandview :type 'theme)
 
@@ -708,6 +709,13 @@ slow, so I'm better off do it the regular way.
 (defcustom grandview-custom-cjk-font "LXGW WenKai Mono"
   "Default CJK font (Chinese/Japanese/Korean) for grandview."
   :group 'grandview :type 'string)
+
+(defcustom grandview-custom-headline-sizes
+  '(1.2 1.15 1.1 1.05)
+  "Height scaling of level-1 to level-4 headings.
+This option controls the `:height' attribute of headlines for relevant
+faces in `outline' and `org'."
+  :group 'org :type 'list)
 
 (defcustom grandview-custom-env-alist
   (let ((x-cfg (expand-file-name "~/.config"))
@@ -1382,39 +1390,26 @@ Recommended themes (using their package names):
 - =modus-vivendi=
   A built-in theme in emacs (version >= 28) created by Protesilaos Stavrou.
 
-- =ef-themes=
-  Yet another theme suite developed by Prot.
-
 - =doom-themes=
   A megapack of popular themes, including aesthetic extensions
   for popular packages.
 
-- =apropospriate-theme=
-  Apropospriate theme.
-
-- =lambda-themes=
-  Lambda themes.
+- =ef-themes=
+  Yet another theme suite developed by Prot.
 
 - =color-theme-sanityinc-tomorrow=
   SanityInc tomorrow theme.
 
-- =mindre-theme=
-  Mindre theme.
-
 #+begin_src emacs-lisp
-(use-package modus-themes :ensure nil :after-call after-init-hook)
+(use-package modus-themes :ensure nil)
+(use-package ef-themes :ensure t)
+(use-package doom-themes :ensure t)
+(use-package color-theme-sanityinc-tomorrow :ensure t)
 
-;; (use-package ef-themes :ensure t :after-call after-init-hook)
-;; (use-package lambda-themes :vc (:url "https://github.com/Lambda-Emacs/lambda-themes"))
-;; (use-package apropospriate-theme :ensure t)
-;; (use-package doom-themes :ensure t)
-;; (use-package color-theme-sanityinc-tomorrow :ensure t)
-;; (use-package mindre-theme :ensure t)
-
-;; (with-eval-after-load 'ef-themes
-;;   (setq ef-themes-to-toggle '(ef-summer ef-winter)
-;;     ef-themes-mixed-fonts t
-;;     ef-themes-variable-pitch-ui t))
+(with-eval-after-load 'ef-themes
+  (setq ef-themes-to-toggle '(ef-day ef-winter)
+    ef-themes-mixed-fonts t
+    ef-themes-variable-pitch-ui t))
 
 (with-eval-after-load 'modus-themes
   (setq modus-themes-common-palette-overrides
@@ -1422,7 +1417,31 @@ Recommended themes (using their package names):
           (underline-link-visited unspecified)
           (underline-link-symbolic unspecified))))
 
+(with-eval-after-load 'outline
+  (+theme-outline-headline-setup)
+  (add-hook 'enable-theme-functions #'+theme-outline-headline-setup))
+
 (add-hook 'after-init-hook (lambda () (load-theme grandview-custom-theme t)))
+#+end_src
+
+**** Extras ::: +theme.el
+:PROPERTIES:
+:CUSTOM_ID: h:E3066C60-3548-40B4-BEB2-1C05972EBCA0
+:header-args:emacs-lisp: :tangle (expand-file-name "+theme.el" grandview--def-dir)
+:END:
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun +theme-outline-headline-setup (&optional _theme)
+  "Setup headline heights for `outline'."
+  (set-face-attribute
+   'outline-1 nil :height (nth 0 grandview-custom-headline-sizes))
+  (set-face-attribute
+   'outline-2 nil :height (nth 1 grandview-custom-headline-sizes))
+  (set-face-attribute
+   'outline-3 nil :height (nth 2 grandview-custom-headline-sizes))
+  (set-face-attribute
+   'outline-4 nil :height (nth 3 grandview-custom-headline-sizes)))
 #+end_src
 
 *** Fonts and icons
@@ -1453,6 +1472,9 @@ Setup fonts.
 
 #+begin_src emacs-lisp
 (+font-setup)
+(with-eval-after-load '+font
+  ;; add the hook AFTER `grandview-custom-theme' is enabled, it is just faster
+  (add-hook 'enable-theme-functions #'+font-setup))
 #+end_src
 
 ***** Extras ::: +font.el
@@ -1463,25 +1485,26 @@ Setup fonts.
 
 #+begin_src emacs-lisp
 ;;;###autoload
-(defun +font-setup (&optional frame)
+(defun +font-setup (&optional _theme)
   "Setup default/fixed-pitch/variable-pitch/zh-font."
   (cl-loop
-   with font-families = (font-family-list frame)
+   with font-families = (font-family-list)
    for font in (list grandview-custom-default-font
                      grandview-custom-fixed-font
                      grandview-custom-variable-font)
    for name in '(default fixed-pitch variable-pitch)
    if (member font font-families) do
-   (custom-theme-set-faces
-    'user `(,name ((t (:font ,font :height ,grandview-custom-font-size)))))
+   (set-face-attribute
+    name nil :font font :height grandview-custom-font-size)
    else do (message "Font `%s' is not available" font)
    finally
    (progn
-     (custom-theme-set-faces
-      'user
-      '(font-lock-keyword-face ((t (:slant italic))))
-      '(font-lock-variable-name-face ((t (:weight demibold))))
-      '(font-lock-function-name-face ((t (:weight demibold)))))
+     (set-face-attribute
+      'font-lock-keyword-face nil :slant 'italic)
+     (set-face-attribute
+      'font-lock-variable-name-face nil :weight 'demibold)
+     (set-face-attribute
+      'font-lock-function-name-face nil :weight 'demibold)
      (if (member grandview-custom-cjk-font font-families)
          (dolist (charset '(kana han cjk-misc bopomofo))
            (set-fontset-font
@@ -2213,6 +2236,7 @@ accessiable under its child keymap =+consult-prefix-=map=.
     "f" 'consult-flymake
     "r" 'consult-ripgrep
     "k" 'consult-kmacro
+    "i" 'consult-imenu
     "o" 'consult-outline
     "y" 'consult-yank-from-kill-ring
     "m" 'consult-bookmark)
@@ -2897,6 +2921,7 @@ With optional COMMAND, run it in DIRECTORY."
       (with-current-buffer buffer
         (kill-local-variable 'project-current-directory-override)))))
 
+;;;###autoload
 (defun +project-find-or-new-file (&optional arg)
   "A extended version of `project-find-file' with ARG.
 When called without prefix or with `C-u' - 2, it works the same as
@@ -3761,8 +3786,7 @@ of characters.
   (setq rime-posframe-properties '(:internal-border-width 10 :lines-truncate t))
   (setq rime-title "ㄓ")
   (setq rime-candidate-num-format-function #'+rime-candidate-num-fmt)
-  (custom-theme-set-faces
-   'user '(rime-preedit-face ((t (:inherit lazy-highlight)))))
+  (set-face-attribute 'rime-preedit-face nil :inherit 'lazy-highlight)
   (define-key rime-active-mode-map [tab] 'rime-send-keybinding)
   (bind! rime-active-mode-map
     "C-`" 'rime-send-keybinding
@@ -3868,8 +3892,8 @@ look like which can be described briefly as follows:
 (use-package org :ensure nil)
 
 (with-eval-after-load 'org
-  (require '+org)
-  (+org-font-setup)
+  (+org-headline-setup)
+  (add-hook 'enable-theme-functions #'+org-headline-setup)
   (add-hook 'org-mode-hook 'variable-pitch-mode)
   (add-hook 'org-mode-hook 'org-indent-mode)
   (add-hook 'org-tab-first-hook 'org-end-of-line)
@@ -3894,10 +3918,6 @@ look like which can be described briefly as follows:
 
 #+begin_src emacs-lisp
 (require 'org-faces)
-
-(defcustom +org-headline-sizes '(1.2 1.15 1.1 1.05)
-  "Heights of level1-4 org headings."
-  :group 'org :type 'list)
 
 (defadvice! org-toggle-comment-ad (fn &rest args)
   "Drop-in replacement for `org-toggle-comment'.
@@ -3933,27 +3953,17 @@ debugging code blocks in a org config file."
         (progn (org-babel-do-in-edit-buffer (fill-paragraph)) nil)
       t)))
 
-(defun +org-font-setup ()
-  "Setup variable-pitch fonts for org-mode."
-  (let* ((families (font-family-list))
-         (fallback `(:font ,(car families)))
-         (var-pitch (if (member grandview-custom-variable-font families)
-                        `(:font ,grandview-custom-variable-font) fallback))
-         (default (if (member grandview-custom-default-font families)
-                      `(:font ,grandview-custom-default-font) fallback)))
-    (custom-theme-set-faces
-     'user
-     `(org-level-1 ((t (,@var-pitch :height ,(nth 0 +org-headline-sizes)))))
-     `(org-level-2 ((t (,@var-pitch :height ,(nth 1 +org-headline-sizes)))))
-     `(org-level-3 ((t (,@var-pitch :height ,(nth 2 +org-headline-sizes)))))
-     `(org-level-4 ((t (,@var-pitch :height ,(nth 3 +org-headline-sizes)))))
-     `(org-table ((t (,@default))))
-     `(org-verbatim ((t (,@default))))
-     `(org-formula ((t (,@default))))
-     `(org-code ((t (,@default))))
-     `(org-block ((t (,@default))))
-     `(org-block-begin-line ((t (:foreground "#606060" :extend t))))
-     '(org-tag ((t (:inherit (shadow) :weight bold :height 0.8)))))))
+;;;###autoload
+(defun +org-headline-setup (&optional _theme)
+  "Setup headline heights for org-mode."
+  (set-face-attribute
+   'org-level-1 nil :height (nth 0 grandview-custom-headline-sizes))
+  (set-face-attribute
+   'org-level-2 nil :height (nth 1 grandview-custom-headline-sizes))
+  (set-face-attribute
+   'org-level-3 nil :height (nth 2 grandview-custom-headline-sizes))
+  (set-face-attribute
+   'org-level-4 nil :height (nth 3 grandview-custom-headline-sizes)))
 #+end_src
 
 *** Identifiers for org entries (org-id.el)
