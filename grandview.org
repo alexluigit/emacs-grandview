@@ -763,7 +763,7 @@ And a few child keymaps.
 
 + =+config-prefix-map=: Commands for managing Emacs config, under =grandview-app-map=
 + =+find-file-prefix-map=: Locate files in specified places, under =grandview-file-map=
-+ =+buffer-prefix-map=: Commands for buffers, under =grandview-file-map=
++ =+file-laf-prefix-map=: Adjust look and feel of buffer/file, under =grandview-file-map=
 
 Initially, the =+config-prefix-map= includes several commands:
 
@@ -803,9 +803,11 @@ Initially, the =+config-prefix-map= includes several commands:
   :doc "Keymap for locating files"
   :parent grandview-file-map)
 
-(defvar-keymap +buffer-prefix-map
-  :doc "Keymap for buffers."
-  :parent grandview-file-map)
+(defvar-keymap +file-laf-prefix-map
+  :doc "Keymap for comamands to adjust look and feel of file or buffers."
+  :parent grandview-file-map
+  ;; recenter current [l]ine
+  "l" #'recenter)
 
 (defun grandview-org ()
   "Edit grandview's org document."
@@ -818,7 +820,7 @@ Initially, the =+config-prefix-map= includes several commands:
   (find-file (grandview--path 'private)))
 
 (define-key grandview-file-map (kbd "f") +find-file-prefix-map)
-(define-key grandview-file-map (kbd "b") +buffer-prefix-map)
+(define-key grandview-file-map (kbd "l") +file-laf-prefix-map)
 (define-key grandview-app-map (kbd "g") +config-prefix-map)
 #+end_src
 
@@ -1434,14 +1436,10 @@ Recommended themes (using their package names):
 ;;;###autoload
 (defun +theme-outline-headline-setup (&optional _theme)
   "Setup headline heights for `outline'."
-  (set-face-attribute
-   'outline-1 nil :height (nth 0 grandview-custom-headline-sizes))
-  (set-face-attribute
-   'outline-2 nil :height (nth 1 grandview-custom-headline-sizes))
-  (set-face-attribute
-   'outline-3 nil :height (nth 2 grandview-custom-headline-sizes))
-  (set-face-attribute
-   'outline-4 nil :height (nth 3 grandview-custom-headline-sizes)))
+  (cl-loop for idx in '(1 2 3 4)
+           for face = (intern (format "outline-%s" idx))
+           for height = (nth (1- idx) grandview-custom-headline-sizes)
+           do (set-face-attribute face nil :height height)))
 #+end_src
 
 *** Fonts and icons
@@ -1885,12 +1883,6 @@ you.
   "=" #'enlarge-window
   "," #'shrink-window-horizontally
   "." #'enlarge-window-horizontally)
-#+end_src
-
-=SPC w c= to recenter current line.
-
-#+begin_src emacs-lisp
-(define-key window-prefix-map (kbd "c") 'recenter)
 #+end_src
 
 **** Window reorder (windmove.el)
@@ -2357,8 +2349,6 @@ completion."
 
 #+begin_src emacs-lisp
 (use-package tempel :ensure t :after-call self-insert-command)
-(use-package eglot-tempel
-  :vc (:url "https://github.com/fejfighter/eglot-tempel"))
 
 (defvar-keymap +tempel-prefix-map
   :doc "Kepmap for tempel commands."
@@ -2408,7 +2398,7 @@ completion."
 :END:
 
 This section defines snippet templates for different file types with optional
-conditions.  All the Tempo syntax elements are fully supported. The syntax
+conditions.  All the *Tempo* syntax elements are fully supported. The syntax
 elements are described in detail in the docstring of ~tempo-define-template~ in
 =tempo.el=.  We document the important ones here:
 
@@ -3129,6 +3119,7 @@ closely related because a failed file rename is often due to a permission issue.
 #+begin_src emacs-lisp
 (bind! grandview-file-map
   "w" 'save-buffer ; [SPC x s] is painful to press
+  "k" 'kill-current-buffer
   "r" '+files-rename-file-and-buffer
   "s" '+files-sudo-find)
 #+end_src
@@ -3906,8 +3897,7 @@ look like which can be described briefly as follows:
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)
   (setq org-image-actual-width nil)
-  (setq org-display-remote-inline-images 'download)
-  (define-key org-mode-map (kbd "C-c l") 'org-insert-last-stored-link))
+  (setq org-display-remote-inline-images 'download))
 #+end_src
 
 **** Extras ::: +org.el
@@ -3956,14 +3946,10 @@ debugging code blocks in a org config file."
 ;;;###autoload
 (defun +org-headline-setup (&optional _theme)
   "Setup headline heights for org-mode."
-  (set-face-attribute
-   'org-level-1 nil :height (nth 0 grandview-custom-headline-sizes))
-  (set-face-attribute
-   'org-level-2 nil :height (nth 1 grandview-custom-headline-sizes))
-  (set-face-attribute
-   'org-level-3 nil :height (nth 2 grandview-custom-headline-sizes))
-  (set-face-attribute
-   'org-level-4 nil :height (nth 3 grandview-custom-headline-sizes)))
+  (cl-loop for idx in '(1 2 3 4)
+           for face = (intern (format "org-level-%s" idx))
+           for height = (nth (1- idx) grandview-custom-headline-sizes)
+           do (set-face-attribute face nil :height height)))
 #+end_src
 
 *** Identifiers for org entries (org-id.el)
@@ -5660,7 +5646,8 @@ the following scenario:
 (with-eval-after-load 'pulsar
   (appendq! pulsar-pulse-functions
             (list 'flymake-goto-next-error 'flymake-goto-prev-error
-                  'meow-save 'meow-replace)))
+                  'meow-save 'meow-replace 'meow-search
+                  'meow-pop-to-mark 'moew-unpop-to-mark)))
 #+end_src
 
 *** Visual line wrap (visual-fill-column.el)
@@ -5682,7 +5669,8 @@ This can also be used in combination with =auto-fill-mode= instead of
 #+begin_src emacs-lisp
 (use-package visual-fill-column :ensure t)
 
-(define-key +buffer-prefix-map (kbd "c") '+visual-fill-column-center-mode)
+;; [c]enter the text
+(define-key +file-laf-prefix-map (kbd "c") '+visual-fill-column-center-mode)
 #+end_src
 
 **** Extras
