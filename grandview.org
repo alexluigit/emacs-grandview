@@ -37,7 +37,7 @@ sections.  Welcome to my kitchen sink.
 :CUSTOM_ID: h:93E5268D-CFDD-4DBF-A793-0CC5812DE181
 :END:
 
-This section details the loading procedure for *grandview* and provides
+This section details the loading procedure of *grandview* and provides
 instructions for using this configuration.
 
 *** This file (*grandview.org*)
@@ -690,7 +690,7 @@ slow, so I'm better off do it the regular way.
   "Default theme for grandview."
   :group 'grandview :type 'theme)
 
-(defcustom grandview-custom-font-size 140
+(defcustom grandview-custom-font-size 150
   "Default font size for grandview."
   :group 'grandview :type 'number)
 
@@ -1204,14 +1204,14 @@ The following =meow-normal-state-keymap= aligns with this principle, using =n/p=
 :END:
 
 In normal mode, we use =i= / =o= key to move cursor forward or backward 1 character.
-To make it consistent, we bind =C-i= and =C-o= in insert mode to do the same job.
+To make it consistent, we bind =C-i= and =C-o= to do the same job globally.
 
 #+begin_src emacs-lisp
-(meow-define-keys 'insert
-  '("S-<backspace>" . meow-kill-whole-line)
-  '("<f7>" . meow-right)
-  '("<C-i>" . meow-right)
-  '("C-o" . meow-left))
+(bind! global-map
+  "S-<backspace>" #'kill-whole-line
+  "<f7>" #'forward-char ; for emacs -nw
+  "<C-i>" #'forward-char
+  "C-o" #'backward-char)
 #+end_src
 
 **** LEADER
@@ -1410,8 +1410,8 @@ Recommended themes (using their package names):
 
 (with-eval-after-load 'ef-themes
   (setq ef-themes-to-toggle '(ef-day ef-winter)
-    ef-themes-mixed-fonts t
-    ef-themes-variable-pitch-ui t))
+        ef-themes-mixed-fonts t
+        ef-themes-variable-pitch-ui t))
 
 (with-eval-after-load 'modus-themes
   (setq modus-themes-common-palette-overrides
@@ -2518,7 +2518,8 @@ org-mode
 (verse "#+begin_verse" n> r> n "#+end_verse")
 (src "#+begin_src " q n r n "#+end_src")
 (gnuplot "#+begin_src gnuplot :var data=" (p "table") " :file " (p "plot.png") n r n "#+end_src" :post (org-edit-src-code))
-(elisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
+(elisp "#+begin_src emacs-lisp" n r n "#+end_src")
+(eelisp "#+begin_src emacs-lisp" n r n "#+end_src" :post (org-edit-src-code))
 (inlsrc "src_" p "{" q "}")
 (title "#+title: " p n "#+author: Alex Lu" n "#+language: en")
 #+end_src
@@ -3459,7 +3460,9 @@ easy to understand how many matches there are in the current buffer
 for your search query.
 
 #+begin_src emacs-lisp
-(use-package anzu :ensure t :after-call isearch-mode)
+(use-package anzu
+  :ensure t
+  :after-call isearch-mode meow-query-replace)
 
 (with-eval-after-load 'anzu
   (global-anzu-mode)
@@ -3479,7 +3482,9 @@ Moreover, the search status information in the echo area and some keybindings
 are slightly simplified.
 
 #+begin_src emacs-lisp
-(use-package isearch-mb :ensure t :after-call isearch-mode)
+(use-package isearch-mb
+  :ensure t
+  :after-call isearch-mode meow-query-replace)
 
 (with-eval-after-load 'isearch-mb
   (isearch-mb-mode)
@@ -3799,7 +3804,7 @@ of characters.
 ;;;###autoload
 (defadvice! rime-return-a (fn &rest args)
   "Make return key (commit script text) compatible with vterm."
-  :around #'rime-return
+  :around #'rime--return
   (interactive)
   (if (eq major-mode 'vterm-mode)
       (progn
@@ -4781,9 +4786,7 @@ added some keybindings to simplify navigation within this tree.
     "n" 'next-line
     "p" 'previous-line
     "C-n" 'Info-next
-    "C-p" 'Info-prev
-    "s-n" 'forward-paragraph
-    "s-p" 'backward-paragraph))
+    "C-p" 'Info-prev))
 #+end_src
 
 *** Man page (man.el)
@@ -4865,6 +4868,9 @@ handle large outputs.
 
 #+begin_src emacs-lisp
 (use-package vterm :ensure t)
+
+(with-eval-after-load 'vterm
+  (setq vterm-max-scrollback 5000))
 #+end_src
 
 **** Poorman's terminal multiplexer
@@ -4872,10 +4878,8 @@ handle large outputs.
 :CUSTOM_ID: h:B68077F6-09F1-4D8D-B5EE-7B1DCB0F44CD
 :END:
 
-=+vterm-mux-mode= is a custom minor mode designed to manage multiple =vterm=
-instances, serving as a minimalist terminal multiplexer.  The following commands
-facilitate the management of `vterm` instances, while the =+vterm-display-alist=
-user option dictates window placement of vterm instances.
+The following commands facilitate the management of *vterm* instances, while the
+=+vterm-display-alist= user option dictates window placement of vterm instances.
 
 + =+vterm-new=: Creates a new vterm buffer.
 + =+vterm-next= / =+vterm-prev=: Navigate between vterm buffers.
@@ -4885,14 +4889,14 @@ For more details, see my [[https://github.com/alexluigit/zenish][zsh profile]], 
 integrating vterm with zsh.
 
 #+begin_src emacs-lisp
-(define-key global-map (kbd "s-`") '+vterm-toggle)
-(define-key grandview-app-map (kbd "t") '+vterm-toggle)
+(defvar-keymap +vterm-prefix-map
+  :doc "Keymap for vterm commands."
+  "t" #'+vterm-toggle
+  "n" '+vterm-new
+  "i" '+vterm-next
+  "o" '+vterm-prev)
 
-(with-eval-after-load 'vterm
-  (+vterm-mux-mode)
-  (setq vterm-max-scrollback 5000)
-  (add-hook 'vterm-copy-mode-hook
-            (lambda () (if vterm-copy-mode (meow-normal-mode) (meow-insert-mode)))))
+(define-key grandview-app-map (kbd "t") +vterm-prefix-map)
 #+end_src
 
 ***** Extras ::: +vterm.el
@@ -4903,63 +4907,73 @@ integrating vterm with zsh.
 
 #+begin_src emacs-lisp
 (require 'vterm)
+(require 'meow)
 
 (defcustom +vterm-display-alist
   '((always . ((window-height . 0.2) (side . bottom))))
   "Determine where to place vterm windows.")
 
-(defvar +vterm-buffers nil
+(defvar +vterm-buffer-alist nil
   "The list of non-dedicated vterm buffers.")
 
-(defvar +vterm-index 0
-  "The index of current vterm buffer.")
+(defvar +vterm-current-id ""
+  "The id of current vterm buffer.")
 
 (defun +vterm--get-win-params ()
   "Parse `+vterm-display-alist' to get vterm display parameters."
   `(("^\\*vterm.*"
      (display-buffer-in-side-window)
+     (body-function . ,#'select-window)
      (window-parameters . ((mode-line-format . none)))
      ,@(cl-loop for (pred . pos) in +vterm-display-alist
                 thereis (and (funcall pred) pos)))))
 
-(defun +vterm--get-index (buf)
-  (let* ((name (buffer-name buf)))
-    (string-match "\\*vterm\\*\<\\([0-9]+\\)\>" name)
-    (string-to-number (cl-subseq name (match-beginning 1) (match-end 1)))))
+(defun +vterm--get-index ()
+  "Get index of current vterm instance."
+  (with-selected-window (selected-window) ; for  zsh prompt
+    (cl-position (current-buffer) +vterm-buffer-alist :key #'cdr)))
+
+(defun +vterm-kill-buffer-h ()
+  "Remove killed buffer from `+vterm-buffer-alist'.
+Used as a hook function added to `kill-buffer-hook'."
+  (let* ((buf (current-buffer))
+         (id (car (rassq buf +vterm-buffer-alist))))
+    (setq +vterm-buffer-alist
+          (assoc-delete-all id +vterm-buffer-alist))
+    (when (equal id +vterm-current-id)
+      (setq +vterm-current-id (or (caar +vterm-buffer-alist) "")))))
 
 ;;;###autoload
 (defun +vterm-new ()
   "Create new vterm buffer."
   (interactive)
-  (let ((new-index (1+ (+vterm--get-index (car +vterm-buffers))))
-        (display-buffer-alist (+vterm--get-win-params)))
-    (add-to-list '+vterm-buffers (vterm new-index))
+  (let* ((display-buffer-alist (+vterm--get-win-params))
+         (buf-name (make-temp-name ""))
+         (buf (vterm (format "*vterm*%s" buf-name))))
+    (add-to-list '+vterm-buffer-alist (cons buf-name buf))
+    (setq +vterm-current-id buf-name)
+    (with-current-buffer buf
+      (add-hook 'kill-buffer-hook #'+vterm-kill-buffer-h nil t))
     (meow-insert)))
 
-(defun +vterm-next (&optional arg)
-  "Select next vterm buffer.
-Create new one if no vterm buffer exists."
+(defun +vterm-next (&optional reverse)
+  "Select next vterm buffer."
   (interactive "P")
-  (let* ((curr-index (cl-position (current-buffer) +vterm-buffers))
-         (new-index (+ curr-index (or arg -1)))
-         (buf (nth new-index +vterm-buffers)))
-    (when buf
-      (switch-to-buffer buf)
-      (setq +vterm-index new-index))))
+  (when-let* (((derived-mode-p 'vterm-mode))
+              (curr-buf (current-buffer))
+              (curr-id (cl-position curr-buf +vterm-buffer-alist :key #'cdr))
+              (next-id (+ curr-id (if reverse -1 1)))
+              (next-pair (when (>= next-id 0)
+                           (nth next-id +vterm-buffer-alist)))
+              (buf (cdr next-pair)))
+    (switch-to-buffer buf)
+    (vterm-goto-char (point))
+    (setq +vterm-current-id (car next-pair))))
 
-(defun +vterm-prev (&optional arg)
+(defun +vterm-prev ()
   "Select previous vterm buffer."
-  (interactive "p")
-  (+vterm-next arg))
-
-(defun +vterm--kill-buffer ()
-  "Remove killed buffer from `+vterm-buffers'.
-
-Used as a hook function added to `kill-buffer-hook'."
-  (let* ((buf (current-buffer))
-         (name (buffer-name buf)))
-    (when (string-prefix-p "*vterm" name)
-      (delq! buf +vterm-buffers))))
+  (interactive)
+  (+vterm-next 'reverse))
 
 ;;;###autoload
 (defun +vterm-toggle (&optional in-place)
@@ -4968,31 +4982,91 @@ If called with prefix argument, create a new vterm buffer with
 `default-directory', otherwise create a new vterm buffer with project
 root directory as `default-directory'."
   (interactive "P")
-  (if (eq major-mode 'vterm-mode)
-      (delete-window)
-    (let* ((display-buffer-alist (+vterm--get-win-params))
-           (buf (nth +vterm-index +vterm-buffers))
-           (pr-root (or (ignore-errors
-                          (project-root (project-current)))
-                        default-directory))
-           (default-directory (if in-place default-directory pr-root))
-           (index (if buf (+vterm--get-index buf) 0)))
-      (add-to-list '+vterm-buffers (vterm index))
-      (meow-insert))))
-
-;;;###autoload
-(define-minor-mode +vterm-mux-mode
-  "Manage multiple vterm instance."
-  :global t
-  :group 'vterm
-  (if +vterm-mux-mode
-      (add-hook 'kill-buffer-hook #'+vterm--kill-buffer)
-    (remove-hook 'kill-buffer-hook #'+vterm--kill-buffer)))
+  (let* ((vt-win
+          (cl-find-if (lambda (w)
+                        (with-selected-window w
+                          (derived-mode-p 'vterm-mode)))
+                      (window-list (selected-frame)))))
+    (cond ((derived-mode-p 'vterm-mode) (delete-window))
+          (vt-win (select-window vt-win) (meow-insert))
+          (t (let* ((display-buffer-alist (+vterm--get-win-params))
+                    (buf (cdr (assoc +vterm-current-id +vterm-buffer-alist)))
+                    (pr-root (or (ignore-errors
+                                   (project-root (project-current)))
+                                 default-directory))
+                    (default-directory (if in-place default-directory pr-root))
+                    (create-name (unless buf (make-temp-name ""))))
+               (setq buf (or buf (vterm (format "*vterm*%s" create-name))))
+               (if create-name
+                   (progn
+                     (add-to-list '+vterm-buffer-alist (cons create-name buf))
+                     (setq +vterm-current-id create-name)
+                     (with-current-buffer buf
+                       (add-hook
+                        'kill-buffer-hook #'+vterm-kill-buffer-h nil t)))
+                 (display-buffer buf))
+               (meow-insert))))))
 #+end_src
 
-**** Translate emacs keycode to vterm
+**** Integrate with meow
 :PROPERTIES:
 :CUSTOM_ID: h:5A93DE31-FD9B-4DF0-BF49-3434E722A5DB
+:END:
+
+*Vterm* consumes all inputs other than its exceptions, making it not integrate
+well with meow.  This can be solved by using a custom keymap in normal mode with
+standard bindings and using the default =vterm-mode-map= in =meow-insert-mode=.
+
+#+begin_src emacs-lisp
+(add-hook 'vterm-mode-hook #'+vterm-meow-setup)
+
+(with-eval-after-load 'vterm
+  ;; bring back ESC taken by `meow-insert-mode-map'
+  (define-key vterm-mode-map (kbd "C-c ESC") #'vterm-send-escape))
+#+end_src
+
+***** Extras ::: +vterm.el
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
+:CUSTOM_ID: h:F8C913CE-EC1D-4CF5-8562-8FAE30296AF0
+:END:
+
+Adopted from https://github.com/accelbread/meow-vterm
+
+#+begin_src emacs-lisp
+(defvar +vterm-meow-normal-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'vterm-send-return)
+    (define-key map [remap yank] #'vterm-yank)
+    (define-key map [remap xterm-paste] #'vterm-xterm-paste)
+    (define-key map [remap yank-pop] #'vterm-yank-pop)
+    (define-key map [remap mouse-yank-primary] #'vterm-yank-primary)
+    (define-key map [remap self-insert-command] #'vterm--self-insert)
+    (define-key map [remap beginning-of-defun] #'vterm-previous-prompt)
+    (define-key map [remap end-of-defun] #'vterm-next-prompt)
+    map)
+  "Keymap for vterm in normal mode.")
+
+(defun +vterm-meow-insert-enter ()
+  "Enable vterm default binding in insert and set cursor."
+  (use-local-map vterm-mode-map)
+  (vterm-goto-char (point)))
+
+(defun +vterm-meow-insert-exit ()
+  "Use regular bindings in normal mode."
+  (use-local-map +vterm-meow-normal-mode-map))
+
+;;;###autoload
+(defun +vterm-meow-setup ()
+  "Configure insert mode for vterm."
+  (add-hook 'meow-insert-enter-hook #'+vterm-meow-insert-enter nil t)
+  (add-hook 'meow-insert-exit-hook #'+vterm-meow-insert-exit nil t)
+  (use-local-map +vterm-meow-normal-mode-map))
+#+end_src
+
+**** Transparent keystrokes
+:PROPERTIES:
+:CUSTOM_ID: h:D8D2AB9A-1BC8-4B15-AA1E-BB0938E4B3AD
 :END:
 
 See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[http://github.com/alexluigit/zenish][zsh profile]].
@@ -5000,20 +5074,14 @@ See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[h
 #+begin_src emacs-lisp
 (with-eval-after-load 'vterm
   (bind! vterm-mode-map
-    "s-`" '+vterm-toggle
-    "s--" '+vterm-new
-    "s-." '+vterm-next
-    "s-," '+vterm-prev
-    "s-n" 'vterm-next-prompt
-    "s-p" 'vterm-previous-prompt
-    "C-/" '+vterm-send-F6
-    "C-<backspace>" '+vterm-send-F8
-    "C-," '+vterm-send-F10
-    "C-." '+vterm-send-F11
-    "C-;" '+vterm-send-F12
     "S-SPC" nil
-    "S-<escape>" 'vterm-copy-mode
-    "S-<escape>" 'vterm-copy-mode-done))
+    "S-<backspace>" #'+vterm-send-F5
+    "C-/" #'+vterm-send-F6
+    "<C-i>" #'+vterm-send-F7
+    "C-<backspace>" #'+vterm-send-F8
+    "C-," #'+vterm-send-F10
+    "C-." #'+vterm-send-F11
+    "C-;" #'+vterm-send-F12))
 #+end_src
 
 ***** Extras ::: +vterm.el
@@ -5023,41 +5091,38 @@ See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[h
 :END:
 
 #+begin_src emacs-lisp
-(defadvice! +vterm-escape-a (fn &rest args)
-  :around #'meow-insert-exit
-  (if (derived-mode-p 'vterm-mode)
-      (vterm-send-escape)
-    (apply fn args)))
-
-(defadvice! +vterm-kill-whole-line-a (fn &rest args)
-  :around #'meow-kill-whole-line
-  (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f5>" nil nil nil)
-    (apply fn args)))
-
-(defadvice! +vterm-backward-char-a (fn &rest args)
-  :around #'meow-right
-  (if (derived-mode-p 'vterm-mode)
-      (vterm-send-key "<f7>" nil nil nil)
-    (apply fn args)))
+(defun +vterm-send-F5 ()
+  "Send F5 to shell."
+  (interactive)
+  (vterm-send-key "<f5>" nil nil nil))
 
 (defun +vterm-send-F6 ()
+  "Send F6 to shell."
   (interactive)
   (vterm-send-key "<f6>" nil nil nil))
 
+(defun +vterm-send-F7 ()
+  "Send F7 to shell."
+  (interactive)
+  (vterm-send-key "<f7>" nil nil nil))
+
 (defun +vterm-send-F8 ()
+  "Send F8 to shell."
   (interactive)
   (vterm-send-key "<f8>" nil nil nil))
 
 (defun +vterm-send-F10 ()
+  "Send F10 to shell."
   (interactive)
   (vterm-send-key "<f10>" nil nil nil))
 
 (defun +vterm-send-F11 ()
+  "Send F11 to shell."
   (interactive)
   (vterm-send-key "<f11>" nil nil nil))
 
 (defun +vterm-send-F12 ()
+  "Send F12 to shell."
   (interactive)
   (vterm-send-key "<f12>" nil nil nil))
 #+end_src
@@ -5311,7 +5376,7 @@ The customizations I made here are just for visual appeal.
 ;;;###autoload
 (defun +tab-bar-format-menu-bar ()
   "Produce the Menu button for the tab bar that shows the menu bar."
-  `((menu-bar menu-item (propertize " 𝝺 " 'face 'tab-bar)
+  `((menu-bar menu-item (propertize " 𝝺 " 'face 'cursor)
               tab-bar-menu-bar :help "Menu Bar")))
 
 ;;;###autoload
