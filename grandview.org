@@ -2735,7 +2735,16 @@ users deserve a file manager better than those popular ones on terminal such as
 [[https://github.com/ranger/ranger][ranger]], [[https://github.com/vifm/vifm][vifm]], [[https://github.com/gokcehan/lf][lf]] since Emacs is more than a terminal emulator.
 
 #+begin_src emacs-lisp
-(use-package dirvish :ensure t)
+;; (use-package dirvish :ensure t)
+
+;; for maintenance purpose
+(use-package dirvish
+  :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions/")
+  :preface
+  (autoload 'dirvish-layout-toggle "dirvish-extras")
+  (add-to-list 'load-path "~/.cache/emacs/elpa/dirvish")
+  (require 'dirvish)
+  (require 'dirvish-extras))
 
 (with-eval-after-load 'dirvish
   (dirvish-override-dired-mode)
@@ -3888,6 +3897,7 @@ look like which can be described briefly as follows:
   (add-hook 'org-mode-hook 'variable-pitch-mode)
   (add-hook 'org-mode-hook 'org-indent-mode)
   (add-hook 'org-tab-first-hook 'org-end-of-line)
+  (setq org-tag-column 0)
   (setq org-adapt-indentation nil)
   (setq org-hide-leading-stars t)
   (setq org-startup-folded t)
@@ -4464,13 +4474,28 @@ So I turn =eldoc-echo-area-use-multiline-p= off.
         '((:async . "yes") (:kernel . "python3"))))
 #+end_src
 
-*** REST client (restclient.el)
+*** REST client (verb.el)
 :PROPERTIES:
 :CUSTOM_ID: h:A25206AC-05E6-4F4D-A161-C295484936FF
 :END:
 
+*Verb* is a package for Emacs which allows you to organize and send HTTP requests.
+
+The package introduces a new minor mode, Verb mode, which works as an extension
+to Org mode.  The core idea is to organize specifications for HTTP requests
+using Org's tree structure.  Properties defined in the child headings extend or
+sometimes override properties defined in the parent headings - this way, it is
+easy to define many HTTP request specifications without having to repeat common
+components as URL hosts, authentication headers, ports, etc.  *Verb* tries to
+combine the usefulness of Org mode with the common functionality provided by
+other HTTP clients.  However, very little knowledge of Org mode is needed to use
+Verb.
+
 #+begin_src emacs-lisp
-(use-package restclient :ensure t)
+(use-package verb :ensure t)
+
+(with-eval-after-load 'org
+  (define-key grandview-prog-map (kbd "p") verb-command-map))
 #+end_src
 
 *** Scratch buffer (scratch)
