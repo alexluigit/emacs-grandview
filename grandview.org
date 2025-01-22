@@ -793,19 +793,16 @@ Initially, the =+config-prefix-map= includes several commands:
 
 (defvar-keymap +config-prefix-map
   :doc "Handy commands for configuring `emacs-grandview'."
-  :parent grandview-app-map
   "g" #'grandview-org
   "p" #'grandview-private-el
   "i" #'emacs-init-time
   "r" #'restart-emacs)
 
 (defvar-keymap +find-file-prefix-map
-  :doc "Keymap for locating files"
-  :parent grandview-file-map)
+  :doc "Keymap for locating files")
 
 (defvar-keymap +file-laf-prefix-map
   :doc "Keymap for comamands to adjust look and feel of file or buffers."
-  :parent grandview-file-map
   ;; recenter current [l]ine
   "l" #'recenter)
 
@@ -2352,7 +2349,6 @@ completion."
 
 (defvar-keymap +tempel-prefix-map
   :doc "Kepmap for tempel commands."
-  :parent grandview-prog-map
   "i" #'tempel-insert
   "k" #'tempel-kill
   "a" #'tempel-abort)
@@ -3262,7 +3258,6 @@ distinct keycodes.  My terminal emulator, Alacritty, is configured to translate
 
 To understand the underlying mechanisms, you may want to explore
 =input-decode-map= and [[https://en.wikipedia.org/wiki/Escape_sequence][escape sequences]].
-
 
 #+begin_src emacs-lisp
 (when (display-graphic-p) (define-key input-decode-map [?\C-i] [C-i]))
@@ -4271,7 +4266,6 @@ Huge thanks to @blahgeek and @jdtsmith!
 
 (defvar-keymap +eglot-prefix-map
   :doc "Keymap for `eglot' commands."
-  :parent grandview-prog-map
   "a" 'eglot-code-actions
   "t" 'eglot-find-typeDefinition
   "d" 'eglot-find-declaration
@@ -4309,7 +4303,6 @@ Huge thanks to @blahgeek and @jdtsmith!
 
 (defvar-keymap +flymake-prefix-map
   :doc "Keymap for `flymake' commands."
-  :parent grandview-prog-map
   "n" 'flymake-goto-next-error
   "p" 'flymake-goto-prev-error
   "s" 'flymake-start)
@@ -4342,7 +4335,7 @@ optional minor mode which can apply this command automatically on save.
 #+begin_src emacs-lisp
 (use-package reformatter :ensure t)
 
-(define-key grandview-prog-map (kbd "r") '+reformatter-format-buffer)
+(define-key +file-laf-prefix-map (kbd "r") '+reformatter-format-buffer)
 
 (with-eval-after-load 'reformatter
   (reformatter-define lua-format
@@ -4820,9 +4813,6 @@ to enable these shortcuts is =SPC h=.  For example, =SPC h s= invokes
 #+begin_src emacs-lisp
 (use-package helpful :ensure t)
 
-;; `helpful-symbol' and `helpful-variable' raise the "lisp nesting
-;; exceed 'max-lisp-eval-depth'" error for keymaps involves
-;; `mode-specfic-map' (leader key), what's going on?
 (bind! help-map
   "/" 'helpful-symbol
   "v" 'helpful-variable
@@ -5202,7 +5192,6 @@ accessiable by the =pass= command.
 
 (defvar-keymap +gptel-prefix-map
   :doc "Summon gpt models."
-  :parent grandview-app-map
   "n" #'gptel ; start [n]ew dialog
   "a" #'gptel-add
   "f" #'gptel-add-file
