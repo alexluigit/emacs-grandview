@@ -4780,6 +4780,11 @@ better option."
 :PROPERTIES:
 :CUSTOM_ID: h:6019F888-2F43-40CD-89C6-03D542D48FA4
 :END:
+
+Emacs is notable for its integration with many common tools.  Not only can you
+invoke them from within the editor, Emacs usually helps you use their output
+more effectively.
+
 ** Get help in Emacs
 :PROPERTIES:
 :CUSTOM_ID: h:B5C5A759-2EF0-4B56-8E18-B1AD5E3D3D96
@@ -4864,16 +4869,7 @@ itself as long as the ~find-function-C-source-directory~ is set properly.
 (define-key +find-file-prefix-map (kbd "l") 'find-library)
 #+end_src
 
-** Integration
-:PROPERTIES:
-:CUSTOM_ID: h:E558471C-2534-4ABA-B898-905EB09F779F
-:END:
-
-Emacs is notable for its integration with many common tools.  Not only can you
-invoke them from within the editor, Emacs usually helps you use their output
-more effectively.
-
-*** Vterm - performant terminal emulator in emacs
+** Vterm - performant terminal emulator in Emacs
 :PROPERTIES:
 :CUSTOM_ID: h:B49FA4E0-EB36-4734-AF25-54D6E6EFEBA6
 :END:
@@ -4886,11 +4882,22 @@ handle large outputs.
 #+begin_src emacs-lisp
 (use-package vterm :ensure t)
 
+(setopt vterm-keymap-exceptions '("C-c" "C-h"))
+
+(push '("^\\*vterm.*"
+        (display-buffer-in-side-window)
+        (body-function . select-window)
+        ;; TODO: useful mode-line for vterm buffers
+        ;; (window-parameters . ((mode-line-format . none)))
+        (window-width . 0.5)
+        (side . right))
+      display-buffer-alist)
+
 (with-eval-after-load 'vterm
   (setq vterm-max-scrollback 5000))
 #+end_src
 
-**** Poorman's terminal multiplexer
+*** Poorman's terminal multiplexer
 :PROPERTIES:
 :CUSTOM_ID: h:B68077F6-09F1-4D8D-B5EE-7B1DCB0F44CD
 :END:
@@ -4909,46 +4916,28 @@ integrating vterm with zsh.
 (defvar-keymap +vterm-prefix-map
   :doc "Keymap for vterm commands."
   "t" #'+vterm-toggle
-  "n" '+vterm-new
-  "i" '+vterm-next
-  "o" '+vterm-prev)
+  "n" #'+vterm-new
+  "i" #'+vterm-next
+  "o" #'+vterm-prev)
 
 (define-key grandview-app-map (kbd "t") +vterm-prefix-map)
 #+end_src
 
-***** Extras ::: +vterm.el
+**** Extras ::: +vterm-stack.el
 :PROPERTIES:
 :CUSTOM_ID: h:B05AAF84-FA1E-42FC-8C55-C7C9AD951D7E
-:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-stack.el" grandview--def-dir)
 :END:
 
 #+begin_src emacs-lisp
 (require 'vterm)
 (require 'meow)
 
-(defcustom +vterm-display-alist
-  '((always . ((window-height . 0.2) (side . bottom))))
-  "Determine where to place vterm windows.")
-
 (defvar +vterm-buffer-alist nil
   "The list of non-dedicated vterm buffers.")
 
 (defvar +vterm-current-id ""
   "The id of current vterm buffer.")
-
-(defun +vterm--get-win-params ()
-  "Parse `+vterm-display-alist' to get vterm display parameters."
-  `(("^\\*vterm.*"
-     (display-buffer-in-side-window)
-     (body-function . ,#'select-window)
-     (window-parameters . ((mode-line-format . none)))
-     ,@(cl-loop for (pred . pos) in +vterm-display-alist
-                thereis (and (funcall pred) pos)))))
-
-(defun +vterm--get-index ()
-  "Get index of current vterm instance."
-  (with-selected-window (selected-window) ; for  zsh prompt
-    (cl-position (current-buffer) +vterm-buffer-alist :key #'cdr)))
 
 (defun +vterm-kill-buffer-h ()
   "Remove killed buffer from `+vterm-buffer-alist'.
@@ -4964,8 +4953,7 @@ Used as a hook function added to `kill-buffer-hook'."
 (defun +vterm-new ()
   "Create new vterm buffer."
   (interactive)
-  (let* ((display-buffer-alist (+vterm--get-win-params))
-         (buf-name (make-temp-name ""))
+  (let* ((buf-name (make-temp-name ""))
          (buf (vterm (format "*vterm*%s" buf-name))))
     (add-to-list '+vterm-buffer-alist (cons buf-name buf))
     (setq +vterm-current-id buf-name)
@@ -4993,39 +4981,27 @@ Used as a hook function added to `kill-buffer-hook'."
   (+vterm-next 'reverse))
 
 ;;;###autoload
-(defun +vterm-toggle (&optional in-place)
+(cl-defun +vterm-toggle (&optional in-place)
   "Toggle vterm.
 If called with prefix argument, create a new vterm buffer with
 `default-directory', otherwise create a new vterm buffer with project
 root directory as `default-directory'."
   (interactive "P")
-  (let* ((vt-win
-          (cl-find-if (lambda (w)
-                        (with-selected-window w
-                          (derived-mode-p 'vterm-mode)))
-                      (window-list (selected-frame)))))
-    (cond ((derived-mode-p 'vterm-mode) (delete-window))
-          (vt-win (select-window vt-win) (meow-insert))
-          (t (let* ((display-buffer-alist (+vterm--get-win-params))
-                    (buf (cdr (assoc +vterm-current-id +vterm-buffer-alist)))
-                    (pr-root (or (ignore-errors
-                                   (project-root (project-current)))
-                                 default-directory))
-                    (default-directory (if in-place default-directory pr-root))
-                    (create-name (unless buf (make-temp-name ""))))
-               (setq buf (or buf (vterm (format "*vterm*%s" create-name))))
-               (if create-name
-                   (progn
-                     (add-to-list '+vterm-buffer-alist (cons create-name buf))
-                     (setq +vterm-current-id create-name)
-                     (with-current-buffer buf
-                       (add-hook
-                        'kill-buffer-hook #'+vterm-kill-buffer-h nil t)))
-                 (display-buffer buf))
-               (meow-insert))))))
+  (when (derived-mode-p 'vterm-mode)
+    (cl-return-from +vterm-toggle (delete-window)))
+  (cl-loop for w in (window-list (selected-frame))
+           when (with-selected-window w (derived-mode-p 'vterm-mode))
+           do (progn (select-window w) (meow-insert)
+                     (cl-return-from +vterm-toggle)))
+  (let* ((pr-root (or (ignore-errors (project-root (project-current)))
+                      default-directory))
+         (default-directory (if in-place default-directory pr-root)))
+    (when-let* ((buf (cdr (assoc +vterm-current-id +vterm-buffer-alist))))
+      (cl-return-from +vterm-toggle (display-buffer buf)))
+    (+vterm-new)))
 #+end_src
 
-**** Integrate with meow
+*** Integrate with meow
 :PROPERTIES:
 :CUSTOM_ID: h:5A93DE31-FD9B-4DF0-BF49-3434E722A5DB
 :END:
@@ -5042,15 +5018,18 @@ standard bindings and using the default =vterm-mode-map= in =meow-insert-mode=.
   (define-key vterm-mode-map (kbd "C-c ESC") #'vterm-send-escape))
 #+end_src
 
-***** Extras ::: +vterm.el
+**** Extras ::: +vterm-keys.el
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-keys.el" grandview--def-dir)
 :CUSTOM_ID: h:F8C913CE-EC1D-4CF5-8562-8FAE30296AF0
 :END:
 
 Adopted from https://github.com/accelbread/meow-vterm
 
 #+begin_src emacs-lisp
+(require 'vterm)
+(require 'meow)
+
 (defvar +vterm-meow-normal-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'vterm-send-return)
@@ -5081,7 +5060,7 @@ Adopted from https://github.com/accelbread/meow-vterm
   (use-local-map +vterm-meow-normal-mode-map))
 #+end_src
 
-**** Transparent keystrokes
+*** Transparent keystrokes
 :PROPERTIES:
 :CUSTOM_ID: h:D8D2AB9A-1BC8-4B15-AA1E-BB0938E4B3AD
 :END:
@@ -5101,9 +5080,9 @@ See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[h
     "C-;" #'+vterm-send-F12))
 #+end_src
 
-***** Extras ::: +vterm.el
+**** Extras ::: +vterm-keys.el
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+vterm.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-keys.el" grandview--def-dir)
 :CUSTOM_ID: h:F8C913CE-EC1D-4CF5-8562-8FAE30296AF0
 :END:
 
@@ -5142,25 +5121,6 @@ See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[h
   "Send F12 to shell."
   (interactive)
   (vterm-send-key "<f12>" nil nil nil))
-#+end_src
-
-*** COMMENT VSCode style icons (vscode-icon.el)
-:PROPERTIES:
-:CUSTOM_ID: h:AE04910B-3A25-4DCD-BC41-B4CF27F82A5B
-:END:
-
-Similar to =all-the-icons.el=, =vscode-icon= is a icon library which provides VSCode
-style icons with image format.  I keep this package only for the purpose of
-testing my =dirvish-icons= library.
-
-#+begin_src emacs-lisp
-(use-package vscode-icon :ensure t)
-
-(with-eval-after-load 'vscode-icon
-  (push '("jpg" . "image") vscode-icon-file-alist)
-  (push '("7z" . "zip") vscode-icon-file-alist)
-  (push '("mkv" . "video") vscode-icon-file-alist)
-  (push '("epub" . "storybook") vscode-icon-file-alist))
 #+end_src
 
 ** AI
@@ -5371,15 +5331,21 @@ The customizations I made here are just for visual appeal.
 #+begin_src emacs-lisp
 (use-package tab-bar :ensure nil)
 
-(setq tab-bar-separator " "
-      tab-bar-close-button-show nil
-      tab-bar-close-last-tab-choice 'tab-bar-mode-disable
-      tab-bar-tab-name-format-function #'+tab-bar-tab-name-format
-      tab-bar-format '(+tab-bar-format-menu-bar
-                       tab-bar-format-tabs
-                       tab-bar-separator
-                       tab-bar-format-align-right
-                       tab-bar-format-global))
+(bind! tab-prefix-map
+  "n" #'tab-new ; `n' -> [n]ew feels much natural
+  "2" #'tab-duplicate)
+
+(setq
+ tab-bar-new-tab-choice "*scratch*"
+ tab-bar-separator " "
+ tab-bar-close-button-show nil
+ tab-bar-close-last-tab-choice 'tab-bar-mode-disable
+ tab-bar-tab-name-format-function #'+tab-bar-tab-name-format
+ tab-bar-format '(+tab-bar-format-menu-bar
+                  tab-bar-format-tabs
+                  tab-bar-separator
+                  tab-bar-format-align-right
+                  tab-bar-format-global))
 #+end_src
 
 ***** Extras
