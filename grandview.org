@@ -278,7 +278,7 @@ You should have received a copy of the GNU General Public License along with
 this file.  If not, see <http://www.gnu.org/licenses/>.
 #+end_quote
 
-* CORE of grandview
+* THE CORE
 :PROPERTIES:
 :CUSTOM_ID: h:FB2572C2-4DDC-44A2-92C0-D8754305B2A7
 :END:
@@ -2740,7 +2740,7 @@ users deserve a file manager better than those popular ones on terminal such as
 ;; for maintenance purpose
 (use-package dirvish
   :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions/")
-  :preface
+  :init
   (autoload 'dirvish-layout-toggle "dirvish-extras")
   (add-to-list 'load-path "~/.cache/emacs/elpa/dirvish")
   (require 'dirvish)
@@ -4230,6 +4230,7 @@ details.
         (go "https://github.com/tree-sitter/tree-sitter-go")
         (html "https://github.com/tree-sitter/tree-sitter-html")
         (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+        (jsdoc "https://github.com/tree-sitter/tree-sitter-jsdoc" "master" "src")
         (json "https://github.com/tree-sitter/tree-sitter-json")
         (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua")
         (make "https://github.com/alemuller/tree-sitter-make")
@@ -4656,6 +4657,7 @@ common scenarios.  To invoke it, type =M-x sharper-main-transient= in a .cs file
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 
 (add-hook 'typescript-ts-mode-hook #'eglot-ensure)
+(add-hook 'js-ts-mode-hook #'eglot-ensure)
 (setq js-indent-level 2)
 #+end_src
 
