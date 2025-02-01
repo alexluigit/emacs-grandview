@@ -4902,25 +4902,31 @@ handle large outputs.
 :CUSTOM_ID: h:B68077F6-09F1-4D8D-B5EE-7B1DCB0F44CD
 :END:
 
-The following commands facilitate the management of *vterm* instances, while the
-=+vterm-display-alist= user option dictates window placement of vterm instances.
+*+vterm-stack* provides a stack-based navigation for vterm buffers, allowing you
+to easily switch between them within current tab (managed by *tab-bar*), create
+new ones, and toggle them.
 
-+ =+vterm-new=: Creates a new vterm buffer.
-+ =+vterm-next= / =+vterm-prev=: Navigate between vterm buffers.
-+ =+vterm-toggle=: Toggles a vterm window. If used with a prefix argument, a new vterm buffer is created with the project root as the default directory.
-
-For more details, see my [[https://github.com/alexluigit/zenish][zsh profile]], which includes configurations for
-integrating vterm with zsh.
++ =+vterm-stack-new=: Creates a new vterm instance in current tab.
++ =+vterm-stack-next= | =+vterm-stack-prev=: Navigate between vterm instances of
+  current tab.
++ =+vterm-stack-toggle=: Toggles a vterm side window. If used with a prefix
+  argument, the new vterm instance is created from the current project root.
 
 #+begin_src emacs-lisp
 (defvar-keymap +vterm-prefix-map
   :doc "Keymap for vterm commands."
-  "t" #'+vterm-toggle
-  "n" #'+vterm-new
-  "i" #'+vterm-next
-  "o" #'+vterm-prev)
+  "t" #'+vterm-stack-toggle
+  "n" #'+vterm-stack-next
+  "p" #'+vterm-stack-prev
+  "o" #'+vterm-stack-new)
 
 (define-key grandview-app-map (kbd "t") +vterm-prefix-map)
+
+(with-eval-after-load 'tab-bar
+  (require '+vterm-stack)
+  (add-hook '+vterm-stack-new-buffer-hook #'meow-insert)
+  (add-hook 'tab-bar-tab-post-open-functions #'+vterm-stack-tab-post-open-h)
+  (add-hook 'tab-bar-tab-pre-close-functions #'+vterm-stack-tab-pre-close-h))
 #+end_src
 
 **** Extras ::: +vterm-stack.el
@@ -4931,74 +4937,118 @@ integrating vterm with zsh.
 
 #+begin_src emacs-lisp
 (require 'vterm)
-(require 'meow)
 
-(defvar +vterm-buffer-alist nil
-  "The list of non-dedicated vterm buffers.")
+(defvar +vterm-stack-list '((:current nil :stack nil))
+  "The list of non-dedicated vterm buffer stacks.
+The structure is:
+'((:current BUF-ID :stack ((BUF-ID . BUF) (BUF-ID . BUF) ...))
+  (:current BUF-ID :stack ((BUF-ID . BUF) (BUF-ID . BUF) ...))
+  ...)")
 
-(defvar +vterm-current-id ""
-  "The id of current vterm buffer.")
+(defvar +vterm-stack-new-buffer-hook nil
+  "List of hooks to call when a new vterm stack buffer created.")
 
-(defun +vterm-kill-buffer-h ()
-  "Remove killed buffer from `+vterm-buffer-alist'.
+(defun +vterm-stack-kill-buffer-h ()
+  "Remove killed buffer from `+vterm-stack-list'.
 Used as a hook function added to `kill-buffer-hook'."
   (let* ((buf (current-buffer))
-         (id (car (rassq buf +vterm-buffer-alist))))
-    (setq +vterm-buffer-alist
-          (assoc-delete-all id +vterm-buffer-alist))
-    (when (equal id +vterm-current-id)
-      (setq +vterm-current-id (or (caar +vterm-buffer-alist) "")))))
+         (tab-index (cl-position-if
+                     (lambda (data)
+                       (member buf (mapcar #'cdr (plist-get data :stack))))
+                     +vterm-stack-list))
+         (tab-data (nth tab-index +vterm-stack-list))
+         (tab-stack (plist-get tab-data :stack))
+         (id (car (rassq buf tab-stack)))
+         (updated-stack (delq (assoc id tab-stack) tab-stack))
+         (next (caar updated-stack))
+         (curr (plist-get tab-data :current)))
+    (when tab-data
+      (setf (nth tab-index +vterm-stack-list)
+            `(:current ,(cond ((not next) nil) ((equal id curr) next) (t curr))
+                       :stack ,updated-stack)))))
 
 ;;;###autoload
-(defun +vterm-new ()
-  "Create new vterm buffer."
-  (interactive)
-  (let* ((buf-name (make-temp-name ""))
-         (buf (vterm (format "*vterm*%s" buf-name))))
-    (add-to-list '+vterm-buffer-alist (cons buf-name buf))
-    (setq +vterm-current-id buf-name)
+(defun +vterm-stack-new (&optional name)
+  "Create new vterm buffer and insert it to `+vterm-stack-list'.
+Optional NAME to specify buffer name."
+  (interactive (list (read-string "Name for new vterm: ")))
+  (let* ((buf-name (if (or (not name) (equal name ""))
+                       (make-temp-name "")
+                     name))
+         (buf (vterm (format "*vterm*%s" buf-name)))
+         (tab-index (tab-bar--current-tab-index))
+         (tab-data (nth tab-index +vterm-stack-list))
+         (tab-stack (plist-get tab-data :stack)))
+    (if tab-data
+        (setf (nth tab-index +vterm-stack-list)
+              `(:current ,buf-name
+                         :stack ,(cons (cons buf-name buf) tab-stack)))
+      (add-to-list
+       '+vterm-stack-list
+       (list :current buf-name :stack (list (cons buf-name buf)))))
     (with-current-buffer buf
-      (add-hook 'kill-buffer-hook #'+vterm-kill-buffer-h nil t))
-    (meow-insert)))
+      (run-hooks '+vterm-stack-new-buffer-hook)
+      (add-hook 'kill-buffer-hook #'+vterm-stack-kill-buffer-h nil t))))
 
-(defun +vterm-next (&optional reverse)
-  "Select next vterm buffer."
+(defun +vterm-stack-next (&optional reverse)
+  "Select next vterm buffer in `+vterm-stack-list'.
+When REVERSE, select the previous one."
   (interactive "P")
   (when-let* (((derived-mode-p 'vterm-mode))
               (curr-buf (current-buffer))
-              (curr-id (cl-position curr-buf +vterm-buffer-alist :key #'cdr))
-              (next-id (+ curr-id (if reverse -1 1)))
+              (tab-index (tab-bar--current-tab-index))
+              (tab-data (nth tab-index +vterm-stack-list))
+              (tab-stack (plist-get tab-data :stack))
+              (curr-id (cl-position curr-buf tab-stack :key #'cdr))
+              (next-id (+ curr-id (if reverse 1 -1)))
               (next-pair (when (>= next-id 0)
-                           (nth next-id +vterm-buffer-alist)))
-              (buf (cdr next-pair)))
-    (switch-to-buffer buf)
+                           (nth next-id tab-stack)))
+              (next-buf (cdr next-pair)))
+    (switch-to-buffer next-buf)
     (vterm-goto-char (point))
-    (setq +vterm-current-id (car next-pair))))
+    (setf (nth tab-index +vterm-stack-list)
+          `(:current ,(car next-pair) :stack ,tab-stack))))
 
-(defun +vterm-prev ()
-  "Select previous vterm buffer."
+(defun +vterm-stack-prev ()
+  "Select previous vterm buffer in `+vterm-stack-list'."
   (interactive)
-  (+vterm-next 'reverse))
+  (+vterm-stack-next 'reverse))
 
 ;;;###autoload
-(cl-defun +vterm-toggle (&optional in-place)
-  "Toggle vterm.
-If called with prefix argument, create a new vterm buffer with
-`default-directory', otherwise create a new vterm buffer with project
-root directory as `default-directory'."
+(cl-defun +vterm-stack-toggle (&optional in-place)
+  "Toggle current vterm buffer recorded in `+vterm-stack-list'.
+If IN-PLACE, create a new vterm buffer with `default-directory',
+otherwise create a new vterm buffer with project root directory as
+`default-directory'."
   (interactive "P")
   (when (derived-mode-p 'vterm-mode)
-    (cl-return-from +vterm-toggle (delete-window)))
+    (cl-return-from +vterm-stack-toggle (delete-window)))
   (cl-loop for w in (window-list (selected-frame))
            when (with-selected-window w (derived-mode-p 'vterm-mode))
-           do (progn (select-window w) (meow-insert)
-                     (cl-return-from +vterm-toggle)))
+           do (cl-return-from +vterm-stack-toggle (select-window w)))
   (let* ((pr-root (or (ignore-errors (project-root (project-current)))
                       default-directory))
-         (default-directory (if in-place default-directory pr-root)))
-    (when-let* ((buf (cdr (assoc +vterm-current-id +vterm-buffer-alist))))
-      (cl-return-from +vterm-toggle (display-buffer buf)))
-    (+vterm-new)))
+         (default-directory (if in-place default-directory pr-root))
+         (tab-index (tab-bar--current-tab-index))
+         (tab-data (nth tab-index +vterm-stack-list))
+         (buf-id (plist-get tab-data :current))
+         (tab-stack (plist-get tab-data :stack)))
+    (when-let* ((buf (cdr (assoc buf-id tab-stack))))
+      (cl-return-from +vterm-stack-toggle (display-buffer buf)))
+    (+vterm-stack-new "default")))
+
+(defun +vterm-stack-tab-post-open-h (tab)
+  "Re-index TAB indices in `+vterm-stack-list'."
+  (when-let* ((idx (tab-bar--tab-index tab)) ((> idx 0)))
+    (push '(:current nil :stack nil) (nthcdr idx +vterm-stack-list))))
+
+(defun +vterm-stack-tab-pre-close-h (tab _last-tab-p)
+  "Re-index TAB indices in `+vterm-stack-list'."
+  (cl-loop for idx from 0
+           for stack in +vterm-stack-list
+           do (progn (when (equal (tab-bar--tab-index tab) idx)
+                       (setf (nth idx +vterm-stack-list) nil)))
+           finally (setq +vterm-stack-list (remove nil +vterm-stack-list))))
 #+end_src
 
 *** Integrate with meow
@@ -5018,9 +5068,9 @@ standard bindings and using the default =vterm-mode-map= in =meow-insert-mode=.
   (define-key vterm-mode-map (kbd "C-c ESC") #'vterm-send-escape))
 #+end_src
 
-**** Extras ::: +vterm-keys.el
+**** Extras ::: +vterm-meow.el
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-keys.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-meow.el" grandview--def-dir)
 :CUSTOM_ID: h:F8C913CE-EC1D-4CF5-8562-8FAE30296AF0
 :END:
 
@@ -5060,15 +5110,22 @@ Adopted from https://github.com/accelbread/meow-vterm
   (use-local-map +vterm-meow-normal-mode-map))
 #+end_src
 
-*** Transparent keystrokes
+*** SHELL | REPL commands
 :PROPERTIES:
 :CUSTOM_ID: h:D8D2AB9A-1BC8-4B15-AA1E-BB0938E4B3AD
 :END:
 
-See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[http://github.com/alexluigit/zenish][zsh profile]].
+The terminal can't differentiate between certain shortcuts, like ~/~ and ~C-/~,
+preventing them from being bound to separate commands.  This is unfortunate
+because they are very easy to press.  To work around this, we can use function
+keys (~F1~ - ~F12~) as an intermediary, mapping these indistinguishable shortcuts to
+different function keys, and then binding those function keys to the desired
+commands.  See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[http://github.com/alexluigit/zenish][zsh profile]] for details.
 
 #+begin_src emacs-lisp
 (with-eval-after-load 'vterm
+  (require '+vterm-commands)
+  (bind! +vterm-prefix-map "s" #'+vterm-send-region)
   (bind! vterm-mode-map
     "S-SPC" nil
     "S-<backspace>" #'+vterm-send-F5
@@ -5080,9 +5137,9 @@ See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[h
     "C-;" #'+vterm-send-F12))
 #+end_src
 
-**** Extras ::: +vterm-keys.el
+**** Extras ::: +vterm-commands.el
 :PROPERTIES:
-:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-keys.el" grandview--def-dir)
+:header-args:emacs-lisp: :tangle (expand-file-name "+vterm-commands.el" grandview--def-dir)
 :CUSTOM_ID: h:F8C913CE-EC1D-4CF5-8562-8FAE30296AF0
 :END:
 
@@ -5121,6 +5178,17 @@ See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[h
   "Send F12 to shell."
   (interactive)
   (vterm-send-key "<f12>" nil nil nil))
+
+(defun +vterm-send-region (beg end)
+  "Send the region delimited by BEG and END to current inferior."
+  (interactive "r\n")
+  (cl-loop
+   with str = (buffer-substring-no-properties beg end)
+   for w in (window-list (selected-frame))
+   when (with-selected-window w (derived-mode-p 'vterm-mode))
+   return (with-current-buffer (window-buffer w)
+            (vterm-send-string str)
+            (vterm-send-return))))
 #+end_src
 
 ** AI
