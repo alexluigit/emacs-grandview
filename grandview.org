@@ -5237,6 +5237,11 @@ accessiable by the =pass= command.
    gptel-display-buffer-action
    `(display-buffer-in-direction
      (body-function . ,#'select-window) (direction . rightmost))
+   gptel-directives
+   '((default . "You are a large language model living in Emacs and a helpful assistant.")
+     (programming . "You are a large language model and a careful programmer. Provide code and only code as output without any additional text, prompt, note. Provide only updated part of the code unless 1. it's for a new file 2. it's a rewrite 3. I asked for full codebase explicitly in prompt.")
+     (writing . "You are a large language model and a writing assistant. Respond concisely.")
+     (chat . "You are a large language model and a conversation partner. Respond concisely."))
    gptel-default-mode 'org-mode
    gptel-model 'gemini-2.0-flash-exp
    gptel-backend
