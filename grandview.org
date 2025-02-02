@@ -1742,6 +1742,7 @@ with emacs is rather simple, no external library required.
 (use-package epg :ensure nil)
 (use-package password-store :ensure nil)
 
+(setq auth-sources '("~/.local/share/authinfo.gpg"))
 (setq epg-pinentry-mode 'loopback)
 #+end_src
 
@@ -5334,6 +5335,15 @@ to provide context-sensitive behavior.
   (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
   (define-key magit-diff-section-base-map
               (kbd "<C-return>") 'magit-diff-visit-file-other-window))
+#+end_src
+
+**** Work with Github from the comfort of Magit (forge.el)
+:PROPERTIES:
+:CUSTOM_ID: h:DCD08E96-5E66-4791-83EF-601C6C7420C3
+:END:
+
+#+begin_src emacs-lisp
+(use-package forge :after magit :ensure t)
 #+end_src
 
 *** Interactive diff, patch, or merge conflict (ediff.el)
