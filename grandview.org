@@ -4885,9 +4885,14 @@ handle large outputs.
 
 (setopt vterm-keymap-exceptions '("C-c" "C-h"))
 
+(defun +vterm-setup-window (window)
+  "Select WINDOW and set its fringes."
+  (select-window window)
+  (set-window-fringes window 10))
+
 (push '("^\\*vterm.*"
         (display-buffer-in-side-window)
-        (body-function . select-window)
+        (body-function . +vterm-setup-window)
         ;; TODO: useful mode-line for vterm buffers
         ;; (window-parameters . ((mode-line-format . none)))
         (window-width . 0.5)
