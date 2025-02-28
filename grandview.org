@@ -664,6 +664,7 @@ In addition, several custom options were introduced in this file:
 
 + ~grandview-custom-theme~: Default theme for grandview.
 + ~grandview-custom-font-size~: Font size being applied.
++ ~grandview-custom-emoji-size~: Size attribute used for emoji font.
 + ~grandview-custom-default-font~: The default font.
 + ~grandview-custom-fixed-font~: The =fixed-pitch= font.
 + ~grandview-custom-variable-font~: The =variable-pitch= font.
@@ -692,6 +693,10 @@ slow, so I'm better off do it the regular way.
 
 (defcustom grandview-custom-font-size 150
   "Default font size for grandview."
+  :group 'grandview :type 'number)
+
+(defcustom grandview-custom-emoji-size 11
+  "Size attribute used for emoji font."
   :group 'grandview :type 'number)
 
 (defcustom grandview-custom-default-font "Iosevka Nerd Font Mono"
@@ -1483,12 +1488,12 @@ Setup fonts.
 (defun +font-setup (&optional _theme)
   "Setup default/fixed-pitch/variable-pitch/zh-font."
   (cl-loop
-   with font-families = (font-family-list)
+   with ffl = (font-family-list) with em-size = grandview-custom-emoji-size
    for font in (list grandview-custom-default-font
                      grandview-custom-fixed-font
                      grandview-custom-variable-font)
    for name in '(default fixed-pitch variable-pitch)
-   if (member font font-families) do
+   if (member font ffl) do
    (set-face-attribute
     name nil :font font :height grandview-custom-font-size)
    else do (message "Font `%s' is not available" font)
@@ -1500,7 +1505,13 @@ Setup fonts.
       'font-lock-variable-name-face nil :weight 'demibold)
      (set-face-attribute
       'font-lock-function-name-face nil :weight 'demibold)
-     (if (member grandview-custom-cjk-font font-families)
+     ;; Emacs28+ comes with the \\='emoji charset
+     (set-fontset-font
+      t 'emoji (cond ((member "Apple Color Emoji" ffl)
+                      (font-spec :family "Apple Color Emoji" :size em-size))
+                     ((member "Noto Color Emoji" ffl)
+                      (font-spec :family "Noto Color Emoji" :size em-size))))
+     (if (member grandview-custom-cjk-font ffl)
          (dolist (charset '(kana han cjk-misc bopomofo))
            (set-fontset-font
             t charset (font-spec :family grandview-custom-cjk-font)))
@@ -1570,7 +1581,7 @@ Setup fonts.
 (define-fringe-bitmap 'right-curly-arrow  [])
 (define-fringe-bitmap 'left-curly-arrow  [])
 (add-to-list 'default-frame-alist '(internal-border-width . 10))
-(add-to-list 'default-frame-alist '(left-fringe . 1))
+(add-to-list 'default-frame-alist '(left-fringe . 5))
 (add-to-list 'default-frame-alist '(right-fringe . 1))
 (fringe-mode '(1 . 1))
 #+end_src
@@ -1672,7 +1683,7 @@ Some tweaks for scrolling behaviors:
 + Show current key strokes in echo area after 0.25s
 + Disable bidirectional text scanning for a modest performance boost.
 + Do not display continuation lines
-+ Do not disable the ~erase-buffer~ command
++ Add ~+clear-r/o-buf~ command for erasing contents in read only buffers
 
 By default, page scrolling should keep the point at the same visual
 position, rather than force it to the top or bottom of the
@@ -1699,7 +1710,7 @@ direction (use =C-l= to reposition it).
 (setq scroll-margin 1)
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
-(put 'erase-buffer 'disabled nil)
+(defun +clear-r/o-buf () (interactive) (let (buffer-read-only) (erase-buffer)))
 #+end_src
 
 *** Transient commands (transient.el)
@@ -1716,11 +1727,12 @@ but are more flexible and discoverable.  This package is inbuilt with Emacs 28+.
 (use-package transient :ensure nil)
 
 (with-eval-after-load 'transient
+  (transient-bind-q-to-quit)
   (setq transient-enable-popup-navigation nil)
   (setq transient-default-level 7)
   (setq transient-show-popup -0.2)
-  (transient-bind-q-to-quit)
   (setq transient-display-buffer-action '(display-buffer-below-selected))
+  (setq transient-show-during-minibuffer-read t)
   (define-key transient-map (kbd "<escape>") 'transient-quit-all)
   (define-key transient-sticky-map (kbd "ESC") 'transient-quit-all))
 #+end_src
@@ -1831,6 +1843,7 @@ reduces rendering/line scan work for Emacs in non-focused windows.
 (use-package window :ensure nil)
 
 (with-eval-after-load 'window
+  ;; (setq switch-to-buffer-obey-display-actions t)
   (setq-default cursor-in-non-selected-windows nil)
   (setq highlight-nonselected-windows nil)
   (setq display-buffer-alist
@@ -2619,7 +2632,6 @@ inside of an Emacs buffer.  It is simply superb!
   (setq mouse-1-click-follows-link nil)
   (setq dired-mouse-drag-files t)                   ; added in Emacs 29
   (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
-  (setq dired-kill-when-opening-new-dired-buffer t) ; added in Emacs 28
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
@@ -2742,7 +2754,6 @@ users deserve a file manager better than those popular ones on terminal such as
 (use-package dirvish
   :vc (:url "https://github.com/alexluigit/dirvish" :lisp-dir "extensions/")
   :init
-  (autoload 'dirvish-layout-toggle "dirvish-extras")
   (add-to-list 'load-path "~/.cache/emacs/elpa/dirvish")
   (require 'dirvish)
   (require 'dirvish-extras))
@@ -2769,7 +2780,9 @@ Here are some customizations about the appearance of *dirvish*.
   (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
   (add-hook 'dirvish-directory-view-mode-hook 'diredfl-mode)
   (setq dirvish-attributes
-        '(vc-state file-size git-msg subtree-state nerd-icons collapse file-time))
+        '(vc-state file-size git-msg subtree-state nerd-icons collapse)
+        dirvish-side-attributes
+        '(vc-state file-size nerd-icons collapse))
   (setopt dirvish-subtree-state-style 'nerd)
   (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
   (setq dirvish-header-line-height '(25 . 35))
@@ -2829,6 +2842,7 @@ for convenient access.
 (with-eval-after-load 'dirvish
   (bind! dirvish-mode-map
     "<mouse-1>" 'dirvish-subtree-toggle-or-open ; left click for expand/collapse dir or open file
+    "?" 'dirvish-dispatch
     "s-n" 'dirvish-history-go-forward
     "s-p" 'dirvish-history-go-backward
     "h" 'dirvish-history-jump
@@ -3023,7 +3037,7 @@ View images inside emacs.  Just rebind some keys here.
   (setq tramp-verbose 0)
   (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
-  (setopt tramp-use-ssh-controlmaster-options nil))
+  (setq tramp-ssh-controlmaster-options nil))
 #+end_src
 
 ** Automated actions
