@@ -5268,7 +5268,7 @@ accessiable by the =pass= command.
      (writing . "You are a large language model and a writing assistant. Respond concisely.")
      (chat . "You are a large language model and a conversation partner. Respond concisely."))
    gptel-default-mode 'org-mode
-   gptel-model 'gemini-2.0-flash-exp
+   gptel-model 'gemini-2.5-pro-exp-03-25
    gptel-backend
    (gptel-make-gemini "Gemini"
      :key (lambda () (require 'password-store) (password-store-get "gemini_apikey"))
