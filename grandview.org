@@ -2630,8 +2630,8 @@ inside of an Emacs buffer.  It is simply superb!
 
 (with-eval-after-load 'dired
   (setq mouse-1-click-follows-link nil)
-  (setq dired-mouse-drag-files t)                   ; added in Emacs 29
-  (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
+  (setq dired-mouse-drag-files t)
+  (setq mouse-drag-and-drop-region-cross-program t)
   (setq dired-recursive-copies 'always)
   (setq dired-recursive-deletes 'always)
   (setq delete-by-moving-to-trash t)
@@ -2641,6 +2641,8 @@ inside of an Emacs buffer.  It is simply superb!
   (setq dired-clean-confirm-killing-deleted-buffers nil)
   (setq dired-do-revert-buffer t)
   (setq dired-auto-revert-buffer #'dired-directory-changed-p)
+  ;; (setq dired-movement-style 'cycle) ; added in Emacs 30, not quite used to it
+  (put 'dired-find-alternate-file 'disabled nil)
   (bind! dired-mode-map
     "<mouse-3>" 'dired-mouse-find-file ; right click for opening file / entering dir
     "<mouse-8>" 'dired-do-shell-command ; side button for shell command execution
@@ -2652,7 +2654,7 @@ inside of an Emacs buffer.  It is simply superb!
     "O" 'dired-find-file-other-window
     "[" 'dired-prev-dirline
     "]" 'dired-next-dirline
-    "o" 'dired-up-directory
+    ";" 'dired-up-directory
     "^" 'mode-line-other-buffer
     "x" 'dired-do-delete
     "X" 'dired-do-flagged-delete
@@ -2780,13 +2782,11 @@ Here are some customizations about the appearance of *dirvish*.
   (add-hook 'dirvish-setup-hook 'dirvish-emerge-mode)
   (add-hook 'dirvish-directory-view-mode-hook 'diredfl-mode)
   (setq dirvish-attributes
-        '(vc-state file-size git-msg subtree-state nerd-icons collapse)
+        '(vc-state subtree-state nerd-icons collapse git-msg file-size)
         dirvish-side-attributes
-        '(vc-state file-size nerd-icons collapse))
+        '(vc-state nerd-icons collapse git-msg file-size))
   (setopt dirvish-subtree-state-style 'nerd)
   (setq dirvish-mode-line-format '(:left (sort symlink) :right (vc-info yank index)))
-  (setq dirvish-header-line-height '(25 . 35))
-  (setq dirvish-mode-line-height 21)
   (setq dirvish-side-width 38)
   (setq dirvish-header-line-format '(:left (path) :right (free-space)))
   (setq dirvish-path-separators (list "  " "  " "  ")))
@@ -2810,7 +2810,9 @@ be called inside or outside of *Dirvish*.
             ("n" "~/Downloads/"                "Downloads")
             ("w" "~/Pictures/wallpaper/"       "Wallpaper")
             ("m" "/mnt/"                       "Mounted Drives")
-            ("s" "/mnt/HDD/Share/"             "Shared files")
+            ("e" "/sudo:root@localhost:/etc"   "Etc")
+            ("s" "/ssh:koi:"                   "Server")
+            ("h" "/mnt/HDD/Share/"             "Shared files")
             ("a" "🔍\\\.org$📁~/Documents/📁" "All Notes") ; this requires `dirvish-fd'
             ("t" "~/.local/share/Trash/files/" "Trash")
             ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/"))))
@@ -2842,24 +2844,22 @@ for convenient access.
 (with-eval-after-load 'dirvish
   (bind! dirvish-mode-map
     "<mouse-1>" 'dirvish-subtree-toggle-or-open ; left click for expand/collapse dir or open file
-    "?" 'dirvish-dispatch
+    "?" 'dirvish-dispatch          ; [?] for help
+    "a" 'dirvish-setup-menu        ; [a]ttributes settings
+    "f" 'dirvish-file-info-menu    ; [f]ile info
+    "o" 'dirvish-quick-access      ; [o]pen path
+    "s" 'dirvish-quicksort         ; [s]ort flie list
+    "r" 'dirvish-history-jump      ; [r]ecent visited
+    "l" 'dirvish-ls-switches-menu  ; [l]s command flags
+    "v" 'dirvish-vc-menu
+    "y" 'dirvish-yank-menu
+    "*" 'dirvish-mark-menu
+    "^" 'dirvish-history-last
+    "N" 'dirvish-narrow
+    "TAB" 'dirvish-subtree-toggle
     "s-n" 'dirvish-history-go-forward
     "s-p" 'dirvish-history-go-backward
-    "h" 'dirvish-history-jump
-    "^" 'dirvish-history-last
-    "TAB" 'dirvish-subtree-toggle
-    "a" 'dirvish-quick-access
-    "f" 'dirvish-file-info-menu
-    "v" 'dirvish-vc-menu
-    "*" 'dirvish-mark-menu
-    "N" 'dirvish-narrow
-    "s-e" 'dirvish-emerge-menu
-    "s-t" 'dirvish-layout-toggle
-    "s-s" 'dirvish-setup-menu
-    "s-j" 'dirvish-fd-jump
-    "s" 'dirvish-quicksort
-    "l" 'dirvish-ls-switches-menu
-    "y" 'dirvish-yank-menu))
+    "s-e" 'dirvish-emerge-menu))
 #+end_src
 
 *** Project management (project.el)
@@ -2893,8 +2893,8 @@ commands.
 #+begin_src emacs-lisp
 (use-package project :ensure nil)
 
+;; (setq project-vc-merge-submodules nil)
 (with-eval-after-load 'project
-  (setopt project-vc-merge-submodules nil)
   (setopt project-switch-commands
           '((project-find-file "Find file")
             (project-find-dir "Find directory")
@@ -3032,8 +3032,12 @@ View images inside emacs.  Just rebind some keys here.
 (use-package tramp :ensure nil)
 
 (with-eval-after-load 'tramp
-  (add-to-list 'tramp-connection-properties
-               (list (regexp-quote "/ssh:buzz:") "direct-async-process" t))
+  (connection-local-set-profile-variables
+   'remote-direct-async-process
+   '((tramp-direct-async-process . t)))
+  (connection-local-set-profiles
+   '(:application tramp :protocol "ssh")
+   'remote-direct-async-process)
   (setq tramp-verbose 0)
   (setq tramp-auto-save-directory (locate-user-emacs-file "tramp/"))
   (setq tramp-chunksize 2000)
@@ -4097,6 +4101,7 @@ Thanks to https://blog.d46.us/advanced-emacs-startup
 (use-package org-modern :ensure t)
 
 (setq org-modern-star 'replace)
+(setq org-modern-table-vertical 1)
 
 (add-hook 'org-mode-hook 'org-modern-mode)
 (add-hook 'org-agenda-finalize-hook 'org-modern-agenda)
