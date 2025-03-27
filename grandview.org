@@ -1697,19 +1697,22 @@ will stay at the top/bottom of the screen while moving in that
 direction (use =C-l= to reposition it).
 
 #+begin_src emacs-lisp
-(setq-default bidi-display-reordering 'left-to-right)
-(setq-default bidi-paragraph-direction 'left-to-right)
-(setq bidi-inhibit-bpa t)
+
 (setq-default truncate-lines t)
-(setq echo-keystrokes 0.25)
-(setq scroll-conservatively 101)
-(setq scroll-up-aggressively 0.01)
-(setq scroll-down-aggressively 0.01)
-(setq auto-window-vscroll nil)
-(setq scroll-step 1)
-(setq scroll-margin 1)
-(setq hscroll-step 1)
-(setq hscroll-margin 1)
+(setq-default bidi-display-reordering nil)
+(setq long-line-threshold 1000
+      large-hscroll-threshold 1000
+      syntax-wholeline-max 1000
+      bidi-inhibit-bpa t
+      echo-keystrokes 0.25
+      scroll-conservatively 101
+      scroll-up-aggressively 0.01
+      scroll-down-aggressively 0.01
+      auto-window-vscroll nil
+      scroll-step 1
+      scroll-margin 1
+      hscroll-step 1
+      hscroll-margin 1)
 (defun +clear-r/o-buf () (interactive) (let (buffer-read-only) (erase-buffer)))
 #+end_src
 
