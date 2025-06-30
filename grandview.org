@@ -4984,7 +4984,7 @@ Used as a hook function added to `kill-buffer-hook'."
                      (lambda (data)
                        (member buf (mapcar #'cdr (plist-get data :stack))))
                      +vterm-stack-list))
-         (tab-data (nth tab-index +vterm-stack-list))
+         (tab-data (and tab-index (nth tab-index +vterm-stack-list)))
          (tab-stack (plist-get tab-data :stack))
          (id (car (rassq buf tab-stack)))
          (updated-stack (delq (assoc id tab-stack) tab-stack))
@@ -5092,6 +5092,8 @@ standard bindings and using the default =vterm-mode-map= in =meow-insert-mode=.
 (add-hook 'vterm-mode-hook #'+vterm-meow-setup)
 
 (with-eval-after-load 'vterm
+  (define-key vterm-mode-map (kbd "s-n") #'+vterm-stack-next)
+  (define-key vterm-mode-map (kbd "s-p") #'+vterm-stack-prev)
   ;; bring back ESC taken by `meow-insert-mode-map'
   (define-key vterm-mode-map (kbd "C-c ESC") #'vterm-send-escape))
 #+end_src
@@ -5110,6 +5112,8 @@ Adopted from https://github.com/accelbread/meow-vterm
 
 (defvar +vterm-meow-normal-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "s-n") #'+vterm-stack-next)
+    (define-key map (kbd "s-p") #'+vterm-stack-prev)
     (define-key map (kbd "RET") #'vterm-send-return)
     (define-key map [remap yank] #'vterm-yank)
     (define-key map [remap xterm-paste] #'vterm-xterm-paste)
