@@ -251,7 +251,7 @@ shift $((OPTIND -1))
 
 emacs_cmd="$BIN $DEBUG >/dev/null 2>&1 & disown"
 kill -9 $(pgrep -x '[Ee]macs') 2>/dev/null
-[[ -n $PKG ]]  && rm -rf <<grandview-cache(type="pkg-repos")>>/$PKG 2>/dev/null
+[[ -n $PKG ]]  && rm -rf <<grandview-cache(type="pkg-repos")>>/$PKG.* 2>/dev/null
 $RESET && rm -rf '<<grandview-cache(type="main")>>' 2>/dev/null
 $REPOs && rm -rf '<<grandview-cache(type="pkg-repos")>>' 2>/dev/null
 eval $emacs_cmd
@@ -344,7 +344,7 @@ these two files.
  frame-inhibit-implied-resize t ; Inhibit frame resizing for performance
  frame-resize-pixelwise t ; Allow resizing frame pixelwise
  idle-update-delay 1.0  ; slow down UI updates down
- read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
+ read-process-output-max (* 10 1024 1024) ; Increase how much is read from processes in a single chunk.
  process-adaptive-read-buffering nil
  redisplay-skip-fontification-on-input t ; Inhibits it for better scrolling performance.
  command-line-x-option-alist nil ; Remove irreleant command line options for faster startup
@@ -583,7 +583,7 @@ slow due to the heaviness of =org.el=.
   (require 'grandview-loaddefs nil raise-err-when-debug-init)
   (push '(grandview-org-local-setup) safe-local-eval-forms)
   (require 'grandview nil raise-err-when-debug-init)
-  (setq gc-cons-threshold 134217728))
+  (setq gc-cons-threshold (* 128 1024 1024)))
 #+end_src
 
 ** Pre-load setups
@@ -2766,7 +2766,8 @@ users deserve a file manager better than those popular ones on terminal such as
 (with-eval-after-load 'dirvish
   (dirvish-override-dired-mode)
   (dirvish-side-follow-mode)
-  (dirvish-peek-mode))
+  (dirvish-peek-mode)
+  (setq dirvish-large-directory-threshold 10000))
 #+end_src
 
 **** Look and feel
@@ -4799,6 +4800,27 @@ better option."
 (setq sh-basic-offset 2)
 #+end_src
 
+*** SQL
+:PROPERTIES:
+:CUSTOM_ID: h:7FECB6B7-3B40-4BA9-9417-628F8DF7AD66
+:END:
+
+#+begin_src emacs-lisp
+(use-package sql-indent :ensure t)
+
+(add-hook 'sqlind-minor-mode-hook
+  (lambda ()
+    (defvar my-sql-indentation-offsets-alist
+        `((select-clause 2)
+          (insert-clause 2)
+          (delete-clause 2)
+          (update-clause 2)
+          (create-statement 2)
+          ,@sqlind-default-indentation-offsets-alist))
+           (setq sqlind-indentation-offsets-alist
+                 my-sql-indentation-offsets-alist)))
+#+end_src
+
 * Utilities & Libraries
 :PROPERTIES:
 :CUSTOM_ID: h:6019F888-2F43-40CD-89C6-03D542D48FA4
@@ -5223,6 +5245,16 @@ commands.  See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]]
             (vterm-send-return))))
 #+end_src
 
+** COMMENT Eat
+:PROPERTIES:
+:CUSTOM_ID: h:A371D86C-359E-4D2B-8AD5-053182BD515A
+:END:
+
+#+begin_src emacs-lisp
+(use-package eat :ensure t)
+
+#+end_src
+
 ** AI
 :PROPERTIES:
 :CUSTOM_ID: h:3F098843-7B8B-4BC0-B729-314C0B40D296
@@ -5275,7 +5307,7 @@ accessiable by the =pass= command.
      (writing . "You are a large language model and a writing assistant. Respond concisely.")
      (chat . "You are a large language model and a conversation partner. Respond concisely."))
    gptel-default-mode 'org-mode
-   gptel-model 'gemini-2.5-pro-exp-03-25
+   gptel-model 'gemini-2.5-pro
    gptel-backend
    (gptel-make-gemini "Gemini"
      :key (lambda () (require 'password-store) (password-store-get "gemini_apikey"))

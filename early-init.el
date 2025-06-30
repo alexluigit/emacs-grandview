@@ -27,7 +27,7 @@
  frame-inhibit-implied-resize t ; Inhibit frame resizing for performance
  frame-resize-pixelwise t ; Allow resizing frame pixelwise
  idle-update-delay 1.0  ; slow down UI updates down
- read-process-output-max (* 1024 1024) ; Increase how much is read from processes in a single chunk.
+ read-process-output-max (* 10 1024 1024) ; Increase how much is read from processes in a single chunk.
  process-adaptive-read-buffering nil
  redisplay-skip-fontification-on-input t ; Inhibits it for better scrolling performance.
  command-line-x-option-alist nil ; Remove irreleant command line options for faster startup

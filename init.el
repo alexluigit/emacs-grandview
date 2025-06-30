@@ -146,4 +146,4 @@ last change or FORCE is non nil."
   (require 'grandview-loaddefs nil raise-err-when-debug-init)
   (push '(grandview-org-local-setup) safe-local-eval-forms)
   (require 'grandview nil raise-err-when-debug-init)
-  (setq gc-cons-threshold 134217728))
+  (setq gc-cons-threshold (* 128 1024 1024)))
