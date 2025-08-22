@@ -2806,20 +2806,26 @@ be called inside or outside of *Dirvish*.
 
 #+begin_src emacs-lisp
 (with-eval-after-load 'dirvish-quick-access
+  ;; TODO: implement this in `dirvish-quick-access'
+  ;; ("A"  "🔍\\\.org$📁~/Documents/📁" "All Notes" fd))
   (setopt dirvish-quick-access-entries
-          '(("o" "~/"                          "Home")
-            ("d" "/opt/dotfiles/"              "Dotfiles")
-            ("u" "~/.cache/emacs/"             "Emacs cache")
-            ("p" "~/Code/"                     "Code")
-            ("n" "~/Downloads/"                "Downloads")
-            ("w" "~/Pictures/wallpaper/"       "Wallpaper")
-            ("m" "/mnt/"                       "Mounted Drives")
-            ("e" "/sudo:root@localhost:/etc"   "Etc")
-            ("s" "/ssh:koi:"                   "Server")
-            ("h" "/mnt/HDD/Share/"             "Shared files")
-            ("a" "🔍\\\.org$📁~/Documents/📁" "All Notes") ; this requires `dirvish-fd'
-            ("t" "~/.local/share/Trash/files/" "Trash")
-            ("W"  "/smb:alex%192.168.0.177@192.168.0.177:share/"))))
+          '(("o"  "~/"                                  "Home")
+            ("/"  "/Volumes/Macintosh HD/Applications"  "Applications")
+            ("."  "/opt/dotfiles/"                      "Dotfiles")
+            ("p"  "~/Code/"                             "Code")
+            ("u"  "~/.cache/emacs/"                     "Emacs cache")
+            ("t"  "~/Desktop/"                          "Desktop")
+            ("f"  "~/Documents/"                        "Documents")
+            ("n"  "~/Downloads/"                        "Downloads")
+            ("m"  "~/Music/"                            "Music")
+            ("v"  "~/Movies/"                           "Video")
+            ("s"  "~/Pictures/Screenshots"              "Screenshots")
+            ("w"  "~/Pictures/Wallpaper/"               "Wallpaper")
+            ("e"  "/sudo:root@localhost:/etc"           "Etc")
+            ("k"  "~/Documents/koi"                     "KOI info")
+            ("g"  "/ssh:gg:"                            "Server-G")
+            ("a"  "/ssh:alex:"                          "Server-A")
+            ("K"  "/ssh:koi:"                           "Server-K"))))
 #+end_src
 
 **** Shortcuts
