@@ -2904,11 +2904,6 @@ commands.
 (use-package project :ensure nil)
 
 (with-eval-after-load 'project
-  (defadvice! +project-vc-no-merge (fn dir)
-    "Temporarily fix for `project--vc-merge-submodules-p'."
-    :around #'project--vc-merge-submodules-p
-    (when dir (apply fn (list dir))))
-
   (setopt project-switch-commands
           '((project-find-file "Find file")
             (project-find-dir "Find directory")
