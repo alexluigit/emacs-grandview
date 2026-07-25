@@ -2829,8 +2829,7 @@ be called inside or outside of *Dirvish*.
             ("e"  "/sudo:root@localhost:/etc"           "Etc")
             ("k"  "~/Documents/koi"                     "KOI info")
             ("g"  "/ssh:gg:"                            "Server-G")
-            ("a"  "/ssh:alex:"                          "Server-A")
-            ("K"  "/ssh:koi:"                           "Server-K"))))
+            ("a"  "/ssh:alex:"                          "Server-A"))))
 #+end_src
 
 **** Shortcuts
