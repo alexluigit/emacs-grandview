@@ -5347,14 +5347,18 @@ accessiable by the =pass= command.
 #+begin_src emacs-lisp
 (use-package gptel-commit :ensure t :after (magit gptel))
 
-(with-eval-after-load 'magit
-  (require '+gptel-commit)
-  (defun +gptel-commit ()
-    (interactive)
-    (let ((gptel-model 'gemini-3.6-flash))
-      (gptel-commit)))
-  (setq gptel-commit-prompt
-        "You are an expert AI assistant specializing in writing concise, clear, and perfectly formatted git commit messages. Your sole purpose is to take a code `diff` as input and generate a commit message that strictly follows the **Conventional Commits 1.0.0 specification**.
+(with-eval-after-load 'magit (require '+gptel-commit))
+#+end_src
+
+***** Extras
+:PROPERTIES:
+:CUSTOM_ID: h:E2E4F350-59E6-47E0-B15F-A8BF4D8FD24B
+:header-args:emacs-lisp: :tangle (expand-file-name "+gptel-commit.el" grandview--def-dir)
+:END:
+
+#+name: grandview-gptel-commit-prompt
+#+begin_src markdown :tangle no
+You are an expert AI assistant specializing in writing concise, clear, and perfectly formatted git commit messages. Your sole purpose is to take a code `diff` as input and generate a commit message that strictly follows the **Conventional Commits 1.0.0 specification**.
 
 Your response must be **ONLY** the git commit message itself, without any introductory phrases, explanations, or surrounding text.
 
@@ -5414,9 +5418,17 @@ The user will provide you with the output of a `git diff --staged` command or a 
 
 ### Output Format
 
-Your output must be the raw commit message text, ready to be piped directly to `git commit -F -`. **DO NOT** include Markdown code fences (e.g., ```) or any other text.")
-  (define-key +gptel-prefix-map (kbd "c") #'+gptel-commit)
-  (define-key +gptel-prefix-map (kbd "C") #'gptel-commit-rationale))
+Your output must be the raw commit message text, ready to be piped directly to `git commit -F -`. **DO NOT** include Markdown code fences (e.g., ```) or any other text.
+#+end_src
+
+#+begin_src emacs-lisp :noweb yes :noweb-prefix no
+(defun +gptel-commit ()
+  (interactive)
+  (let* ((gptel-model 'gemini-3.6-flash))
+    (gptel-commit)))
+(setq gptel-commit-prompt "<<grandview-gptel-commit-prompt>>")
+(define-key +gptel-prefix-map (kbd "c") #'+gptel-commit)
+(define-key +gptel-prefix-map (kbd "C") #'gptel-commit-rationale)
 #+end_src
 
 ** Version Control
