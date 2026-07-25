@@ -1421,6 +1421,11 @@ Recommended themes (using their package names):
           (underline-link-visited unspecified)
           (underline-link-symbolic unspecified))))
 
+(with-eval-after-load 'doom-themes
+  ;; Temporary hack for the face inheritence error
+  (setcdr (assoc 'gnus-group-news-low-empty doom-themes-base-faces)
+          '(:inherit 'gnus-group-mail-1-empty :weight 'normal)))
+
 (with-eval-after-load 'outline
   (+theme-outline-headline-setup)
   (add-hook 'enable-theme-functions #'+theme-outline-headline-setup))
