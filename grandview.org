@@ -4291,22 +4291,9 @@ details.
 It's much simper and faster than *lsp-mode*, also it works well with all the
 in-built emacs packages such as flymake, eldoc, etc.
 
-We use =emacs-lsp-booster= (see: https://github.com/blahgeek/emacs-lsp-booster) to
-speed up the json parsing, make sure you have the binary installed in your *PATH*.
-
-Huge thanks to @blahgeek and @jdtsmith!
-
 #+begin_src emacs-lisp
 (use-package eglot :ensure nil)
 (use-package markdown-mode :ensure t)
-(use-package eglot-booster :vc (:url "https://github.com/jdtsmith/eglot-booster"))
-
-(with-eval-after-load 'eglot
-  (setq eglot-autoshutdown t)
-  (setq eglot-send-changes-idle-time 0)
-  (add-hook 'eglot-mode-hook '+eglot-setup-eldoc)
-  (setq eglot-booster-io-only t)
-  (add-hook 'eglot-mode-hook 'eglot-booster-mode))
 
 (defvar-keymap +eglot-prefix-map
   :doc "Keymap for `eglot' commands."
