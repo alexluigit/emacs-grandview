@@ -1998,6 +1998,25 @@ Note that any number of clients may dispatch files to Emacs to be edited.
 (desktop-save-mode 1)
 #+end_src
 
+** OS-specific key bindings
+:PROPERTIES:
+:CUSTOM_ID: h:4ADD44B8-FB22-4FB0-93A0-34FEF223F9C9
+:END:
+
+Linux and macOS use different keyboard layouts for the Control, Super, and Meta
+keys; personally, I prefer using distinct keymappings for each OS.
+
+*** macOS
+:PROPERTIES:
+:CUSTOM_ID: h:00987611-423D-47AC-9FD1-AA1C3AFA2052
+:END:
+
+The following keybindings overwrite defaults in =ns-win.el=.
+
+#+begin_src emacs-lisp
+(define-key global-map [?\s-t] 'tab-bar-new-tab)
+#+end_src
+
 * Completion framework
 :PROPERTIES:
 :CUSTOM_ID: h:50E17583-1B94-4453-83B8-6E05260EA03D
