@@ -5303,7 +5303,7 @@ accessiable by the =pass= command.
      (writing . "You are a large language model and a writing assistant. Respond concisely.")
      (chat . "You are a large language model and a conversation partner. Respond concisely."))
    gptel-default-mode 'org-mode
-   gptel-model 'gemini-3.1-pro-preview
+   gptel-model 'gemini-3.6-flash
    gptel-backend
    (gptel-make-gemini "Gemini"
      :key (lambda () (require 'password-store) (password-store-get "gemini_apikey"))
@@ -5409,12 +5409,8 @@ Your output must be the raw commit message text, ready to be piped directly to `
 #+end_src
 
 #+begin_src emacs-lisp :noweb yes :noweb-prefix no
-(defun +gptel-commit ()
-  (interactive)
-  (let* ((gptel-model 'gemini-3.6-flash))
-    (gptel-commit)))
 (setq gptel-commit-prompt "<<grandview-gptel-commit-prompt>>")
-(define-key +gptel-prefix-map (kbd "c") #'+gptel-commit)
+(define-key +gptel-prefix-map (kbd "c") #'gptel-commit)
 (define-key +gptel-prefix-map (kbd "C") #'gptel-commit-rationale)
 #+end_src
 
