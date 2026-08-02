@@ -2817,7 +2817,7 @@ be called inside or outside of *Dirvish*.
           '(("o"  "~/"                                  "Home")
             ("/"  "/Volumes/Macintosh HD/Applications"  "Applications")
             ("."  "/opt/dotfiles/"                      "Dotfiles")
-            ("p"  "~/Code/"                             "Code")
+            ("p"  "~/Projects/"                         "Projects")
             ("u"  "~/.cache/emacs/"                     "Emacs cache")
             ("t"  "~/Desktop/"                          "Desktop")
             ("f"  "~/Documents/"                        "Documents")
@@ -2827,7 +2827,7 @@ be called inside or outside of *Dirvish*.
             ("s"  "~/Pictures/Screenshots"              "Screenshots")
             ("w"  "~/Pictures/Wallpaper/"               "Wallpaper")
             ("e"  "/sudo:root@localhost:/etc"           "Etc")
-            ("k"  "~/Documents/koi"                     "KOI info")
+            ("k"  "~/Documents/WorkProgress"            "Work")
             ("g"  "/ssh:gg:"                            "Server-G")
             ("a"  "/ssh:alex:"                          "Server-A"))))
 #+end_src
@@ -5479,7 +5479,7 @@ to provide context-sensitive behavior.
   (setq git-commit-style-convention-checks
         '(non-empty-second-line overlong-summary-line))
   (setq magit-diff-refine-hunk t)
-  (setq magit-repository-directories '(("~/Code" . 1) ("~" . 1)))
+  (setq magit-repository-directories '(("~/Projects" . 1) ("~" . 1)))
   (define-key magit-diff-section-base-map
               (kbd "<C-return>") 'magit-diff-visit-file-other-window))
 #+end_src
