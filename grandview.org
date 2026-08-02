@@ -5666,7 +5666,7 @@ workspaces that will be created when Emacs starts.
 
 (defun +tabspaces-integrate-consult ()
   "Integrate `tabspaces' with `consult'."
-  (consult-customize consult--source-buffer :hidden t :default nil)
+  (consult-customize consult-source-buffer :hidden t :default nil)
   (defvar consult--source-workspace
     (list :name "Workspace Buffers"
           :narrow ?w
