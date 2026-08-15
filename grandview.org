@@ -3844,6 +3844,14 @@ of characters.
     "C-`" 'rime-send-keybinding
     "C-k" 'rime-send-keybinding
     "<C-i>" 'rime-send-keybinding
+    "A" 'rime-send-keybinding
+    "R" 'rime-send-keybinding
+    "S" 'rime-send-keybinding
+    "T" 'rime-send-keybinding
+    "N" 'rime-send-keybinding
+    "E" 'rime-send-keybinding
+    "I" 'rime-send-keybinding
+    "O" 'rime-send-keybinding
     "C-o" 'rime-send-keybinding
     "C-a" 'rime-send-keybinding
     "C-e" 'rime-send-keybinding
@@ -5192,6 +5200,11 @@ keys (~F1~ - ~F12~) as an intermediary, mapping these indistinguishable shortcut
 different function keys, and then binding those function keys to the desired
 commands.  See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]] and my [[http://github.com/alexluigit/zenish][zsh profile]] for details.
 
+=emacs-rime= conflicts with =emacs-libvterm=. Specifically, when
+~current-input-method~ is set to ~rime~ while ~rime-active-mode~ is disabled, key
+combinations such as ~C-o~ stop working. Re-declaring the affected keybindings
+here resolves the issue.
+
 #+begin_src emacs-lisp
 (with-eval-after-load 'vterm
   (require '+vterm-commands)
@@ -5201,6 +5214,12 @@ commands.  See [[#h:46996B4B-A490-4981-B583-51ED036305CD][Keyboard orientation]]
     "S-<backspace>" #'+vterm-send-F5
     "C-/" #'+vterm-send-F6
     "<C-i>" #'+vterm-send-F7
+    "C-a" #'vterm-send-C-a ; for `emacs-rime'
+    "C-e" #'vterm-send-C-e ; for `emacs-rime'
+    "C-o" #'vterm-send-C-o ; for `emacs-rime'
+    "C-u" #'vterm-send-C-u ; for `emacs-rime'
+    "C-r" #'vterm-send-C-r ; for `emacs-rime'
+    "C-l" #'vterm-send-C-l ; for `emacs-rime'
     "C-<backspace>" #'+vterm-send-F8
     "C-," #'+vterm-send-F10
     "C-." #'+vterm-send-F11
