@@ -2825,10 +2825,12 @@ Here are some customizations about the appearance of *dirvish*.
 :CUSTOM_ID: h:579DBE58-EA09-4EF3-9016-75D2E91C366E
 :END:
 
-These are quick access entries for the ~dirvish-quick-access~ command, which can
-be called inside or outside of *Dirvish*.
+Quick-access entries for the ~dirvish-quick-access~ command, which can be called
+inside or outside of *Dirvish*. The following is a sample configuration; the
+actual configuration resides in =grandview-private-el=, as it contains private
+information.
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (with-eval-after-load 'dirvish-quick-access
   ;; TODO: implement this in `dirvish-quick-access'
   ;; ("A"  "🔍\\\.org$📁~/Documents/📁" "All Notes" fd))
@@ -2846,9 +2848,8 @@ be called inside or outside of *Dirvish*.
             ("s"  "~/Pictures/Screenshots"              "Screenshots")
             ("w"  "~/Pictures/Wallpaper/"               "Wallpaper")
             ("e"  "/sudo:root@localhost:/etc"           "Etc")
-            ("k"  "~/Documents/WorkProgress"            "Work")
-            ("g"  "/ssh:gg:"                            "Server-G")
-            ("a"  "/ssh:alex:"                          "Server-A"))))
+            ("k"  "~/Documents/WP"                      "Work progress")
+            ("g"  "/ssh:gg:"                            "Server-G"))))
 #+end_src
 
 **** Shortcuts
@@ -5322,7 +5323,7 @@ accessiable by the =pass= command.
      (writing . "You are a large language model and a writing assistant. Respond concisely.")
      (chat . "You are a large language model and a conversation partner. Respond concisely."))
    gptel-default-mode 'org-mode
-   gptel-model 'gemini-3.6-flash
+   gptel-model 'gemini-flash-latest
    gptel-backend
    (gptel-make-gemini "Gemini"
      :key (lambda () (require 'password-store) (password-store-get "gemini_apikey"))
