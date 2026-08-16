@@ -2143,7 +2143,9 @@ window as a constant value.
 #+begin_src emacs-lisp
 (use-package vertico :ensure t :after-call pre-command-hook)
 
-(with-eval-after-load 'vertico (vertico-mode 1))
+(with-eval-after-load 'vertico
+  (vertico-mode 1)
+  (setq vertico-cycle t))
 #+end_src
 
 *** Match candidates made easy (orderless.el)
