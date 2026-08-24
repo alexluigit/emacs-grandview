@@ -4546,7 +4546,7 @@ Verb.
 (use-package verb :ensure t)
 
 (with-eval-after-load 'org
-  (define-key grandview-prog-map (kbd "p") verb-command-map))
+  (define-key grandview-prog-map (kbd "v") verb-command-map))
 #+end_src
 
 *** Scratch buffer (scratch)
@@ -5120,6 +5120,8 @@ otherwise create a new vterm buffer with project root directory as
 
 (defun +vterm-stack-tab-pre-close-h (tab _last-tab-p)
   "Re-index TAB indices in `+vterm-stack-list'."
+  (unless (y-or-n-p (format "Close tab '%s'? " (alist-get 'name tab)))
+    (user-error "Tab close canceled"))
   (cl-loop for idx from 0
            for stack in +vterm-stack-list
            do (progn (when (equal (tab-bar--tab-index tab) idx)
@@ -5344,7 +5346,7 @@ accessiable by the =pass= command.
      (writing . "You are a large language model and a writing assistant. Respond concisely.")
      (chat . "You are a large language model and a conversation partner. Respond concisely."))
    gptel-default-mode 'org-mode
-   gptel-model 'gemini-flash-latest
+   gptel-model 'gemini-3.7-flash
    gptel-backend
    (gptel-make-gemini "Gemini"
      :key (lambda () (require 'password-store) (password-store-get "gemini_apikey"))
